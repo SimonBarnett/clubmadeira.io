@@ -1,6 +1,6 @@
 # Amazon Discount Finder with Flask and Wix Velo
 
-Welcome to the Amazon Discount Finder project! This system allows users to browse discounted products from Amazon based on customizable categories, powered by a Flask backend and a Wix frontend with Velo.
+Welcome to the Amazon Discount Finder project! This system allows users to browse discounted products from Amazon based on customizable categories, powered by a Flask backend and a Wix frontend with Velo. Named after the Madeira River, a major tributary of the Amazon, this project reflects its role as a conduit for delivering Amazon product data to users.
 
 ## Project Overview
 
@@ -15,7 +15,7 @@ This project integrates a Flask backend with a Wix frontend to display and manag
 
 ## Documentation
 
-- **[Amazon Affiliation](affiliate.md)**: Becoming an affiliate.
+- **[Amazon Affiliation](affiliate.md)**: Becoming an affiliate and joining the Amazon Associates program.
 - **[Velo Setup Instructions](velo.md)**: Step-by-step guide to setting up the Wix site with Velo.
 - **[Velo Code](velo.js)**: Code Wix site with Velo.
 - **[Flask API Documentation](flask.md)**: Detailed information on API endpoints, parameters, and responses.
