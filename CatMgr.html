@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Categories Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User Categories Management</h1>
+        <div class="form-group">
+            <label for="userId">User ID</label>
+            <input type="text" id="userId" placeholder="Enter User ID">
+        </div>
+        <div class="form-group">
+            <label for="categories">Categories (comma-separated)</label>
+            <input type="text" id="categories" placeholder="Enter categories">
+        </div>
+        <div class="form-group">
+            <button onclick="addOrUpdateCategories('PUT')">Add/Update Categories</button>
+            <button onclick="patchCategories()">Patch Categories</button>
+            <button onclick="removeCategory()">Remove Category</button>
+        </div>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:5000';
+
+        async function addOrUpdateCategories(method) {
+            const userId = document.getElementById('userId').value;
+            const categories = document.getElementById('categories').value.split(',').map(cat => cat.trim());
+            const response = await fetch(`${apiUrl}/${userId}/categories`, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ categories: categories })
+            });
+            const data = await response.json();
+            document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function patchCategories() {
+            await addOrUpdateCategories('PATCH');
+        }
+
+        async function removeCategory() {
+            const userId = document.getElementById('userId').value;
+            const categoryId = document.getElementById('categories').value.trim();
+            const response = await fetch(`${apiUrl}/${userId}/categories?category_id=${categoryId}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>
