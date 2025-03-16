@@ -29,25 +29,25 @@ This project integrates a Flask backend with a Wix frontend to display and manag
 1. **Install Dependencies**:
    - Ensure you have Python installed.
    - Install required packages using pip:
-     @@@bash
+     ```bash
      pip install flask flask-cors amazon-paapi
-     @@@
+     ```
 
 2. **Set Up Amazon PAAPI Credentials**:
    - Open `app.py` in your code editor.
    - Replace the placeholders with your actual Amazon PAAPI credentials:
-     @@@python
+     ```python
      ACCESS_KEY = "YOUR_ACCESS_KEY"
      SECRET_KEY = "YOUR_SECRET_KEY"
      ASSOCIATE_TAG = "YOUR_ASSOCIATE_TAG"
-     @@@
+     ```
 
 3. **Run the Flask App**:
    - Save the Flask code as `app.py`.
    - Start the app from the terminal:
-     @@@bash
+     ```bash
      python app.py
-     @@@
+     ```
    - The API will be available at `http://localhost:5000`.
 
 ### Wix Frontend with Velo Setup
