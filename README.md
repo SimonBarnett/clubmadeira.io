@@ -98,7 +98,7 @@ The User Part Gateway introduces a powerful feature for users to manage their ow
 
 - **Stock Update Callback**:
   - When a sale occurs on a user’s website, the stock quantity (`QTY`) can be updated via the `GET /<USERid>/products/<product_id>` endpoint.
-  - Example: After selling one unit of a product with ID `custom123`, a request like `GET /<USERid>/products/custom123?qty=4` updates the quantity to 4.
+  - Example: After selling one unit of a product with ID `custom123`, a request like `GET /<USERid>/products/custom123?qty=-4` reduces the quantity by 4.
   - This ensures real-time stock management, reflecting availability accurately in the Wix frontend.
 
 This feature enhances the project by allowing users to contribute their own products to the ecosystem, complementing the Amazon discount finder with a personalized inventory system.
