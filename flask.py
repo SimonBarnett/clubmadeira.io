@@ -10,6 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 USERS_FILE = "users_categories.json"
+USERS_PRODUCTS_FILE = "users_products.json"
 CONFIG_FILE = "config.json"
 DEFAULT_CATEGORIES = ["283155", "172282"]
 
@@ -30,6 +31,20 @@ def get_user_categories(user_id):
         users_data[user_id] = DEFAULT_CATEGORIES
         save_users_categories(users_data)
     return users_data.get(user_id, [])
+
+def load_users_products():
+    if os.path.exists(USERS_PRODUCTS_FILE):
+        with open(USERS_PRODUCTS_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_users_products(users_products):
+    with open(USERS_PRODUCTS_FILE, 'w') as f:
+        json.dump(users_products, f, indent=4)
+
+def get_user_products(user_id):
+    users_products = load_users_products()
+    return users_products.get(user_id, [])
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -105,6 +120,7 @@ def filter_categories_with_products(category_ids, min_discount_percent):
     except Exception as e:
         print(f"Error filtering categories: {str(e)}")
         return []
+    
 #endregion Helper Functions Region - Utility functions for file operations and category management
 
 #region Detailed Fetch Region - Functions to fetch detailed item data from affiliate networks
@@ -250,6 +266,7 @@ def get_cj_uk_full_details(skus):
         except Exception as e:
             print(f"CJ UK Error for {sku}: {str(e)}")
     return full_item_data
+
 #endregion Detailed Fetch Region - Functions to fetch detailed item data from affiliate networks
 
 #region Search Region - Functions to search discounted products from affiliate networks
@@ -375,6 +392,8 @@ def search_cj_uk_discounted(browse_node_id, min_discount_percent=20):
 #endregion Search Region - Functions to search discounted products from affiliate networks
 
 #region Management Endpoints Region - Endpoints for managing config and user categories
+
+#region /config
 @app.route('/config', methods=['GET'])
 def get_config():
     config = load_config()
@@ -410,7 +429,9 @@ def delete_config(affiliate):
         "message": f"Credentials for {affiliate} deleted",
         "config": config
     })
+#endregion /config
 
+#region /<USERid>/categories
 @app.route('/<USERid>/categories', methods=['PUT'])
 def put_user_categories(USERid):
     if not request.json or 'categories' not in request.json:
@@ -458,6 +479,105 @@ def delete_user_category(USERid):
         else:
             return jsonify({"status": "error", "message": f"Category {category_id} not found for user {USERid}"}), 404
     return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
+#endregion /<USERid>/categories
+
+#region /<USERid>/products
+@app.route('/<USERid>/products', methods=['GET'])
+def get_user_product_list(USERid):
+    products = get_user_products(USERid)
+    return jsonify({
+        "status": "success",
+        "count": len(products),
+        "products": products
+    })
+
+@app.route('/<USERid>/products', methods=['POST'])
+def post_user_product(USERid):
+    if not request.json or 'product' not in request.json:
+        return jsonify({"status": "error", "message": "Request body must contain 'product' object"}), 400
+    
+    product = request.json['product']
+    required_fields = ["id", "title", "product_url", "current_price", "original_price", "discount_percent"]
+    if not all(field in product for field in required_fields):
+        return jsonify({"status": "error", "message": "Product must include id, title, product_url, current_price, original_price, discount_percent"}), 400
+    
+    product["source"] = "user_defined"
+    users_products = load_users_products()
+    if USERid not in users_products:
+        users_products[USERid] = []
+    
+    # Check if product ID already exists
+    if any(p["id"] == product["id"] for p in users_products[USERid]):
+        return jsonify({"status": "error", "message": f"Product with id {product['id']} already exists"}), 409
+    
+    users_products[USERid].append(product)
+    save_users_products(users_products)
+    return jsonify({"status": "success", "message": f"Product added for user {USERid}", "product": product}), 201
+
+@app.route('/<USERid>/products', methods=['PUT'])
+def put_user_products(USERid):
+    if not request.json or 'products' not in request.json:
+        return jsonify({"status": "error", "message": "Request body must contain 'products' list"}), 400
+    
+    new_products = request.json['products']
+    if not isinstance(new_products, list):
+        return jsonify({"status": "error", "message": "'products' must be a list"}), 400
+    
+    for product in new_products:
+        required_fields = ["id", "title", "product_url", "current_price", "original_price", "discount_percent"]
+        if not all(field in product for field in required_fields):
+            return jsonify({"status": "error", "message": "Each product must include id, title, product_url, current_price, original_price, discount_percent"}), 400
+        product["source"] = "user_defined"
+    
+    users_products = load_users_products()
+    users_products[USERid] = new_products
+    save_users_products(users_products)
+    return jsonify({"status": "success", "message": f"Products for user {USERid} replaced", "products": new_products})
+
+@app.route('/<USERid>/products', methods=['PATCH'])
+def patch_user_products(USERid):
+    if not request.json or 'products' not in request.json:
+        return jsonify({"status": "error", "message": "Request body must contain 'products' list"}), 400
+    
+    new_products = request.json['products']
+    if not isinstance(new_products, list):
+        return jsonify({"status": "error", "message": "'products' must be a list"}), 400
+    
+    for product in new_products:
+        required_fields = ["id", "title", "product_url", "current_price", "original_price", "discount_percent"]
+        if not all(field in product for field in required_fields):
+            return jsonify({"status": "error", "message": "Each product must include id, title, product_url, current_price, original_price, discount_percent"}), 400
+        product["source"] = "user_defined"
+    
+    users_products = load_users_products()
+    current_products = users_products.get(USERid, [])
+    existing_ids = {p["id"] for p in current_products}
+    updated_products = [p for p in current_products if p["id"] not in {np["id"] for np in new_products}]
+    updated_products.extend(new_products)
+    users_products[USERid] = updated_products
+    save_users_products(users_products)
+    return jsonify({"status": "success", "message": f"Products for user {USERid} updated", "products": updated_products})
+
+@app.route('/<USERid>/products', methods=['DELETE'])
+def delete_user_product(USERid):
+    product_id = request.args.get('product_id')
+    if not product_id:
+        return jsonify({"status": "error", "message": "Query parameter 'product_id' is required"}), 400
+    
+    users_products = load_users_products()
+    if USERid in users_products:
+        current_products = users_products[USERid]
+        product_to_remove = next((p for p in current_products if p["id"] == product_id), None)
+        if product_to_remove:
+            current_products.remove(product_to_remove)
+            users_products[USERid] = current_products
+            save_users_products(users_products)
+            return jsonify({"status": "success", "message": f"Product {product_id} removed for user {USERid}", "products": current_products})
+        else:
+            return jsonify({"status": "error", "message": f"Product {product_id} not found for user {USERid}"}), 404
+    return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
+#endregion /<USERid>/products
+
 #endregion Management Endpoints Region - Endpoints for managing config and user categories
 
 #region Velo Endpoints Region - Endpoints for Velo frontend integration
@@ -480,6 +600,13 @@ def get_discounted_products(USERid):
             all_discounted_items.extend(search_awin_uk_discounted(cat_id, min_discount))
         if all(config.get("cj", {}).values()):
             all_discounted_items.extend(search_cj_uk_discounted(cat_id, min_discount))
+    
+    # Add user-defined products, filtered by min_discount
+    user_products = get_user_products(USERid)
+    for product in user_products:
+        if (product.get("discount_percent", 0) >= min_discount and 
+            (not category_id or product.get("category_id") == category_id)):
+            all_discounted_items.append(product)
 
     return jsonify({
         "status": "success",
@@ -512,6 +639,7 @@ def get_categories(USERid):
             return jsonify({"status": "success", "count": 0, "categories": [], "message": f"No categories with products at {min_discount}% discount found."})
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error fetching categories: {str(e)}"}), 500
+
 #endregion Velo Endpoints Region - Endpoints for Velo frontend integration
 
 if __name__ == '__main__':
