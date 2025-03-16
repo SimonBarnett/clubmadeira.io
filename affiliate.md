@@ -129,6 +129,8 @@ Merseyside Model Flying Club
 - If you have website traffic data (e.g., monthly visitors or page views), include it to strengthen the application.  
 - This application assumes the club has a website; if not, you could adapt it to focus on a planned website or social media presence.  
 
+
+
 ---
 
 # Affiliate Program Instructions and Best Case Scenarios
