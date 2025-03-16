@@ -10,7 +10,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/discounted-products`
-- **Description**: Retrieves a list of discounted products across multiple affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK) and user-defined products based on user categories or a specific category ID. Uses Amazon category titles for searches on non-Amazon providers.
+- **Description**: Retrieves a list of discounted products across multiple affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK) based on user categories or a specific category ID. Uses Amazon category titles for searches on non-Amazon providers. Does not include user-defined products.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -41,15 +41,6 @@ These endpoints are designed for integration with the Velo frontend, providing c
         "dimensions": "5 x 8 in",
         "features": ["Hardcover"],
         "image_url": "https://images.amazon.com/sample.jpg"
-      },
-      {
-        "source": "user_defined",
-        "id": "custom123",
-        "title": "Custom Product",
-        "current_price": 10.00,
-        "original_price": 15.00,
-        "discount_percent": 33,
-        "product_url": "https://example.com/custom123"
       }
     ],
     "min_discount": 30
@@ -60,7 +51,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/categories`
-- **Description**: Fetches either root categories with discounted products or subcategories of a specified parent category, filtered by minimum discount percentage.
+- **Description**: Fetches either root categories with discounted products or subcategories of a specified parent category, filtered by minimum discount percentage. Checks all providers (Amazon UK, eBay UK, Awin UK, CJ UK) for available products, not just Amazon.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -82,6 +73,51 @@ These endpoints are designed for integration with the Velo frontend, providing c
       {"id": "1025612", "name": "Non-Fiction"}
     ],
     "min_discount": 20
+  }
+  ```
+
+### Get Club Products
+![GET](https://img.shields.io/badge/GET-blue)
+
+- **Endpoint**: `/club-products`
+- **Description**: Retrieves a list of all user-defined products (parts) across all users where `QTY > 0`. Aggregates products from the user-defined product store.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| None            | No parameters required                           | N/A           |
+
+- **Example Request**:
+  ```bash
+  curl http://localhost:5000/club-products
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "count": 2,
+    "products": [
+      {
+        "source": "user_defined",
+        "id": "custom123",
+        "title": "Custom Product",
+        "current_price": 10.00,
+        "original_price": 15.00,
+        "product_url": "https://example.com/custom123",
+        "image_url": "https://example.com/images/custom123.jpg",
+        "QTY": 5
+      },
+      {
+        "source": "user_defined",
+        "id": "custom124",
+        "title": "New Product",
+        "current_price": 20.00,
+        "original_price": 25.00,
+        "product_url": "https://example.com/custom124",
+        "image_url": "https://example.com/images/custom124.jpg",
+        "QTY": 3
+      }
+    ]
   }
   ```
 
@@ -246,7 +282,7 @@ These endpoints handle configuration and user category/product management, divid
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/products`
-- **Description**: Retrieves the list of user-defined products for a specific user.
+- **Description**: Retrieves the list of user-defined products (parts) for a specific user.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -269,8 +305,9 @@ These endpoints handle configuration and user category/product management, divid
         "title": "Custom Product",
         "current_price": 10.00,
         "original_price": 15.00,
-        "discount_percent": 33,
-        "product_url": "https://example.com/custom123"
+        "product_url": "https://example.com/custom123",
+        "image_url": "https://example.com/images/custom123.jpg",
+        "QTY": 5
       }
     ]
   }
@@ -280,7 +317,7 @@ These endpoints handle configuration and user category/product management, divid
 ![POST](https://img.shields.io/badge/POST-green)
 
 - **Endpoint**: `/<USERid>/products`
-- **Description**: Adds a new user-defined product to the user’s list. Requires specific fields in the JSON body.
+- **Description**: Adds a new user-defined product (part) to the user’s list. Requires specific fields in the JSON body, including `image_url` and `QTY`.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -288,7 +325,7 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X POST -H "Content-Type: application/json" -d '{"product": {"id": "custom123", "title": "Custom Product", "product_url": "https://example.com/custom123", "current_price": 10.00, "original_price": 15.00, "discount_percent": 33}}' http://localhost:5000/<USERid>/products
+  curl -X POST -H "Content-Type: application/json" -d '{"product": {"id": "custom123", "title": "Custom Product", "product_url": "https://example.com/custom123", "current_price": 10.00, "original_price": 15.00, "image_url": "https://example.com/images/custom123.jpg", "QTY": 5}}' http://localhost:5000/<USERid>/products
   ```
 
 - **Example Response**:
@@ -302,8 +339,9 @@ These endpoints handle configuration and user category/product management, divid
       "title": "Custom Product",
       "current_price": 10.00,
       "original_price": 15.00,
-      "discount_percent": 33,
-      "product_url": "https://example.com/custom123"
+      "product_url": "https://example.com/custom123",
+      "image_url": "https://example.com/images/custom123.jpg",
+      "QTY": 5
     }
   }
   ```
@@ -312,7 +350,7 @@ These endpoints handle configuration and user category/product management, divid
 ![PUT](https://img.shields.io/badge/PUT-orange)
 
 - **Endpoint**: `/<USERid>/products`
-- **Description**: Replaces the entire list of user-defined products for a user.
+- **Description**: Replaces the entire list of user-defined products (parts) for a user. Each product must include `image_url` and `QTY`.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -320,7 +358,7 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X PUT -H "Content-Type: application/json" -d '{"products": [{"id": "custom123", "title": "Custom Product", "product_url": "https://example.com/custom123", "current_price": 10.00, "original_price": 15.00, "discount_percent": 33}]}' http://localhost:5000/<USERid>/products
+  curl -X PUT -H "Content-Type: application/json" -d '{"products": [{"id": "custom123", "title": "Custom Product", "product_url": "https://example.com/custom123", "current_price": 10.00, "original_price": 15.00, "image_url": "https://example.com/images/custom123.jpg", "QTY": 5}]}' http://localhost:5000/<USERid>/products
   ```
 
 - **Example Response**:
@@ -335,8 +373,9 @@ These endpoints handle configuration and user category/product management, divid
         "title": "Custom Product",
         "current_price": 10.00,
         "original_price": 15.00,
-        "discount_percent": 33,
-        "product_url": "https://example.com/custom123"
+        "product_url": "https://example.com/custom123",
+        "image_url": "https://example.com/images/custom123.jpg",
+        "QTY": 5
       }
     ]
   }
@@ -346,7 +385,7 @@ These endpoints handle configuration and user category/product management, divid
 ![PATCH](https://img.shields.io/badge/PATCH-yellow)
 
 - **Endpoint**: `/<USERid>/products`
-- **Description**: Updates the user’s product list by adding or replacing products, preserving existing ones not in the new list.
+- **Description**: Updates the user’s product list by adding or replacing products (parts), preserving existing ones not in the new list. Each new product must include `image_url` and `QTY`.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -354,7 +393,7 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X PATCH -H "Content-Type: application/json" -d '{"products": [{"id": "custom124", "title": "New Product", "product_url": "https://example.com/custom124", "current_price": 20.00, "original_price": 25.00, "discount_percent": 20}]}' http://localhost:5000/<USERid>/products
+  curl -X PATCH -H "Content-Type: application/json" -d '{"products": [{"id": "custom124", "title": "New Product", "product_url": "https://example.com/custom124", "current_price": 20.00, "original_price": 25.00, "image_url": "https://example.com/images/custom124.jpg", "QTY": 3}]}' http://localhost:5000/<USERid>/products
   ```
 
 - **Example Response**:
@@ -369,8 +408,9 @@ These endpoints handle configuration and user category/product management, divid
         "title": "Custom Product",
         "current_price": 10.00,
         "original_price": 15.00,
-        "discount_percent": 33,
-        "product_url": "https://example.com/custom123"
+        "product_url": "https://example.com/custom123",
+        "image_url": "https://example.com/images/custom123.jpg",
+        "QTY": 5
       },
       {
         "source": "user_defined",
@@ -378,8 +418,9 @@ These endpoints handle configuration and user category/product management, divid
         "title": "New Product",
         "current_price": 20.00,
         "original_price": 25.00,
-        "discount_percent": 20,
-        "product_url": "https://example.com/custom124"
+        "product_url": "https://example.com/custom124",
+        "image_url": "https://example.com/images/custom124.jpg",
+        "QTY": 3
       }
     ]
   }
@@ -389,7 +430,7 @@ These endpoints handle configuration and user category/product management, divid
 ![DELETE](https://img.shields.io/badge/DELETE-red)
 
 - **Endpoint**: `/<USERid>/products`
-- **Description**: Removes a specific user-defined product from the user’s list.
+- **Description**: Removes a specific user-defined product (part) from the user’s list.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -406,5 +447,39 @@ These endpoints handle configuration and user category/product management, divid
     "status": "success",
     "message": "Product custom123 removed for user <USERid>",
     "products": []
+  }
+  ```
+
+#### Update Product Quantity
+![PUT](https://img.shields.io/badge/PUT-orange)
+
+- **Endpoint**: `/<USERid>/products/update-qty`
+- **Description**: Updates the `QTY` value of a specific user-defined product (part) when a sale is made on the user’s website.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| `product_id`    | Product ID to update (query)                     | None          |
+| None            | Requires JSON body with "QTY" field              | N/A           |
+
+- **Example Request**:
+  ```bash
+  curl -X PUT -H "Content-Type: application/json" -d '{"QTY": 4}' http://localhost:5000/<USERid>/products/update-qty?product_id=custom123
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Quantity updated for product custom123 for user <USERid>",
+    "product": {
+      "source": "user_defined",
+      "id": "custom123",
+      "title": "Custom Product",
+      "current_price": 10.00,
+      "original_price": 15.00,
+      "product_url": "https://example.com/custom123",
+      "image_url": "https://example.com/images/custom123.jpg",
+      "QTY": 4
+    }
   }
   ```
