@@ -1,86 +1,232 @@
-# API Documentation
+# API Endpoints Documentation
 
-## Base URL
-`http://<host>:5000`
+This document outlines the API endpoints for the Flask application, categorized into Velo Endpoints (for frontend integration) and Management Endpoints (for configuration and user category management). Each endpoint includes its HTTP method, parameters, descriptions, and default values.
 
-## Endpoints
+## Velo Endpoints
+
+These endpoints are designed for integration with the Velo frontend, providing category and discounted product data.
 
 ### Get Discounted Products
-**GET** `/<USERid>/discounted-products`
+![GET](https://img.shields.io/badge/GET-blue)
 
-**Description:** Fetch discounted products for a user.
+- **Endpoint**: `/<USERid>/discounted-products`
+- **Description**: Retrieves a list of discounted products across multiple affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK) based on user categories or a specific category ID. Uses Amazon category titles for searches on non-Amazon providers.
 
-**Query Parameters:**
-- `category_id` (optional): Specific category ID to search within.
-- `min_discount` (optional, default=20): Minimum discount percentage.
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| `category_id`   | Specific Amazon Browse Node ID to search         | None          |
+| `min_discount`  | Minimum discount percentage for products (int)   | 20            |
 
-**Response:**
-- `status`: "success" or "error"
-- `count`: Number of products found
-- `products`: List of discounted products
-- `min_discount`: Minimum discount percentage used in the search
+- **Example Request**:
+  ```bash
+  curl http://localhost:5000/<USERid>/discounted-products?category_id=283155&min_discount=30
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "count": 5,
+    "products": [
+      {
+        "source": "amazon_uk",
+        "id": "B08N5WRWNW",
+        "title": "Sample Book",
+        "current_price": 15.99,
+        "savings": 4.00,
+        "original_price": 19.99,
+        "discount_percent": 20,
+        "product_url": "https://amazon.co.uk/dp/B08N5WRWNW",
+        "manufacturer": "Publisher",
+        "dimensions": "5 x 8 in",
+        "features": ["Hardcover"],
+        "image_url": "https://images.amazon.com/sample.jpg"
+      }
+    ],
+    "min_discount": 30
+  }
+  ```
 
 ### Get Categories
-**GET** `/<USERid>/categories`
+![GET](https://img.shields.io/badge/GET-blue)
 
-**Description:** Fetch categories for a user.
+- **Endpoint**: `/<USERid>/categories`
+- **Description**: Fetches either root categories with discounted products or subcategories of a specified parent category, filtered by minimum discount percentage.
 
-**Query Parameters:**
-- `parent_id` (optional): Parent category ID to fetch subcategories.
-- `min_discount` (optional, default=20): Minimum discount percentage.
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| `parent_id`     | Parent Amazon Browse Node ID for subcategories   | None          |
+| `min_discount`  | Minimum discount percentage for products (int)   | 20            |
 
-**Response:**
-- `status`: "success" or "error"
-- `count`: Number of categories found
-- `categories`: List of categories
-- `min_discount`: Minimum discount percentage used in the search
+- **Example Request**:
+  ```bash
+  curl http://localhost:5000/<USERid>/categories?parent_id=283155
+  ```
 
-### Replace User Categories
-**PUT** `/<USERid>/categories`
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "count": 2,
+    "categories": [
+      {"id": "1025616", "name": "Fiction"},
+      {"id": "1025612", "name": "Non-Fiction"}
+    ],
+    "min_discount": 20
+  }
+  ```
 
-**Description:** Replace categories for a user.
+## Management Endpoints
 
-**Request Body:**
-- `categories`: List of new categories
+These endpoints handle configuration and user category management, divided into Config Management and User Category Management.
 
-**Response:**
-- `status`: "success" or "error"
-- `message`: Description of the result
-- `categories`: Updated list of categories
+### Config Management
 
-### Patch User Categories
-**PATCH** `/<USERid>/categories`
+#### Get Config
+![GET](https://img.shields.io/badge/GET-blue)
 
-**Description:** Add new categories to a user's existing categories.
+- **Endpoint**: `/config`
+- **Description**: Retrieves the current configuration for all affiliate networks.
 
-**Request Body:**
-- `categories`: List of new categories to add
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| None            | No parameters required                           | N/A           |
 
-**Response:**
-- `status`: "success" or "error"
-- `message`: Description of the result
-- `categories`: Updated list of categories
+- **Example Request**:
+  ```bash
+  curl http://localhost:5000/config
+  ```
 
-### Delete User Category
-**DELETE** `/<USERid>/categories`
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "count": 4,
+    "config": {
+      "amazon_uk": {"ACCESS_KEY": "key", "SECRET_KEY": "secret", "ASSOCIATE_TAG": "tag", "COUNTRY": "UK"},
+      "ebay_uk": {"APP_ID": "id"}
+    }
+  }
+  ```
 
-**Description:** Remove a category from a user's categories.
+#### Replace Config
+![PUT](https://img.shields.io/badge/PUT-orange)
 
-**Query Parameters:**
-- `category_id`: Category ID to remove
+- **Endpoint**: `/config/<affiliate>`
+- **Description**: Replaces the configuration for a specific affiliate network.
 
-**Response:**
-- `status`: "success" or "error"
-- `message`: Description of the result
-- `categories`: Updated list of categories
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| `affiliate`     | Name of the affiliate network (e.g., amazon_uk)  | None          |
 
-## Example Requests
+- **Example Request**:
+  ```bash
+  curl -X PUT -H "Content-Type: application/json" -d '{"APP_ID": "new_id"}' http://localhost:5000/config/ebay_uk
+  ```
 
-### Get Discounted Products
-```bash
-curl -X GET "http://<host>:5000/12345/discounted-products?category_id=283155&min_discount=30"
-curl -X GET "http://<host>:5000/12345/categories?parent_id=172282&min_discount=25"
-curl -X PUT "http://<host>:5000/12345/categories" -H "Content-Type: application/json" -d '{"categories": ["283155", "172282"]}'
-curl -X PATCH "http://<host>:5000/12345/categories" -H "Content-Type: application/json" -d '{"categories": ["283155"]}'
-curl -X DELETE "http://<host>:5000/12345/categories?category_id=283155"
-```
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Credentials for ebay_uk replaced",
+    "credentials": {"APP_ID": "new_id"}
+  }
+  ```
+
+#### Delete Config
+![DELETE](https://img.shields.io/badge/DELETE-red)
+
+- **Endpoint**: `/config/<affiliate>`
+- **Description**: Deletes the configuration for a specific affiliate network.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| `affiliate`     | Name of the affiliate network (e.g., amazon_uk)  | None          |
+
+- **Example Request**:
+  ```bash
+  curl -X DELETE http://localhost:5000/config/ebay_uk
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Credentials for ebay_uk deleted",
+    "config": {"amazon_uk": {"ACCESS_KEY": "key", "SECRET_KEY": "secret", "ASSOCIATE_TAG": "tag", "COUNTRY": "UK"}}
+  }
+  ```
+
+### User Category Management
+
+#### Replace User Categories
+![PUT](https://img.shields.io/badge/PUT-orange)
+
+- **Endpoint**: `/<USERid>/categories`
+- **Description**: Replaces the list of categories for a user.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| None            | Requires JSON body with "categories" list        | N/A           |
+
+- **Example Request**:
+  ```bash
+  curl -X PUT -H "Content-Type: application/json" -d '{"categories": ["172282"]}' http://localhost:5000/<USERid>/categories
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Categories for user <USERid> replaced",
+    "categories": ["172282"]
+  }
+  ```
+
+#### Patch User Categories
+![PATCH](https://img.shields.io/badge/PATCH-yellow)
+
+- **Endpoint**: `/<USERid>/categories`
+- **Description**: Adds new categories to a user’s existing list, avoiding duplicates.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| None            | Requires JSON body with "categories" list        | N/A           |
+
+- **Example Request**:
+  ```bash
+  curl -X PATCH -H "Content-Type: application/json" -d '{"categories": ["165796011"]}' http://localhost:5000/<USERid>/categories
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Categories for user <USERid> patched",
+    "categories": ["283155", "172282", "165796011"]
+  }
+  ```
+
+#### Delete User Category
+![DELETE](https://img.shields.io/badge/DELETE-red)
+
+- **Endpoint**: `/<USERid>/categories`
+- **Description**: Removes a specific category from a user’s list.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| `category_id`   | Category ID to remove                            | None          |
+
+- **Example Request**:
+  ```bash
+  curl -X DELETE http://localhost:5000/<USERid>/categories?category_id=283155
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Category 283155 removed for user <USERid>",
+    "categories": ["172282"]
+  }
+  ```

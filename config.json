@@ -1,0 +1,20 @@
+{
+    "amazon_uk": {
+        "ACCESS_KEY": "YOUR_AMAZON_UK_ACCESS_KEY",
+        "SECRET_KEY": "YOUR_AMAZON_UK_SECRET_KEY",
+        "ASSOCIATE_TAG": "YOUR_AMAZON_UK_ASSOCIATE_TAG",
+        "COUNTRY": "UK"
+    },
+    "ebay_uk": {
+        "APP_ID": "YOUR_EBAY_APP_ID",
+        "CERT_ID": "YOUR_EBAY_CERT_ID",
+        "DEV_ID": "YOUR_EBAY_DEV_ID"
+    },
+    "awin": {
+        "API_TOKEN": "YOUR_AWIN_API_TOKEN"
+    },
+    "cj": {
+        "API_KEY": "YOUR_CJ_API_KEY",
+        "WEBSITE_ID": "YOUR_CJ_WEBSITE_ID"
+    }
+}
