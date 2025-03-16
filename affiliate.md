@@ -129,6 +129,8 @@ Merseyside Model Flying Club
 - If you have website traffic data (e.g., monthly visitors or page views), include it to strengthen the application.  
 - This application assumes the club has a website; if not, you could adapt it to focus on a planned website or social media presence.  
 
+---
+
 # Affiliate Program Instructions and Best Case Scenarios
 
 This document provides instructions for registering with the non-Amazon affiliate programs referenced in the Flask application (eBay UK, Awin UK, and CJ UK) and outlines the best-case scenarios for approval and success. Each section includes step-by-step guidance and an optimal use case tailored to an entity like the Merseyside Model Flying Club.
