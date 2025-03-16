@@ -30,14 +30,14 @@ This project integrates a Flask backend with a Wix frontend to display and manag
 1. **Install Dependencies**:
    - Ensure you have Python installed.
    - Install required packages using pip:
-     @@@bash
+     ```bash
      pip install flask flask-cors amazon-paapi requests
-     @@@
+     ```
 
 2. **Set Up Amazon PAAPI Credentials**:
    - Open `madeira.py` in your code editor.
    - Replace the placeholders with your actual Amazon PAAPI credentials and other affiliate network credentials:
-     @@@python
+     ```python
      "amazon_uk": {
          "ACCESS_KEY": "YOUR_ACCESS_KEY",
          "SECRET_KEY": "YOUR_SECRET_KEY",
@@ -54,14 +54,14 @@ This project integrates a Flask backend with a Wix frontend to display and manag
          "API_KEY": "YOUR_CJ_API_KEY",
          "WEBSITE_ID": "YOUR_CJ_WEBSITE_ID"
      }
-     @@@
+     ```
 
 3. **Run the Flask App**:
    - Save the Flask code as `madeira.py`.
    - Start the app from the terminal:
-     @@@bash
+     ```bash
      python madeira.py
-     @@@
+     ```
    - The API will be available at `http://localhost:5000`.
 
 ### Wix Frontend with Velo Setup
