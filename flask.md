@@ -18,12 +18,12 @@ These endpoints are designed for integration with the Velo frontend, providing c
 | `min_discount`  | Minimum discount percentage for products (int)   | 20            |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl http://localhost:5000/<USERid>/discounted-products?category_id=283155&min_discount=30
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "count": 5,
@@ -45,7 +45,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
     ],
     "min_discount": 30
   }
-  @@@
+  ```
 
 ### Get Categories
 ![GET](https://img.shields.io/badge/GET-blue)
@@ -59,12 +59,12 @@ These endpoints are designed for integration with the Velo frontend, providing c
 | `min_discount`  | Minimum discount percentage for products (int)   | 20            |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl http://localhost:5000/<USERid>/categories?parent_id=283155
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "count": 2,
@@ -74,7 +74,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
     ],
     "min_discount": 20
   }
-  @@@
+  ```
 
 ### Get Club Products
 ![GET](https://img.shields.io/badge/GET-blue)
@@ -87,12 +87,12 @@ These endpoints are designed for integration with the Velo frontend, providing c
 | None            | No parameters required                           | N/A           |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl http://localhost:5000/club-products
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "count": 2,
@@ -106,24 +106,14 @@ These endpoints are designed for integration with the Velo frontend, providing c
         "product_url": "https://example.com/custom123",
         "image_url": "https://example.com/images/custom123.jpg",
         "QTY": 5
-      },
-      {
-        "source": "user_defined",
-        "id": "custom124",
-        "title": "New Product",
-        "current_price": 20.00,
-        "original_price": 25.00,
-        "product_url": "https://example.com/custom124",
-        "image_url": "https://example.com/images/custom124.jpg",
-        "QTY": 3
       }
     ]
   }
-  @@@
+  ```
 
 ## Management Endpoints
 
-These endpoints handle configuration and user category/product management, divided into Config Management, User Category Management, and User Product Management.
+These endpoints handle configuration and user category/product management, divided into Config Management, User Settings Management, User Category Management, and User Product Management.
 
 ### Config Management
 
@@ -138,76 +128,164 @@ These endpoints handle configuration and user category/product management, divid
 | None            | No parameters required                           | N/A           |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl http://localhost:5000/config
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "count": 4,
     "config": {
       "amazon_uk": {"ACCESS_KEY": "key", "SECRET_KEY": "secret", "ASSOCIATE_TAG": "tag", "COUNTRY": "UK"},
-      "ebay_uk": {"APP_ID": "id"}
+      "ebay_uk": {"APP_ID": "id"},
+      "awin": {"API_TOKEN": "token"},
+      "cj": {"API_KEY": "key", "WEBSITE_ID": "id"}
     }
   }
-  @@@
+  ```
 
 #### Replace Config
-![PUT](https://img.shields.io/badge/PUT-orange)
+![PATCH](https://img.shields.io/badge/PATCH-yellow)
 
 - **Endpoint**: `/config/<affiliate>`
-- **Description**: Replaces the configuration for a specific affiliate network.
+- **Description**: Updates the configuration for a specific affiliate network with new values provided in the request body, merging with existing settings.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
 | `affiliate`     | Name of the affiliate network (e.g., amazon_uk)  | None          |
 
 - **Example Request**:
-  @@@bash
-  curl -X PUT -H "Content-Type: application/json" -d '{"APP_ID": "new_id"}' http://localhost:5000/config/ebay_uk
-  @@@
+  ```bash
+  curl -X PATCH -H "Content-Type: application/json" -d '{"APP_ID": "new_id"}' http://localhost:5000/config/ebay_uk
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Credentials for ebay_uk replaced",
     "credentials": {"APP_ID": "new_id"}
   }
-  @@@
+  ```
 
-#### Delete Config
-![DELETE](https://img.shields.io/badge/DELETE-red)
+### User Settings Management
 
-- **Endpoint**: `/config/<affiliate>`
-- **Description**: Deletes the configuration for a specific affiliate network.
+#### Get User Settings
+![GET](https://img.shields.io/badge/GET-blue)
+
+- **Endpoint**: `/<USERid>/user`
+- **Description**: Retrieves the settings for a specific user, including contact information and website details.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
-| `affiliate`     | Name of the affiliate network (e.g., amazon_uk)  | None          |
+| None            | No parameters required                           | N/A           |
 
 - **Example Request**:
-  @@@bash
-  curl -X DELETE http://localhost:5000/config/ebay_uk
-  @@@
+  ```bash
+  curl http://localhost:5000/<USERid>/user
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
-    "message": "Credentials for ebay_uk deleted",
-    "config": {"amazon_uk": {"ACCESS_KEY": "key", "SECRET_KEY": "secret", "ASSOCIATE_TAG": "tag", "COUNTRY": "UK"}}
+    "contact_name": "John Doe",
+    "website_url": "https://example.com",
+    "email_address": "john@example.com",
+    "phone_number": "+1234567890"
   }
-  @@@
+  ```
+
+#### Replace User Settings
+![PUT](https://img.shields.io/badge/PUT-orange)
+
+- **Endpoint**: `/<USERid>/user`
+- **Description**: Replaces the entire settings object for a user. Requires all fields: `contact_name`, `website_url`, `email_address`, and `phone_number`.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| None            | Requires JSON body with settings object          | N/A           |
+
+- **Example Request**:
+  ```bash
+  curl -X PUT -H "Content-Type: application/json" -d '{"contact_name": "Jane Doe", "website_url": "https://janedoe.com", "email_address": "jane@janedoe.com", "phone_number": "+0987654321"}' http://localhost:5000/<USERid>/user
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Settings for user <USERid> replaced",
+    "settings": {
+      "contact_name": "Jane Doe",
+      "website_url": "https://janedoe.com",
+      "email_address": "jane@janedoe.com",
+      "phone_number": "+0987654321"
+    }
+  }
+  ```
+
+#### Update User Settings
+![PATCH](https://img.shields.io/badge/PATCH-yellow)
+
+- **Endpoint**: `/<USERid>/user`
+- **Description**: Updates specific fields in the user’s settings, leaving unspecified fields unchanged.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| None            | Requires JSON body with partial settings object  | N/A           |
+
+- **Example Request**:
+  ```bash
+  curl -X PATCH -H "Content-Type: application/json" -d '{"email_address": "jane.new@janedoe.com"}' http://localhost:5000/<USERid>/user
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Settings for user <USERid> updated",
+    "settings": {
+      "contact_name": "Jane Doe",
+      "website_url": "https://janedoe.com",
+      "email_address": "jane.new@janedoe.com",
+      "phone_number": "+0987654321"
+    }
+  }
+  ```
 
 ### User Category Management
+
+#### Get User Categories
+![GET](https://img.shields.io/badge/GET-blue)
+
+- **Endpoint**: `/<USERid>/mycategories`
+- **Description**: Retrieves the list of categories associated with a specific user.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| None            | No parameters required                           | N/A           |
+
+- **Example Request**:
+  ```bash
+  curl http://localhost:5000/<USERid>/mycategories
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "count": 2,
+    "categories": ["283155", "172282"]
+  }
+  ```
 
 #### Replace User Categories
 ![PUT](https://img.shields.io/badge/PUT-orange)
 
-- **Endpoint**: `/<USERid>/categories`
+- **Endpoint**: `/<USERid>/mycategories`
 - **Description**: Replaces the list of categories for a user.
 
 | Parameter       | Description                                      | Default Value |
@@ -215,23 +293,23 @@ These endpoints handle configuration and user category/product management, divid
 | None            | Requires JSON body with "categories" list        | N/A           |
 
 - **Example Request**:
-  @@@bash
-  curl -X PUT -H "Content-Type: application/json" -d '{"categories": ["172282"]}' http://localhost:5000/<USERid>/categories
-  @@@
+  ```bash
+  curl -X PUT -H "Content-Type: application/json" -d '{"categories": ["172282"]}' http://localhost:5000/<USERid>/mycategories
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Categories for user <USERid> replaced",
     "categories": ["172282"]
   }
-  @@@
+  ```
 
 #### Patch User Categories
 ![PATCH](https://img.shields.io/badge/PATCH-yellow)
 
-- **Endpoint**: `/<USERid>/categories`
+- **Endpoint**: `/<USERid>/mycategories`
 - **Description**: Adds new categories to a user’s existing list, avoiding duplicates.
 
 | Parameter       | Description                                      | Default Value |
@@ -239,23 +317,23 @@ These endpoints handle configuration and user category/product management, divid
 | None            | Requires JSON body with "categories" list        | N/A           |
 
 - **Example Request**:
-  @@@bash
-  curl -X PATCH -H "Content-Type: application/json" -d '{"categories": ["165796011"]}' http://localhost:5000/<USERid>/categories
-  @@@
+  ```bash
+  curl -X PATCH -H "Content-Type: application/json" -d '{"categories": ["165796011"]}' http://localhost:5000/<USERid>/mycategories
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Categories for user <USERid> patched",
     "categories": ["283155", "172282", "165796011"]
   }
-  @@@
+  ```
 
 #### Delete User Category
 ![DELETE](https://img.shields.io/badge/DELETE-red)
 
-- **Endpoint**: `/<USERid>/categories`
+- **Endpoint**: `/<USERid>/mycategories`
 - **Description**: Removes a specific category from a user’s list.
 
 | Parameter       | Description                                      | Default Value |
@@ -263,18 +341,45 @@ These endpoints handle configuration and user category/product management, divid
 | `category_id`   | Category ID to remove                            | None          |
 
 - **Example Request**:
-  @@@bash
-  curl -X DELETE http://localhost:5000/<USERid>/categories?category_id=283155
-  @@@
+  ```bash
+  curl -X DELETE http://localhost:5000/<USERid>/mycategories?category_id=283155
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Category 283155 removed for user <USERid>",
     "categories": ["172282"]
   }
-  @@@
+  ```
+
+#### Get All Categories
+![GET](https://img.shields.io/badge/GET-blue)
+
+- **Endpoint**: `/categories`
+- **Description**: Retrieves all available categories, either top-level or subcategories of a specified parent, using Amazon API if configured, otherwise pseudo data.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| `parent_id`     | Parent category ID to fetch subcategories        | None          |
+
+- **Example Request**:
+  ```bash
+  curl http://localhost:5000/categories?parent_id=283155
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "count": 2,
+    "categories": [
+      {"id": "1025616", "name": "Fiction"},
+      {"id": "1025612", "name": "Non-Fiction"}
+    ]
+  }
+  ```
 
 ### User Product Management
 
@@ -289,12 +394,12 @@ These endpoints handle configuration and user category/product management, divid
 | None            | No parameters required                           | N/A           |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl http://localhost:5000/<USERid>/products
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "count": 1,
@@ -311,7 +416,7 @@ These endpoints handle configuration and user category/product management, divid
       }
     ]
   }
-  @@@
+  ```
 
 #### Add User Product
 ![POST](https://img.shields.io/badge/POST-green)
@@ -324,12 +429,12 @@ These endpoints handle configuration and user category/product management, divid
 | None            | Requires JSON body with "product" object         | N/A           |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl -X POST -H "Content-Type: application/json" -d '{"product": {"id": "custom123", "title": "Custom Product", "product_url": "https://example.com/custom123", "current_price": 10.00, "original_price": 15.00, "image_url": "https://example.com/images/custom123.jpg", "QTY": 5}}' http://localhost:5000/<USERid>/products
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Product added for user <USERid>",
@@ -344,7 +449,7 @@ These endpoints handle configuration and user category/product management, divid
       "QTY": 5
     }
   }
-  @@@
+  ```
 
 #### Replace User Products
 ![PUT](https://img.shields.io/badge/PUT-orange)
@@ -357,12 +462,12 @@ These endpoints handle configuration and user category/product management, divid
 | None            | Requires JSON body with "products" list          | N/A           |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl -X PUT -H "Content-Type: application/json" -d '{"products": [{"id": "custom123", "title": "Custom Product", "product_url": "https://example.com/custom123", "current_price": 10.00, "original_price": 15.00, "image_url": "https://example.com/images/custom123.jpg", "QTY": 5}]}' http://localhost:5000/<USERid>/products
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Products for user <USERid> replaced",
@@ -379,7 +484,7 @@ These endpoints handle configuration and user category/product management, divid
       }
     ]
   }
-  @@@
+  ```
 
 #### Patch User Products
 ![PATCH](https://img.shields.io/badge/PATCH-yellow)
@@ -392,12 +497,12 @@ These endpoints handle configuration and user category/product management, divid
 | None            | Requires JSON body with "products" list          | N/A           |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl -X PATCH -H "Content-Type: application/json" -d '{"products": [{"id": "custom124", "title": "New Product", "product_url": "https://example.com/custom124", "current_price": 20.00, "original_price": 25.00, "image_url": "https://example.com/images/custom124.jpg", "QTY": 3}]}' http://localhost:5000/<USERid>/products
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Products for user <USERid> updated",
@@ -424,7 +529,7 @@ These endpoints handle configuration and user category/product management, divid
       }
     ]
   }
-  @@@
+  ```
 
 #### Delete User Product
 ![DELETE](https://img.shields.io/badge/DELETE-red)
@@ -437,18 +542,18 @@ These endpoints handle configuration and user category/product management, divid
 | `product_id`    | Product ID to remove                             | None          |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl -X DELETE http://localhost:5000/<USERid>/products?product_id=custom123
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Product custom123 removed for user <USERid>",
     "products": []
   }
-  @@@
+  ```
 
 #### Update Product Quantity
 ![PUT](https://img.shields.io/badge/PUT-orange)
@@ -462,12 +567,12 @@ These endpoints handle configuration and user category/product management, divid
 | `qty`           | New quantity value (query, int)                  | None          |
 
 - **Example Request**:
-  @@@bash
+  ```bash
   curl -X PUT http://localhost:5000/<USERid>/products/custom123?qty=4
-  @@@
+  ```
 
 - **Example Response**:
-  @@@json
+  ```json
   {
     "status": "success",
     "message": "Quantity updated for product custom123 for user <USERid>",
@@ -482,4 +587,4 @@ These endpoints handle configuration and user category/product management, divid
       "QTY": 4
     }
   }
-  @@@
+  ```

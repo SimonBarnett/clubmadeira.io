@@ -1,10 +1,11 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from amazon_paapi import AmazonApi
+from amazon_paapi import AmazonApi 
 import time
 import json
 import os
 import requests
+from pseudo_categories import PSEUDO_CATEGORIES  # Added import
 
 app = Flask(__name__)
 CORS(app)
@@ -13,17 +14,25 @@ USERS_FILE = "users_categories.json"
 USERS_PRODUCTS_FILE = "users_products.json"
 CONFIG_FILE = "config.json"
 DEFAULT_CATEGORIES = ["283155", "172282"]
+USERS_SETTINGS_FILE = "users_settings.json"
 
 # region Helper Functions
 def load_users_categories():
     if os.path.exists(USERS_FILE):
-        with open(USERS_FILE, 'r') as f:
-            return json.load(f)
+        try:
+            with open(USERS_FILE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading {USERS_FILE}: {str(e)}")
+            return {}
     return {}
 
 def save_users_categories(users_data):
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users_data, f, indent=4)
+    try:
+        with open(USERS_FILE, 'w') as f:
+            json.dump(users_data, f, indent=4)
+    except Exception as e:
+        print(f"Error saving {USERS_FILE}: {str(e)}")
 
 def get_user_categories(user_id):
     users_data = load_users_categories()
@@ -47,14 +56,72 @@ def get_user_products(user_id):
     return users_products.get(user_id, [])
 
 def load_config():
+    default_config = {
+        "amazon_uk": {
+            "ACCESS_KEY": "",
+            "SECRET_KEY": "",
+            "ASSOCIATE_TAG": "",
+            "COUNTRY": ""
+        },
+        "ebay_uk": {
+            "APP_ID": ""
+        },
+        "awin": {
+            "API_TOKEN": ""
+        },
+        "cj": {
+            "API_KEY": "",
+            "WEBSITE_ID": ""
+        }
+    }
+    
     if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as f:
-            return json.load(f)
-    return {}
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                loaded_config = json.load(f)
+                # Merge loaded config with default config to ensure all fields exist
+                for section in default_config:
+                    if section in loaded_config:
+                        default_config[section].update(loaded_config[section])
+                    else:
+                        loaded_config[section] = default_config[section]
+                return loaded_config
+        except Exception as e:
+            print(f"Error loading {CONFIG_FILE}: {str(e)}")
+            return default_config
+    return default_config
 
 def save_config(config):
-    with open(CONFIG_FILE, 'w') as f:
-        json.dump(config, f, indent=4)
+    # Ensure all expected fields are present, even if empty
+    default_config = {
+        "amazon_uk": {
+            "ACCESS_KEY": "",
+            "SECRET_KEY": "",
+            "ASSOCIATE_TAG": "",
+            "COUNTRY": ""
+        },
+        "ebay_uk": {
+            "APP_ID": ""
+        },
+        "awin": {
+            "API_TOKEN": ""
+        },
+        "cj": {
+            "API_KEY": "",
+            "WEBSITE_ID": ""
+        }
+    }
+    
+    # Update default config with provided values
+    for section in config:
+        if section in default_config:
+            default_config[section].update(config[section])
+    
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(default_config, f, indent=4)
+    except Exception as e:
+        print(f"Error saving {CONFIG_FILE}: {str(e)}")
 
 def get_amazon_category_title(browse_node_id):
     config = load_config()
@@ -110,6 +177,62 @@ def filter_categories_with_products(category_ids, min_discount_percent):
             category_title = get_amazon_category_title(cat_id) or cat_id
             filtered_categories.append({"id": cat_id, "name": category_title})
     return filtered_categories
+
+def find_node(categories, target_id):
+    """
+    Recursively search for a node with the given target_id in a nested list of categories.
+    
+    Args:
+        categories (list): List of category dictionaries with 'id', 'name', and optional 'subcategories'.
+        target_id (str): The ID to search for.
+    
+    Returns:
+        dict or None: The dictionary representing the node with the target_id, or None if not found.
+    """
+    for category in categories:
+        # Check if the current category's ID matches the target
+        if category['id'] == target_id:
+            return category
+        # If the category has subcategories, search them recursively
+        if 'subcategories' in category:
+            result = find_node(category['subcategories'], target_id)
+            if result is not None:
+                return result
+    # If no match is found in this list or its subcategories, return None
+    return None
+
+import json
+
+import json
+
+def find_pseudo_subcategories(parent_id, categories):
+    node = find_node(categories, parent_id)
+    if node and 'subcategories' in node:
+        return [{'id': subcat['id'], 'name': subcat['name']} for subcat in node['subcategories']]
+    else:
+        return []
+
+def load_users_settings():
+    if os.path.exists(USERS_SETTINGS_FILE):
+        try:
+            with open(USERS_SETTINGS_FILE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading {USERS_SETTINGS_FILE}: {str(e)}")
+            return {}
+    return {}
+
+def save_users_settings(users_settings):
+    try:
+        with open(USERS_SETTINGS_FILE, 'w') as f:
+            json.dump(users_settings, f, indent=4)
+    except Exception as e:
+        print(f"Error saving {USERS_SETTINGS_FILE}: {str(e)}")
+
+def get_user_settings(user_id):
+    users_settings = load_users_settings()
+    return users_settings.get(user_id, {})
+
 # endregion Helper Functions
 
 # region Detailed Fetch
@@ -391,7 +514,7 @@ def get_config():
         "config": config
     })
 
-@app.route('/config/<affiliate>', methods=['PUT'])
+@app.route('/config/<affiliate>', methods=['PATCH'])
 def replace_config(affiliate):
     config = load_config()
     data = request.get_json()
@@ -405,22 +528,76 @@ def replace_config(affiliate):
         "credentials": config[affiliate]
     })
 
-@app.route('/config/<affiliate>', methods=['DELETE'])
-def delete_config(affiliate):
-    config = load_config()
-    if affiliate not in config:
-        return jsonify({"status": "error", "message": f"Credentials for {affiliate} not found"}), 404
-    del config[affiliate]
-    save_config(config)
-    return jsonify({
-        "status": "success",
-        "message": f"Credentials for {affiliate} deleted",
-        "config": config
-    })
 # endregion /config
 
+# region /<USERid>/user
+@app.route('/<USERid>/user', methods=['GET'])
+def get_user_settings_endpoint(USERid):
+    try:
+        settings = get_user_settings(USERid)
+        return jsonify({
+            "status": "success",
+            "contact_name": settings.get("contact_name", ""),
+            "website_url": settings.get("website_url", ""),
+            "email_address": settings.get("email_address", ""),
+            "phone_number": settings.get("phone_number", "")
+        })
+    except Exception as e:
+        print(f"Error in /<USERid>/user GET: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/<USERid>/user', methods=['PUT'])
+def put_user_settings(USERid):
+    if not request.json:
+        return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
+    
+    settings = request.json
+    required_fields = ["contact_name", "website_url", "email_address", "phone_number"]
+    if not all(field in settings for field in required_fields):
+        return jsonify({"status": "error", "message": "Settings must include contact_name, website_url, email_address, phone_number"}), 400
+    
+    users_settings = load_users_settings()
+    users_settings[USERid] = settings
+    save_users_settings(users_settings)
+    return jsonify({"status": "success", "message": f"Settings for user {USERid} replaced", "settings": settings})
+
+@app.route('/<USERid>/user', methods=['PATCH'])
+def patch_user_settings(USERid):
+    if not request.json:
+        return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
+    
+    new_settings = request.json
+    users_settings = load_users_settings()
+    current_settings = users_settings.get(USERid, {})
+    
+    # Update only provided fields
+    for key in new_settings:
+        if key in ["contact_name", "website_url", "email_address", "phone_number"]:
+            current_settings[key] = new_settings[key]
+    
+    users_settings[USERid] = current_settings
+    save_users_settings(users_settings)
+    return jsonify({"status": "success", "message": f"Settings for user {USERid} updated", "settings": current_settings})
+# endregion /<USERid>/user
+
 # region /<USERid>/categories
-@app.route('/<USERid>/categories', methods=['PUT'])
+@app.route('/<USERid>/mycategories', methods=['GET'])
+def get_user_categories_endpoint(USERid):
+    try:
+        categories = get_user_categories(USERid)
+        return jsonify({
+            "status": "success",
+            "count": len(categories),
+            "categories": categories
+        })
+    except Exception as e:
+        print(f"Error in /<USERid>/mycategories for USERid {USERid}: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to retrieve categories: {str(e)}"
+        }), 500
+
+@app.route('/<USERid>/mycategories', methods=['PUT'])
 def put_user_categories(USERid):
     if not request.json or 'categories' not in request.json:
         return jsonify({"status": "error", "message": "Request body must contain 'categories' list"}), 400
@@ -434,7 +611,7 @@ def put_user_categories(USERid):
     save_users_categories(users_data)
     return jsonify({"status": "success", "message": f"Categories for user {USERid} replaced", "categories": new_categories})
 
-@app.route('/<USERid>/categories', methods=['PATCH'])
+@app.route('/<USERid>/mycategories', methods=['PATCH'])
 def patch_user_categories(USERid):
     if not request.json or 'categories' not in request.json:
         return jsonify({"status": "error", "message": "Request body must contain 'categories' list"}), 400
@@ -450,7 +627,7 @@ def patch_user_categories(USERid):
     save_users_categories(users_data)
     return jsonify({"status": "success", "message": f"Categories for user {USERid} patched", "categories": users_data[USERid]})
 
-@app.route('/<USERid>/categories', methods=['DELETE'])
+@app.route('/<USERid>/mycategories', methods=['DELETE'])
 def delete_user_category(USERid):
     category_id = request.args.get('category_id')
     if not category_id:
@@ -467,6 +644,78 @@ def delete_user_category(USERid):
         else:
             return jsonify({"status": "error", "message": f"Category {category_id} not found for user {USERid}"}), 404
     return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
+
+@app.route('/categories', methods=['GET'])
+def get_all_categories():
+    config = load_config()
+    parent_id = request.args.get('parent_id')
+    
+    amazon_config = config.get("amazon_uk", {})
+    # Check if all Amazon config fields are non-empty strings
+    has_valid_amazon_config = all(
+        isinstance(amazon_config.get(field, ""), str) and 
+        len(amazon_config.get(field, "").strip()) > 0
+        for field in ["ACCESS_KEY", "SECRET_KEY", "ASSOCIATE_TAG", "COUNTRY"]
+    )
+
+    if has_valid_amazon_config:
+        # Amazon config exists and all fields are non-empty strings
+        amazon = AmazonApi(
+            amazon_config["ACCESS_KEY"],
+            amazon_config["SECRET_KEY"],
+            amazon_config["ASSOCIATE_TAG"],
+            amazon_config["COUNTRY"]
+        )
+        try:
+            if parent_id:
+                # Fetch subcategories for the given parent_id
+                browse_nodes = amazon.get_browse_nodes(
+                    browse_node_ids=[parent_id],
+                    resources=["BrowseNodes.Children"]
+                )
+                if browse_nodes and browse_nodes.browse_nodes and browse_nodes.browse_nodes[0].children:
+                    categories = [
+                        {"id": node.browse_node_id, "name": node.display_name}
+                        for node in browse_nodes.browse_nodes[0].children
+                    ]
+                else:
+                    categories = []
+            else:
+                # Fetch top-level categories
+                browse_nodes = amazon.get_browse_nodes(
+                    browse_node_ids=DEFAULT_CATEGORIES,
+                    resources=["BrowseNodes.DisplayName"]
+                )
+                if browse_nodes and browse_nodes.browse_nodes:
+                    categories = [
+                        {"id": node.browse_node_id, "name": node.display_name}
+                        for node in browse_nodes.browse_nodes
+                    ]
+                else:
+                    categories = []
+        except Exception as e:
+            print(f"Error fetching Amazon categories: {str(e)}")
+            categories = []
+    else:
+        # No valid Amazon config, use pseudo data
+        if parent_id:
+            # Find subcategories based on parent_id in pseudo data
+            categories = find_pseudo_subcategories(parent_id, PSEUDO_CATEGORIES)
+            if categories is None:
+                categories = []  # Return empty if parent_id not found
+        else:
+            # Return top-level pseudo categories
+            categories = [
+                {"id": cat["id"], "name": cat["name"]}
+                for cat in PSEUDO_CATEGORIES
+            ]
+
+    return jsonify({
+        "status": "success",
+        "count": len(categories),
+        "categories": categories
+    })
+
 # endregion /<USERid>/categories
 
 # region /<USERid>/products

@@ -1,8 +1,5 @@
 {
     "amazon_uk": {
-        "ACCESS_KEY": "YOUR_AMAZON_UK_ACCESS_KEY",
-        "SECRET_KEY": "YOUR_AMAZON_UK_SECRET_KEY",
-        "ASSOCIATE_TAG": "YOUR_AMAZON_UK_ASSOCIATE_TAG",
         "COUNTRY": "UK"
     },
     "ebay_uk": {
