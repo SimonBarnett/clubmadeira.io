@@ -9,6 +9,26 @@
             "image_url": "https://qedfg/",
             "QTY": 100,
             "source": "user_defined"
+        },
+        {
+            "id": "2",
+            "title": "asxzq",
+            "product_url": "file:///M:/python/Madeira/CatMgr.html",
+            "current_price": 1,
+            "original_price": 1,
+            "image_url": "file:///M:/python/Madeira/CatMgr.html",
+            "QTY": 1,
+            "source": "user_defined"
+        },
+        {
+            "id": "3",
+            "title": "asdv",
+            "product_url": "https://web/",
+            "current_price": 2.99,
+            "original_price": 8.99,
+            "image_url": "https://image/",
+            "QTY": 50,
+            "source": "user_defined"
         }
     ]
 }

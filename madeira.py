@@ -91,6 +91,8 @@ def load_config():
             return default_config
     return default_config
 
+# region Helper Functions
+
 def save_config(config):
     # Ensure all expected fields are present, even if empty
     default_config = {
@@ -201,10 +203,6 @@ def find_node(categories, target_id):
     # If no match is found in this list or its subcategories, return None
     return None
 
-import json
-
-import json
-
 def find_pseudo_subcategories(parent_id, categories):
     node = find_node(categories, parent_id)
     if node and 'subcategories' in node:
@@ -232,6 +230,32 @@ def save_users_settings(users_settings):
 def get_user_settings(user_id):
     users_settings = load_users_settings()
     return users_settings.get(user_id, {})
+
+def validate_product(product):
+    required_fields = {
+        "id": str,
+        "title": str,
+        "product_url": str,
+        "current_price": (int, float),
+        "original_price": (int, float),
+        "image_url": str,
+        "QTY": int
+    }
+    for field, field_type in required_fields.items():
+        # Check if field is missing or None
+        if field not in product or product[field] is None:
+            return False, f"Missing field: {field}"
+        # Check field type
+        if isinstance(field_type, tuple):
+            if not isinstance(product[field], field_type):
+                return False, f"Invalid type for {field}: expected {field_type}"
+        else:
+            if not isinstance(product[field], field_type):
+                return False, f"Invalid type for {field}: expected {field_type}"
+            # For strings, ensure not empty after stripping whitespace
+            if field_type == str and not product[field].strip():
+                return False, f"Empty string for {field}"
+    return True, ""
 
 # endregion Helper Functions
 
@@ -734,10 +758,11 @@ def post_user_product(USERid):
         return jsonify({"status": "error", "message": "Request body must contain 'product' object"}), 400
     
     product = request.json['product']
-    required_fields = ["id", "title", "product_url", "current_price", "original_price", "image_url", "QTY"]
-    if not all(field in product for field in required_fields):
-        return jsonify({"status": "error", "message": "Product must include id, title, product_url, current_price, original_price, image_url, QTY"}), 400
+    valid, message = validate_product(product)
+    if not valid:
+        return jsonify({"status": "error", "message": message}), 400
     
+    # Proceed with adding the product (e.g., save to storage)
     product["source"] = "user_defined"
     users_products = load_users_products()
     if USERid not in users_products:
@@ -759,12 +784,13 @@ def put_user_products(USERid):
     if not isinstance(new_products, list):
         return jsonify({"status": "error", "message": "'products' must be a list"}), 400
     
-    required_fields = ["id", "title", "product_url", "current_price", "original_price", "image_url", "QTY"]
     for product in new_products:
-        if not all(field in product for field in required_fields):
-            return jsonify({"status": "error", "message": "Each product must include id, title, product_url, current_price, original_price, image_url, QTY"}), 400
+        valid, message = validate_product(product)
+        if not valid:
+            return jsonify({"status": "error", "message": message}), 400
         product["source"] = "user_defined"
     
+    # Replace the user's product list
     users_products = load_users_products()
     users_products[USERid] = new_products
     save_users_products(users_products)
@@ -779,15 +805,15 @@ def patch_user_products(USERid):
     if not isinstance(new_products, list):
         return jsonify({"status": "error", "message": "'products' must be a list"}), 400
     
-    required_fields = ["id", "title", "product_url", "current_price", "original_price", "image_url", "QTY"]
     for product in new_products:
-        if not all(field in product for field in required_fields):
-            return jsonify({"status": "error", "message": "Each product must include id, title, product_url, current_price, original_price, image_url, QTY"}), 400
+        valid, message = validate_product(product)
+        if not valid:
+            return jsonify({"status": "error", "message": message}), 400
         product["source"] = "user_defined"
     
+    # Update the user's product list
     users_products = load_users_products()
     current_products = users_products.get(USERid, [])
-    existing_ids = {p["id"] for p in current_products}
     updated_products = [p for p in current_products if p["id"] not in {np["id"] for np in new_products}]
     updated_products.extend(new_products)
     users_products[USERid] = updated_products
@@ -813,34 +839,49 @@ def delete_user_product(USERid):
             return jsonify({"status": "error", "message": f"Product {product_id} not found for user {USERid}"}), 404
     return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
 
-@app.route('/<USERid>/products/<product_id>', methods=['PUT'])
-def update_product_quantity(USERid, product_id):
+@app.route('/<USERid>/products/<product_id>', methods=['GET'])
+def reduce_product_quantity(USERid, product_id):
+    # Get the qty parameter and ensure it’s an integer
     qty = request.args.get('qty', type=int)
     if qty is None:
         return jsonify({"status": "error", "message": "Query parameter 'qty' is required and must be an integer"}), 400
     
+    # Ensure qty is negative as per the requirement
+    if qty >= 0:
+        return jsonify({"status": "error", "message": "Query parameter 'qty' must be a negative integer"}), 400
+    
+    # Load the user’s product data
     users_products = load_users_products()
     if USERid not in users_products:
         return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
     
+    # Find the product for the user
     current_products = users_products[USERid]
     product_to_update = next((p for p in current_products if p["id"] == product_id), None)
     if not product_to_update:
         return jsonify({"status": "error", "message": f"Product {product_id} not found for user {USERid}"}), 404
     
-    product_to_update["QTY"] = qty
+    # Reduce the quantity by adding the negative qty, ensuring it doesn’t go below 0
+    current_qty = product_to_update["QTY"]
+    new_qty = max(0, current_qty + qty)
+    product_to_update["QTY"] = new_qty
+    
+    # Save the updated products
     users_products[USERid] = current_products
     save_users_products(users_products)
+    
+    # Return success response
     return jsonify({
         "status": "success",
-        "message": f"Quantity updated for product {product_id} for user {USERid}",
+        "message": f"Quantity reduced for product {product_id} for user {USERid}",
         "product": product_to_update
     })
+
 # endregion /<USERid>/products
 
 # endregion Management Endpoints
 
-# region Velo Endpoints
+# region Velo Public Endpoints
 @app.route('/<USERid>/discounted-products', methods=['GET'])
 def get_discounted_products(USERid):
     category_id = request.args.get('category_id')

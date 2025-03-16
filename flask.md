@@ -1,6 +1,8 @@
 # API Endpoints Documentation
 
-This document outlines the API endpoints for the Flask application, categorized into Velo Endpoints (for frontend integration) and Management Endpoints (for configuration and user category/product management). Each endpoint includes its HTTP method, parameters, descriptions, and default values.
+This document outlines the API endpoints for the Flask application, categorized into **Velo Endpoints** (for frontend integration) and **Management Endpoints** (for configuration and user category/product management). Each endpoint includes its HTTP method, parameters, descriptions, and default values where applicable.
+
+---
 
 ## Velo Endpoints
 
@@ -111,9 +113,11 @@ These endpoints are designed for integration with the Velo frontend, providing c
   }
   ```
 
+---
+
 ## Management Endpoints
 
-These endpoints handle configuration and user category/product management, divided into Config Management, User Settings Management, User Category Management, and User Product Management.
+These endpoints handle configuration and user category/product management, divided into **Config Management**, **User Settings Management**, **User Category Management**, and **User Product Management**.
 
 ### Config Management
 
@@ -383,6 +387,8 @@ These endpoints handle configuration and user category/product management, divid
 
 ### User Product Management
 
+User-defined products are custom items added by users, which can be managed through the following endpoints. These endpoints allow retrieval, addition, replacement, updating, and deletion of products, as well as specific actions like updating or reducing product quantities.
+
 #### Get User Products
 ![GET](https://img.shields.io/badge/GET-blue)
 
@@ -559,7 +565,7 @@ These endpoints handle configuration and user category/product management, divid
 ![PUT](https://img.shields.io/badge/PUT-orange)
 
 - **Endpoint**: `/<USERid>/products/<product_id>`
-- **Description**: Updates the `QTY` value of a specific user-defined product (part) when a sale is made on the user’s website.
+- **Description**: Updates the `QTY` value of a specific user-defined product (part) to the specified value when a sale is made on the user’s website.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -588,3 +594,48 @@ These endpoints handle configuration and user category/product management, divid
     }
   }
   ```
+
+#### Reduce Product Quantity
+![GET](https://img.shields.io/badge/GET-blue)
+
+- **Endpoint**: `/<USERid>/products/<product_id>`
+- **Description**: Reduces the `QTY` value of a specific user-defined product by the amount specified in the `qty` query parameter. The `qty` must be a negative integer. The quantity will not go below zero.
+
+| Parameter       | Description                                      | Default Value |
+|-----------------|--------------------------------------------------|---------------|
+| `product_id`    | Product ID to update (path)                      | None          |
+| `qty`           | Negative integer to reduce the quantity by (query)| None         |
+
+- **Example Request**:
+  ```bash
+  curl "http://localhost:5000/<USERid>/products/custom123?qty=-2"
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "Quantity reduced for product custom123 for user <USERid>",
+    "product": {
+      "source": "user_defined",
+      "id": "custom123",
+      "title": "Custom Product",
+      "current_price": 10.00,
+      "original_price": 15.00,
+      "product_url": "https://example.com/custom123",
+      "image_url": "https://example.com/images/custom123.jpg",
+      "QTY": 3
+    }
+  }
+  ```
+
+- **Notes**:
+  - The `qty` parameter must be a negative integer. Positive values or zero will result in a **400 Bad Request** error.
+  - If the reduction would cause `QTY` to go below zero, it will be set to zero.
+  - This endpoint uses GET for modification, which is unconventional but implemented as per specific requirements.
+  - Returns a **400 Bad Request** if `qty` is missing, not an integer, or not negative.
+  - Returns a **404 Not Found** if the user or product does not exist.
+
+---
+
+This documentation provides a comprehensive reference for all API endpoints, with consistent formatting and detailed examples. The **User Product Management** section includes both the **Update Product Quantity** (PUT) and **Reduce Product Quantity** (GET) endpoints, offering flexibility in managing product quantities. Replace `<USERid>` with the actual user ID when making requests.
