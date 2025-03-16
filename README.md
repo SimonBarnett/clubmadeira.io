@@ -97,8 +97,8 @@ The User Part Gateway introduces a powerful feature for users to manage their ow
   - The `/club-products` endpoint aggregates all user-defined products with a `QTY > 0` across all users, enabling a community-driven marketplace.
 
 - **Stock Update Callback**:
-  - When a sale occurs on a user’s website, the stock quantity (`QTY`) can be updated via the `PUT /<USERid>/products/<product_id>` endpoint.
-  - Example: After selling one unit of a product with ID `custom123`, a request like `PUT /<USERid>/products/custom123?qty=4` updates the quantity to 4.
+  - When a sale occurs on a user’s website, the stock quantity (`QTY`) can be updated via the `GET /<USERid>/products/<product_id>` endpoint.
+  - Example: After selling one unit of a product with ID `custom123`, a request like `GET /<USERid>/products/custom123?qty=4` updates the quantity to 4.
   - This ensures real-time stock management, reflecting availability accurately in the Wix frontend.
 
 This feature enhances the project by allowing users to contribute their own products to the ecosystem, complementing the Amazon discount finder with a personalized inventory system.
