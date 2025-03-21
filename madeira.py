@@ -42,7 +42,7 @@ def get_user_categories(user_id):
     return users_data.get(user_id, [])
 
 def load_users_products():
-    """Load Wix products for all users using their wixClientId from users_settings.json, including category and correct QTY."""
+    """Load Wix products for all users using their wixClientId from users_settings.json."""
     users_settings = load_users_settings()
     users_products = {}
     
@@ -146,27 +146,32 @@ def load_users_products():
                     break
 
                 products = result["products"]
-                formatted_products = [
-                    {
+                for product in products:
+                    current_price = float(product.get("price", {}).get("formatted", {}).get("price", "0").replace("$", "").replace("£", "").replace(",", "") or 0.0)
+                    original_price = float(product.get("discountedPrice", {}).get("formatted", {}).get("price", str(current_price)).replace("$", "").replace("£", "").replace(",", "") or current_price)
+                    discount = ((original_price - current_price) / original_price) * 100 if original_price > current_price else 0
+                    base_url = (
+                        product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
+                        product.get("productPageUrl", {}).get("path", "").lstrip("/")
+                    )
+                    product_url = f"{base_url}?referer={user_id}"
+                    all_products.append({
+                        "source": user_id,
                         "id": product.get("id", ""),
                         "title": product.get("name", ""),
-                        "product_url": (
-                            product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
-                            product.get("productPageUrl", {}).get("path", "").lstrip("/")
-                        ),
-                        "current_price": float(product.get("price", {}).get("formatted", {}).get("price", "0").replace("$", "").replace("£", "").replace(",", "")) or 0.0,
-                        "original_price": float(product.get("discountedPrice", {}).get("formatted", {}).get("price", product.get("price", {}).get("formatted", {}).get("price", "0")).replace("$", "").replace("£", "").replace(",", "")) or 0.0,
+                        "product_url": product_url,
+                        "current_price": current_price,
+                        "original_price": original_price,
+                        "discount_percent": round(discount, 2),
                         "image_url": product.get("media", {}).get("mainMedia", {}).get("thumbnail", {}).get("url", ""),
-                        "QTY": (
+                        "qty": (
                             int(product.get("stock", {}).get("quantity", 0))
                             if product.get("stock", {}).get("trackQuantity", False)
                             else -1
                         ),
-                        "category": collection_name
-                    }
-                    for product in products
-                ]
-                all_products.extend(formatted_products)
+                        "category": collection_name,
+                        "user_id": user_id
+                    })
                 print(f"Fetched {len(products)} products for collection {collection_name} for user {user_id} (offset {offset} to {offset + limit - 1})")
                 offset += limit
                 if len(products) < limit:
@@ -187,24 +192,11 @@ def get_user_products(user_id):
 
 def load_config():
     default_config = {
-        "amazon_uk": {
-            "ACCESS_KEY": "",
-            "SECRET_KEY": "",
-            "ASSOCIATE_TAG": "",
-            "COUNTRY": ""
-        },
-        "ebay_uk": {
-            "APP_ID": ""
-        },
-        "awin": {
-            "API_TOKEN": ""
-        },
-        "cj": {
-            "API_KEY": "",
-            "WEBSITE_ID": ""
-        }
+        "amazon_uk": {"ACCESS_KEY": "", "SECRET_KEY": "", "ASSOCIATE_TAG": "", "COUNTRY": ""},
+        "ebay_uk": {"APP_ID": ""},
+        "awin": {"API_TOKEN": ""},
+        "cj": {"API_KEY": "", "WEBSITE_ID": ""}
     }
-    
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, 'r') as f:
@@ -212,38 +204,21 @@ def load_config():
                 for section in default_config:
                     if section in loaded_config:
                         default_config[section].update(loaded_config[section])
-                    else:
-                        loaded_config[section] = default_config[section]
                 return loaded_config
         except Exception as e:
             print(f"Error loading {CONFIG_FILE}: {str(e)}")
-            return default_config
     return default_config
 
 def save_config(config):
     default_config = {
-        "amazon_uk": {
-            "ACCESS_KEY": "",
-            "SECRET_KEY": "",
-            "ASSOCIATE_TAG": "",
-            "COUNTRY": ""
-        },
-        "ebay_uk": {
-            "APP_ID": ""
-        },
-        "awin": {
-            "API_TOKEN": ""
-        },
-        "cj": {
-            "API_KEY": "",
-            "WEBSITE_ID": ""
-        }
+        "amazon_uk": {"ACCESS_KEY": "", "SECRET_KEY": "", "ASSOCIATE_TAG": "", "COUNTRY": ""},
+        "ebay_uk": {"APP_ID": ""},
+        "awin": {"API_TOKEN": ""},
+        "cj": {"API_KEY": "", "WEBSITE_ID": ""}
     }
-    
     for section in config:
         if section in default_config:
             default_config[section].update(config[section])
-    
     try:
         with open(CONFIG_FILE, 'w') as f:
             json.dump(default_config, f, indent=4)
@@ -262,26 +237,17 @@ def get_amazon_category_title(browse_node_id):
             )
             if browse_nodes and browse_nodes.browse_nodes:
                 return browse_nodes.browse_nodes[0].display_name
-            return None
         except Exception as e:
             print(f"Error fetching category title for {browse_node_id}: {str(e)}")
-            return None
-    else:
-        # Fallback to recursive search in pseudo_categories.py if Amazon config is missing
-        def find_category_recursive(categories, target_id):
-            for category in categories:
-                if category.get("id") == target_id:
-                    return category.get("name")
-                if "subcategories" in category:
-                    result = find_category_recursive(category["subcategories"], target_id)
-                    if result is not None:
-                        return result
-            return None
-
-        result = find_category_recursive(PSEUDO_CATEGORIES, browse_node_id)
-        if result is None:
-            print(f"No matching category found in PSEUDO_CATEGORIES for {browse_node_id}")
-        return result
+    def find_category_recursive(categories, target_id):
+        for category in categories:
+            if category.get("id") == target_id:
+                return category.get("name")
+            if "subcategories" in category:
+                result = find_category_recursive(category["subcategories"], target_id)
+                if result is not None:
+                    return result
+    return find_category_recursive(PSEUDO_CATEGORIES, browse_node_id)
 
 def get_immediate_subcategories(parent_id):
     config = load_config()
@@ -334,8 +300,7 @@ def find_pseudo_subcategories(parent_id, categories):
     node = find_node(categories, parent_id)
     if node and 'subcategories' in node:
         return [{'id': subcat['id'], 'name': subcat['name']} for subcat in node['subcategories']]
-    else:
-        return []
+    return []
 
 def load_users_settings():
     if os.path.exists(USERS_SETTINGS_FILE):
@@ -357,35 +322,10 @@ def save_users_settings(users_settings):
 def get_user_settings(user_id):
     users_settings = load_users_settings()
     return users_settings.get(user_id, {})
-
-def validate_product(product):
-    required_fields = {
-        "id": str,
-        "title": str,
-        "product_url": str,
-        "current_price": (int, float),
-        "original_price": (int, float),
-        "image_url": str,
-        "QTY": int,
-        "category": str
-    }
-    for field, field_type in required_fields.items():
-        if field not in product or product[field] is None:
-            return False, f"Missing field: {field}"
-        if isinstance(field_type, tuple):
-            if not isinstance(product[field], field_type):
-                return False, f"Invalid type for {field}: expected {field_type}"
-        else:
-            if not isinstance(product[field], field_type):
-                return False, f"Invalid type for {field}: expected {field_type}"
-            if field_type == str and not product[field].strip():
-                return False, f"Empty string for {field}"
-    return True, ""
-
 # endregion Helper Functions
 
 # region Detailed Fetch
-def get_amazon_uk_full_details(asins):
+def get_amazon_uk_full_details(asins, category):
     config = load_config()
     if not all(config.get("amazon_uk", {}).values()):
         return []
@@ -400,19 +340,27 @@ def get_amazon_uk_full_details(asins):
                        "Offers.Listings.Price", "DetailPageURL"]
         )
         for item in item_response.items:
+            current_price = item.offers.listings[0].price.amount if item.offers and item.offers.listings else None
+            if item.offers and item.offers.listings and item.offers.listings[0].price.savings:
+                savings = item.offers.listings[0].price.savings.amount
+                original_price = current_price + savings
+                discount_percent = float(item.offers.listings[0].price.savings.percentage)
+            else:
+                original_price = current_price
+                discount_percent = 0.0
             item_data = {
                 "source": "amazon_uk",
                 "id": item.asin,
                 "title": item.item_info.title.display_value if item.item_info.title else None,
                 "product_url": item.detail_page_url,
-                "current_price": item.offers.listings[0].price.amount if item.offers and item.offers.listings else None,
-                "savings": item.offers.listings[0].price.savings.amount if item.offers and item.offers.listings and item.offers.listings[0].price.savings else None,
-                "original_price": (item.offers.listings[0].price.amount + item.offers.listings[0].price.savings.amount) if item.offers and item.offers.listings and item.offers.listings[0].price.savings else None,
-                "discount_percent": item.offers.listings[0].price.savings.percentage if item.offers and item.offers.listings and item.offers.listings[0].price.savings else None,
+                "current_price": current_price,
+                "original_price": original_price,
+                "discount_percent": discount_percent,
+                "image_url": item.images.primary.large.url if item.images and item.images.primary else None,
+                "category": category,
                 "manufacturer": item.item_info.by_line_info.manufacturer.display_value if item.item_info.by_line_info and item.item_info.by_line_info.manufacturer else None,
                 "dimensions": item.item_info.product_info.item_dimensions.display_value if item.item_info.product_info and item.item_info.product_info.item_dimensions else None,
-                "features": item.item_info.features.display_values if item.item_info.features else [],
-                "image_url": item.images.primary.large.url if item.images and item.images.primary else None
+                "features": item.item_info.features.display_values if item.item_info.features else []
             }
             full_item_data.append(item_data)
         time.sleep(1)
@@ -420,7 +368,7 @@ def get_amazon_uk_full_details(asins):
         print(f"Amazon UK Error: {str(e)}")
     return full_item_data
 
-def get_ebay_uk_full_details(item_ids):
+def get_ebay_uk_full_details(item_ids, category):
     config = load_config()
     if not all(config.get("ebay_uk", {}).values()):
         return []
@@ -433,21 +381,21 @@ def get_ebay_uk_full_details(item_ids):
             response = requests.get(url, headers=headers, params=params)
             item = response.json()
             current_price = float(item["price"]["value"])
-            original_price = float(item.get("originalPrice", {}).get("value", current_price))
-            discount = ((original_price - current_price) / original_price) * 100 if original_price > current_price else 0
+            original_price_value = item.get("originalPrice", {}).get("value", current_price)
+            original_price = float(original_price_value)
+            discount = ((original_price - current_price) / original_price) * 100 if original_price > current_price else 0.0
             item_data = {
                 "source": "ebay_uk",
                 "id": item["itemId"],
                 "title": item["title"],
                 "product_url": item["itemWebUrl"],
                 "current_price": current_price,
-                "savings": original_price - current_price if original_price > current_price else None,
-                "original_price": original_price if original_price > current_price else None,
-                "discount_percent": int(discount) if discount > 0 else None,
+                "original_price": original_price,
+                "discount_percent": round(discount, 2),
+                "image_url": item["image"]["imageUrl"] if "image" in item else None,
+                "category": category,
                 "manufacturer": item.get("brand", None),
-                "dimensions": None,
-                "features": item.get("shortDescription", "").split(". ") if item.get("shortDescription") else [],
-                "image_url": item["image"]["imageUrl"] if "image" in item else None
+                "features": item.get("shortDescription", "").split(". ") if item.get("shortDescription") else []
             }
             full_item_data.append(item_data)
             time.sleep(1)
@@ -455,7 +403,7 @@ def get_ebay_uk_full_details(item_ids):
             print(f"eBay UK Error for {item_id}: {str(e)}")
     return full_item_data
 
-def get_awin_uk_full_details(product_ids):
+def get_awin_uk_full_details(product_ids, category):
     config = load_config()
     if not config.get("awin", {}).get("API_TOKEN"):
         return []
@@ -468,20 +416,20 @@ def get_awin_uk_full_details(product_ids):
             product = response.json()["products"][0]
             current_price = float(product["price"]["amount"])
             original_price = float(product.get("originalPrice", current_price))
-            discount = ((original_price - current_price) / original_price) * 100 if original_price > current_price else 0
+            discount = ((original_price - current_price) / original_price) * 100 if original_price > current_price else 0.0
             item_data = {
                 "source": "awin_uk",
                 "id": product["productId"],
                 "title": product["name"],
                 "product_url": product["url"],
                 "current_price": current_price,
-                "savings": original_price - current_price if original_price > current_price else None,
-                "original_price": original_price if original_price > current_price else None,
-                "discount_percent": int(discount) if discount > 0 else None,
+                "original_price": original_price,
+                "discount_percent": round(discount, 2),
+                "image_url": product.get("imageUrl", None),
+                "category": category,
                 "manufacturer": product.get("brand", None),
                 "dimensions": product.get("dimensions", None),
-                "features": product.get("description", "").split(". ") if product.get("description") else [],
-                "image_url": product.get("imageUrl", None)
+                "features": product.get("description", "").split(". ") if product.get("description") else []
             }
             full_item_data.append(item_data)
             time.sleep(1)
@@ -489,7 +437,7 @@ def get_awin_uk_full_details(product_ids):
             print(f"Awin UK Error for {product_id}: {str(e)}")
     return full_item_data
 
-def get_cj_uk_full_details(skus):
+def get_cj_uk_full_details(skus, category):
     config = load_config()
     if not all(config.get("cj", {}).values()):
         return []
@@ -507,20 +455,20 @@ def get_cj_uk_full_details(skus):
             product = response.json()["products"][0]
             current_price = float(product["price"])
             original_price = float(product.get("salePrice", current_price))
-            discount = ((original_price - current_price) / original_price) * 100 if original_price > current_price else 0
+            discount = ((original_price - current_price) / original_price) * 100 if original_price > current_price else 0.0
             item_data = {
                 "source": "cj_uk",
                 "id": product["sku"],
                 "title": product["name"],
                 "product_url": product["buyUrl"],
                 "current_price": current_price,
-                "savings": original_price - current_price if original_price > current_price else None,
-                "original_price": original_price if original_price > current_price else None,
-                "discount_percent": int(discount) if discount > 0 else None,
+                "original_price": original_price,
+                "discount_percent": round(discount, 2),
+                "image_url": product.get("imageUrl", None),
+                "category": category,
                 "manufacturer": product.get("manufacturerName", None),
                 "dimensions": product.get("dimensions", None),
-                "features": product.get("description", "").split(". ") if product.get("description") else [],
-                "image_url": product.get("imageUrl", None)
+                "features": product.get("description", "").split(". ") if product.get("description") else []
             }
             full_item_data.append(item_data)
             time.sleep(1)
@@ -537,6 +485,9 @@ def search_amazon_uk_discounted(browse_node_id, min_discount_percent=20):
     amazon = AmazonApi(config["amazon_uk"]["ACCESS_KEY"], config["amazon_uk"]["SECRET_KEY"],
                        config["amazon_uk"]["ASSOCIATE_TAG"], config["amazon_uk"]["COUNTRY"])
     asins = []
+    category_title = get_amazon_category_title(browse_node_id)
+    if not category_title:
+        return []
     try:
         search_params = {
             "BrowseNodeId": browse_node_id,
@@ -554,7 +505,7 @@ def search_amazon_uk_discounted(browse_node_id, min_discount_percent=20):
                     item.offers.listings[0].price.savings.percentage >= min_discount_percent):
                     asins.append(item.asin)
             time.sleep(1)
-        return get_amazon_uk_full_details(asins)
+        return get_amazon_uk_full_details(asins, category=category_title)
     except Exception as e:
         print(f"Amazon UK Search Error: {str(e)}")
         return []
@@ -585,7 +536,7 @@ def search_ebay_uk_discounted(browse_node_id, min_discount_percent=20):
                 discount = ((original_price - current_price) / original_price) * 100
                 if discount >= min_discount_percent:
                     item_ids.append(item["itemId"])
-        return get_ebay_uk_full_details(item_ids)
+        return get_ebay_uk_full_details(item_ids, category=category_title)
     except Exception as e:
         print(f"eBay UK Search Error: {str(e)}")
         return []
@@ -614,7 +565,7 @@ def search_awin_uk_discounted(browse_node_id, min_discount_percent=20):
                 discount = ((original_price - current_price) / original_price) * 100
                 if discount >= min_discount_percent:
                     product_ids.append(product["productId"])
-        return get_awin_uk_full_details(product_ids)
+        return get_awin_uk_full_details(product_ids, category=category_title)
     except Exception as e:
         print(f"Awin UK Search Error: {str(e)}")
         return []
@@ -645,7 +596,7 @@ def search_cj_uk_discounted(browse_node_id, min_discount_percent=20):
                 discount = ((original_price - current_price) / original_price) * 100
                 if discount >= min_discount_percent:
                     skus.append(product["sku"])
-        return get_cj_uk_full_details(skus)
+        return get_cj_uk_full_details(skus, category=category_title)
     except Exception as e:
         print(f"CJ UK Search Error: {str(e)}")
         return []
@@ -756,28 +707,31 @@ def search_wix_discounted(browse_node_id, min_discount_percent=20):
             products = result["products"]
             for product in products:
                 current_price = float(product.get("price", {}).get("formatted", {}).get("price", "0").replace("$", "").replace("£", "").replace(",", "") or 0.0)
-                original_price = float(product.get("discountedPrice", {}).get("formatted", {}).get("price", current_price).replace("$", "").replace("£", "").replace(",", "") or current_price)
+                original_price = float(product.get("discountedPrice", {}).get("formatted", {}).get("price", str(current_price)).replace("$", "").replace("£", "").replace(",", "") or current_price)
                 if original_price > current_price:
                     discount = ((original_price - current_price) / original_price) * 100
                     if discount >= min_discount_percent:
+                        base_url = (
+                            product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
+                            product.get("productPageUrl", {}).get("path", "").lstrip("/")
+                        )
+                        product_url = f"{base_url}?referer={user_id}"
                         discounted_products.append({
-                            "user_id": user_id,
+                            "source": user_id,
                             "id": product.get("id", ""),
                             "title": product.get("name", ""),
-                            "product_url": (
-                                product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
-                                product.get("productPageUrl", {}).get("path", "").lstrip("/")
-                            ),
+                            "product_url": product_url,
                             "current_price": current_price,
                             "original_price": original_price,
                             "discount_percent": round(discount, 2),
                             "image_url": product.get("media", {}).get("mainMedia", {}).get("thumbnail", {}).get("url", ""),
-                            "QTY": (
+                            "qty": (
                                 int(product.get("stock", {}).get("quantity", 0))
                                 if product.get("stock", {}).get("trackQuantity", False)
                                 else -1
                             ),
-                            "category": matching_collection["name"]
+                            "category": matching_collection["name"],
+                            "user_id": user_id
                         })
 
             offset += limit
@@ -789,7 +743,6 @@ def search_wix_discounted(browse_node_id, min_discount_percent=20):
 
     return all_discounted_products
 
-# New search functions for all products
 def search_amazon_uk_all(browse_node_id):
     config = load_config()
     if not all(config.get("amazon_uk", {}).values()):
@@ -797,6 +750,9 @@ def search_amazon_uk_all(browse_node_id):
     amazon = AmazonApi(config["amazon_uk"]["ACCESS_KEY"], config["amazon_uk"]["SECRET_KEY"],
                        config["amazon_uk"]["ASSOCIATE_TAG"], config["amazon_uk"]["COUNTRY"])
     asins = []
+    category_title = get_amazon_category_title(browse_node_id)
+    if not category_title:
+        return []
     try:
         search_params = {
             "BrowseNodeId": browse_node_id,
@@ -811,7 +767,7 @@ def search_amazon_uk_all(browse_node_id):
             for item in search_result.items:
                 asins.append(item.asin)
             time.sleep(1)
-        return get_amazon_uk_full_details(asins)
+        return get_amazon_uk_full_details(asins, category=category_title)
     except Exception as e:
         print(f"Amazon UK Search Error: {str(e)}")
         return []
@@ -836,7 +792,7 @@ def search_ebay_uk_all(browse_node_id):
         data = response.json()
         for item in data.get("itemSummaries", []):
             item_ids.append(item["itemId"])
-        return get_ebay_uk_full_details(item_ids)
+        return get_ebay_uk_full_details(item_ids, category=category_title)
     except Exception as e:
         print(f"eBay UK Search Error: {str(e)}")
         return []
@@ -859,7 +815,7 @@ def search_awin_uk_all(browse_node_id):
         data = response.json()
         for product in data.get("products", []):
             product_ids.append(product["productId"])
-        return get_awin_uk_full_details(product_ids)
+        return get_awin_uk_full_details(product_ids, category=category_title)
     except Exception as e:
         print(f"Awin UK Search Error: {str(e)}")
         return []
@@ -884,7 +840,7 @@ def search_cj_uk_all(browse_node_id):
         data = response.json()
         for product in data.get("products", []):
             skus.append(product["sku"])
-        return get_cj_uk_full_details(skus)
+        return get_cj_uk_full_details(skus, category=category_title)
     except Exception as e:
         print(f"CJ UK Search Error: {str(e)}")
         return []
@@ -994,33 +950,30 @@ def search_wix_all(browse_node_id):
 
             products = result["products"]
             for product in products:
-                # Get current_price as a float
-                current_price_str = product.get("price", {}).get("formatted", {}).get("price", "0")
-                current_price = float(str(current_price_str).replace("$", "").replace("£", "").replace(",", "") or 0.0)
-
-                # Get original_price as a float, ensuring it's a string first
-                original_price_str = product.get("discountedPrice", {}).get("formatted", {}).get("price", str(current_price))
-                original_price = float(str(original_price_str).replace("$", "").replace("£", "").replace(",", "") or current_price)
-
-                discount = ((original_price - current_price) / original_price * 100) if original_price > current_price else 0
+                current_price = float(product.get("price", {}).get("formatted", {}).get("price", "0").replace("$", "").replace("£", "").replace(",", "") or 0.0)
+                original_price = float(product.get("discountedPrice", {}).get("formatted", {}).get("price", str(current_price)).replace("$", "").replace("£", "").replace(",", "") or current_price)
+                discount = ((original_price - current_price) / original_price) * 100 if original_price > current_price else 0.0
+                base_url = (
+                    product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
+                    product.get("productPageUrl", {}).get("path", "").lstrip("/")
+                )
+                product_url = f"{base_url}?referer={user_id}"
                 category_products.append({
-                    "user_id": user_id,
+                    "source": user_id,
                     "id": product.get("id", ""),
                     "title": product.get("name", ""),
-                    "product_url": (
-                        product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
-                        product.get("productPageUrl", {}).get("path", "").lstrip("/") + 'referer=' + user_id
-                    ),
+                    "product_url": product_url,
                     "current_price": current_price,
                     "original_price": original_price,
                     "discount_percent": round(discount, 2),
                     "image_url": product.get("media", {}).get("mainMedia", {}).get("thumbnail", {}).get("url", ""),
-                    "QTY": (
+                    "qty": (
                         int(product.get("stock", {}).get("quantity", 0))
                         if product.get("stock", {}).get("trackQuantity", False)
                         else -1
                     ),
-                    "category": matching_collection["name"]
+                    "category": matching_collection["name"],
+                    "user_id": user_id
                 })
 
             offset += limit
@@ -1031,20 +984,13 @@ def search_wix_all(browse_node_id):
         print(f"Found {len(category_products)} products for user {user_id} in category '{category_title}'")
 
     return all_products
-
 # endregion Search
 
 # region Management Endpoints
-
-# region /config
 @app.route('/config', methods=['GET'])
 def get_config():
     config = load_config()
-    return jsonify({
-        "status": "success",
-        "count": len(config),
-        "config": config
-    })
+    return jsonify({"status": "success", "count": len(config), "config": config})
 
 @app.route('/config/<affiliate>', methods=['PATCH'])
 def replace_config(affiliate):
@@ -1060,9 +1006,6 @@ def replace_config(affiliate):
         "credentials": config[affiliate]
     })
 
-# endregion /config
-
-# region /<USERid>/user
 @app.route('/<USERid>/user', methods=['GET'])
 def get_user_settings_endpoint(USERid):
     try:
@@ -1083,12 +1026,10 @@ def get_user_settings_endpoint(USERid):
 def put_user_settings(USERid):
     if not request.json:
         return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
-    
     settings = request.json
     required_fields = ["contact_name", "website_url", "email_address", "phone_number", "wixClientId"]
     if not all(field in settings for field in required_fields):
-        return jsonify({"status": "error", "message": "Settings must include contact_name, website_url, email_address, phone_number, and wixClientId"}), 400
-    
+        return jsonify({"status": "error", "message": "Settings must include all required fields"}), 400
     users_settings = load_users_settings()
     users_settings[USERid] = settings
     save_users_settings(users_settings)
@@ -1098,47 +1039,33 @@ def put_user_settings(USERid):
 def patch_user_settings(USERid):
     if not request.json:
         return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
-    
     new_settings = request.json
     users_settings = load_users_settings()
     current_settings = users_settings.get(USERid, {})
-    
     valid_fields = ["contact_name", "website_url", "email_address", "phone_number", "wixClientId"]
     for key in new_settings:
         if key in valid_fields:
             current_settings[key] = new_settings[key]
-    
     users_settings[USERid] = current_settings
     save_users_settings(users_settings)
     return jsonify({"status": "success", "message": f"Settings for user {USERid} updated", "settings": current_settings})
-# endregion /<USERid>/user
 
-# region /<USERid>/categories
 @app.route('/<USERid>/mycategories', methods=['GET'])
 def get_user_categories_endpoint(USERid):
     try:
         categories = get_user_categories(USERid)
-        return jsonify({
-            "status": "success",
-            "count": len(categories),
-            "categories": categories
-        })
+        return jsonify({"status": "success", "count": len(categories), "categories": categories})
     except Exception as e:
         print(f"Error in /<USERid>/mycategories for USERid {USERid}: {str(e)}")
-        return jsonify({
-            "status": "error",
-            "message": f"Failed to retrieve categories: {str(e)}"
-        }), 500
+        return jsonify({"status": "error", "message": f"Failed to retrieve categories: {str(e)}"}), 500
 
 @app.route('/<USERid>/mycategories', methods=['PUT'])
 def put_user_categories(USERid):
     if not request.json or 'categories' not in request.json:
         return jsonify({"status": "error", "message": "Request body must contain 'categories' list"}), 400
-    
     new_categories = request.json['categories']
     if not isinstance(new_categories, list):
         return jsonify({"status": "error", "message": "'categories' must be a list"}), 400
-    
     users_data = load_users_categories()
     users_data[USERid] = new_categories
     save_users_categories(users_data)
@@ -1148,11 +1075,9 @@ def put_user_categories(USERid):
 def patch_user_categories(USERid):
     if not request.json or 'categories' not in request.json:
         return jsonify({"status": "error", "message": "Request body must contain 'categories' list"}), 400
-    
     new_categories = request.json['categories']
     if not isinstance(new_categories, list):
         return jsonify({"status": "error", "message": "'categories' must be a list"}), 400
-    
     users_data = load_users_categories()
     current_categories = set(users_data.get(USERid, []))
     current_categories.update(new_categories)
@@ -1165,142 +1090,62 @@ def delete_user_category(USERid):
     category_id = request.args.get('category_id')
     if not category_id:
         return jsonify({"status": "error", "message": "Query parameter 'category_id' is required"}), 400
-    
     users_data = load_users_categories()
-    if USERid in users_data:
-        current_categories = users_data[USERid]
-        if category_id in current_categories:
-            current_categories.remove(category_id)
-            users_data[USERid] = current_categories
-            save_users_categories(users_data)
-            return jsonify({"status": "success", "message": f"Category {category_id} removed for user {USERid}", "categories": current_categories})
-        else:
-            return jsonify({"status": "error", "message": f"Category {category_id} not found for user {USERid}"}), 404
-    return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
+    if USERid in users_data and category_id in users_data[USERid]:
+        users_data[USERid].remove(category_id)
+        save_users_categories(users_data)
+        return jsonify({"status": "success", "message": f"Category {category_id} removed for user {USERid}", "categories": users_data[USERid]})
+    return jsonify({"status": "error", "message": f"Category {category_id} not found for user {USERid}"}), 404
 
 @app.route('/categories', methods=['GET'])
 def get_all_categories():
     config = load_config()
     parent_id = request.args.get('parent_id')
-    
     amazon_config = config.get("amazon_uk", {})
-    has_valid_amazon_config = all(
-        isinstance(amazon_config.get(field, ""), str) and 
-        len(amazon_config.get(field, "").strip()) > 0
-        for field in ["ACCESS_KEY", "SECRET_KEY", "ASSOCIATE_TAG", "COUNTRY"]
-    )
-
-    if has_valid_amazon_config:
-        amazon = AmazonApi(
-            amazon_config["ACCESS_KEY"],
-            amazon_config["SECRET_KEY"],
-            amazon_config["ASSOCIATE_TAG"],
-            amazon_config["COUNTRY"]
-        )
-        try:
-            if parent_id:
-                browse_nodes = amazon.get_browse_nodes(
-                    browse_node_ids=[parent_id],
-                    resources=["BrowseNodes.Children"]
-                )
-                if browse_nodes and browse_nodes.browse_nodes and browse_nodes.browse_nodes[0].children:
-                    categories = [
-                        {"id": node.browse_node_id, "name": node.display_name}
-                        for node in browse_nodes.browse_nodes[0].children
-                    ]
-                else:
-                    categories = []
-            else:
-                browse_nodes = amazon.get_browse_nodes(
-                    browse_node_ids=DEFAULT_CATEGORIES,
-                    resources=["BrowseNodes.DisplayName"]
-                )
-                if browse_nodes and browse_nodes.browse_nodes:
-                    categories = [
-                        {"id": node.browse_node_id, "name": node.display_name}
-                        for node in browse_nodes.browse_nodes
-                    ]
-                else:
-                    categories = []
-        except Exception as e:
-            print(f"Error fetching Amazon categories: {str(e)}")
-            categories = []
+    has_valid_amazon_config = all(amazon_config.get(field, "") for field in ["ACCESS_KEY", "SECRET_KEY", "ASSOCIATE_TAG", "COUNTRY"])
+    
+    if has_valid_amazon_config and parent_id:
+        categories = get_immediate_subcategories(parent_id)
+    elif not parent_id:
+        categories = [{"id": cat["id"], "name": cat["name"]} for cat in PSEUDO_CATEGORIES]
     else:
-        if parent_id:
-            categories = find_pseudo_subcategories(parent_id, PSEUDO_CATEGORIES)
-            if categories is None:
-                categories = []
-        else:
-            categories = [
-                {"id": cat["id"], "name": cat["name"]}
-                for cat in PSEUDO_CATEGORIES
-            ]
+        categories = find_pseudo_subcategories(parent_id, PSEUDO_CATEGORIES)
+    
+    return jsonify({"status": "success", "count": len(categories), "categories": categories})
 
-    return jsonify({
-        "status": "success",
-        "count": len(categories),
-        "categories": categories
-    })
-
-# endregion /<USERid>/categories
-
-# region /<USERid>/products
 @app.route('/<USERid>/products', methods=['GET'])
 def get_user_product_list(USERid):
     products = get_user_products(USERid)
-    return jsonify({
-        "status": "success",
-        "count": len(products),
-        "products": products
-    })
+    return jsonify({"status": "success", "count": len(products), "products": products})
 
 @app.route('/<USERid>/products/<product_id>', methods=['GET'])
 def reduce_product_quantity(USERid, product_id):
     qty = request.args.get('qty', type=int)
-    if qty is None:
-        return jsonify({"status": "error", "message": "Query parameter 'qty' is required and must be an integer"}), 400
-    
-    if qty >= 0:
+    if qty is None or qty >= 0:
         return jsonify({"status": "error", "message": "Query parameter 'qty' must be a negative integer"}), 400
-    
     users_products = load_users_products()
     if USERid not in users_products:
         return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
-    
     current_products = users_products[USERid]
     product_to_update = next((p for p in current_products if p["id"] == product_id), None)
     if not product_to_update:
         return jsonify({"status": "error", "message": f"Product {product_id} not found for user {USERid}"}), 404
-    
-    current_qty = product_to_update["QTY"]
+    current_qty = product_to_update["qty"]
     if current_qty != -1:
-        new_qty = max(0, current_qty + qty)
-        product_to_update["QTY"] = new_qty
-    
+        product_to_update["qty"] = max(0, current_qty + qty)
     users_products[USERid] = current_products
     save_users_products(users_products)
-    
-    return jsonify({
-        "status": "success",
-        "message": f"Quantity reduced for product {product_id} for user {USERid}",
-        "product": product_to_update
-    })
+    return jsonify({"status": "success", "message": f"Quantity reduced for product {product_id}", "product": product_to_update})
 
-# endregion /<USERid>/products
-
-#region Corrected /discounted-products endpoint (no USERid, no discount constraint)
 @app.route('/discounted-products', methods=['GET'])
 def get_all_discounted_products():
     category_id = request.args.get('category_id')
-    all_items = []
-
-    # Always search the specified category_id (no user category filter)
     if not category_id:
         return jsonify({"status": "error", "message": "Query parameter 'category_id' is required"}), 400
-    
-    search_categories = [category_id]
+    all_items = []
     config = load_config()
-
+    search_categories = [category_id]
+    
     for cat_id in search_categories:
         if all(config.get("amazon_uk", {}).values()):
             all_items.extend(search_amazon_uk_all(cat_id))
@@ -1310,16 +1155,9 @@ def get_all_discounted_products():
             all_items.extend(search_awin_uk_all(cat_id))
         if all(config.get("cj", {}).values()):
             all_items.extend(search_cj_uk_all(cat_id))
-        wix_products = search_wix_all(cat_id)
-        all_items.extend(wix_products)
+        all_items.extend(search_wix_all(cat_id))
 
-    return jsonify({
-        "status": "success",
-        "count": len(all_items),
-        "products": all_items
-    })
-    #endregion
-
+    return jsonify({"status": "success", "count": len(all_items), "products": all_items})
 # endregion Management Endpoints
 
 # region Velo Public Endpoints
@@ -1329,10 +1167,9 @@ def get_user_discounted_products(USERid):
     min_discount = request.args.get('min_discount', default=20, type=int)
     root_category_ids = get_user_categories(USERid)
     all_discounted_items = []
-
-    search_categories = [category_id] if category_id else root_category_ids
     config = load_config()
-
+    search_categories = [category_id] if category_id else root_category_ids
+    
     for cat_id in search_categories:
         if all(config.get("amazon_uk", {}).values()):
             all_discounted_items.extend(search_amazon_uk_discounted(cat_id, min_discount))
@@ -1342,8 +1179,7 @@ def get_user_discounted_products(USERid):
             all_discounted_items.extend(search_awin_uk_discounted(cat_id, min_discount))
         if all(config.get("cj", {}).values()):
             all_discounted_items.extend(search_cj_uk_discounted(cat_id, min_discount))
-        wix_products = search_wix_discounted(cat_id, min_discount)
-        all_discounted_items.extend(wix_products)
+        all_discounted_items.extend(search_wix_discounted(cat_id, min_discount))
 
     return jsonify({
         "status": "success",
@@ -1361,22 +1197,26 @@ def get_categories(USERid):
     
     try:
         if parent_id:
-            print(f"User {USERid} - Fetching subcategories for parent node {parent_id}...")
             subcategories = get_immediate_subcategories(parent_id)
             if subcategories:
                 subcategory_ids = [cat["id"] for cat in subcategories]
                 all_categories = filter_categories_with_products(subcategory_ids, min_discount)
         else:
-            print(f"User {USERid} - Fetching root categories with products...")
             all_categories = filter_categories_with_products(root_category_ids, min_discount)
         
-        if all_categories:
-            return jsonify({"status": "success", "count": len(all_categories), "categories": all_categories, "min_discount": min_discount})
-        else:
-            return jsonify({"status": "success", "count": 0, "categories": [], "message": f"No categories with products at {min_discount}% discount found."})
+        return jsonify({
+            "status": "success",
+            "count": len(all_categories),
+            "categories": all_categories,
+            "min_discount": min_discount
+        }) if all_categories else jsonify({
+            "status": "success",
+            "count": 0,
+            "categories": [],
+            "message": f"No categories with products at {min_discount}% discount found."
+        })
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error fetching categories: {str(e)}"}), 500
-
 # endregion Velo Public Endpoints
 
 if __name__ == '__main__':

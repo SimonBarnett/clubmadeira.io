@@ -1,3 +1,4 @@
+```markdown
 # API Endpoints Documentation
 
 This document outlines the API endpoints for the Flask application, categorized into **Velo Endpoints** (for frontend integration) and **Management Endpoints** (for configuration and user category/product management). Each endpoint includes its HTTP method, parameters, descriptions, and default values where applicable.
@@ -12,7 +13,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/discounted-products`
-- **Description**: Retrieves a list of discounted products across multiple affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) based on user categories or a specific category ID. Uses Amazon category titles for searches on non-Amazon providers. Does not include user-defined products from the local store but includes Wix products from all users if they match the category and discount criteria.
+- **Description**: Retrieves a list of discounted products across multiple affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) based on user categories or a specific category ID. Uses Amazon category titles for searches on non-Amazon providers. Includes Wix products from all users if they match the category and discount criteria.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -21,40 +22,41 @@ These endpoints are designed for integration with the Velo frontend, providing c
 
 - **Example Request**:
   ```bash
-  curl http://localhost:5000/<USERid>/discounted-products?category_id=283155&min_discount=30
+  curl http://localhost:5000/user123/discounted-products?category_id=283155&min_discount=30
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "count": 5,
+    "count": 2,
     "products": [
       {
         "source": "amazon_uk",
         "id": "B08N5WRWNW",
         "title": "Sample Book",
-        "current_price": 15.99,
-        "savings": 4.00,
-        "original_price": 19.99,
-        "discount_percent": 20,
         "product_url": "https://amazon.co.uk/dp/B08N5WRWNW",
+        "current_price": 15.99,
+        "original_price": 19.99,
+        "discount_percent": 20.0,
+        "image_url": "https://images.amazon.com/sample.jpg",
+        "category": "Books",
         "manufacturer": "Publisher",
         "dimensions": "5 x 8 in",
-        "features": ["Hardcover"],
-        "image_url": "https://images.amazon.com/sample.jpg"
+        "features": ["Hardcover"]
       },
       {
-        "user_id": "<USERid>",
+        "source": "user123",
         "id": "wix123",
         "title": "Wix Product",
-        "product_url": "https://example.wixsite.com/product/wix123",
+        "product_url": "https://example.wixsite.com/product/wix123?referer=user123",
         "current_price": 10.00,
         "original_price": 15.00,
         "discount_percent": 33.33,
         "image_url": "https://wix.com/images/wix123.jpg",
-        "QTY": 5,
-        "category": "Books"
+        "qty": 5,
+        "category": "Books",
+        "user_id": "user123"
       }
     ],
     "min_discount": 30
@@ -65,7 +67,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/categories`
-- **Description**: Fetches either root categories with discounted products or subcategories of a specified parent category, filtered by minimum discount percentage. Checks all providers (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) for available products, not just Amazon.
+- **Description**: Fetches either root categories with discounted products or subcategories of a specified parent category, filtered by minimum discount percentage. Checks all providers (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) for available products.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -74,7 +76,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
 
 - **Example Request**:
   ```bash
-  curl http://localhost:5000/<USERid>/categories?parent_id=283155
+  curl http://localhost:5000/user123/categories?parent_id=283155
   ```
 
 - **Example Response**:
@@ -90,7 +92,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
   }
   ```
 
-### Get All Discounted Products (No User Constraint)
+### Get All Products (No User Constraint)
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/discounted-products`
@@ -109,33 +111,34 @@ These endpoints are designed for integration with the Velo frontend, providing c
   ```json
   {
     "status": "success",
-    "count": 3,
+    "count": 2,
     "products": [
       {
         "source": "amazon_uk",
         "id": "B08N5WRWNW",
         "title": "Sample Book",
-        "current_price": 15.99,
-        "savings": 4.00,
-        "original_price": 19.99,
-        "discount_percent": 20,
         "product_url": "https://amazon.co.uk/dp/B08N5WRWNW",
+        "current_price": 15.99,
+        "original_price": 19.99,
+        "discount_percent": 20.0,
+        "image_url": "https://images.amazon.com/sample.jpg",
+        "category": "Books",
         "manufacturer": "Publisher",
         "dimensions": "5 x 8 in",
-        "features": ["Hardcover"],
-        "image_url": "https://images.amazon.com/sample.jpg"
+        "features": ["Hardcover"]
       },
       {
-        "user_id": "<USERid>",
+        "source": "user123",
         "id": "wix123",
         "title": "Wix Product",
-        "product_url": "https://example.wixsite.com/product/wix123referer=<USERid>",
+        "product_url": "https://example.wixsite.com/product/wix123?referer=user123",
         "current_price": 10.00,
         "original_price": 15.00,
         "discount_percent": 33.33,
         "image_url": "https://wix.com/images/wix123.jpg",
-        "QTY": 5,
-        "category": "Books"
+        "qty": 5,
+        "category": "Books",
+        "user_id": "user123"
       }
     ]
   }
@@ -216,7 +219,7 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl http://localhost:5000/<USERid>/user
+  curl http://localhost:5000/user123/user
   ```
 
 - **Example Response**:
@@ -243,14 +246,14 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X PUT -H "Content-Type: application/json" -d '{"contact_name": "Jane Doe", "website_url": "https://janedoe.com", "email_address": "jane@janedoe.com", "phone_number": "+0987654321", "wixClientId": "wix-client-id-456"}' http://localhost:5000/<USERid>/user
+  curl -X PUT -H "Content-Type: application/json" -d '{"contact_name": "Jane Doe", "website_url": "https://janedoe.com", "email_address": "jane@janedoe.com", "phone_number": "+0987654321", "wixClientId": "wix-client-id-456"}' http://localhost:5000/user123/user
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "message": "Settings for user <USERid> replaced",
+    "message": "Settings for user user123 replaced",
     "settings": {
       "contact_name": "Jane Doe",
       "website_url": "https://janedoe.com",
@@ -273,14 +276,14 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X PATCH -H "Content-Type: application/json" -d '{"email_address": "jane.new@janedoe.com", "wixClientId": "wix-client-id-789"}' http://localhost:5000/<USERid>/user
+  curl -X PATCH -H "Content-Type: application/json" -d '{"email_address": "jane.new@janedoe.com", "wixClientId": "wix-client-id-789"}' http://localhost:5000/user123/user
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "message": "Settings for user <USERid> updated",
+    "message": "Settings for user user123 updated",
     "settings": {
       "contact_name": "Jane Doe",
       "website_url": "https://janedoe.com",
@@ -305,7 +308,7 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl http://localhost:5000/<USERid>/mycategories
+  curl http://localhost:5000/user123/mycategories
   ```
 
 - **Example Response**:
@@ -329,14 +332,14 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X PUT -H "Content-Type: application/json" -d '{"categories": ["172282"]}' http://localhost:5000/<USERid>/mycategories
+  curl -X PUT -H "Content-Type: application/json" -d '{"categories": ["172282"]}' http://localhost:5000/user123/mycategories
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "message": "Categories for user <USERid> replaced",
+    "message": "Categories for user user123 replaced",
     "categories": ["172282"]
   }
   ```
@@ -353,14 +356,14 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X PATCH -H "Content-Type: application/json" -d '{"categories": ["165796011"]}' http://localhost:5000/<USERid>/mycategories
+  curl -X PATCH -H "Content-Type: application/json" -d '{"categories": ["165796011"]}' http://localhost:5000/user123/mycategories
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "message": "Categories for user <USERid> patched",
+    "message": "Categories for user user123 patched",
     "categories": ["283155", "172282", "165796011"]
   }
   ```
@@ -377,14 +380,14 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X DELETE http://localhost:5000/<USERid>/mycategories?category_id=283155
+  curl -X DELETE http://localhost:5000/user123/mycategories?category_id=283155
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "message": "Category 283155 removed for user <USERid>",
+    "message": "Category 283155 removed for user user123",
     "categories": ["172282"]
   }
   ```
@@ -418,7 +421,7 @@ These endpoints handle configuration and user category/product management, divid
 
 ### User Product Management
 
-User-defined products are now fetched from Wix using the `wixClientId` stored in user settings, rather than a local store. The following endpoints reflect this change.
+User-defined products are fetched from Wix using the `wixClientId` stored in user settings.
 
 #### Get User Products
 ![GET](https://img.shields.io/badge/GET-blue)
@@ -432,7 +435,7 @@ User-defined products are now fetched from Wix using the `wixClientId` stored in
 
 - **Example Request**:
   ```bash
-  curl http://localhost:5000/<USERid>/products
+  curl http://localhost:5000/user123/products
   ```
 
 - **Example Response**:
@@ -442,14 +445,17 @@ User-defined products are now fetched from Wix using the `wixClientId` stored in
     "count": 1,
     "products": [
       {
+        "source": "user123",
         "id": "wix123",
         "title": "Wix Product",
-        "product_url": "https://example.wixsite.com/product/wix123",
+        "product_url": "https://example.wixsite.com/product/wix123?referer=user123",
         "current_price": 10.00,
         "original_price": 15.00,
+        "discount_percent": 33.33,
         "image_url": "https://wix.com/images/wix123.jpg",
-        "QTY": 5,
-        "category": "Books"
+        "qty": 5,
+        "category": "Books",
+        "user_id": "user123"
       }
     ]
   }
@@ -459,7 +465,7 @@ User-defined products are now fetched from Wix using the `wixClientId` stored in
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/products/<product_id>`
-- **Description**: Reduces the `QTY` value of a specific Wix product by the amount specified in the `qty` query parameter. The `qty` must be a negative integer. The quantity will not go below zero. Note: This does not update the Wix store directly but modifies the local cache.
+- **Description**: Reduces the `qty` value of a specific Wix product by the amount specified in the `qty` query parameter. The `qty` must be a negative integer. The quantity will not go below zero. Note: This does not update the Wix store directly but modifies the local cache.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -468,30 +474,33 @@ User-defined products are now fetched from Wix using the `wixClientId` stored in
 
 - **Example Request**:
   ```bash
-  curl "http://localhost:5000/<USERid>/products/wix123?qty=-2"
+  curl "http://localhost:5000/user123/products/wix123?qty=-2"
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "message": "Quantity reduced for product wix123 for user <USERid>",
+    "message": "Quantity reduced for product wix123",
     "product": {
+      "source": "user123",
       "id": "wix123",
       "title": "Wix Product",
-      "product_url": "https://example.wixsite.com/product/wix123",
+      "product_url": "https://example.wixsite.com/product/wix123?referer=user123",
       "current_price": 10.00,
       "original_price": 15.00,
+      "discount_percent": 33.33,
       "image_url": "https://wix.com/images/wix123.jpg",
-      "QTY": 3,
-      "category": "Books"
+      "qty": 3,
+      "category": "Books",
+      "user_id": "user123"
     }
   }
   ```
 
 - **Notes**:
   - The `qty` parameter must be a negative integer. Positive values or zero will result in a **400 Bad Request** error.
-  - If the reduction would cause `QTY` to go below zero, it will be set to zero.
+  - If the reduction would cause `qty` to go below zero, it will be set to zero.
   - This endpoint uses GET for modification, which is unconventional but implemented as per specific requirements.
   - Returns a **400 Bad Request** if `qty` is missing, not an integer, or not negative.
   - Returns a **404 Not Found** if the user or product does not exist.
@@ -500,9 +509,10 @@ User-defined products are now fetched from Wix using the `wixClientId` stored in
 
 ## Key Updates
 
-- **Wix Integration**: Products are now sourced from Wix using the `wixClientId` from user settings. The `/<USERid>/products` endpoint fetches from Wix instead of a local store. Other product management endpoints (POST, PUT, PATCH, DELETE) are removed as Wix handles product creation and updates.
+- **Wix Integration**: Products are sourced from Wix using the `wixClientId` from user settings. The `/<USERid>/products` endpoint fetches from Wix instead of a local store.
 - **New Endpoint**: `/discounted-products` (no USERid) retrieves all products for a given category ID across all providers without discount filtering.
-- **Discounted Products**: The `/<USERid>/discounted-products` endpoint now includes Wix products from all users matching the category and discount criteria.
+- **Discounted Products**: The `/<USERid>/discounted-products` endpoint includes Wix products from all users matching the category and discount criteria.
 - **User Settings**: Added `wixClientId` as a required field for user settings to enable Wix API integration.
+- **Product Fields**: Wix products include `source` (set to `user_id`), `qty` (instead of `QTY`), and `product_url` with `?referer={user_id}` suffix. Non-Wix products exclude `savings` field, with discount calculated from `original_price` and `current_price`.
 
 Replace `<USERid>` with the actual user ID when making requests.
