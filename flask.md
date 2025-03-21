@@ -1,4 +1,3 @@
-```markdown
 # API Endpoints Documentation
 
 This document outlines the API endpoints for the Flask application, categorized into **Velo Endpoints** (for frontend integration) and **Management Endpoints** (for configuration and user category/product management). Each endpoint includes its HTTP method, parameters, descriptions, and default values where applicable.
