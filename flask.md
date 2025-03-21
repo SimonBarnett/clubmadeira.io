@@ -12,7 +12,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/discounted-products`
-- **Description**: Retrieves a list of discounted products across multiple affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK) based on user categories or a specific category ID. Uses Amazon category titles for searches on non-Amazon providers. Does not include user-defined products.
+- **Description**: Retrieves a list of discounted products across multiple affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) based on user categories or a specific category ID. Uses Amazon category titles for searches on non-Amazon providers. Does not include user-defined products from the local store but includes Wix products from all users if they match the category and discount criteria.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -43,6 +43,18 @@ These endpoints are designed for integration with the Velo frontend, providing c
         "dimensions": "5 x 8 in",
         "features": ["Hardcover"],
         "image_url": "https://images.amazon.com/sample.jpg"
+      },
+      {
+        "user_id": "<USERid>",
+        "id": "wix123",
+        "title": "Wix Product",
+        "product_url": "https://example.wixsite.com/product/wix123",
+        "current_price": 10.00,
+        "original_price": 15.00,
+        "discount_percent": 33.33,
+        "image_url": "https://wix.com/images/wix123.jpg",
+        "QTY": 5,
+        "category": "Books"
       }
     ],
     "min_discount": 30
@@ -53,7 +65,7 @@ These endpoints are designed for integration with the Velo frontend, providing c
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/categories`
-- **Description**: Fetches either root categories with discounted products or subcategories of a specified parent category, filtered by minimum discount percentage. Checks all providers (Amazon UK, eBay UK, Awin UK, CJ UK) for available products, not just Amazon.
+- **Description**: Fetches either root categories with discounted products or subcategories of a specified parent category, filtered by minimum discount percentage. Checks all providers (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) for available products, not just Amazon.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -78,36 +90,52 @@ These endpoints are designed for integration with the Velo frontend, providing c
   }
   ```
 
-### Get Club Products
+### Get All Discounted Products (No User Constraint)
 ![GET](https://img.shields.io/badge/GET-blue)
 
-- **Endpoint**: `/club-products`
-- **Description**: Retrieves a list of all user-defined products (parts) across all users where `QTY > 0`. Aggregates products from the user-defined product store.
+- **Endpoint**: `/discounted-products`
+- **Description**: Retrieves a list of all products (discounted or not) across all affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) for a specific category ID. Does not filter by user categories or minimum discount percentage.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
-| None            | No parameters required                           | N/A           |
+| `category_id`   | Specific Amazon Browse Node ID to search (required) | None       |
 
 - **Example Request**:
   ```bash
-  curl http://localhost:5000/club-products
+  curl http://localhost:5000/discounted-products?category_id=283155
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "count": 2,
+    "count": 3,
     "products": [
       {
-        "source": "user_defined",
-        "id": "custom123",
-        "title": "Custom Product",
+        "source": "amazon_uk",
+        "id": "B08N5WRWNW",
+        "title": "Sample Book",
+        "current_price": 15.99,
+        "savings": 4.00,
+        "original_price": 19.99,
+        "discount_percent": 20,
+        "product_url": "https://amazon.co.uk/dp/B08N5WRWNW",
+        "manufacturer": "Publisher",
+        "dimensions": "5 x 8 in",
+        "features": ["Hardcover"],
+        "image_url": "https://images.amazon.com/sample.jpg"
+      },
+      {
+        "user_id": "<USERid>",
+        "id": "wix123",
+        "title": "Wix Product",
+        "product_url": "https://example.wixsite.com/product/wix123referer=<USERid>",
         "current_price": 10.00,
         "original_price": 15.00,
-        "product_url": "https://example.com/custom123",
-        "image_url": "https://example.com/images/custom123.jpg",
-        "QTY": 5
+        "discount_percent": 33.33,
+        "image_url": "https://wix.com/images/wix123.jpg",
+        "QTY": 5,
+        "category": "Books"
       }
     ]
   }
@@ -154,7 +182,7 @@ These endpoints handle configuration and user category/product management, divid
 ![PATCH](https://img.shields.io/badge/PATCH-yellow)
 
 - **Endpoint**: `/config/<affiliate>`
-- **Description**: Updates the configuration for a specific affiliate network with new values provided in the request body, merging with existing settings.
+- **Description**: Replaces the configuration for a specific affiliate network with new values provided in the request body, overwriting existing settings.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -180,7 +208,7 @@ These endpoints handle configuration and user category/product management, divid
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/user`
-- **Description**: Retrieves the settings for a specific user, including contact information and website details.
+- **Description**: Retrieves the settings for a specific user, including contact information, website details, and Wix Client ID.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -198,7 +226,8 @@ These endpoints handle configuration and user category/product management, divid
     "contact_name": "John Doe",
     "website_url": "https://example.com",
     "email_address": "john@example.com",
-    "phone_number": "+1234567890"
+    "phone_number": "+1234567890",
+    "wixClientId": "wix-client-id-123"
   }
   ```
 
@@ -206,7 +235,7 @@ These endpoints handle configuration and user category/product management, divid
 ![PUT](https://img.shields.io/badge/PUT-orange)
 
 - **Endpoint**: `/<USERid>/user`
-- **Description**: Replaces the entire settings object for a user. Requires all fields: `contact_name`, `website_url`, `email_address`, and `phone_number`.
+- **Description**: Replaces the entire settings object for a user. Requires all fields: `contact_name`, `website_url`, `email_address`, `phone_number`, and `wixClientId`.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -214,7 +243,7 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X PUT -H "Content-Type: application/json" -d '{"contact_name": "Jane Doe", "website_url": "https://janedoe.com", "email_address": "jane@janedoe.com", "phone_number": "+0987654321"}' http://localhost:5000/<USERid>/user
+  curl -X PUT -H "Content-Type: application/json" -d '{"contact_name": "Jane Doe", "website_url": "https://janedoe.com", "email_address": "jane@janedoe.com", "phone_number": "+0987654321", "wixClientId": "wix-client-id-456"}' http://localhost:5000/<USERid>/user
   ```
 
 - **Example Response**:
@@ -226,7 +255,8 @@ These endpoints handle configuration and user category/product management, divid
       "contact_name": "Jane Doe",
       "website_url": "https://janedoe.com",
       "email_address": "jane@janedoe.com",
-      "phone_number": "+0987654321"
+      "phone_number": "+0987654321",
+      "wixClientId": "wix-client-id-456"
     }
   }
   ```
@@ -235,7 +265,7 @@ These endpoints handle configuration and user category/product management, divid
 ![PATCH](https://img.shields.io/badge/PATCH-yellow)
 
 - **Endpoint**: `/<USERid>/user`
-- **Description**: Updates specific fields in the user’s settings, leaving unspecified fields unchanged.
+- **Description**: Updates specific fields in the user’s settings, leaving unspecified fields unchanged. Valid fields are `contact_name`, `website_url`, `email_address`, `phone_number`, and `wixClientId`.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -243,7 +273,7 @@ These endpoints handle configuration and user category/product management, divid
 
 - **Example Request**:
   ```bash
-  curl -X PATCH -H "Content-Type: application/json" -d '{"email_address": "jane.new@janedoe.com"}' http://localhost:5000/<USERid>/user
+  curl -X PATCH -H "Content-Type: application/json" -d '{"email_address": "jane.new@janedoe.com", "wixClientId": "wix-client-id-789"}' http://localhost:5000/<USERid>/user
   ```
 
 - **Example Response**:
@@ -255,7 +285,8 @@ These endpoints handle configuration and user category/product management, divid
       "contact_name": "Jane Doe",
       "website_url": "https://janedoe.com",
       "email_address": "jane.new@janedoe.com",
-      "phone_number": "+0987654321"
+      "phone_number": "+0987654321",
+      "wixClientId": "wix-client-id-789"
     }
   }
   ```
@@ -387,13 +418,13 @@ These endpoints handle configuration and user category/product management, divid
 
 ### User Product Management
 
-User-defined products are custom items added by users, which can be managed through the following endpoints. These endpoints allow retrieval, addition, replacement, updating, and deletion of products, as well as specific actions like updating or reducing product quantities.
+User-defined products are now fetched from Wix using the `wixClientId` stored in user settings, rather than a local store. The following endpoints reflect this change.
 
 #### Get User Products
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/products`
-- **Description**: Retrieves the list of user-defined products (parts) for a specific user.
+- **Description**: Retrieves the list of products for a specific user from their Wix store, including category and quantity information.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -411,187 +442,16 @@ User-defined products are custom items added by users, which can be managed thro
     "count": 1,
     "products": [
       {
-        "source": "user_defined",
-        "id": "custom123",
-        "title": "Custom Product",
+        "id": "wix123",
+        "title": "Wix Product",
+        "product_url": "https://example.wixsite.com/product/wix123",
         "current_price": 10.00,
         "original_price": 15.00,
-        "product_url": "https://example.com/custom123",
-        "image_url": "https://example.com/images/custom123.jpg",
-        "QTY": 5
+        "image_url": "https://wix.com/images/wix123.jpg",
+        "QTY": 5,
+        "category": "Books"
       }
     ]
-  }
-  ```
-
-#### Add User Product
-![POST](https://img.shields.io/badge/POST-green)
-
-- **Endpoint**: `/<USERid>/products`
-- **Description**: Adds a new user-defined product (part) to the user’s list. Requires specific fields in the JSON body, including `image_url` and `QTY`.
-
-| Parameter       | Description                                      | Default Value |
-|-----------------|--------------------------------------------------|---------------|
-| None            | Requires JSON body with "product" object         | N/A           |
-
-- **Example Request**:
-  ```bash
-  curl -X POST -H "Content-Type: application/json" -d '{"product": {"id": "custom123", "title": "Custom Product", "product_url": "https://example.com/custom123", "current_price": 10.00, "original_price": 15.00, "image_url": "https://example.com/images/custom123.jpg", "QTY": 5}}' http://localhost:5000/<USERid>/products
-  ```
-
-- **Example Response**:
-  ```json
-  {
-    "status": "success",
-    "message": "Product added for user <USERid>",
-    "product": {
-      "source": "user_defined",
-      "id": "custom123",
-      "title": "Custom Product",
-      "current_price": 10.00,
-      "original_price": 15.00,
-      "product_url": "https://example.com/custom123",
-      "image_url": "https://example.com/images/custom123.jpg",
-      "QTY": 5
-    }
-  }
-  ```
-
-#### Replace User Products
-![PUT](https://img.shields.io/badge/PUT-orange)
-
-- **Endpoint**: `/<USERid>/products`
-- **Description**: Replaces the entire list of user-defined products (parts) for a user. Each product must include `image_url` and `QTY`.
-
-| Parameter       | Description                                      | Default Value |
-|-----------------|--------------------------------------------------|---------------|
-| None            | Requires JSON body with "products" list          | N/A           |
-
-- **Example Request**:
-  ```bash
-  curl -X PUT -H "Content-Type: application/json" -d '{"products": [{"id": "custom123", "title": "Custom Product", "product_url": "https://example.com/custom123", "current_price": 10.00, "original_price": 15.00, "image_url": "https://example.com/images/custom123.jpg", "QTY": 5}]}' http://localhost:5000/<USERid>/products
-  ```
-
-- **Example Response**:
-  ```json
-  {
-    "status": "success",
-    "message": "Products for user <USERid> replaced",
-    "products": [
-      {
-        "source": "user_defined",
-        "id": "custom123",
-        "title": "Custom Product",
-        "current_price": 10.00,
-        "original_price": 15.00,
-        "product_url": "https://example.com/custom123",
-        "image_url": "https://example.com/images/custom123.jpg",
-        "QTY": 5
-      }
-    ]
-  }
-  ```
-
-#### Patch User Products
-![PATCH](https://img.shields.io/badge/PATCH-yellow)
-
-- **Endpoint**: `/<USERid>/products`
-- **Description**: Updates the user’s product list by adding or replacing products (parts), preserving existing ones not in the new list. Each new product must include `image_url` and `QTY`.
-
-| Parameter       | Description                                      | Default Value |
-|-----------------|--------------------------------------------------|---------------|
-| None            | Requires JSON body with "products" list          | N/A           |
-
-- **Example Request**:
-  ```bash
-  curl -X PATCH -H "Content-Type: application/json" -d '{"products": [{"id": "custom124", "title": "New Product", "product_url": "https://example.com/custom124", "current_price": 20.00, "original_price": 25.00, "image_url": "https://example.com/images/custom124.jpg", "QTY": 3}]}' http://localhost:5000/<USERid>/products
-  ```
-
-- **Example Response**:
-  ```json
-  {
-    "status": "success",
-    "message": "Products for user <USERid> updated",
-    "products": [
-      {
-        "source": "user_defined",
-        "id": "custom123",
-        "title": "Custom Product",
-        "current_price": 10.00,
-        "original_price": 15.00,
-        "product_url": "https://example.com/custom123",
-        "image_url": "https://example.com/images/custom123.jpg",
-        "QTY": 5
-      },
-      {
-        "source": "user_defined",
-        "id": "custom124",
-        "title": "New Product",
-        "current_price": 20.00,
-        "original_price": 25.00,
-        "product_url": "https://example.com/custom124",
-        "image_url": "https://example.com/images/custom124.jpg",
-        "QTY": 3
-      }
-    ]
-  }
-  ```
-
-#### Delete User Product
-![DELETE](https://img.shields.io/badge/DELETE-red)
-
-- **Endpoint**: `/<USERid>/products`
-- **Description**: Removes a specific user-defined product (part) from the user’s list.
-
-| Parameter       | Description                                      | Default Value |
-|-----------------|--------------------------------------------------|---------------|
-| `product_id`    | Product ID to remove                             | None          |
-
-- **Example Request**:
-  ```bash
-  curl -X DELETE http://localhost:5000/<USERid>/products?product_id=custom123
-  ```
-
-- **Example Response**:
-  ```json
-  {
-    "status": "success",
-    "message": "Product custom123 removed for user <USERid>",
-    "products": []
-  }
-  ```
-
-#### Update Product Quantity
-![PUT](https://img.shields.io/badge/PUT-orange)
-
-- **Endpoint**: `/<USERid>/products/<product_id>`
-- **Description**: Updates the `QTY` value of a specific user-defined product (part) to the specified value when a sale is made on the user’s website.
-
-| Parameter       | Description                                      | Default Value |
-|-----------------|--------------------------------------------------|---------------|
-| `product_id`    | Product ID to update (path)                      | None          |
-| `qty`           | New quantity value (query, int)                  | None          |
-
-- **Example Request**:
-  ```bash
-  curl -X PUT http://localhost:5000/<USERid>/products/custom123?qty=4
-  ```
-
-- **Example Response**:
-  ```json
-  {
-    "status": "success",
-    "message": "Quantity updated for product custom123 for user <USERid>",
-    "product": {
-      "source": "user_defined",
-      "id": "custom123",
-      "title": "Custom Product",
-      "current_price": 10.00,
-      "original_price": 15.00,
-      "product_url": "https://example.com/custom123",
-      "image_url": "https://example.com/images/custom123.jpg",
-      "QTY": 4
-    }
   }
   ```
 
@@ -599,7 +459,7 @@ User-defined products are custom items added by users, which can be managed thro
 ![GET](https://img.shields.io/badge/GET-blue)
 
 - **Endpoint**: `/<USERid>/products/<product_id>`
-- **Description**: Reduces the `QTY` value of a specific user-defined product by the amount specified in the `qty` query parameter. The `qty` must be a negative integer. The quantity will not go below zero.
+- **Description**: Reduces the `QTY` value of a specific Wix product by the amount specified in the `qty` query parameter. The `qty` must be a negative integer. The quantity will not go below zero. Note: This does not update the Wix store directly but modifies the local cache.
 
 | Parameter       | Description                                      | Default Value |
 |-----------------|--------------------------------------------------|---------------|
@@ -608,23 +468,23 @@ User-defined products are custom items added by users, which can be managed thro
 
 - **Example Request**:
   ```bash
-  curl "http://localhost:5000/<USERid>/products/custom123?qty=-2"
+  curl "http://localhost:5000/<USERid>/products/wix123?qty=-2"
   ```
 
 - **Example Response**:
   ```json
   {
     "status": "success",
-    "message": "Quantity reduced for product custom123 for user <USERid>",
+    "message": "Quantity reduced for product wix123 for user <USERid>",
     "product": {
-      "source": "user_defined",
-      "id": "custom123",
-      "title": "Custom Product",
+      "id": "wix123",
+      "title": "Wix Product",
+      "product_url": "https://example.wixsite.com/product/wix123",
       "current_price": 10.00,
       "original_price": 15.00,
-      "product_url": "https://example.com/custom123",
-      "image_url": "https://example.com/images/custom123.jpg",
-      "QTY": 3
+      "image_url": "https://wix.com/images/wix123.jpg",
+      "QTY": 3,
+      "category": "Books"
     }
   }
   ```
@@ -638,4 +498,11 @@ User-defined products are custom items added by users, which can be managed thro
 
 ---
 
-This documentation provides a comprehensive reference for all API endpoints, with consistent formatting and detailed examples. The **User Product Management** section includes both the **Update Product Quantity** (PUT) and **Reduce Product Quantity** (GET) endpoints, offering flexibility in managing product quantities. Replace `<USERid>` with the actual user ID when making requests.
+## Key Updates
+
+- **Wix Integration**: Products are now sourced from Wix using the `wixClientId` from user settings. The `/<USERid>/products` endpoint fetches from Wix instead of a local store. Other product management endpoints (POST, PUT, PATCH, DELETE) are removed as Wix handles product creation and updates.
+- **New Endpoint**: `/discounted-products` (no USERid) retrieves all products for a given category ID across all providers without discount filtering.
+- **Discounted Products**: The `/<USERid>/discounted-products` endpoint now includes Wix products from all users matching the category and discount criteria.
+- **User Settings**: Added `wixClientId` as a required field for user settings to enable Wix API integration.
+
+Replace `<USERid>` with the actual user ID when making requests.
