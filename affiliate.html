@@ -10,9 +10,17 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { max-width: 800px; margin: auto; }
-        .menu { margin-bottom: 20px; }
-        .menu a { margin-right: 15px; text-decoration: none; color: #007BFF; }
-        .menu a:hover { text-decoration: underline; }
+        .menu { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .menu button { 
+            padding: 8px 12px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 14px; 
+        }
+        .menu button:hover { background-color: #0056b3; }
         .section { display: none; }
         .active { display: block; }
         .affiliate-form { display: flex; flex-direction: column; gap: 10px; max-width: 400px; }
@@ -32,15 +40,32 @@
             background-color: #dc3545;
             border-color: #c82333;
         }
+        /* Referral Test Section Specific Styles */
+        .referral-form { max-width: 400px; margin-bottom: 20px; }
+        .referral-form table { width: 100%; border-collapse: collapse; }
+        .referral-form td { padding: 5px; vertical-align: middle; }
+        .referral-form label { font-weight: bold; text-align: right; padding-right: 10px; }
+        .referral-form input { width: 100%; padding: 5px; box-sizing: border-box; }
+        .referral-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; width: 100%; }
+        .referral-form button:hover { background-color: #0056b3; }
+        /* Update Password Section Specific Styles */
+        .password-form { display: flex; flex-direction: column; gap: 10px; max-width: 400px; }
+        .password-form label { font-weight: bold; }
+        .password-form input { padding: 5px; }
+        .password-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; }
+        .password-form button:hover { background-color: #0056b3; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="menu">
-            | <a href="#" onclick="showAffiliate('amazon_uk'); return false;">Amazon UK</a>
-            | <a href="#" onclick="showAffiliate('ebay_uk'); return false;">eBay UK</a>
-            | <a href="#" onclick="showAffiliate('awin'); return false;">Awin</a>
-            | <a href="#" onclick="showAffiliate('cj'); return false;">CJ</a>
+            <button onclick="showAffiliate('amazon_uk')">Amazon UK</button>
+            <button onclick="showAffiliate('ebay_uk')">eBay UK</button>
+            <button onclick="showAffiliate('awin')">Awin</button>
+            <button onclick="showAffiliate('cj')">CJ</button>
+            <button onclick="showAffiliate('page_visit_test')">Page Visit Test</button>
+            <button onclick="showAffiliate('order_test')">Order Test</button>
+            <button onclick="showAffiliate('update_password')">Update Password</button>
         </div>
 
         <div id="amazon_uk" class="section">
@@ -98,6 +123,75 @@
                 <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>. Click "Publisher Sign Up," provide your website URL and promotion methods, submit your application, and await approval (3-7 days).
             </div>
         </div>
+
+        <div id="page_visit_test" class="section">
+            <h2>Page Visit Referral Test</h2>
+            <div class="referral-form">
+                <form id="pageVisitForm">
+                    <table>
+                        <tr>
+                            <td><label for="pageReferer">Referer:</label></td>
+                            <td><input type="text" id="pageReferer" name="referer" value="test_user" placeholder="Enter referer"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="page">Page:</label></td>
+                            <td><input type="text" id="page" name="page" value="/home" placeholder="Enter page URL"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="pageTimestamp">Timestamp:</label></td>
+                            <td><input type="text" id="pageTimestamp" name="timestamp" placeholder="YYYY-MM-DD HH:MM:SS"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><button type="submit">Submit Page Visit</button></td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+
+        <div id="order_test" class="section">
+            <h2>Order Referral Test</h2>
+            <div class="referral-form">
+                <form id="orderForm">
+                    <table>
+                        <tr>
+                            <td><label for="orderReferer">Referer:</label></td>
+                            <td><input type="text" id="orderReferer" name="referer" value="test_user" placeholder="Enter referer"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="orderId">Order ID:</label></td>
+                            <td><input type="text" id="orderId" name="orderId" value="ORD12345" placeholder="Enter order ID"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="buyer">Buyer Name:</label></td>
+                            <td><input type="text" id="buyer" name="buyer" value="John Doe" placeholder="Enter buyer name"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="total">Total Amount (£):</label></td>
+                            <td><input type="number" id="total" name="total" value="99.99" step="0.01" placeholder="Enter total amount (£)"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="orderTimestamp">Timestamp:</label></td>
+                            <td><input type="text" id="orderTimestamp" name="timestamp" placeholder="YYYY-MM-DD HH:MM:SS"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><button type="submit">Submit Order</button></td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+
+        <div id="update_password" class="section">
+            <h2>Update User Password</h2>
+            <div class="password-form">
+                <label for="updateEmail">Email:</label>
+                <input type="email" id="updateEmail" placeholder="Enter user email">
+                <label for="updatePassword">New Password:</label>
+                <input type="password" id="updatePassword" placeholder="Enter new password">
+                <button onclick="updatePassword()">Update Password</button>
+            </div>
+        </div>
     </div>
 
     <!-- jQuery (required for Toastr) -->
@@ -105,7 +199,7 @@
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        const apiUrl = 'http://localhost:5000';
+        const apiUrl = 'http://192.168.1.17:5000';
 
         // Configure Toastr options
         toastr.options = {
@@ -117,13 +211,37 @@
             hideMethod: 'slideUp'
         };
 
+        // Function to format current timestamp as YYYY-MM-DD HH:MM:SS
+        function getCurrentTimestamp() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
         function showAffiliate(affiliate) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(affiliate).classList.add('active');
             loadAffiliate(affiliate);
+
+            // Update timestamps when showing referral test sections
+            if (affiliate === 'page_visit_test') {
+                document.getElementById('pageTimestamp').value = getCurrentTimestamp();
+            } else if (affiliate === 'order_test') {
+                document.getElementById('orderTimestamp').value = getCurrentTimestamp();
+            }
         }
 
         async function loadAffiliate(affiliate) {
+            // Skip loading for referral test and update password sections since they don't need initial data
+            if (affiliate === 'page_visit_test' || affiliate === 'order_test' || affiliate === 'update_password') {
+                return;
+            }
+
             try {
                 const response = await fetch(`${apiUrl}/config`);
                 if (!response.ok) throw new Error(`Failed to fetch /config: ${response.status}`);
@@ -198,6 +316,80 @@
                 toastr.error(`Error updating credentials: ${error.message}`);
             }
         }
+
+        // Function to handle referral form submission
+        async function submitReferral(formId, successMessage) {
+            const form = document.getElementById(formId);
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const jsonData = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch(`${apiUrl}/referal`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(jsonData),
+                    });
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.message || 'Unknown error');
+                    }
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        toastr.success(`${successMessage} - Referer: ${data.referer}`, 'Success');
+                    } else {
+                        toastr.error(data.message || 'Unknown error', 'Error');
+                    }
+                } catch (error) {
+                    toastr.error(error.message || 'Failed to connect to server', 'Error');
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+        // Function to handle password update
+        async function updatePassword() {
+            const email = document.getElementById('updateEmail').value.trim();
+            const newPassword = document.getElementById('updatePassword').value.trim();
+
+            if (!email || !newPassword) {
+                toastr.error('Email and new password are required');
+                return;
+            }
+
+            const payload = {
+                email: email,
+                password: newPassword
+            };
+
+            try {
+                const response = await fetch(`${apiUrl}/update-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.message || `Failed to update password: ${response.status}`);
+                }
+                const data = await response.json();
+                toastr.success(`Password updated successfully for ${email}`);
+                // Clear the form after success
+                document.getElementById('updateEmail').value = '';
+                document.getElementById('updatePassword').value = '';
+            } catch (error) {
+                console.error('Error in updatePassword:', error);
+                toastr.error(`Error updating password: ${error.message}`);
+            }
+        }
+
+        // Initialize referral form handlers
+        submitReferral('pageVisitForm', 'Page visit recorded successfully');
+        submitReferral('orderForm', 'Order recorded successfully');
 
         // Load the first affiliate by default
         showAffiliate('amazon_uk');

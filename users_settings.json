@@ -1,5 +1,6 @@
 {
     "232": {
+        "Password": "$2b$12$QPjvIvgZr9O5Ov3cbJI5xOBGC9Rq9vG/E.6Wrjqcr1.awGTHFHNwS",
         "contact_name": "Si",
         "website_url": "www.someurl.com",
         "email_address": "si@ntsa.uk",
@@ -9,25 +10,44 @@
             "visits": [
                 {
                     "page": "/home",
-                    "timestamp": "2025-03-21 10:00:00"
+                    "timestamp": "2025-03-21 10:21:23"
                 },
                 {
-                    "page": "/home",
-                    "timestamp": "2025-03-21 10:00:00"
+                    "page": "/mywebpage",
+                    "timestamp": "2025-03-21 11:41:18"
                 }
             ],
+            "orders": [
+                {
+                    "orderId": "ORD12323445",
+                    "buyer": "John Doe",
+                    "total": "8.99",
+                    "timestamp": "2025-03-21 11:41:37"
+                }
+            ]
+        },
+        "password": "$2b$12$OC5HOTNzriWuBugxKF6qyOKC4gCGGq4Uj1p7VUKRrIMp8Vl.po5z6"
+    },
+    "test_user": {
+        "contact_name": "",
+        "website_url": "",
+        "email_address": "",
+        "phone_number": "",
+        "wixClientId": "",
+        "referrals": {
+            "visits": [],
             "orders": [
                 {
                     "orderId": "ORD12345",
                     "buyer": "John Doe",
                     "total": "99.99",
-                    "timestamp": "2025-03-21 10:00:00"
+                    "timestamp": "2025-03-21 07:03:49"
                 },
                 {
-                    "orderId": "ORD12345",
+                    "orderId": "ORD12323445",
                     "buyer": "John Doe",
-                    "total": "99.99",
-                    "timestamp": "2025-03-21 10:00:00"
+                    "total": "8.99",
+                    "timestamp": "2025-03-21 11:41:37"
                 }
             ]
         }

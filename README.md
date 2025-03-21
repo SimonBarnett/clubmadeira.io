@@ -57,12 +57,12 @@ This project integrates a Flask backend with a Wix frontend to display and manag
      ```
 
 3. **Run the Flask App**:
-   - Save the Flask code as `madeira.py`.
+   - Save the Flask code as `madeira.py\`.
    - Start the app from the terminal:
      ```bash
      python madeira.py
      ```
-   - The API will be available at `http://localhost:5000`.
+   - The API will be available at `http://192.168.1.17:5000`.
 
 ### Wix Frontend with Velo Setup
 
@@ -80,7 +80,7 @@ This project integrates a Flask backend with a Wix frontend to display and manag
 4. **Add Velo Script**:
    - In the Velo sidebar, open the `category.js` file.
    - Paste the provided Velo script into this file.
-   - Update the `baseUrl` variable in the script to point to your Flask API (e.g., `http://localhost:5000` or your ngrok URL).
+   - Update the `baseUrl` variable in the script to point to your Flask API (e.g., `http://192.168.1.17:5000` or your ngrok URL).
 
 ## User Part Gateway and Stock Updates
 

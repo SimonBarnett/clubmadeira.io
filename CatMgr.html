@@ -12,26 +12,24 @@
         .container { max-width: 800px; margin: auto; }
         .menu { margin-bottom: 20px; }
         .menu a {
-            display: inline-block; /* Makes the link behave like a button */
-            padding: 8px 16px; /* Adds padding for button size */
-            margin-right: 10px; /* Adjusted spacing between buttons */
-            text-decoration: none; /* Removes underline */
-            color: white; /* White text for contrast */
-            background-color: #007BFF; /* Blue background */
-            border-radius: 4px; /* Rounded corners */
-            cursor: pointer; /* Hand cursor on hover */
-            transition: background-color 0.3s; /* Smooth hover transition */
+            display: inline-block;
+            padding: 8px 16px;
+            margin-right: 10px;
+            text-decoration: none;
+            color: white;
+            background-color: #007BFF;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
         .menu a:hover {
-            background-color: #0056b3; /* Darker blue on hover */
-            text-decoration: none; /* Ensures no underline on hover */
+            background-color: #0056b3;
+            text-decoration: none;
         }
         .section { display: none; }
         .active { display: block; }
         .treeview { max-height: 400px; overflow-y: auto; margin-bottom: 10px; }
-        .treeview,
-        .treeview ul,
-        .treeview li {
+        .treeview, .treeview ul, .treeview li {
             list-style-type: none;
             padding: 0;
             margin: 0;
@@ -49,7 +47,6 @@
         .settings-form input { padding: 5px; }
         .settings-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; }
         .settings-form button:hover { background-color: #0056b3; }
-        /* Toastr Custom Styles */
         #toast-container > .toast-success {
             background-color: #28a745;
             border-color: #218838;
@@ -63,13 +60,14 @@
 <body>
     <div class="container">        
         <div class="menu">
-            <label for="userId">User ID:</label>
-            <input type="text" id="userId" placeholder="Enter User ID"><br><br>
+            <!-- Hidden User ID input and label -->
+            <input type="text" id="userId" placeholder="Enter User ID" style="display: none;">
             <a href="#" onclick="showSection('settings'); return false;">User</a>
             <a href="#" onclick="showSection('categories'); return false;">Categories</a>
             <a href="#" onclick="showSection('products'); return false;">Products</a>
             <a href="#" onclick="showSection('visits'); return false;">Visits</a>
             <a href="#" onclick="showSection('orders'); return false;">Orders</a>
+            <a href="#" onclick="logout(); return false;">Logout</a>
         </div>
 
         <div id="categories" class="section">
@@ -113,7 +111,6 @@
             </div>
         </div>
 
-        <!-- Visits Section -->
         <div id="visits" class="section">
             <h2>Visits</h2>
             <table id="visitsTable">
@@ -127,7 +124,6 @@
             </table>
         </div>
 
-        <!-- Orders Section -->
         <div id="orders" class="section">
             <h2>Orders</h2>
             <table id="ordersTable">
@@ -148,7 +144,22 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        const apiUrl = 'http://localhost:5000';
+        const apiUrl = 'http://192.168.1.17:5000';
+
+        // Check authentication on page load
+        window.onload = function() {
+            const token = localStorage.getItem('authToken');
+            const userId = localStorage.getItem('userId');
+            if (!token) {
+                window.location.href = 'login.html'; // Redirect to login if no token
+                return;
+            }
+            if (userId) {
+                document.getElementById('userId').value = userId; // Set User ID in hidden input
+                showSection('settings'); // Show settings by default
+                loadSettings(); // Load settings automatically
+            }
+        };
 
         // Configure Toastr options
         toastr.options = {
@@ -160,6 +171,33 @@
             hideMethod: 'slideUp'
         };
 
+        // Authenticated fetch helper with Bearer token
+        async function authenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('authToken');
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+            const response = await fetch(url, options);
+            if (response.status === 401) { // Unauthorized
+                toastr.error('Session expired. Please log in again.');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
+            }
+            return response;
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            toastr.success('Logged out successfully.');
+            window.location.href = '/login.html';
+        }
+
+        // Show section
         function showSection(section) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(section).classList.add('active');
@@ -174,11 +212,11 @@
         async function loadSettings() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                toastr.error('Please enter a User ID');
+                toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const response = await fetch(`${apiUrl}/${userId}/user`);
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`);
                 if (!response.ok) throw new Error(`Failed to fetch /${userId}/user: ${response.status}`);
                 const data = await response.json();
                 console.log('User Settings:', data);
@@ -197,7 +235,7 @@
         async function saveSettings() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                toastr.error('Please enter a User ID');
+                toastr.error('User ID not found in session');
                 return;
             }
             const settings = {
@@ -208,9 +246,8 @@
                 wixClientId: document.getElementById('wixClientId').value.trim()
             };
             try {
-                const response = await fetch(`${apiUrl}/${userId}/user`, {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(settings)
                 });
                 if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
@@ -226,17 +263,17 @@
         async function loadCategories() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                toastr.error('Please enter a User ID');
+                toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const userResponse = await fetch(`${apiUrl}/${userId}/mycategories`);
+                const userResponse = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`);
                 if (!userResponse.ok) throw new Error(`Failed to fetch /${userId}/mycategories: ${userResponse.status}`);
                 const userData = await userResponse.json();
                 console.log('User Categories:', userData);
                 const savedCategories = userData.categories || [];
 
-                const response = await fetch(`${apiUrl}/categories`);
+                const response = await authenticatedFetch(`${apiUrl}/categories`);
                 if (!response.ok) throw new Error(`Failed to fetch /categories: ${response.status}`);
                 const data = await response.json();
                 console.log('Top-Level Categories:', data);
@@ -296,16 +333,15 @@
             } else {
                 if (subUl.children.length === 0) {
                     try {
-                        const response = await fetch(`${apiUrl}/categories?parent_id=${parentId}`);
-                        if (!response.ok) throw new Error(`Failed to fetch subcategories for ${parentId}: ${response.status}`);
+                        const response = await authenticatedFetch(`${apiUrl}/categories?parent_id=${parentId}`);
+                        if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
                         const data = await response.json();
                         console.log(`Subcategories for ${parentId}:`, data);
 
                         const userId = document.getElementById('userId').value;
-                        const userResponse = await fetch(`${apiUrl}/${userId}/mycategories`);
+                        const userResponse = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`);
                         if (!userResponse.ok) throw new Error(`Failed to fetch /${userId}/mycategories: ${userResponse.status}`);
                         const userData = await userResponse.json();
-                        console.log('User Categories (sub):', userData);
                         const savedCategories = userData.categories || [];
 
                         data.categories.forEach(cat => {
@@ -326,20 +362,19 @@
         async function saveCategories() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                toastr.error('Please enter a User ID');
+                toastr.error('User ID not found in session');
                 return;
             }
             const checked = Array.from(document.querySelectorAll('#categoryTree input[type="checkbox"]:checked'))
                 .map(cb => cb.value);
             try {
-                const response = await fetch(`${apiUrl}/${userId}/mycategories`, {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ categories: checked })
                 });
                 if (!response.ok) throw new Error(`Failed to save categories: ${response.status}`);
                 const data = await response.json();
-                toastr.success('Categories saved successfully: ' + JSON.stringify(data.categories));
+                toastr.success('Categories saved successfully');
             } catch (error) {
                 console.error('Error in saveCategories:', error);
                 toastr.error(`Error saving categories: ${error.message}`);
@@ -350,11 +385,11 @@
         async function loadProducts() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                toastr.error('Please enter a User ID');
+                toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const response = await fetch(`${apiUrl}/${userId}/products`);
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/products`);
                 if (!response.ok) throw new Error(`Failed to fetch /${userId}/products: ${response.status}`);
                 const data = await response.json();
                 const tbody = document.getElementById('productList');
@@ -377,7 +412,7 @@
                 <td>${product.current_price}</td>
                 <td>${product.original_price}</td>
                 <td><img src="${product.image_url}" width="50"></td>
-                <td>${product.QTY}</td>
+                <td>${product.qty}</td> <!-- Fixed 'QTY' to 'qty' to match API response -->
             `;
             return tr;
         }
@@ -386,11 +421,11 @@
         async function loadVisits() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                toastr.error('Please enter a User ID');
+                toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const response = await fetch(`${apiUrl}/${userId}/visits`);
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/visits`);
                 if (!response.ok) throw new Error(`Failed to fetch /${userId}/visits: ${response.status}`);
                 const data = await response.json();
                 if (data.status === 'success') {
@@ -428,11 +463,11 @@
         async function loadOrders() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                toastr.error('Please enter a User ID');
+                toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const response = await fetch(`${apiUrl}/${userId}/orders`);
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/orders`);
                 if (!response.ok) throw new Error(`Failed to fetch /${userId}/orders: ${response.status}`);
                 const data = await response.json();
                 if (data.status === 'success') {

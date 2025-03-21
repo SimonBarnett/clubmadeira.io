@@ -5,11 +5,27 @@ import time
 import json
 import os
 import requests
+import jwt
 from pseudo_categories import PSEUDO_CATEGORIES
+import random
+import string
+import hashlib
+from flask import Flask, request, jsonify
+import bcrypt
+import json
+import datetime
 
 app = Flask(__name__)
-CORS(app)
+# Enable CORS with verbose logging
+CORS(app, resources={
+    r"/*": {  # Wildcard to match all routes
+        "origins": "http://walrus:8282",
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+}, supports_credentials=False)
 
+SECRET_KEY = "itsananagramjanet"  # Replace with a secure key
 USERS_FILE = "users_categories.json"
 USERS_PRODUCTS_FILE = "users_products.json"
 CONFIG_FILE = "config.json"
@@ -1172,14 +1188,12 @@ def handle_referral():
 
         users_settings = load_users_settings()
         
-        # Extract common fields
         referer = data.get("referer", "none")
         timestamp = data.get("timestamp")
         
         if not timestamp:
             return jsonify({"status": "error", "message": "Timestamp is required"}), 400
 
-        # Initialize referral data for this user if it doesn't exist
         if referer not in users_settings:
             users_settings[referer] = {
                 "contact_name": "",
@@ -1198,8 +1212,7 @@ def handle_referral():
                 "orders": []
             }
 
-        # Handle different types of referral data
-        if "page" in data:  # From home.js
+        if "page" in data:
             referral_data = {
                 "page": data["page"],
                 "timestamp": timestamp
@@ -1207,7 +1220,7 @@ def handle_referral():
             users_settings[referer]["referrals"]["visits"].append(referral_data)
             print(f"Stored page visit for referer {referer}: {referral_data}")
         
-        elif "orderId" in data:  # From events.js
+        elif "orderId" in data:
             referral_data = {
                 "orderId": data["orderId"],
                 "buyer": data["buyer"],
@@ -1220,7 +1233,6 @@ def handle_referral():
         else:
             return jsonify({"status": "error", "message": "Invalid referral data format"}), 400
 
-        # Save updated user settings with referral data
         save_users_settings(users_settings)
         
         return jsonify({
@@ -1234,43 +1246,180 @@ def handle_referral():
         print(f"Error in referral endpoint: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
-# New endpoint: /<userId>/visits
-@app.route('/<userId>/visits', methods=['GET'])
-def get_user_visits(userId):
-    """
-    Retrieve all visit data for the specified userId from users_settings.json.
-    Returns the visits array from referrals.visits.
-    """
+def load_users_settings():
+    """Load users_settings.json file."""
     try:
+        with open('users_settings.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip()
+        plain_password = data.get("password", "").strip()
+
+        if not email or not plain_password:
+            return jsonify({"status": "error", "message": "Email and password are required"}), 400
+
         users_settings = load_users_settings()
-        
-        if userId in users_settings and "referrals" in users_settings[userId]:
-            visits = users_settings[userId]["referrals"]["visits"]
-            return jsonify({"status": "success", "userId": userId, "visits": visits})
-        else:
-            return jsonify({"status": "success", "userId": userId, "visits": []})
+        matching_user_id = None
+        for user_id, settings in users_settings.items():
+            stored_email = settings.get("email_address", "").strip()
+            if stored_email and stored_email.lower() == email.lower():
+                stored_hashed_password = settings.get("password", "")
+                if isinstance(stored_hashed_password, str):
+                    stored_hashed_password = stored_hashed_password.encode('utf-8')
+                if bcrypt.checkpw(plain_password.encode('utf-8'), stored_hashed_password):
+                    matching_user_id = user_id
+                    break
+
+        if not matching_user_id:
+            return jsonify({"status": "error", "message": "Invalid email or password"}), 401
+
+        token_payload = {"userId": matching_user_id, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)}
+        token = jwt.encode(token_payload, SECRET_KEY, algorithm="HS256")
+
+        return jsonify({"status": "success", "message": "Login successful", "token": token, "userId": matching_user_id}), 200
     except Exception as e:
-        print(f"Error in /<userId>/visits endpoint: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
-# New endpoint: /<userId>/orders
-@app.route('/<userId>/orders', methods=['GET'])
-def get_user_orders(userId):
-    """
-    Retrieve all order data for the specified userId from users_settings.json.
-    Returns the orders array from referrals.orders.
-    """
+@app.route('/signup', methods=['POST'])
+def signup():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        email = data.get("email")
+        phone = data.get("phone")
+        plain_password = data.get("password")
+
+        if not email or not phone or not plain_password:
+            return jsonify({"status": "error", "message": "Email, phone, and password are required"}), 400
+
+        users_settings = load_users_settings()
+        if email in users_settings:
+            return jsonify({"status": "error", "message": "Email already registered"}), 400
+
+        hashed_password = bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt())
+        users_settings[email] = {
+            "email_address": email,
+            "phone_number": phone,
+            "password": hashed_password.decode('utf-8'),
+            "contact_name": "",
+            "website_url": "",
+            "wixClientId": "",
+            "referrals": {"visits": [], "orders": []}
+        }
+        save_users_settings(users_settings)
+        return jsonify({"status": "success", "message": "Signup successful"}), 201
+    except Exception as e:
+        print(f"Error in signup endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@app.route('/update-password', methods=['POST'])
+def update_password():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        email = data.get("email", "").strip()
+        new_password = data.get("password", "").strip()
+
+        if not email or not new_password:
+            return jsonify({"status": "error", "message": "Email and password are required"}), 400
+
+        users_settings = load_users_settings()
+        matching_user_id = None
+        for user_id, settings in users_settings.items():
+            stored_email = settings.get("email_address", "").strip()
+            if stored_email and stored_email.lower() == email.lower():
+                matching_user_id = user_id
+                break
+
+        if not matching_user_id:
+            return jsonify({"status": "error", "message": f"No user found with email '{email}'"}), 404
+
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+        users_settings[matching_user_id]["password"] = hashed_password.decode('utf-8')
+        save_users_settings(users_settings)
+        return jsonify({"status": "success", "message": f"Password updated for user with email '{email}'", "user_id": matching_user_id}), 200
+    except Exception as e:
+        print(f"Error in update-password endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@app.route('/reset-password', methods=['POST'])
+def reset_password():
+    """Handle password reset by generating a new password and updating users_settings.json."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        email = data.get("email")
+        if not email:
+            return jsonify({"status": "error", "message": "Email is required"}), 400
+
+        users_settings = load_users_settings()
+
+        if email not in users_settings:
+            return jsonify({"status": "error", "message": "Email not found"}), 404
+
+        new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        hashed_new_password = hashlib.sha256(new_password.encode('utf-8')).hexdigest()
+        users_settings[email]["password"] = hashed_new_password
+
+        phone = users_settings[email]["phone_number"]
+        print(f"New password for {email}: {new_password} (hashed: {hashed_new_password}, would be sent to {phone})")
+
+        save_users_settings(users_settings)
+        return jsonify({"status": "success", "message": "A new password has been generated and would be sent to your phone"}), 200
+
+    except Exception as e:
+        print(f"Error in reset-password endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@app.route('/<USERid>/visits', methods=['GET'])
+def get_user_visits(USERid):
+    """Fetch the list of visits for a user from users_settings.json."""
     try:
         users_settings = load_users_settings()
-        
-        if userId in users_settings and "referrals" in users_settings[userId]:
-            orders = users_settings[userId]["referrals"]["orders"]
-            return jsonify({"status": "success", "userId": userId, "orders": orders})
-        else:
-            return jsonify({"status": "success", "userId": userId, "orders": []})
+        if USERid not in users_settings:
+            return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
+
+        referrals = users_settings[USERid].get("referrals", {})
+        visits = referrals.get("visits", [])
+        return jsonify({
+            "status": "success",
+            "count": len(visits),
+            "visits": visits
+        })
     except Exception as e:
-        print(f"Error in /<userId>/orders endpoint: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+        print(f"Error in /<USERid>/visits GET: {str(e)}")
+        return jsonify({"status": "error", "message": f"Failed to retrieve visits: {str(e)}"}), 500
+
+@app.route('/<USERid>/orders', methods=['GET'])
+def get_user_orders(USERid):
+    """Fetch the list of orders for a user from users_settings.json."""
+    try:
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
+
+        referrals = users_settings[USERid].get("referrals", {})
+        orders = referrals.get("orders", [])
+        return jsonify({
+            "status": "success",
+            "count": len(orders),
+            "orders": orders
+        })
+    except Exception as e:
+        print(f"Error in /<USERid>/orders GET: {str(e)}")
+        return jsonify({"status": "error", "message": f"Failed to retrieve orders: {str(e)}"}), 500
 
 # endregion Management Endpoints
 

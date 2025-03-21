@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Signup</title>
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .toggle-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .toggle-link a {
+            color: #007BFF;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .toggle-link a:hover {
+            text-decoration: underline;
+        }
+        /* Toastr Custom Styles */
+        #toast-container > .toast-success {
+            background-color: #28a745;
+            border-color: #218838;
+        }
+        #toast-container > .toast-error {
+            background-color: #dc3545;
+            border-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginContainer">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div class="toggle-link">
+            <a onclick="showSignup()">Need an account? Sign Up</a><br>
+            <a onclick="showForgotPassword()">Forgot Password?</a>
+        </div>
+    </div>
+
+    <div class="container" id="signupContainer" style="display: none;">
+        <h2>Sign Up</h2>
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="signupEmail">Email:</label>
+                <input type="email" id="signupEmail" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="signupPhone">Phone Number:</label>
+                <input type="tel" id="signupPhone" name="phone" placeholder="Enter your phone (e.g., +447123456789)" pattern="\+[0-9]{10,14}" required>
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password:</label>
+                <input type="password" id="signupPassword" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Sign Up</button>
+        </form>
+        <div class="toggle-link">
+            <a onclick="showLogin()">Already have an account? Login</a>
+        </div>
+    </div>
+
+    <div class="container" id="forgotPasswordContainer" style="display: none;">
+        <h2>Forgot Password</h2>
+        <form id="forgotPasswordForm">
+            <div class="form-group">
+                <label for="forgotEmail">Email:</label>
+                <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
+            </div>
+            <button type="submit">Reset Password</button>
+        </form>
+        <div class="toggle-link">
+            <a onclick="showLogin()">Back to Login</a>
+        </div>
+    </div>
+
+    <!-- jQuery (required for Toastr) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        const apiUrl = 'http://192.168.1.17:5000';
+
+        // Configure Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
+        };
+
+        // Toggle between forms
+        function showLogin() {
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('signupContainer').style.display = 'none';
+            document.getElementById('forgotPasswordContainer').style.display = 'none';
+        }
+
+        function showSignup() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('signupContainer').style.display = 'block';
+            document.getElementById('forgotPasswordContainer').style.display = 'none';
+        }
+
+        function showForgotPassword() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('signupContainer').style.display = 'none';
+            document.getElementById('forgotPasswordContainer').style.display = 'block';
+        }
+
+        // Signup Form Submission
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
+            const password = document.getElementById('signupPassword').value;
+
+            try {
+                const response = await fetch(`${apiUrl}/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, phone, password }) // Send plain password; hashing should be server-side
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.message || 'Signup failed');
+                }
+
+                const data = await response.json();
+                toastr.success('Account created successfully! Please log in.');
+                showLogin();
+            } catch (error) {
+                toastr.error(error.message || 'Error during signup');
+                console.error('Signup Error:', error);
+            }
+        });
+
+        // Login Form Submission with HTTP Token
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${apiUrl}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }) // Send plain password; server should hash and verify
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.message || 'Login failed');
+                }
+
+                const data = await response.json();
+                // Store the token and userId (if provided) in localStorage
+                localStorage.setItem('authToken', data.token);
+                if (data.userId) localStorage.setItem('userId', data.userId);
+                toastr.success(`Welcome back, ${email}!`);
+                window.location.href = '/CatMgr.html'; // Redirect to protected page
+            } catch (error) {
+                toastr.error(error.message || 'Error during login');
+                console.error('Login Error:', error);
+            }
+        });
+
+        // Forgot Password Form Submission
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            try {
+                const response = await fetch(`${apiUrl}/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.message || 'Reset request failed');
+                }
+
+                const data = await response.json();
+                toastr.success('A reset link has been sent to your email.');
+                showLogin();
+            } catch (error) {
+                toastr.error(error.message || 'Error during password reset');
+                console.error('Reset Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
