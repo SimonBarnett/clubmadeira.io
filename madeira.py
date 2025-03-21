@@ -5,7 +5,7 @@ import time
 import json
 import os
 import requests
-from pseudo_categories import PSEUDO_CATEGORIES  # Added import
+from pseudo_categories import PSEUDO_CATEGORIES
 
 app = Flask(__name__)
 CORS(app)
@@ -42,10 +42,140 @@ def get_user_categories(user_id):
     return users_data.get(user_id, [])
 
 def load_users_products():
-    if os.path.exists(USERS_PRODUCTS_FILE):
-        with open(USERS_PRODUCTS_FILE, 'r') as f:
-            return json.load(f)
-    return {}
+    """Load Wix products for all users using their wixClientId from users_settings.json, including category and correct QTY."""
+    users_settings = load_users_settings()
+    users_products = {}
+    
+    for user_id, settings in users_settings.items():
+        wix_client_id = settings.get("wixClientId")
+        if not wix_client_id:
+            print(f"No wixClientId found for user {user_id}")
+            users_products[user_id] = []
+            continue
+
+        token_url = "https://www.wixapis.com/oauth2/token"
+        payload = {
+            "clientId": wix_client_id,
+            "grantType": "anonymous"
+        }
+        headers = {"Content-Type": "application/json"}
+        try:
+            response = requests.post(token_url, json=payload, headers=headers)
+            if response.status_code != 200:
+                print(f"Error getting token for user {user_id}: {response.status_code} - {response.text}")
+                users_products[user_id] = []
+                continue
+            token_data = response.json()
+            access_token = token_data["access_token"]
+            print(f"Access Token for user {user_id}: {access_token}")
+        except Exception as e:
+            print(f"Token fetch error for user {user_id}: {str(e)}")
+            users_products[user_id] = []
+            continue
+
+        collections_url = "https://www.wixapis.com/stores-reader/v1/collections/query"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}"
+        }
+
+        def fetch_collections(limit=10, offset=0):
+            query_payload = {
+                "query": {
+                    "paging": {"limit": limit, "offset": offset}
+                },
+                "includeNumberOfProducts": True
+            }
+            response = requests.post(collections_url, headers=headers, json=query_payload)
+            if response.status_code != 200:
+                print(f"Error fetching collections for user {user_id}: {response.status_code} - {response.text}")
+                return None
+            return response.json()
+
+        products_url = "https://www.wixapis.com/stores/v1/products/query"
+
+        def fetch_products_for_collection(collection_id, limit=10, offset=0):
+            filter_str = json.dumps({"collections.id": {"$hasSome": [collection_id]}})
+            query_payload = {
+                "query": {
+                    "filter": filter_str,
+                    "paging": {"limit": limit, "offset": offset}
+                }
+            }
+            response = requests.post(products_url, headers=headers, json=query_payload)
+            if response.status_code != 200:
+                print(f"Error fetching products for collection {collection_id} for user {user_id}: {response.status_code} - {response.text}")
+                return None
+            return response.json()
+
+        all_collections = []
+        limit = 10
+        offset = 0
+
+        while True:
+            result = fetch_collections(limit=limit, offset=offset)
+            if not result or "collections" not in result or not result["collections"]:
+                break
+
+            collections = result["collections"]
+            filtered_collections = [
+                {
+                    "id": col["id"],
+                    "name": col["name"],
+                    "numberOfProducts": col["numberOfProducts"],
+                    "products": []
+                }
+                for col in collections
+                if not col["id"].startswith("00000000")
+            ]
+            all_collections.extend(filtered_collections)
+            print(f"Fetched {len(collections)} collections, kept {len(filtered_collections)} for user {user_id} (offset {offset} to {offset + limit - 1})")
+            offset += limit
+            if len(collections) < limit:
+                break
+
+        all_products = []
+        for collection in all_collections:
+            collection_id = collection["id"]
+            collection_name = collection["name"]
+            offset = 0
+
+            while True:
+                result = fetch_products_for_collection(collection_id, limit=limit, offset=offset)
+                if not result or "products" not in result or not result["products"]:
+                    break
+
+                products = result["products"]
+                formatted_products = [
+                    {
+                        "id": product.get("id", ""),
+                        "title": product.get("name", ""),
+                        "product_url": (
+                            product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
+                            product.get("productPageUrl", {}).get("path", "").lstrip("/")
+                        ),
+                        "current_price": float(product.get("price", {}).get("formatted", {}).get("price", "0").replace("$", "").replace("£", "").replace(",", "")) or 0.0,
+                        "original_price": float(product.get("discountedPrice", {}).get("formatted", {}).get("price", product.get("price", {}).get("formatted", {}).get("price", "0")).replace("$", "").replace("£", "").replace(",", "")) or 0.0,
+                        "image_url": product.get("media", {}).get("mainMedia", {}).get("thumbnail", {}).get("url", ""),
+                        "QTY": (
+                            int(product.get("stock", {}).get("quantity", 0))
+                            if product.get("stock", {}).get("trackQuantity", False)
+                            else -1
+                        ),
+                        "category": collection_name
+                    }
+                    for product in products
+                ]
+                all_products.extend(formatted_products)
+                print(f"Fetched {len(products)} products for collection {collection_name} for user {user_id} (offset {offset} to {offset + limit - 1})")
+                offset += limit
+                if len(products) < limit:
+                    break
+
+        users_products[user_id] = all_products
+        print(f"Total products fetched for user {user_id}: {len(all_products)}")
+
+    return users_products
 
 def save_users_products(users_products):
     with open(USERS_PRODUCTS_FILE, 'w') as f:
@@ -79,7 +209,6 @@ def load_config():
         try:
             with open(CONFIG_FILE, 'r') as f:
                 loaded_config = json.load(f)
-                # Merge loaded config with default config to ensure all fields exist
                 for section in default_config:
                     if section in loaded_config:
                         default_config[section].update(loaded_config[section])
@@ -91,10 +220,7 @@ def load_config():
             return default_config
     return default_config
 
-# region Helper Functions
-
 def save_config(config):
-    # Ensure all expected fields are present, even if empty
     default_config = {
         "amazon_uk": {
             "ACCESS_KEY": "",
@@ -114,7 +240,6 @@ def save_config(config):
         }
     }
     
-    # Update default config with provided values
     for section in config:
         if section in default_config:
             default_config[section].update(config[section])
@@ -127,21 +252,36 @@ def save_config(config):
 
 def get_amazon_category_title(browse_node_id):
     config = load_config()
-    if not all(config.get("amazon_uk", {}).values()):
-        return None
-    amazon = AmazonApi(config["amazon_uk"]["ACCESS_KEY"], config["amazon_uk"]["SECRET_KEY"],
-                       config["amazon_uk"]["ASSOCIATE_TAG"], config["amazon_uk"]["COUNTRY"])
-    try:
-        browse_nodes = amazon.get_browse_nodes(
-            browse_node_ids=[browse_node_id],
-            resources=["BrowseNodes.DisplayName"]
-        )
-        if browse_nodes and browse_nodes.browse_nodes:
-            return browse_nodes.browse_nodes[0].display_name
-        return None
-    except Exception as e:
-        print(f"Error fetching category title for {browse_node_id}: {str(e)}")
-        return None
+    if all(config.get("amazon_uk", {}).values()):
+        amazon = AmazonApi(config["amazon_uk"]["ACCESS_KEY"], config["amazon_uk"]["SECRET_KEY"],
+                           config["amazon_uk"]["ASSOCIATE_TAG"], config["amazon_uk"]["COUNTRY"])
+        try:
+            browse_nodes = amazon.get_browse_nodes(
+                browse_node_ids=[browse_node_id],
+                resources=["BrowseNodes.DisplayName"]
+            )
+            if browse_nodes and browse_nodes.browse_nodes:
+                return browse_nodes.browse_nodes[0].display_name
+            return None
+        except Exception as e:
+            print(f"Error fetching category title for {browse_node_id}: {str(e)}")
+            return None
+    else:
+        # Fallback to recursive search in pseudo_categories.py if Amazon config is missing
+        def find_category_recursive(categories, target_id):
+            for category in categories:
+                if category.get("id") == target_id:
+                    return category.get("name")
+                if "subcategories" in category:
+                    result = find_category_recursive(category["subcategories"], target_id)
+                    if result is not None:
+                        return result
+            return None
+
+        result = find_category_recursive(PSEUDO_CATEGORIES, browse_node_id)
+        if result is None:
+            print(f"No matching category found in PSEUDO_CATEGORIES for {browse_node_id}")
+        return result
 
 def get_immediate_subcategories(parent_id):
     config = load_config()
@@ -181,26 +321,13 @@ def filter_categories_with_products(category_ids, min_discount_percent):
     return filtered_categories
 
 def find_node(categories, target_id):
-    """
-    Recursively search for a node with the given target_id in a nested list of categories.
-    
-    Args:
-        categories (list): List of category dictionaries with 'id', 'name', and optional 'subcategories'.
-        target_id (str): The ID to search for.
-    
-    Returns:
-        dict or None: The dictionary representing the node with the target_id, or None if not found.
-    """
     for category in categories:
-        # Check if the current category's ID matches the target
         if category['id'] == target_id:
             return category
-        # If the category has subcategories, search them recursively
         if 'subcategories' in category:
             result = find_node(category['subcategories'], target_id)
             if result is not None:
                 return result
-    # If no match is found in this list or its subcategories, return None
     return None
 
 def find_pseudo_subcategories(parent_id, categories):
@@ -239,20 +366,18 @@ def validate_product(product):
         "current_price": (int, float),
         "original_price": (int, float),
         "image_url": str,
-        "QTY": int
+        "QTY": int,
+        "category": str
     }
     for field, field_type in required_fields.items():
-        # Check if field is missing or None
         if field not in product or product[field] is None:
             return False, f"Missing field: {field}"
-        # Check field type
         if isinstance(field_type, tuple):
             if not isinstance(product[field], field_type):
                 return False, f"Invalid type for {field}: expected {field_type}"
         else:
             if not isinstance(product[field], field_type):
                 return False, f"Invalid type for {field}: expected {field_type}"
-            # For strings, ensure not empty after stripping whitespace
             if field_type == str and not product[field].strip():
                 return False, f"Empty string for {field}"
     return True, ""
@@ -524,6 +649,389 @@ def search_cj_uk_discounted(browse_node_id, min_discount_percent=20):
     except Exception as e:
         print(f"CJ UK Search Error: {str(e)}")
         return []
+
+def search_wix_discounted(browse_node_id, min_discount_percent=20):
+    """Search for discounted Wix products across all users matching browse_node_id."""
+    users_settings = load_users_settings()
+    all_discounted_products = []
+    
+    category_title = get_amazon_category_title(browse_node_id)
+    if not category_title:
+        print(f"No category title found for browse_node_id {browse_node_id}")
+        return []
+
+    for user_id, settings in users_settings.items():
+        wix_client_id = settings.get("wixClientId")
+        if not wix_client_id:
+            print(f"No wixClientId found for user {user_id}")
+            continue
+
+        token_url = "https://www.wixapis.com/oauth2/token"
+        payload = {
+            "clientId": wix_client_id,
+            "grantType": "anonymous"
+        }
+        headers = {"Content-Type": "application/json"}
+        try:
+            response = requests.post(token_url, json=payload, headers=headers)
+            if response.status_code != 200:
+                print(f"Error getting token for user {user_id}: {response.status_code} - {response.text}")
+                continue
+            token_data = response.json()
+            access_token = token_data["access_token"]
+            print(f"Access Token for user {user_id}: {access_token}")
+        except Exception as e:
+            print(f"Token fetch error for user {user_id}: {str(e)}")
+            continue
+
+        collections_url = "https://www.wixapis.com/stores-reader/v1/collections/query"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}"
+        }
+
+        def fetch_collections(limit=10, offset=0):
+            query_payload = {
+                "query": {
+                    "paging": {"limit": limit, "offset": offset}
+                },
+                "includeNumberOfProducts": True
+            }
+            response = requests.post(collections_url, headers=headers, json=query_payload)
+            if response.status_code != 200:
+                print(f"Error fetching collections for user {user_id}: {response.status_code} - {response.text}")
+                return None
+            return response.json()
+
+        products_url = "https://www.wixapis.com/stores/v1/products/query"
+
+        def fetch_products_for_collection(collection_id, limit=10, offset=0):
+            filter_str = json.dumps({"collections.id": {"$hasSome": [collection_id]}})
+            query_payload = {
+                "query": {
+                    "filter": filter_str,
+                    "paging": {"limit": limit, "offset": offset}
+                }
+            }
+            response = requests.post(products_url, headers=headers, json=query_payload)
+            if response.status_code != 200:
+                print(f"Error fetching products for collection {collection_id} for user {user_id}: {response.status_code} - {response.text}")
+                return None
+            return response.json()
+
+        limit = 10
+        offset = 0
+        matching_collection = None
+
+        while True:
+            result = fetch_collections(limit=limit, offset=offset)
+            if not result or "collections" not in result or not result["collections"]:
+                break
+
+            collections = result["collections"]
+            for col in collections:
+                if col["name"].lower() == category_title.lower() and not col["id"].startswith("00000000"):
+                    matching_collection = col
+                    break
+            if matching_collection:
+                break
+
+            offset += limit
+            if len(collections) < limit:
+                break
+
+        if not matching_collection:
+            print(f"No matching collection found for category '{category_title}' for user {user_id}")
+            continue
+
+        collection_id = matching_collection["id"]
+        offset = 0
+        discounted_products = []
+
+        while True:
+            result = fetch_products_for_collection(collection_id, limit=limit, offset=offset)
+            if not result or "products" not in result or not result["products"]:
+                break
+
+            products = result["products"]
+            for product in products:
+                current_price = float(product.get("price", {}).get("formatted", {}).get("price", "0").replace("$", "").replace("£", "").replace(",", "") or 0.0)
+                original_price = float(product.get("discountedPrice", {}).get("formatted", {}).get("price", current_price).replace("$", "").replace("£", "").replace(",", "") or current_price)
+                if original_price > current_price:
+                    discount = ((original_price - current_price) / original_price) * 100
+                    if discount >= min_discount_percent:
+                        discounted_products.append({
+                            "user_id": user_id,
+                            "id": product.get("id", ""),
+                            "title": product.get("name", ""),
+                            "product_url": (
+                                product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
+                                product.get("productPageUrl", {}).get("path", "").lstrip("/")
+                            ),
+                            "current_price": current_price,
+                            "original_price": original_price,
+                            "discount_percent": round(discount, 2),
+                            "image_url": product.get("media", {}).get("mainMedia", {}).get("thumbnail", {}).get("url", ""),
+                            "QTY": (
+                                int(product.get("stock", {}).get("quantity", 0))
+                                if product.get("stock", {}).get("trackQuantity", False)
+                                else -1
+                            ),
+                            "category": matching_collection["name"]
+                        })
+
+            offset += limit
+            if len(products) < limit:
+                break
+
+        all_discounted_products.extend(discounted_products)
+        print(f"Found {len(discounted_products)} discounted products for user {user_id} in category '{category_title}'")
+
+    return all_discounted_products
+
+# New search functions for all products
+def search_amazon_uk_all(browse_node_id):
+    config = load_config()
+    if not all(config.get("amazon_uk", {}).values()):
+        return []
+    amazon = AmazonApi(config["amazon_uk"]["ACCESS_KEY"], config["amazon_uk"]["SECRET_KEY"],
+                       config["amazon_uk"]["ASSOCIATE_TAG"], config["amazon_uk"]["COUNTRY"])
+    asins = []
+    try:
+        search_params = {
+            "BrowseNodeId": browse_node_id,
+            "ItemCount": 10,
+            "Resources": ["ItemInfo.Title", "Offers.Listings.Price", "Images.Primary.Large", "DetailPageURL"]
+        }
+        for page in range(1, 11):
+            search_params["ItemPage"] = page
+            search_result = amazon.search_items(**search_params)
+            if not search_result or not search_result.items:
+                break
+            for item in search_result.items:
+                asins.append(item.asin)
+            time.sleep(1)
+        return get_amazon_uk_full_details(asins)
+    except Exception as e:
+        print(f"Amazon UK Search Error: {str(e)}")
+        return []
+
+def search_ebay_uk_all(browse_node_id):
+    config = load_config()
+    if not all(config.get("ebay_uk", {}).values()):
+        return []
+    category_title = get_amazon_category_title(browse_node_id)
+    if not category_title:
+        return []
+    url = "https://api.ebay.com/buy/browse/v1/item_summary/search"
+    headers = {"Authorization": f"Bearer {config['ebay_uk']['APP_ID']}"}
+    params = {
+        "q": category_title,
+        "filter": "condition:NEW,availability:UK",
+        "limit": "10"
+    }
+    item_ids = []
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        data = response.json()
+        for item in data.get("itemSummaries", []):
+            item_ids.append(item["itemId"])
+        return get_ebay_uk_full_details(item_ids)
+    except Exception as e:
+        print(f"eBay UK Search Error: {str(e)}")
+        return []
+
+def search_awin_uk_all(browse_node_id):
+    config = load_config()
+    if not config.get("awin", {}).get("API_TOKEN"):
+        return []
+    category_title = get_amazon_category_title(browse_node_id)
+    if not category_title:
+        return []
+    url = f"https://api.awin.com/publishers/{config['awin']['API_TOKEN']}/products"
+    params = {
+        "region": "UK",
+        "search": category_title
+    }
+    product_ids = []
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+        for product in data.get("products", []):
+            product_ids.append(product["productId"])
+        return get_awin_uk_full_details(product_ids)
+    except Exception as e:
+        print(f"Awin UK Search Error: {str(e)}")
+        return []
+
+def search_cj_uk_all(browse_node_id):
+    config = load_config()
+    if not all(config.get("cj", {}).values()):
+        return []
+    category_title = get_amazon_category_title(browse_node_id)
+    if not category_title:
+        return []
+    url = "https://product-search.api.cj.com/v2/product-search"
+    headers = {"Authorization": f"Bearer {config['cj']['API_KEY']}"}
+    params = {
+        "website-id": config["cj"]["WEBSITE_ID"],
+        "keywords": category_title,
+        "country": "UK"
+    }
+    skus = []
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        data = response.json()
+        for product in data.get("products", []):
+            skus.append(product["sku"])
+        return get_cj_uk_full_details(skus)
+    except Exception as e:
+        print(f"CJ UK Search Error: {str(e)}")
+        return []
+
+def search_wix_all(browse_node_id):
+    """Search for all Wix products across all users matching browse_node_id."""
+    users_settings = load_users_settings()
+    all_products = []
+    
+    category_title = get_amazon_category_title(browse_node_id)
+    if not category_title:
+        print(f"No category title found for browse_node_id {browse_node_id}")
+        return []
+
+    for user_id, settings in users_settings.items():
+        wix_client_id = settings.get("wixClientId")
+        if not wix_client_id:
+            print(f"No wixClientId found for user {user_id}")
+            continue
+
+        token_url = "https://www.wixapis.com/oauth2/token"
+        payload = {
+            "clientId": wix_client_id,
+            "grantType": "anonymous"
+        }
+        headers = {"Content-Type": "application/json"}
+        try:
+            response = requests.post(token_url, json=payload, headers=headers)
+            if response.status_code != 200:
+                print(f"Error getting token for user {user_id}: {response.status_code} - {response.text}")
+                continue
+            token_data = response.json()
+            access_token = token_data["access_token"]
+            print(f"Access Token for user {user_id}: {access_token}")
+        except Exception as e:
+            print(f"Token fetch error for user {user_id}: {str(e)}")
+            continue
+
+        collections_url = "https://www.wixapis.com/stores-reader/v1/collections/query"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}"
+        }
+
+        def fetch_collections(limit=10, offset=0):
+            query_payload = {
+                "query": {
+                    "paging": {"limit": limit, "offset": offset}
+                },
+                "includeNumberOfProducts": True
+            }
+            response = requests.post(collections_url, headers=headers, json=query_payload)
+            if response.status_code != 200:
+                print(f"Error fetching collections for user {user_id}: {response.status_code} - {response.text}")
+                return None
+            return response.json()
+
+        products_url = "https://www.wixapis.com/stores/v1/products/query"
+
+        def fetch_products_for_collection(collection_id, limit=10, offset=0):
+            filter_str = json.dumps({"collections.id": {"$hasSome": [collection_id]}})
+            query_payload = {
+                "query": {
+                    "filter": filter_str,
+                    "paging": {"limit": limit, "offset": offset}
+                }
+            }
+            response = requests.post(products_url, headers=headers, json=query_payload)
+            if response.status_code != 200:
+                print(f"Error fetching products for collection {collection_id} for user {user_id}: {response.status_code} - {response.text}")
+                return None
+            return response.json()
+
+        limit = 10
+        offset = 0
+        matching_collection = None
+
+        while True:
+            result = fetch_collections(limit=limit, offset=offset)
+            if not result or "collections" not in result or not result["collections"]:
+                break
+
+            collections = result["collections"]
+            for col in collections:
+                if col["name"].lower() == category_title.lower() and not col["id"].startswith("00000000"):
+                    matching_collection = col
+                    break
+            if matching_collection:
+                break
+
+            offset += limit
+            if len(collections) < limit:
+                break
+
+        if not matching_collection:
+            print(f"No matching collection found for category '{category_title}' for user {user_id}")
+            continue
+
+        collection_id = matching_collection["id"]
+        offset = 0
+        category_products = []
+
+        while True:
+            result = fetch_products_for_collection(collection_id, limit=limit, offset=offset)
+            if not result or "products" not in result or not result["products"]:
+                break
+
+            products = result["products"]
+            for product in products:
+                # Get current_price as a float
+                current_price_str = product.get("price", {}).get("formatted", {}).get("price", "0")
+                current_price = float(str(current_price_str).replace("$", "").replace("£", "").replace(",", "") or 0.0)
+
+                # Get original_price as a float, ensuring it's a string first
+                original_price_str = product.get("discountedPrice", {}).get("formatted", {}).get("price", str(current_price))
+                original_price = float(str(original_price_str).replace("$", "").replace("£", "").replace(",", "") or current_price)
+
+                discount = ((original_price - current_price) / original_price * 100) if original_price > current_price else 0
+                category_products.append({
+                    "user_id": user_id,
+                    "id": product.get("id", ""),
+                    "title": product.get("name", ""),
+                    "product_url": (
+                        product.get("productPageUrl", {}).get("base", "").rstrip("/") + "/" +
+                        product.get("productPageUrl", {}).get("path", "").lstrip("/") + 'referer=' + user_id
+                    ),
+                    "current_price": current_price,
+                    "original_price": original_price,
+                    "discount_percent": round(discount, 2),
+                    "image_url": product.get("media", {}).get("mainMedia", {}).get("thumbnail", {}).get("url", ""),
+                    "QTY": (
+                        int(product.get("stock", {}).get("quantity", 0))
+                        if product.get("stock", {}).get("trackQuantity", False)
+                        else -1
+                    ),
+                    "category": matching_collection["name"]
+                })
+
+            offset += limit
+            if len(products) < limit:
+                break
+
+        all_products.extend(category_products)
+        print(f"Found {len(category_products)} products for user {user_id} in category '{category_title}'")
+
+    return all_products
+
 # endregion Search
 
 # region Management Endpoints
@@ -564,7 +1072,8 @@ def get_user_settings_endpoint(USERid):
             "contact_name": settings.get("contact_name", ""),
             "website_url": settings.get("website_url", ""),
             "email_address": settings.get("email_address", ""),
-            "phone_number": settings.get("phone_number", "")
+            "phone_number": settings.get("phone_number", ""),
+            "wixClientId": settings.get("wixClientId", "")
         })
     except Exception as e:
         print(f"Error in /<USERid>/user GET: {str(e)}")
@@ -576,9 +1085,9 @@ def put_user_settings(USERid):
         return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
     
     settings = request.json
-    required_fields = ["contact_name", "website_url", "email_address", "phone_number"]
+    required_fields = ["contact_name", "website_url", "email_address", "phone_number", "wixClientId"]
     if not all(field in settings for field in required_fields):
-        return jsonify({"status": "error", "message": "Settings must include contact_name, website_url, email_address, phone_number"}), 400
+        return jsonify({"status": "error", "message": "Settings must include contact_name, website_url, email_address, phone_number, and wixClientId"}), 400
     
     users_settings = load_users_settings()
     users_settings[USERid] = settings
@@ -594,9 +1103,9 @@ def patch_user_settings(USERid):
     users_settings = load_users_settings()
     current_settings = users_settings.get(USERid, {})
     
-    # Update only provided fields
+    valid_fields = ["contact_name", "website_url", "email_address", "phone_number", "wixClientId"]
     for key in new_settings:
-        if key in ["contact_name", "website_url", "email_address", "phone_number"]:
+        if key in valid_fields:
             current_settings[key] = new_settings[key]
     
     users_settings[USERid] = current_settings
@@ -675,7 +1184,6 @@ def get_all_categories():
     parent_id = request.args.get('parent_id')
     
     amazon_config = config.get("amazon_uk", {})
-    # Check if all Amazon config fields are non-empty strings
     has_valid_amazon_config = all(
         isinstance(amazon_config.get(field, ""), str) and 
         len(amazon_config.get(field, "").strip()) > 0
@@ -683,7 +1191,6 @@ def get_all_categories():
     )
 
     if has_valid_amazon_config:
-        # Amazon config exists and all fields are non-empty strings
         amazon = AmazonApi(
             amazon_config["ACCESS_KEY"],
             amazon_config["SECRET_KEY"],
@@ -692,7 +1199,6 @@ def get_all_categories():
         )
         try:
             if parent_id:
-                # Fetch subcategories for the given parent_id
                 browse_nodes = amazon.get_browse_nodes(
                     browse_node_ids=[parent_id],
                     resources=["BrowseNodes.Children"]
@@ -705,7 +1211,6 @@ def get_all_categories():
                 else:
                     categories = []
             else:
-                # Fetch top-level categories
                 browse_nodes = amazon.get_browse_nodes(
                     browse_node_ids=DEFAULT_CATEGORIES,
                     resources=["BrowseNodes.DisplayName"]
@@ -721,14 +1226,11 @@ def get_all_categories():
             print(f"Error fetching Amazon categories: {str(e)}")
             categories = []
     else:
-        # No valid Amazon config, use pseudo data
         if parent_id:
-            # Find subcategories based on parent_id in pseudo data
             categories = find_pseudo_subcategories(parent_id, PSEUDO_CATEGORIES)
             if categories is None:
-                categories = []  # Return empty if parent_id not found
+                categories = []
         else:
-            # Return top-level pseudo categories
             categories = [
                 {"id": cat["id"], "name": cat["name"]}
                 for cat in PSEUDO_CATEGORIES
@@ -752,125 +1254,32 @@ def get_user_product_list(USERid):
         "products": products
     })
 
-@app.route('/<USERid>/products', methods=['POST'])
-def post_user_product(USERid):
-    if not request.json or 'product' not in request.json:
-        return jsonify({"status": "error", "message": "Request body must contain 'product' object"}), 400
-    
-    product = request.json['product']
-    valid, message = validate_product(product)
-    if not valid:
-        return jsonify({"status": "error", "message": message}), 400
-    
-    # Proceed with adding the product (e.g., save to storage)
-    product["source"] = "user_defined"
-    users_products = load_users_products()
-    if USERid not in users_products:
-        users_products[USERid] = []
-    
-    if any(p["id"] == product["id"] for p in users_products[USERid]):
-        return jsonify({"status": "error", "message": f"Product with id {product['id']} already exists"}), 409
-    
-    users_products[USERid].append(product)
-    save_users_products(users_products)
-    return jsonify({"status": "success", "message": f"Product added for user {USERid}", "product": product}), 201
-
-@app.route('/<USERid>/products', methods=['PUT'])
-def put_user_products(USERid):
-    if not request.json or 'products' not in request.json:
-        return jsonify({"status": "error", "message": "Request body must contain 'products' list"}), 400
-    
-    new_products = request.json['products']
-    if not isinstance(new_products, list):
-        return jsonify({"status": "error", "message": "'products' must be a list"}), 400
-    
-    for product in new_products:
-        valid, message = validate_product(product)
-        if not valid:
-            return jsonify({"status": "error", "message": message}), 400
-        product["source"] = "user_defined"
-    
-    # Replace the user's product list
-    users_products = load_users_products()
-    users_products[USERid] = new_products
-    save_users_products(users_products)
-    return jsonify({"status": "success", "message": f"Products for user {USERid} replaced", "products": new_products})
-
-@app.route('/<USERid>/products', methods=['PATCH'])
-def patch_user_products(USERid):
-    if not request.json or 'products' not in request.json:
-        return jsonify({"status": "error", "message": "Request body must contain 'products' list"}), 400
-    
-    new_products = request.json['products']
-    if not isinstance(new_products, list):
-        return jsonify({"status": "error", "message": "'products' must be a list"}), 400
-    
-    for product in new_products:
-        valid, message = validate_product(product)
-        if not valid:
-            return jsonify({"status": "error", "message": message}), 400
-        product["source"] = "user_defined"
-    
-    # Update the user's product list
-    users_products = load_users_products()
-    current_products = users_products.get(USERid, [])
-    updated_products = [p for p in current_products if p["id"] not in {np["id"] for np in new_products}]
-    updated_products.extend(new_products)
-    users_products[USERid] = updated_products
-    save_users_products(users_products)
-    return jsonify({"status": "success", "message": f"Products for user {USERid} updated", "products": updated_products})
-
-@app.route('/<USERid>/products', methods=['DELETE'])
-def delete_user_product(USERid):
-    product_id = request.args.get('product_id')
-    if not product_id:
-        return jsonify({"status": "error", "message": "Query parameter 'product_id' is required"}), 400
-    
-    users_products = load_users_products()
-    if USERid in users_products:
-        current_products = users_products[USERid]
-        product_to_remove = next((p for p in current_products if p["id"] == product_id), None)
-        if product_to_remove:
-            current_products.remove(product_to_remove)
-            users_products[USERid] = current_products
-            save_users_products(users_products)
-            return jsonify({"status": "success", "message": f"Product {product_id} removed for user {USERid}", "products": current_products})
-        else:
-            return jsonify({"status": "error", "message": f"Product {product_id} not found for user {USERid}"}), 404
-    return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
-
 @app.route('/<USERid>/products/<product_id>', methods=['GET'])
 def reduce_product_quantity(USERid, product_id):
-    # Get the qty parameter and ensure it’s an integer
     qty = request.args.get('qty', type=int)
     if qty is None:
         return jsonify({"status": "error", "message": "Query parameter 'qty' is required and must be an integer"}), 400
     
-    # Ensure qty is negative as per the requirement
     if qty >= 0:
         return jsonify({"status": "error", "message": "Query parameter 'qty' must be a negative integer"}), 400
     
-    # Load the user’s product data
     users_products = load_users_products()
     if USERid not in users_products:
         return jsonify({"status": "error", "message": f"User {USERid} not found"}), 404
     
-    # Find the product for the user
     current_products = users_products[USERid]
     product_to_update = next((p for p in current_products if p["id"] == product_id), None)
     if not product_to_update:
         return jsonify({"status": "error", "message": f"Product {product_id} not found for user {USERid}"}), 404
     
-    # Reduce the quantity by adding the negative qty, ensuring it doesn’t go below 0
     current_qty = product_to_update["QTY"]
-    new_qty = max(0, current_qty + qty)
-    product_to_update["QTY"] = new_qty
+    if current_qty != -1:
+        new_qty = max(0, current_qty + qty)
+        product_to_update["QTY"] = new_qty
     
-    # Save the updated products
     users_products[USERid] = current_products
     save_users_products(users_products)
     
-    # Return success response
     return jsonify({
         "status": "success",
         "message": f"Quantity reduced for product {product_id} for user {USERid}",
@@ -879,11 +1288,43 @@ def reduce_product_quantity(USERid, product_id):
 
 # endregion /<USERid>/products
 
+#region Corrected /discounted-products endpoint (no USERid, no discount constraint)
+@app.route('/discounted-products', methods=['GET'])
+def get_all_discounted_products():
+    category_id = request.args.get('category_id')
+    all_items = []
+
+    # Always search the specified category_id (no user category filter)
+    if not category_id:
+        return jsonify({"status": "error", "message": "Query parameter 'category_id' is required"}), 400
+    
+    search_categories = [category_id]
+    config = load_config()
+
+    for cat_id in search_categories:
+        if all(config.get("amazon_uk", {}).values()):
+            all_items.extend(search_amazon_uk_all(cat_id))
+        if all(config.get("ebay_uk", {}).values()):
+            all_items.extend(search_ebay_uk_all(cat_id))
+        if config.get("awin", {}).get("API_TOKEN"):
+            all_items.extend(search_awin_uk_all(cat_id))
+        if all(config.get("cj", {}).values()):
+            all_items.extend(search_cj_uk_all(cat_id))
+        wix_products = search_wix_all(cat_id)
+        all_items.extend(wix_products)
+
+    return jsonify({
+        "status": "success",
+        "count": len(all_items),
+        "products": all_items
+    })
+    #endregion
+
 # endregion Management Endpoints
 
 # region Velo Public Endpoints
 @app.route('/<USERid>/discounted-products', methods=['GET'])
-def get_discounted_products(USERid):
+def get_user_discounted_products(USERid):
     category_id = request.args.get('category_id')
     min_discount = request.args.get('min_discount', default=20, type=int)
     root_category_ids = get_user_categories(USERid)
@@ -901,6 +1342,8 @@ def get_discounted_products(USERid):
             all_discounted_items.extend(search_awin_uk_discounted(cat_id, min_discount))
         if all(config.get("cj", {}).values()):
             all_discounted_items.extend(search_cj_uk_discounted(cat_id, min_discount))
+        wix_products = search_wix_discounted(cat_id, min_discount)
+        all_discounted_items.extend(wix_products)
 
     return jsonify({
         "status": "success",
@@ -934,21 +1377,7 @@ def get_categories(USERid):
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error fetching categories: {str(e)}"}), 500
 
-@app.route('/club-products', methods=['GET'])
-def get_club_products():
-    users_products = load_users_products()
-    all_club_products = []
-    for user_id, products in users_products.items():
-        for product in products:
-            if product["QTY"] > 0:
-                all_club_products.append(product)
-    
-    return jsonify({
-        "status": "success",
-        "count": len(all_club_products),
-        "products": all_club_products
-    })
-# endregion Velo Endpoints
+# endregion Velo Public Endpoints
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

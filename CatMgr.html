@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { max-width: 800px; margin: auto; }
@@ -27,15 +29,22 @@
         .treeview .subcategories.open { display: block; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .edit-mode input { width: 90%; }
-        .icon { cursor: pointer; margin: 0 5px; }
+        .hidden { display: none; }
         .error-star { color: red; font-size: 16px; margin-left: 2px; }
-        .short-input { width: 5ch; }
         .settings-form { display: flex; flex-direction: column; gap: 10px; max-width: 400px; }
         .settings-form label { font-weight: bold; }
         .settings-form input { padding: 5px; }
         .settings-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; }
         .settings-form button:hover { background-color: #0056b3; }
+        /* Toastr Custom Styles */
+        #toast-container > .toast-success {
+            background-color: #28a745;
+            border-color: #218838;
+        }
+        #toast-container > .toast-error {
+            background-color: #dc3545;
+            border-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -54,18 +63,18 @@
         </div>
 
         <div id="products" class="section">
-            <h2>Products <i class="fas fa-plus icon" onclick="addNewProduct()" title="Add New Product"></i></h2>
+            <h2>Products</h2>
             <table id="productTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th class="hidden">ID</th>
+                        <th>Category</th>
                         <th>Title</th>
                         <th>URL</th>
                         <th>Price</th>
                         <th>Original</th>
                         <th>Image</th>
                         <th>QTY</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="productList"></tbody>
@@ -83,16 +92,30 @@
                 <input type="email" id="emailAddress" placeholder="Enter email address">
                 <label for="phoneNumber">Phone Number:</label>
                 <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                <label for="wixClientId">Wix Client ID:</label>
+                <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
                 <button onclick="saveSettings()">Save Settings</button>
             </div>
         </div>
 
-        <div id="response"></div>
+        <!-- Removed #response div as Toastr will handle messages -->
     </div>
 
+    <!-- Toastr JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         const apiUrl = 'http://localhost:5000';
-        let editingProductId = null;
+
+        // Configure Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
+        };
 
         function showSection(section) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -102,11 +125,63 @@
             else if (section === 'settings') loadSettings();
         }
 
+        // Settings Functions
+        async function loadSettings() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('Please enter a User ID');
+                return;
+            }
+            try {
+                const response = await fetch(`${apiUrl}/${userId}/user`);
+                if (!response.ok) throw new Error(`Failed to fetch /${userId}/user: ${response.status}`);
+                const data = await response.json();
+                console.log('User Settings:', data);
+                document.getElementById('contactName').value = data.contact_name || '';
+                document.getElementById('websiteUrl').value = data.website_url || '';
+                document.getElementById('emailAddress').value = data.email_address || '';
+                document.getElementById('phoneNumber').value = data.phone_number || '';
+                document.getElementById('wixClientId').value = data.wixClientId || '';
+                toastr.success('Settings loaded successfully');
+            } catch (error) {
+                console.error('Error in loadSettings:', error);
+                toastr.error(`Error loading settings: ${error.message}`);
+            }
+        }
+
+        async function saveSettings() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('Please enter a User ID');
+                return;
+            }
+            const settings = {
+                contact_name: document.getElementById('contactName').value.trim(),
+                website_url: document.getElementById('websiteUrl').value.trim(),
+                email_address: document.getElementById('emailAddress').value.trim(),
+                phone_number: document.getElementById('phoneNumber').value.trim(),
+                wixClientId: document.getElementById('wixClientId').value.trim()
+            };
+            try {
+                const response = await fetch(`${apiUrl}/${userId}/user`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
+                const data = await response.json();
+                toastr.success('Settings saved successfully');
+            } catch (error) {
+                console.error('Error in saveSettings:', error);
+                toastr.error(`Error saving settings: ${error.message}`);
+            }
+        }
+
         // Categories Functions
         async function loadCategories() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                document.getElementById('response').innerText = 'Please enter a User ID';
+                toastr.error('Please enter a User ID');
                 return;
             }
 
@@ -129,9 +204,10 @@
                     ul.appendChild(createTreeNode(cat, savedCategories));
                 });
                 tree.appendChild(ul);
+                toastr.success('Categories loaded successfully');
             } catch (error) {
                 console.error('Error in loadCategories:', error);
-                document.getElementById('response').innerText = `Error loading categories: ${error.message}`;
+                toastr.error(`Error loading categories: ${error.message}`);
             }
         }
 
@@ -191,9 +267,10 @@
                         data.categories.forEach(cat => {
                             subUl.appendChild(createTreeNode(cat, savedCategories));
                         });
+                        toastr.success(`Subcategories for ${parentId} loaded successfully`);
                     } catch (error) {
                         console.error('Error in toggleSubcategories:', error);
-                        document.getElementById('response').innerText = `Error loading subcategories: ${error.message}`;
+                        toastr.error(`Error loading subcategories: ${error.message}`);
                         return;
                     }
                 }
@@ -205,7 +282,7 @@
         async function saveCategories() {
             const userId = document.getElementById('userId').value;
             if (!userId) {
-                document.getElementById('response').innerText = 'Please enter a User ID';
+                toastr.error('Please enter a User ID');
                 return;
             }
             const checked = Array.from(document.querySelectorAll('#categoryTree input[type="checkbox"]:checked'))
@@ -218,182 +295,47 @@
                 });
                 if (!response.ok) throw new Error(`Failed to save categories: ${response.status}`);
                 const data = await response.json();
-                document.getElementById('response').innerText = 'Categories saved: ' + JSON.stringify(data.categories);
+                toastr.success('Categories saved successfully: ' + JSON.stringify(data.categories));
             } catch (error) {
                 console.error('Error in saveCategories:', error);
-                document.getElementById('response').innerText = `Error saving categories: ${error.message}`;
-            }
-        }
-
-        // Settings Functions
-        async function loadSettings() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
-                document.getElementById('response').innerText = 'Please enter a User ID';
-                return;
-            }
-            try {
-                const response = await fetch(`${apiUrl}/${userId}/user`);
-                if (!response.ok) throw new Error(`Failed to fetch /${userId}/user: ${response.status}`);
-                const data = await response.json();
-                console.log('User Settings:', data);
-                document.getElementById('contactName').value = data.contact_name || '';
-                document.getElementById('websiteUrl').value = data.website_url || '';
-                document.getElementById('emailAddress').value = data.email_address || '';
-                document.getElementById('phoneNumber').value = data.phone_number || '';
-            } catch (error) {
-                console.error('Error in loadSettings:', error);
-                document.getElementById('response').innerText = `Error loading settings: ${error.message}`;
-            }
-        }
-
-        async function saveSettings() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
-                document.getElementById('response').innerText = 'Please enter a User ID';
-                return;
-            }
-            const settings = {
-                contact_name: document.getElementById('contactName').value.trim(),
-                website_url: document.getElementById('websiteUrl').value.trim(),
-                email_address: document.getElementById('emailAddress').value.trim(),
-                phone_number: document.getElementById('phoneNumber').value.trim()
-            };
-            try {
-                const response = await fetch(`${apiUrl}/${userId}/user`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(settings)
-                });
-                if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
-                const data = await response.json();
-                document.getElementById('response').innerText = 'Settings saved successfully';
-            } catch (error) {
-                console.error('Error in saveSettings:', error);
-                document.getElementById('response').innerText = `Error saving settings: ${error.message}`;
+                toastr.error(`Error saving categories: ${error.message}`);
             }
         }
 
         // Products Functions
         async function loadProducts() {
             const userId = document.getElementById('userId').value;
-            const response = await fetch(`${apiUrl}/${userId}/products`);
-            const data = await response.json();
-            const tbody = document.getElementById('productList');
-            tbody.innerHTML = '';
-            data.products.forEach(product => tbody.appendChild(createProductRow(product)));
+            if (!userId) {
+                toastr.error('Please enter a User ID');
+                return;
+            }
+            try {
+                const response = await fetch(`${apiUrl}/${userId}/products`);
+                if (!response.ok) throw new Error(`Failed to fetch /${userId}/products: ${response.status}`);
+                const data = await response.json();
+                const tbody = document.getElementById('productList');
+                tbody.innerHTML = '';
+                data.products.forEach(product => tbody.appendChild(createProductRow(product)));
+                toastr.success('Products loaded successfully');
+            } catch (error) {
+                console.error('Error in loadProducts:', error);
+                toastr.error(`Error loading products: ${error.message}`);
+            }
         }
 
         function createProductRow(product) {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${product.id}</td>
+                <td class="hidden">${product.id}</td>
+                <td>${product.category}</td>
                 <td>${product.title}</td>
                 <td><a href="${product.product_url}" target="_blank">Link</a></td>
                 <td>${product.current_price}</td>
                 <td>${product.original_price}</td>
                 <td><img src="${product.image_url}" width="50"></td>
                 <td>${product.QTY}</td>
-                <td>
-                    <i class="fas fa-edit icon" onclick="editProduct('${product.id}', this)"></i>
-                    <i class="fas fa-trash-alt icon" onclick="deleteProduct('${product.id}')"></i>
-                </td>
             `;
             return tr;
-        }
-
-        function editProduct(productId, icon) {
-            if (editingProductId) return;
-            editingProductId = productId;
-            const tr = icon.closest('tr');
-            const tds = tr.querySelectorAll('td');
-            const fields = ['id', 'title', 'product_url', 'current_price', 'original_price', 'image_url', 'QTY'];
-            fields.forEach((field, i) => {
-                let value = field === 'product_url' ? tds[i].querySelector('a').href :
-                            field === 'image_url' ? tds[i].querySelector('img').src : tds[i].textContent;
-                const inputClass = (field === 'id' || field === 'current_price' || field === 'original_price' || field === 'QTY') ? 'short-input' : '';
-                tds[i].innerHTML = `<input type="text" class="${inputClass}" value="${value}" required>`;
-            });
-            tds[7].innerHTML = `
-                <i class="fas fa-save icon" onclick="saveProduct('${productId}', this)"></i>
-                <i class="fas fa-times icon" onclick="cancelEdit()"></i>
-            `;
-        }
-
-        async function saveProduct(productId, icon) {
-            const userId = document.getElementById('userId').value;
-            const tr = icon.closest('tr');
-            const inputs = tr.querySelectorAll('input');
-            const product = {
-                id: inputs[0].value.trim(),
-                title: inputs[1].value.trim(),
-                product_url: inputs[2].value.trim(),
-                current_price: parseFloat(inputs[3].value),
-                original_price: parseFloat(inputs[4].value),
-                image_url: inputs[5].value.trim(),
-                QTY: parseInt(inputs[6].value)
-            };
-            const response = await fetch(`${apiUrl}/${userId}/products`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ products: [product] })
-            });
-            editingProductId = null;
-            loadProducts();
-        }
-
-        function cancelEdit() {
-            editingProductId = null;
-            loadProducts();
-        }
-
-        async function addNewProduct() {
-            const tbody = document.getElementById('productList');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="text" class="short-input" required></td>
-                <td><input type="text" required></td>
-                <td><input type="text" required></td>
-                <td><input type="text" class="short-input" required></td>
-                <td><input type="text" class="short-input" required></td>
-                <td><input type="text" required></td>
-                <td><input type="text" class="short-input" required></td>
-                <td>
-                    <i class="fas fa-save icon" onclick="saveNewProduct(this)"></i>
-                    <i class="fas fa-times icon" onclick="cancelEdit()"></i>
-                </td>
-            `;
-            tbody.appendChild(tr);
-            await saveNewProduct(tr.querySelector('.fas.fa-save'));
-        }
-
-        async function saveNewProduct(icon) {
-            const userId = document.getElementById('userId').value;
-            const tr = icon.closest('tr');
-            const inputs = tr.querySelectorAll('input');
-            const product = {
-                id: inputs[0].value.trim(),
-                title: inputs[1].value.trim(),
-                product_url: inputs[2].value.trim(),
-                current_price: parseFloat(inputs[3].value),
-                original_price: parseFloat(inputs[4].value),
-                image_url: inputs[5].value.trim(),
-                QTY: parseInt(inputs[6].value)
-            };
-            const response = await fetch(`${apiUrl}/${userId}/products`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product })
-            });
-            if (response.ok) loadProducts();
-        }
-
-        async function deleteProduct(productId) {
-            const userId = document.getElementById('userId').value;
-            const response = await fetch(`${apiUrl}/${userId}/products?product_id=${productId}`, {
-                method: 'DELETE'
-            });
-            loadProducts();
         }
     </script>
 </body>
