@@ -72,7 +72,7 @@
             <h2>Amazon UK Credentials</h2>
             <div class="affiliate-form">
                 <label for="amazonAccessKey">Access Key:</label>
-                <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
+                <input type="text" id="amazonAccessKey" placeholder="Enterallan Access Key">
                 <label for="amazonSecretKey">Secret Key:</label>
                 <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
                 <label for="amazonAssociateTag">Associate Tag:</label>
@@ -189,6 +189,8 @@
                 <input type="email" id="updateEmail" placeholder="Enter user email">
                 <label for="updatePassword">New Password:</label>
                 <input type="password" id="updatePassword" placeholder="Enter new password">
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password">
                 <button onclick="updatePassword()">Update Password</button>
             </div>
         </div>
@@ -215,7 +217,7 @@
         function getCurrentTimestamp() {
             const now = new Date();
             const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -355,9 +357,15 @@
         async function updatePassword() {
             const email = document.getElementById('updateEmail').value.trim();
             const newPassword = document.getElementById('updatePassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
 
-            if (!email || !newPassword) {
-                toastr.error('Email and new password are required');
+            if (!email || !newPassword || !confirmPassword) {
+                toastr.error('Email and both password fields are required');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                toastr.error('Passwords do not match');
                 return;
             }
 
@@ -381,6 +389,7 @@
                 // Clear the form after success
                 document.getElementById('updateEmail').value = '';
                 document.getElementById('updatePassword').value = '';
+                document.getElementById('confirmPassword').value = '';
             } catch (error) {
                 console.error('Error in updatePassword:', error);
                 toastr.error(`Error updating password: ${error.message}`);
