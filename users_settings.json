@@ -15,6 +15,10 @@
                 {
                     "page": "/mywebpage",
                     "timestamp": "2025-03-21 11:41:18"
+                },
+                {
+                    "page": "/home/johnsmttih",
+                    "timestamp": "2025-03-21 14:02:45"
                 }
             ],
             "orders": [
@@ -23,6 +27,12 @@
                     "buyer": "John Doe",
                     "total": "8.99",
                     "timestamp": "2025-03-21 11:41:37"
+                },
+                {
+                    "orderId": "ORD12399",
+                    "buyer": "John Smith",
+                    "total": "59.99",
+                    "timestamp": "2025-03-21 14:03:04"
                 }
             ]
         },
