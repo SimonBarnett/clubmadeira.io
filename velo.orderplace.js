@@ -28,7 +28,7 @@ export async function wixStores_onOrderPlaced(event) {
                 timestamp: new Date().toISOString()
             };
 
-            const response = await fetch('http://localhost:5000/referal', {
+            const response = await fetch('https://clubmedeira.io/referal', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from amazon_paapi import AmazonApi 
 import time
@@ -1003,6 +1003,26 @@ def search_wix_all(browse_node_id):
 # endregion Search
 
 # region Management Endpoints
+@app.route('/')
+def home():
+    return render_template('login.html')  # Serves login.html at /
+
+@app.route('/CatMgr')
+def catmgr():
+    return render_template('CatMgr.html')  # Serves CatMgr.html
+
+@app.route('/affiliate')
+def affiliate():
+    return render_template('affiliate.html')  # Serves affiliate.html
+
+@app.route('/listings')
+def listings():
+    return render_template('listings.html')  # Serves listings.html
+
+@app.route('/test')
+def test():
+    return "Test route from madeira.py on 443!"
+
 @app.route('/config', methods=['GET'])
 def get_config():
     config = load_config()

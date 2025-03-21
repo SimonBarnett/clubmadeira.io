@@ -142,7 +142,7 @@
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        const apiUrl = 'http://192.168.1.17:5000';
+        const apiUrl = 'https://clubmadeira.io';
 
         // Configure Toastr options
         toastr.options = {
@@ -224,7 +224,7 @@
                 localStorage.setItem('authToken', data.token);
                 if (data.userId) localStorage.setItem('userId', data.userId);
                 toastr.success(`Welcome back, ${email}!`);
-                window.location.href = '/CatMgr.html'; // Redirect to protected page
+                window.location.href = '/CatMgr'; // Redirect to protected page
             } catch (error) {
                 toastr.error(error.message || 'Error during login');
                 console.error('Login Error:', error);

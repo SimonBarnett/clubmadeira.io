@@ -144,7 +144,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        const apiUrl = 'http://192.168.1.17:5000';
+        const apiUrl = 'https://clubmadeira.io/';
 
         // Check authentication on page load
         window.onload = function() {
@@ -184,7 +184,7 @@
                 toastr.error('Session expired. Please log in again.');
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userId');
-                window.location.href = '/login.html';
+                window.location.href = '/';
             }
             return response;
         }
@@ -194,7 +194,7 @@
             localStorage.removeItem('authToken');
             localStorage.removeItem('userId');
             toastr.success('Logged out successfully.');
-            window.location.href = '/login.html';
+            window.location.href = '/';
         }
 
         // Show section
