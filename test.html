@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test User Visits and Orders Endpoints</title>
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-section {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .input-section label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .input-section input {
+            padding: 8px;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button-section {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-section {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        /* Toastr Custom Styles */
+        #toast-container > .toast-success {
+            background-color: #28a745;
+            border-color: #218838;
+        }
+        #toast-container > .toast-error {
+            background-color: #dc3545;
+            border-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test User Visits and Orders Endpoints</h1>
+
+        <div class="input-section">
+            <label for="userId">User ID:</label>
+            <input type="text" id="userId" placeholder="Enter User ID (e.g., 232)">
+        </div>
+
+        <div class="button-section">
+            <button onclick="fetchVisits()">Fetch Visits</button>
+            <button onclick="fetchOrders()">Fetch Orders</button>
+        </div>
+
+        <div class="result-section" id="visitsSection">
+            <h2>Visits</h2>
+            <table id="visitsTable">
+                <thead>
+                    <tr>
+                        <th>Page</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="visitsList"></tbody>
+            </table>
+        </div>
+
+        <div class="result-section" id="ordersSection">
+            <h2>Orders</h2>
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Buyer</th>
+                        <th>Total</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- jQuery (required for Toastr) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        const apiUrl = 'http://localhost:5000';
+
+        // Configure Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
+        };
+
+        async function fetchVisits() {
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) {
+                toastr.error('Please enter a User ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}/${userId}/visits`);
+                if (!response.ok) throw new Error(`Failed to fetch visits: ${response.status}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    updateVisitsTable(data.visits);
+                    toastr.success(`Visits loaded for User ID: ${userId}`);
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (error) {
+                toastr.error(`Error fetching visits: ${error.message}`);
+                console.error('Error:', error);
+            }
+        }
+
+        async function fetchOrders() {
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) {
+                toastr.error('Please enter a User ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}/${userId}/orders`);
+                if (!response.ok) throw new Error(`Failed to fetch orders: ${response.status}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    updateOrdersTable(data.orders);
+                    toastr.success(`Orders loaded for User ID: ${userId}`);
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (error) {
+                toastr.error(`Error fetching orders: ${error.message}`);
+                console.error('Error:', error);
+            }
+        }
+
+        function updateVisitsTable(visits) {
+            const tbody = document.getElementById('visitsList');
+            tbody.innerHTML = '';
+
+            if (visits.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="2">No visits found</td>';
+                tbody.appendChild(row);
+            } else {
+                visits.forEach(visit => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${visit.page}</td>
+                        <td>${visit.timestamp}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        function updateOrdersTable(orders) {
+            const tbody = document.getElementById('ordersList');
+            tbody.innerHTML = '';
+
+            if (orders.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="4">No orders found</td>';
+                tbody.appendChild(row);
+            } else {
+                orders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${order.orderId}</td>
+                        <td>${order.buyer}</td>
+                        <td>$${order.total}</td>
+                        <td>${order.timestamp}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

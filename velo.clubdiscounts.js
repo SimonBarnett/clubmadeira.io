@@ -2,24 +2,17 @@ import { fetch } from 'wix-fetch';
 import wixLocation from 'wix-location';
 
 $w.onReady(async function () {
-    // Use the site base URL as the USER identifier, sanitized for Flask
     const siteUrl = wixLocation.baseUrl
-        .replace('https://', '')  // Remove protocol
-        .replace(/\//g, '-');     // Replace slashes with hyphens
-    const USERid = encodeURIComponent(siteUrl); // Ensure it’s URL-safe
+        .replace('https://', '')
+        .replace(/\//g, '-');
+    const USERid = encodeURIComponent(siteUrl);
 
-    // Get category ID from URL (e.g., "283155" or "root")
     const categoryId = wixLocation.path[1] || 'root';
-
-    // Get min_discount from input if available, default to 20
     const minDiscount = $w('#discountInput') && $w('#discountInput').value 
         ? parseInt($w('#discountInput').value, 10) 
         : 20;
 
-    // Base URL for Flask API using site URL as USERid
-    const baseUrl = `http://localhost:5000/${USERid}`; // Replace with deployed URL
-
-    // Construct API endpoints
+    const baseUrl = `http://localhost:5000/${USERid}`;
     const subcategoriesEndpoint = categoryId === 'root' 
         ? `${baseUrl}/categories?min_discount=${minDiscount}`
         : `${baseUrl}/categories?parent_id=${categoryId}&min_discount=${minDiscount}`;
@@ -28,7 +21,7 @@ $w.onReady(async function () {
         : `${baseUrl}/discounted-products?category_id=${categoryId}&min_discount=${minDiscount}`;
 
     try {
-        // Fetch and display subcategories
+        // Subcategories fetch remains unchanged
         const subcatResponse = await fetch(subcategoriesEndpoint);
         if (subcatResponse.ok) {
             const subcatData = await subcatResponse.json();
@@ -53,18 +46,26 @@ $w.onReady(async function () {
             throw new Error(`Subcategories fetch failed: ${subcatResponse.status}`);
         }
 
-        // Fetch and display products
+        // Updated products fetch with new fields
         const productsResponse = await fetch(productsEndpoint);
         if (productsResponse.ok) {
             const productsData = await productsResponse.json();
             if (productsData.count > 0) {
                 $w('#productsRepeater').data = productsData.products.map(product => ({
-                    _id: product.asin,
+                    _id: product.id,  // Changed from asin to id
+                    source: product.source,
                     title: product.title,
+                    productUrl: product.product_url,
                     currentPrice: `$${product.current_price.toFixed(2)}`,
                     originalPrice: `$${product.original_price.toFixed(2)}`,
-                    discount: `${product.discount_percent}% off (Save $${product.savings.toFixed(2)})`,
-                    productUrl: product.product_url
+                    discount: `${product.discount_percent}% off`,
+                    imageUrl: product.image_url,
+                    category: product.category,
+                    manufacturer: product.manufacturer,
+                    dimensions: product.dimensions,
+                    features: product.features ? product.features.join(', ') : '',
+                    qty: product.qty || 'N/A',
+                    userId: product.user_id || 'N/A'
                 }));
                 $w('#productsRepeater').onItemReady(($item, itemData) => {
                     $item('#titleText').text = itemData.title;
@@ -72,6 +73,15 @@ $w.onReady(async function () {
                     $item('#discountText').text = itemData.discount;
                     $item('#productLink').link = itemData.productUrl;
                     $item('#productLink').target = "_blank";
+                    // Add new fields to display
+                    $item('#sourceText').text = `Source: ${itemData.source}`;
+                    $item('#image').src = itemData.imageUrl;
+                    $item('#categoryText').text = `Category: ${itemData.category}`;
+                    $item('#manufacturerText').text = itemData.manufacturer ? `By: ${itemData.manufacturer}` : '';
+                    $item('#dimensionsText').text = itemData.dimensions ? `Size: ${itemData.dimensions}` : '';
+                    $item('#featuresText').text = itemData.features ? `Features: ${itemData.features}` : '';
+                    $item('#qtyText').text = itemData.qty !== 'N/A' ? `Qty: ${itemData.qty}` : '';
+                    $item('#userIdText').text = itemData.userId !== 'N/A' ? `Seller: ${itemData.userId}` : '';
                 });
                 $w('#productsRepeater').show();
             } else {
@@ -88,7 +98,6 @@ $w.onReady(async function () {
     }
 });
 
-// Refresh data when min_discount changes
 if ($w('#discountInput')) {
     $w('#discountInput').onChange(() => {
         $w.onReady();

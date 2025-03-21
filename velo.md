@@ -1,117 +1,112 @@
-# Installing the Velo Script in Wix
+# Installing Velo Scripts for Community and Seller Websites in Wix
 
-This guide provides step-by-step instructions to install a Velo script in a Wix site. The script fetches subcategories and discounted products from a Flask backend API, using the site's base URL as an identifier. Follow these steps to set it up.
+This guide provides step-by-step instructions to install Velo scripts in Wix for two types of websites: a **Community Website** (displaying member discounts) and a **Seller Website** (handling referrals and order callbacks). These scripts interact with a Flask backend API (e.g., running at `http://localhost:5000`) to fetch data or send referral notifications.
 
 ## Prerequisites
 
-- A Wix account with a site created.
+- A Wix account with two sites created: one for the Community Website and one for the Seller Website.
 - The Flask backend running locally (e.g., `http://localhost:5000`) or deployed (e.g., via ngrok or a hosting service).
-- Basic familiarity with the Wix Editor.
+- Basic familiarity with the Wix Editor and Velo.
 
-## Step 1: Enable Velo in Wix
+## General Setup: Enable Velo in Wix
+
+For both websites, start by enabling Velo:
 
 1. **Log in to Wix**:
-   - Go to [wix.com](https://www.wix.com) and log in to your account.
-   - Select the site you want to work on from the dashboard.
+   - Go to [wix.com](https://www.wix.com), log in, and select the site (Community or Seller) from the dashboard.
 
 2. **Open the Editor**:
-   - Click **Edit Site** to open the Wix Editor for your site.
+   - Click **Edit Site** to launch the Wix Editor.
 
 3. **Enable Velo**:
-   - In the Wix Editor, click the **Dev Mode** icon (a code symbol) in the left sidebar.
-   - Toggle the **Turn on Dev Mode** switch to enable Velo.
-   - This opens the Velo sidebar, where you’ll manage your code.
+   - Click the **Dev Mode** icon (code symbol) in the left sidebar.
+   - Toggle **Turn on Dev Mode** to enable Velo, opening the Velo sidebar for code management.
 
-## Step 2: Create a Dynamic Page
+---
 
-The script uses a dynamic page to display categories and products based on a URL parameter (`/category/{categoryId}`).
+## Community Website: Member Discounts Page
+
+This section covers installing a Velo script on the Community Website to display subcategories and discounted products on a dynamic "Category" page.
+
+### Step 1: Create a Dynamic Page
 
 1. **Add a Dynamic Page**:
-   - In the Wix Editor, click the **Pages** icon (a stack of pages) in the left sidebar.
-   - Click **+ New Page** > **Dynamic Page** > **Add New Dynamic Page**.
-   - Name it something like "Category" (this will be the page title).
+   - In the Wix Editor, click the **Pages** icon > **+ New Page** > **Dynamic Page** > **Add New Dynamic Page**.
+   - Name it "Category" (this sets the page title).
 
 2. **Set the URL Pattern**:
-   - In the **Dynamic Page Settings** panel:
-     - Set the **URL** field to `/category/{categoryId}`.
-     - Leave the dataset options blank (we’re not using Wix Data here; the script fetches from Flask).
-   - Click **Done** to create the page.
+   - In the **Dynamic Page Settings**:
+     - Set the **URL** to `/category/{categoryId}`.
+     - Leave dataset options blank (data comes from Flask, not Wix Data).
+   - Click **Done**.
 
-3. **Switch to the Dynamic Page**:
-   - In the Pages dropdown, select your new "Category" dynamic page to edit it.
+3. **Switch to the Page**:
+   - From the Pages dropdown, select the "Category" dynamic page.
 
-## Step 3: Add Page Elements
+### Step 2: Add Page Elements
 
-The script interacts with repeaters and an optional input. Add these elements to the dynamic page to display all available Flask fields.
+Add repeaters and an optional discount input:
 
-1. **Add Subcategory Repeater**:
-   - Click the **+ Add** button in the left sidebar > **List & Grid** > Drag a **Repeater** onto the page.
-   - In the repeater’s **Properties** panel (right-click the repeater > Properties):
-     - Set the **ID** to `subcategoryRepeater`.
+1. **Subcategory Repeater**:
+   - Click **+ Add** > **List & Grid** > Drag a **Repeater** onto the page.
+   - In **Properties** (right-click > Properties):
+     - Set **ID** to `subcategoryRepeater`.
    - Inside the repeater:
-     - Add a **Text** element, set its ID to `subcategoryName`.
-     - Add a **Button** element, set its ID to `subcategoryLink`, and label it (e.g., "View").
+     - Add a **Text** element, set **ID** to `subcategoryName`.
+     - Add a **Button** element, set **ID** to `subcategoryLink`, label it "View".
 
-2. **Add Products Repeater**:
-   - Add another **Repeater** below the first one.
-   - In its **Properties** panel:
-     - Set the **ID** to `productsRepeater`.
-   - Inside the repeater, add elements for all Flask fields:
-     - Add a **Text** element for the title, set its ID to `titleText`.
-     - Add a **Text** element for the price, set its ID to `priceText`.
-     - Add a **Text** element for the discount, set its ID to `discountText`.
-     - Add a **Button** element for the product link, set its ID to `productLink`, and label it (e.g., "Buy Now").
-     - Add a **Text** element for the ASIN, set its ID to `asinText`.
-     - Add a **Text** element for the manufacturer, set its ID to `manufacturerText`.
-     - Add a **Text** element for the dimensions, set its ID to `dimensionsText`.
-     - Add a **Text** element for the features, set its ID to `featuresText`.
-     - Add an **Image** element for the product image, set its ID to `productImage`.
-     - Add a **Text** element for the browse node ID, set its ID to `browseNodeText`.
+2. **Products Repeater**:
+   - Add another **Repeater** below.
+   - In **Properties**:
+     - Set **ID** to `productsRepeater`.
+   - Inside the repeater, add:
+     - **Text** for title, **ID**: `titleText`.
+     - **Text** for price, **ID**: `priceText`.
+     - **Text** for discount, **ID**: `discountText`.
+     - **Button** for link, **ID**: `productLink`, label "Buy Now".
+     - **Text** for source, **ID**: `sourceText`.
+     - **Image** for product image, **ID**: `image`.
+     - **Text** for category, **ID**: `categoryText`.
+     - **Text** for manufacturer, **ID**: `manufacturerText`.
+     - **Text** for dimensions, **ID**: `dimensionsText`.
+     - **Text** for features, **ID**: `featuresText`.
+     - **Text** for quantity, **ID**: `qtyText`.
+     - **Text** for user ID, **ID**: `userIdText`.
 
-3. **Optional: Add Discount Input**:
-   - Click **+ Add** > **Input** > Drag a **Dropdown** or **Text Input** onto the page.
-   - In its **Properties** panel:
-     - Set the **ID** to `discountInput`.
-   - For a dropdown:
-     - Click **Manage Choices** and add options (e.g., `10`, `15`, `20`, `25`) to set the minimum discount percentage.
-     - Set the default value to `20`.
+3. **Optional Discount Input**:
+   - Click **+ Add** > **Input** > Drag a **Dropdown** onto the page.
+   - In **Properties**:
+     - Set **ID** to `discountInput`.
+     - Click **Manage Choices**, add options (e.g., `10`, `15`, `20`, `25`), set default to `20`.
 
-4. **Design the Layout**:
-   - Arrange the repeaters and input as desired (e.g., subcategories at the top, products below with all fields, discount input above).
-   - Save your changes in the Editor.
+4. **Layout**:
+   - Arrange elements (e.g., subcategories at top, products below, discount input above).
+   - Save changes.
 
-## Step 4: Add the Velo Script
+### Step 3: Add the Velo Script
 
-1. **Open the Code Panel**:
-   - In the Velo sidebar (bottom of the screen), ensure the **Page Code** tab is selected.
-   - The file should be named `category.js` (matches the dynamic page name "Category").
+1. **Open Code Panel**:
+   - In the Velo sidebar, select **Page Code** tab (file named `category.js`).
 
 2. **Paste the Script**:
-   - Copy the following Velo code and paste it into the `category.js` file:
+   - Add this code:
 
      ```javascript
      import { fetch } from 'wix-fetch';
      import wixLocation from 'wix-location';
 
      $w.onReady(async function () {
-         // Use the site base URL as the USER identifier, sanitized for Flask
          const siteUrl = wixLocation.baseUrl
              .replace('https://', '')
              .replace(/\//g, '-');
          const USERid = encodeURIComponent(siteUrl);
 
-         // Get category ID from URL (e.g., "283155" or "root")
          const categoryId = wixLocation.path[1] || 'root';
-
-         // Get min_discount from input if available, default to 20
          const minDiscount = $w('#discountInput') && $w('#discountInput').value 
              ? parseInt($w('#discountInput').value, 10) 
              : 20;
 
-         // Base URL for Flask API
-         const baseUrl = `http://localhost:5000/${USERid}`; // Replace with deployed URL
-
-         // Construct API endpoints
+         const baseUrl = `http://localhost:5000/${USERid}`;
          const subcategoriesEndpoint = categoryId === 'root' 
              ? `${baseUrl}/categories?min_discount=${minDiscount}`
              : `${baseUrl}/categories?parent_id=${categoryId}&min_discount=${minDiscount}`;
@@ -120,7 +115,6 @@ The script interacts with repeaters and an optional input. Add these elements to
              : `${baseUrl}/discounted-products?category_id=${categoryId}&min_discount=${minDiscount}`;
 
          try {
-             // Fetch and display subcategories
              const subcatResponse = await fetch(subcategoriesEndpoint);
              if (subcatResponse.ok) {
                  const subcatData = await subcatResponse.json();
@@ -145,24 +139,25 @@ The script interacts with repeaters and an optional input. Add these elements to
                  throw new Error(`Subcategories fetch failed: ${subcatResponse.status}`);
              }
 
-             // Fetch and display products with all Flask fields
              const productsResponse = await fetch(productsEndpoint);
              if (productsResponse.ok) {
                  const productsData = await productsResponse.json();
                  if (productsData.count > 0) {
                      $w('#productsRepeater').data = productsData.products.map(product => ({
-                         _id: product.asin,
+                         _id: product.id,
+                         source: product.source,
                          title: product.title,
-                         currentPrice: product.current_price ? `$${product.current_price.toFixed(2)}` : "N/A",
-                         originalPrice: product.original_price ? `$${product.original_price.toFixed(2)}` : "N/A",
-                         discount: product.discount_percent ? `${product.discount_percent}% off (Save $${product.savings.toFixed(2)})` : "N/A",
-                         productUrl: product.product_url || "",
-                         asin: product.asin || "N/A",
-                         manufacturer: product.manufacturer || "Unknown",
-                         dimensions: product.dimensions || "Not specified",
-                         features: product.features && product.features.length > 0 ? product.features.join(", ") : "None",
-                         imageUrl: product.image_url || "",
-                         browseNodeId: product.browse_node_id || "N/A"
+                         productUrl: product.product_url,
+                         currentPrice: `$${product.current_price.toFixed(2)}`,
+                         originalPrice: `$${product.original_price.toFixed(2)}`,
+                         discount: `${product.discount_percent}% off`,
+                         imageUrl: product.image_url,
+                         category: product.category,
+                         manufacturer: product.manufacturer,
+                         dimensions: product.dimensions,
+                         features: product.features ? product.features.join(', ') : '',
+                         qty: product.qty || 'N/A',
+                         userId: product.user_id || 'N/A'
                      }));
                      $w('#productsRepeater').onItemReady(($item, itemData) => {
                          $item('#titleText').text = itemData.title;
@@ -170,12 +165,14 @@ The script interacts with repeaters and an optional input. Add these elements to
                          $item('#discountText').text = itemData.discount;
                          $item('#productLink').link = itemData.productUrl;
                          $item('#productLink').target = "_blank";
-                         $item('#asinText').text = `ASIN: ${itemData.asin}`;
-                         $item('#manufacturerText').text = `Manufacturer: ${itemData.manufacturer}`;
-                         $item('#dimensionsText').text = `Dimensions: ${itemData.dimensions}`;
-                         $item('#featuresText').text = `Features: ${itemData.features}`;
-                         $item('#productImage').src = itemData.imageUrl;
-                         $item('#browseNodeText').text = `Category ID: ${itemData.browseNodeId}`;
+                         $item('#sourceText').text = `Source: ${itemData.source}`;
+                         $item('#image').src = itemData.imageUrl;
+                         $item('#categoryText').text = `Category: ${itemData.category}`;
+                         $item('#manufacturerText').text = itemData.manufacturer ? `By: ${itemData.manufacturer}` : '';
+                         $item('#dimensionsText').text = itemData.dimensions ? `Size: ${itemData.dimensions}` : '';
+                         $item('#featuresText').text = itemData.features ? `Features: ${itemData.features}` : '';
+                         $item('#qtyText').text = itemData.qty !== 'N/A' ? `Qty: ${itemData.qty}` : '';
+                         $item('#userIdText').text = itemData.userId !== 'N/A' ? `Seller: ${itemData.userId}` : '';
                      });
                      $w('#productsRepeater').show();
                  } else {
@@ -192,7 +189,6 @@ The script interacts with repeaters and an optional input. Add these elements to
          }
      });
 
-     // Refresh data when min_discount changes
      if ($w('#discountInput')) {
          $w('#discountInput').onChange(() => {
              $w.onReady();
@@ -200,38 +196,206 @@ The script interacts with repeaters and an optional input. Add these elements to
      }
      ```
 
-   - **Note**: Replace `http://localhost:5000` with your Flask backend URL if it’s deployed (e.g., `https://your-flask-app.ngrok.io`).
+   - **Explanation**:
+     - **Imports**: Uses `wix-fetch` for API calls and `wix-location` for URL handling.
+     - **USERid**: Derives a unique identifier from the site’s base URL.
+     - **Endpoints**: Fetches subcategories and products from Flask based on `categoryId` (from URL) and `minDiscount` (from input or default 20).
+     - **Subcategories**: Populates `#subcategoryRepeater` with names and clickable links to subcategories.
+     - **Products**: Populates `#productsRepeater` with detailed fields (title, price, discount, etc.).
+     - **Error Handling**: Hides repeaters on failure and logs errors.
+     - **Discount Input**: Refreshes data when changed.
 
-3. **Save the Code**:
-   - Click the **Save** button in the Wix Editor toolbar (top right).
-   - Optionally, click **Preview** to test locally, but full testing requires the Flask backend.
+3. **Update URL**:
+   - Replace `http://localhost:5000` with your Flask backend URL if deployed (e.g., `https://your-flask-app.ngrok.io`).
 
-## Step 5: Test the Installation
+4. **Save**:
+   - Click **Save** in the Editor toolbar.
 
-1. **Run the Flask Backend**:
-   - Ensure your Flask app is running (e.g., `python app.py` on `localhost:5000`).
-   - For local testing, use a tool like ngrok:
-     - Run `ngrok http 5000` in a terminal.
-     - Update `baseUrl` in the script to the ngrok URL (e.g., `https://abc123.ngrok.io`).
+### Step 4: Test
+- In the Editor, click **Preview**.
+- Visit `/category/root` to see root-level data or `/category/{someId}` for specific categories.
+- Verify subcategories and products load with all fields. Test the discount input if added.
 
-2. **Preview the Site**:
-   - In the Wix Editor, click **Preview** (top right).
-   - Navigate to `/category/root` (e.g., append `/category/root` to the preview URL).
-   - Verify that:
-     - Subcategories appear in `#subcategoryRepeater`.
-     - Products appear in `#productsRepeater` with all fields (title, price, discount, ASIN, manufacturer, dimensions, features, image, browse node ID).
-     - Clicking a `#subcategoryLink` updates the URL (e.g., `/category/283155`) and refreshes the content.
+---
 
-3. **Test with Discount Input** (if added):
-   - Change the `#discountInput` value (e.g., from 20 to 15).
-   - Ensure the repeaters update with products filtered by the new `min_discount`.
+## Seller Website: Referral Handling
 
-## Step 6: Publish the Site
+The Seller Website uses two scripts: one to capture a `?referer` query parameter on page load (`public/pages/home.js`) and another to notify the referrer on order placement (`backend/events.js`).
+
+### Step 1: Set Up the Home Page
+
+1. **Select the Home Page**:
+   - In the Wix Editor for the Seller site, ensure you’re on the "Home" page (or any page where referrals might occur).
+
+2. **Add the Frontend Script**:
+   - In the Velo sidebar, under **Public** > right-click **public** > **New File**, name it `pages/home.js`.
+   - Paste this code:
+
+     ```javascript
+     import { session } from 'wix-storage';
+     import wixLocation from 'wix-location';
+     import { fetch } from 'wix-fetch';
+
+     $w.onReady(function () {
+         const query = wixLocation.query;
+         
+         if (query.referer) {
+             session.setItem('referer', query.referer);
+             console.log('Referer stored:', query.referer);
+
+             const sendCallbackToReferer = async () => {
+                 try {
+                     const response = await fetch('http://localhost:5000/referal', {
+                         method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/json'
+                         },
+                         body: JSON.stringify({
+                             referer: query.referer,
+                             page: wixLocation.url,
+                             timestamp: new Date().toISOString()
+                         })
+                     });
+
+                     if (response.ok) {
+                         const result = await response.json();
+                         console.log('Callback to referrer successful:', result);
+                     } else {
+                         console.error('Callback failed with status:', response.status);
+                     }
+                 } catch (error) {
+                     console.error('Error sending callback to referrer:', error);
+                 }
+             };
+
+             sendCallbackToReferer();
+         } else {
+             const storedReferer = session.getItem('referer');
+             if (storedReferer) {
+                 console.log('Using previously stored referer:', storedReferer);
+             }
+         }
+     });
+     ```
+
+   - **Explanation**:
+     - **Imports**: Uses `wix-storage` for session storage, `wix-location` for URL queries, and `wix-fetch` for HTTP requests.
+     - **Referer Check**: If `?referer` exists in the URL (e.g., `?referer=community123`), it’s stored in session storage.
+     - **Callback**: Sends a POST request to `/referal` with the referer, current page URL, and timestamp.
+     - **Fallback**: Logs if a referer was previously stored but none is in the current URL.
+
+3. **Update URL**:
+   - Replace `http://localhost:5000` with your Flask backend URL if deployed.
+
+4. **Save**:
+   - Save the file.
+
+### Step 2: Set Up the Backend Order Callback
+
+1. **Create Backend File**:
+   - In the Velo sidebar, under **Backend** > right-click **backend** > **New File**, name it `events.js`.
+
+2. **Paste the Script**:
+   - Add this code:
+
+     ```javascript
+     import { fetch } from 'wix-fetch';
+     import { getSessionData } from 'wix-storage-backend';
+
+     export async function wixStores_onOrderPlaced(event) {
+         const orderId = event.orderId;
+         const buyerInfo = event.buyerInfo;
+         const total = event.totals.total;
+
+         let referer;
+         try {
+             referer = await getSessionData('referer');
+         } catch (error) {
+             console.error('Failed to retrieve referer from session:', error);
+         }
+
+         const callback = async () => {
+             try {
+                 const payload = {
+                     orderId: orderId,
+                     buyer: buyerInfo,
+                     total: total,
+                     referer: referer || 'none',
+                     timestamp: new Date().toISOString()
+                 };
+
+                 const response = await fetch('http://localhost:5000/referal', {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json'
+                     },
+                     body: JSON.stringify(payload)
+                 });
+
+                 if (response.ok) {
+                     const result = await response.json();
+                     console.log('Callback successful:', result);
+                     return result;
+                 } else {
+                     throw new Error(`Callback failed with status: ${response.status}`);
+                 }
+             } catch (error) {
+                 console.error('Callback error:', error.message);
+                 throw error;
+             }
+         };
+
+         try {
+             await callback();
+         } catch (error) {
+             console.error('Failed to execute callback on order placed:', error);
+         }
+     }
+     ```
+
+   - **Explanation**:
+     - **Imports**: Uses `wix-fetch` for API calls and `wix-storage-backend` for backend session access.
+     - **Event Handler**: Triggers on `wixStores_onOrderPlaced` when an order is placed.
+     - **Referer Retrieval**: Fetches the referer stored by the frontend script from session storage.
+     - **Callback**: Sends a POST request to `/referal` with order details (ID, buyer, total), referer, and timestamp.
+     - **Error Handling**: Logs failures at each step.
+
+3. **Update URL**:
+   - Replace `http://localhost:5000` with your Flask backend URL if deployed.
+
+4. **Save**:
+   - Save the file.
+
+### Step 3: Test the Seller Site
+
+1. **Run Flask Backend**:
+   - Ensure Flask is running (e.g., `python app.py` on `localhost:5000`).
+   - Use ngrok for local testing if needed (`ngrok http 5000`) and update URLs in scripts.
+
+2. **Test Referral Capture**:
+   - In Preview mode, visit the home page with a referer (e.g., append `?referer=community123`).
+   - Check the console for "Referer stored" and "Callback to referrer successful" logs.
+
+3. **Test Order Callback**:
+   - Place a test order via Wix Stores (requires a store setup).
+   - Verify the console logs "Callback successful" with order details sent to Flask.
+
+---
+
+## Final Steps: Publish Both Sites
 
 1. **Publish**:
-   - Click **Publish** in the Wix Editor (top right).
-   - Confirm the site updates on your live URL (e.g., `https://yourusername.wixsite.com/mysite`).
+   - For each site, click **Publish** in the Wix Editor.
+   - Confirm live URLs (e.g., `https://yourusername.wixsite.com/communitysite` and `https://yourusername.wixsite.com/sellersite`).
 
 2. **Verify Live**:
-   - Visit `https://yourusername.wixsite.com/mysite/category/root`.
-   - Ensure subcategories and products load correctly with all fields displayed.
+   - Community Site: Visit `/category/root` to ensure subcategories and products load.
+   - Seller Site: Visit with `?referer=xyz`, place an order, and confirm callbacks to Flask.
+
+---
+
+## Notes
+
+- Replace all instances of `http://localhost:5000` with your live Flask URL before publishing.
+- Ensure Flask endpoints (`/categories`, `/discounted-products`, `/referal`) are implemented to handle these requests.
+- Test thoroughly in Preview mode before going live.

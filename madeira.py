@@ -1158,6 +1158,120 @@ def get_all_discounted_products():
         all_items.extend(search_wix_all(cat_id))
 
     return jsonify({"status": "success", "count": len(all_items), "products": all_items})
+
+@app.route('/referal', methods=['POST'])
+def handle_referral():
+    """
+    Handle referral callbacks from Wix scripts and store in users_settings.json.
+    Expects JSON payload with either page visit or order data.
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        users_settings = load_users_settings()
+        
+        # Extract common fields
+        referer = data.get("referer", "none")
+        timestamp = data.get("timestamp")
+        
+        if not timestamp:
+            return jsonify({"status": "error", "message": "Timestamp is required"}), 400
+
+        # Initialize referral data for this user if it doesn't exist
+        if referer not in users_settings:
+            users_settings[referer] = {
+                "contact_name": "",
+                "website_url": "",
+                "email_address": "",
+                "phone_number": "",
+                "wixClientId": "",
+                "referrals": {
+                    "visits": [],
+                    "orders": []
+                }
+            }
+        elif "referrals" not in users_settings[referer]:
+            users_settings[referer]["referrals"] = {
+                "visits": [],
+                "orders": []
+            }
+
+        # Handle different types of referral data
+        if "page" in data:  # From home.js
+            referral_data = {
+                "page": data["page"],
+                "timestamp": timestamp
+            }
+            users_settings[referer]["referrals"]["visits"].append(referral_data)
+            print(f"Stored page visit for referer {referer}: {referral_data}")
+        
+        elif "orderId" in data:  # From events.js
+            referral_data = {
+                "orderId": data["orderId"],
+                "buyer": data["buyer"],
+                "total": data["total"],
+                "timestamp": timestamp
+            }
+            users_settings[referer]["referrals"]["orders"].append(referral_data)
+            print(f"Stored order for referer {referer}: {referral_data}")
+        
+        else:
+            return jsonify({"status": "error", "message": "Invalid referral data format"}), 400
+
+        # Save updated user settings with referral data
+        save_users_settings(users_settings)
+        
+        return jsonify({
+            "status": "success",
+            "message": "Referral data recorded",
+            "referer": referer,
+            "timestamp": timestamp
+        })
+
+    except Exception as e:
+        print(f"Error in referral endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+# New endpoint: /<userId>/visits
+@app.route('/<userId>/visits', methods=['GET'])
+def get_user_visits(userId):
+    """
+    Retrieve all visit data for the specified userId from users_settings.json.
+    Returns the visits array from referrals.visits.
+    """
+    try:
+        users_settings = load_users_settings()
+        
+        if userId in users_settings and "referrals" in users_settings[userId]:
+            visits = users_settings[userId]["referrals"]["visits"]
+            return jsonify({"status": "success", "userId": userId, "visits": visits})
+        else:
+            return jsonify({"status": "success", "userId": userId, "visits": []})
+    except Exception as e:
+        print(f"Error in /<userId>/visits endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+# New endpoint: /<userId>/orders
+@app.route('/<userId>/orders', methods=['GET'])
+def get_user_orders(userId):
+    """
+    Retrieve all order data for the specified userId from users_settings.json.
+    Returns the orders array from referrals.orders.
+    """
+    try:
+        users_settings = load_users_settings()
+        
+        if userId in users_settings and "referrals" in users_settings[userId]:
+            orders = users_settings[userId]["referrals"]["orders"]
+            return jsonify({"status": "success", "userId": userId, "orders": orders})
+        else:
+            return jsonify({"status": "success", "userId": userId, "orders": []})
+    except Exception as e:
+        print(f"Error in /<userId>/orders endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
 # endregion Management Endpoints
 
 # region Velo Public Endpoints

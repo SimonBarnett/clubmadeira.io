@@ -4,6 +4,32 @@
         "website_url": "www.someurl.com",
         "email_address": "si@ntsa.uk",
         "phone_number": "07989389179",
-        "wixClientId": "9fa0f271-1600-4282-9fae-d841be6aaff6"
+        "wixClientId": "9fa0f271-1600-4282-9fae-d841be6aaff6",
+        "referrals": {
+            "visits": [
+                {
+                    "page": "/home",
+                    "timestamp": "2025-03-21 10:00:00"
+                },
+                {
+                    "page": "/home",
+                    "timestamp": "2025-03-21 10:00:00"
+                }
+            ],
+            "orders": [
+                {
+                    "orderId": "ORD12345",
+                    "buyer": "John Doe",
+                    "total": "99.99",
+                    "timestamp": "2025-03-21 10:00:00"
+                },
+                {
+                    "orderId": "ORD12345",
+                    "buyer": "John Doe",
+                    "total": "99.99",
+                    "timestamp": "2025-03-21 10:00:00"
+                }
+            ]
+        }
     }
 }

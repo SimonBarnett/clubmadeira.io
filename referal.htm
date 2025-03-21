@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referral Endpoint Test</title>
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- Basic Styling -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .form-section h2 {
+            color: #555;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Referral Endpoint Test</h1>
+
+        <!-- Page Visit Referral Form -->
+        <div class="form-section">
+            <h2>Page Visit Referral</h2>
+            <form id="pageVisitForm">
+                <label for="pageReferer">Referer:</label>
+                <input type="text" id="pageReferer" name="referer" value="test_user" placeholder="Enter referer">
+
+                <label for="page">Page:</label>
+                <input type="text" id="page" name="page" value="/home" placeholder="Enter page URL">
+
+                <label for="pageTimestamp">Timestamp:</label>
+                <input type="text" id="pageTimestamp" name="timestamp" placeholder="YYYY-MM-DD HH:MM:SS" value="2025-03-21 10:00:00">
+
+                <button type="submit">Submit Page Visit</button>
+            </form>
+        </div>
+
+        <!-- Order Referral Form -->
+        <div class="form-section">
+            <h2>Order Referral</h2>
+            <form id="orderForm">
+                <label for="orderReferer">Referer:</label>
+                <input type="text" id="orderReferer" name="referer" value="test_user" placeholder="Enter referer">
+
+                <label for="orderId">Order ID:</label>
+                <input type="text" id="orderId" name="orderId" value="ORD12345" placeholder="Enter order ID">
+
+                <label for="buyer">Buyer Name:</label>
+                <input type="text" id="buyer" name="buyer" value="John Doe" placeholder="Enter buyer name">
+
+                <label for="total">Total Amount:</label>
+                <input type="number" id="total" name="total" value="99.99" step="0.01" placeholder="Enter total amount">
+
+                <label for="orderTimestamp">Timestamp:</label>
+                <input type="text" id="orderTimestamp" name="timestamp" placeholder="YYYY-MM-DD HH:MM:SS" value="2025-03-21 10:00:00">
+
+                <button type="submit">Submit Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- jQuery (required for Toastr) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Configure Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-right",
+            timeOut: "5000",
+        };
+
+        // Function to handle form submission
+        function submitReferral(formId, successMessage) {
+            const form = document.getElementById(formId);
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const jsonData = Object.fromEntries(formData.entries());
+
+                fetch('http://localhost:5000/referal', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        toastr.success(`${successMessage} - Referer: ${data.referer}`, 'Success');
+                    } else {
+                        toastr.error(data.message || 'Unknown error', 'Error');
+                    }
+                })
+                .catch(error => {
+                    toastr.error(error.message || 'Failed to connect to server', 'Error');
+                    console.error('Error:', error);
+                });
+            });
+        }
+
+        // Initialize form handlers
+        submitReferral('pageVisitForm', 'Page visit recorded successfully');
+        submitReferral('orderForm', 'Order recorded successfully');
+    </script>
+</body>
+</html>

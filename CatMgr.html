@@ -11,8 +11,21 @@
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { max-width: 800px; margin: auto; }
         .menu { margin-bottom: 20px; }
-        .menu a { margin-right: 15px; text-decoration: none; color: #007BFF; }
-        .menu a:hover { text-decoration: underline; }
+        .menu a {
+            display: inline-block; /* Makes the link behave like a button */
+            padding: 8px 16px; /* Adds padding for button size */
+            margin-right: 10px; /* Adjusted spacing between buttons */
+            text-decoration: none; /* Removes underline */
+            color: white; /* White text for contrast */
+            background-color: #007BFF; /* Blue background */
+            border-radius: 4px; /* Rounded corners */
+            cursor: pointer; /* Hand cursor on hover */
+            transition: background-color 0.3s; /* Smooth hover transition */
+        }
+        .menu a:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            text-decoration: none; /* Ensures no underline on hover */
+        }
         .section { display: none; }
         .active { display: block; }
         .treeview { max-height: 400px; overflow-y: auto; margin-bottom: 10px; }
@@ -52,9 +65,11 @@
         <div class="menu">
             <label for="userId">User ID:</label>
             <input type="text" id="userId" placeholder="Enter User ID"><br><br>
-            | <a href="#" onclick="showSection('settings'); return false;">User</a>
-            | <a href="#" onclick="showSection('categories'); return false;">Categories</a>
-            | <a href="#" onclick="showSection('products'); return false;">Products</a>
+            <a href="#" onclick="showSection('settings'); return false;">User</a>
+            <a href="#" onclick="showSection('categories'); return false;">Categories</a>
+            <a href="#" onclick="showSection('products'); return false;">Products</a>
+            <a href="#" onclick="showSection('visits'); return false;">Visits</a>
+            <a href="#" onclick="showSection('orders'); return false;">Orders</a>
         </div>
 
         <div id="categories" class="section">
@@ -98,7 +113,35 @@
             </div>
         </div>
 
-        <!-- Removed #response div as Toastr will handle messages -->
+        <!-- Visits Section -->
+        <div id="visits" class="section">
+            <h2>Visits</h2>
+            <table id="visitsTable">
+                <thead>
+                    <tr>
+                        <th>Page</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="visitsList"></tbody>
+            </table>
+        </div>
+
+        <!-- Orders Section -->
+        <div id="orders" class="section">
+            <h2>Orders</h2>
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Buyer</th>
+                        <th>Total</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersList"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Toastr JS -->
@@ -123,6 +166,8 @@
             if (section === 'categories') loadCategories();
             else if (section === 'products') loadProducts();
             else if (section === 'settings') loadSettings();
+            else if (section === 'visits') loadVisits();
+            else if (section === 'orders') loadOrders();
         }
 
         // Settings Functions
@@ -184,7 +229,6 @@
                 toastr.error('Please enter a User ID');
                 return;
             }
-
             try {
                 const userResponse = await fetch(`${apiUrl}/${userId}/mycategories`);
                 if (!userResponse.ok) throw new Error(`Failed to fetch /${userId}/mycategories: ${userResponse.status}`);
@@ -336,6 +380,92 @@
                 <td>${product.QTY}</td>
             `;
             return tr;
+        }
+
+        // Visits Functions
+        async function loadVisits() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('Please enter a User ID');
+                return;
+            }
+            try {
+                const response = await fetch(`${apiUrl}/${userId}/visits`);
+                if (!response.ok) throw new Error(`Failed to fetch /${userId}/visits: ${response.status}`);
+                const data = await response.json();
+                if (data.status === 'success') {
+                    updateVisitsTable(data.visits);
+                    toastr.success(`Visits loaded for User ID: ${userId}`);
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('Error in loadVisits:', error);
+                toastr.error(`Error loading visits: ${error.message}`);
+            }
+        }
+
+        function updateVisitsTable(visits) {
+            const tbody = document.getElementById('visitsList');
+            tbody.innerHTML = '';
+            if (visits.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="2">No visits found</td>';
+                tbody.appendChild(row);
+            } else {
+                visits.forEach(visit => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${visit.page}</td>
+                        <td>${visit.timestamp}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        // Orders Functions
+        async function loadOrders() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('Please enter a User ID');
+                return;
+            }
+            try {
+                const response = await fetch(`${apiUrl}/${userId}/orders`);
+                if (!response.ok) throw new Error(`Failed to fetch /${userId}/orders: ${response.status}`);
+                const data = await response.json();
+                if (data.status === 'success') {
+                    updateOrdersTable(data.orders);
+                    toastr.success(`Orders loaded for User ID: ${userId}`);
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('Error in loadOrders:', error);
+                toastr.error(`Error loading orders: ${error.message}`);
+            }
+        }
+
+        function updateOrdersTable(orders) {
+            const tbody = document.getElementById('ordersList');
+            tbody.innerHTML = '';
+            if (orders.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="4">No orders found</td>';
+                tbody.appendChild(row);
+            } else {
+                orders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${order.orderId}</td>
+                        <td>${order.buyer}</td>
+                        <td>$${order.total}</td>
+                        <td>${order.timestamp}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
         }
     </script>
 </body>

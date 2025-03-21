@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Affiliate Credentials Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { max-width: 800px; margin: auto; }
@@ -21,7 +23,15 @@
         .signup-instructions { margin-top: 15px; font-size: 0.9em; color: #555; }
         .signup-instructions a { color: #007BFF; text-decoration: none; }
         .signup-instructions a:hover { text-decoration: underline; }
-        #response { margin-top: 10px; }
+        /* Toastr Custom Styles */
+        #toast-container > .toast-success {
+            background-color: #28a745;
+            border-color: #218838;
+        }
+        #toast-container > .toast-error {
+            background-color: #dc3545;
+            border-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -88,12 +98,24 @@
                 <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>. Click "Publisher Sign Up," provide your website URL and promotion methods, submit your application, and await approval (3-7 days).
             </div>
         </div>
-
-        <div id="response"></div>
     </div>
 
+    <!-- jQuery (required for Toastr) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         const apiUrl = 'http://localhost:5000';
+
+        // Configure Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
+        };
 
         function showAffiliate(affiliate) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -122,10 +144,10 @@
                     document.getElementById('cjApiKey').value = config.API_KEY || '';
                     document.getElementById('cjWebsiteId').value = config.WEBSITE_ID || '';
                 }
-                document.getElementById('response').innerText = `Loaded credentials for ${affiliate}`;
+                toastr.success(`Loaded credentials for ${affiliate}`);
             } catch (error) {
                 console.error('Error in loadAffiliate:', error);
-                document.getElementById('response').innerText = `Error loading credentials: ${error.message}`;
+                toastr.error(`Error loading credentials: ${error.message}`);
             }
         }
 
@@ -158,7 +180,7 @@
                 Object.entries(credentials).filter(([_, value]) => value !== '')
             );
             if (Object.keys(credentials).length === 0) {
-                document.getElementById('response').innerText = 'No changes to update';
+                toastr.warning('No changes to update');
                 return;
             }
 
@@ -170,10 +192,10 @@
                 });
                 if (!response.ok) throw new Error(`Failed to update credentials: ${response.status}`);
                 const data = await response.json();
-                document.getElementById('response').innerText = `Update successful: ${data.message}`;
+                toastr.success(`Update successful: ${data.message}`);
             } catch (error) {
                 console.error('Error in updateAffiliate:', error);
-                document.getElementById('response').innerText = `Error updating credentials: ${error.message}`;
+                toastr.error(`Error updating credentials: ${error.message}`);
             }
         }
 
