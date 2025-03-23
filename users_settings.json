@@ -1,13 +1,15 @@
 {
     "232": {
-        "password": "$2b$12$QPjvIvgZr9O5Ov3cbJI5xOBGC9Rq9vG/E.6Wrjqcr1.awGTHFHNwS",
+        "password": "$2b$12$/1iOm.R/eTZDuvmdRHWqb.ew9q6ZayhS/2/DZkP8H0d3wOBLX6T2y",
         "contact_name": "Si",
         "website_url": "www.someurl.com",
         "email_address": "si@ntsa.uk",
         "phone_number": "07989389179",
         "wixClientId": "9fa0f271-1600-4282-9fae-d841be6aaff6",
         "permissions": [
-            "admin"
+            "admin",
+            "validated",
+            "merchant"
         ],
         "referrals": {
             "visits": [
@@ -71,7 +73,8 @@
         "permissions": [
             "wixpro",
             "admin",
-            "validated"
+            "validated",
+            "merchant"
         ],
         "website_url": "",
         "wixClientId": "",

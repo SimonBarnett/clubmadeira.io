@@ -35,6 +35,7 @@
         .treeview .subcategories { display: none; padding-left: 20px; }
         .treeview .subcategories.open { display: block; }
         #toast-container > .toast-error { background-color: #dc3545; border-color: #c82333; }
+        #toast-container > .toast-success { background-color: #28a745; border-color: #218838; }
         .toggle-section { cursor: pointer; font-weight: bold; margin: 10px 0; background-color: #e9ecef; padding: 5px; border-radius: 4px; }
         .toggle-content { display: none; }
         .toggle-content.open { display: block; }
@@ -797,6 +798,7 @@
 
             const siteRequest = {
                 userId: userId,
+                type: "community", // Added hidden type field set to "community"
                 communityName: document.getElementById('communityName').value.trim(),
                 aboutCommunity: tinymce.get('aboutCommunity').getContent(),
                 communityLogos: [],

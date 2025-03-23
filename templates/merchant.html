@@ -19,10 +19,6 @@
         .menu button:hover { background-color: #0056b3; }
         .menu .btn-logoff { background-color: #dc3545; }
         .menu .btn-logoff:hover { background-color: #c82333; }
-        .sub-menu { display: none; padding-left: 20px; }
-        .sub-menu.active { display: block; }
-        .sub-button { padding: 8px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; margin-bottom: 5px; display: block; }
-        .sub-button:hover { background-color: #218838; }
         .section { display: none; }
         .active { display: block; }
         .settings-form { display: flex; flex-direction: column; gap: 10px; max-width: 400px; }
@@ -34,6 +30,7 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .hidden { display: none; }
         #toast-container > .toast-error { background-color: #dc3545; border-color: #c82333; }
+        #toast-container > .toast-success { background-color: #28a745; border-color: #218838; }
         .password-container { position: relative; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; }
         .password-container input { width: 50%; padding-right: 30px; }
         .password-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; }
@@ -58,10 +55,7 @@
                 <input type="text" id="userId" style="display: none;">
                 <button onclick="showSection('my-products')">My Products</button>
                 <button onclick="showSection('my-store')">My Store</button>
-                <button onclick="toggleSubMenu('api-sub-menu', 'my-api-keys')">My API Keys</button>
-                <div id="api-sub-menu" class="sub-menu">
-                    <button class="sub-button" onclick="showSection('wix-keys')">Wix Keys</button>
-                </div>
+                <button onclick="showSection('wix-keys')">Wix Keys</button>
                 <button onclick="showSection('my-account')">My Account</button>
                 <button class="btn-logoff" onclick="window.location.href='/admin'">Back to Admin</button>
                 <button class="btn-logoff" onclick="logout()">Log Off</button>
@@ -112,10 +106,6 @@
                     </thead>
                     <tbody id="productList"></tbody>
                 </table>
-            </div>
-            <div id="my-api-keys" class="section">
-                <h2>My API Keys</h2>
-                <p>Your Wix professional will update this for you.</p>
             </div>
             <div id="wix-keys" class="section">
                 <h2>Wix Keys</h2>
@@ -300,18 +290,6 @@
             else if (section === 'my-products') loadProducts();
             else if (section === 'wix-keys') loadWixClientId();
             else if (section === 'my-store') loadStoreRequest();
-            else if (section === 'my-api-keys') document.getElementById('my-api-keys').classList.add('active');
-        }
-
-        function toggleSubMenu(subMenuId, sectionId) {
-            const subMenu = document.getElementById(subMenuId);
-            const isActive = subMenu.classList.contains('active');
-            document.querySelectorAll('.sub-menu').forEach(sm => sm.classList.remove('active'));
-            if (!isActive) {
-                subMenu.classList.add('active');
-            }
-            // Always show the "My API Keys" section when clicked, even if collapsing
-            showSection(sectionId);
         }
 
         function logout() {
@@ -534,6 +512,7 @@
 
             const storeRequest = {
                 userId: userId,
+                type: "merchant", // Added hidden type field set to "merchant"
                 storeName: document.getElementById('storeName').value.trim(),
                 aboutStore: tinymce.get('aboutStore').getContent(),
                 storeLogos: [],
@@ -616,6 +595,7 @@
                     body: JSON.stringify(storeRequest)
                 });
                 if (!response.ok) throw new Error(`Failed to save store request: ${response.status}`);
+                toastr.success('Store request saved successfully');
             } catch (error) {
                 toastr.error(`Error saving store request: ${error.message}`);
             }

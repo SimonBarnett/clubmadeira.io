@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, redirect, url_for
+from flask import Flask, jsonify, request, render_template, redirect, url_for, abort, render_template_string
 from flask_cors import CORS
 from amazon_paapi import AmazonApi 
 import time
@@ -14,6 +14,9 @@ from flask import Flask, request, jsonify
 import bcrypt
 import json
 import datetime, re
+import logging
+import os
+import markdown
 
 app = Flask(__name__)
 # Enable CORS with verbose logging
@@ -33,6 +36,14 @@ DEFAULT_CATEGORIES = ["283155", "172282"]
 USERS_SETTINGS_FILE = "users_settings.json"
 # Define the base directory for site requests
 SITE_REQUEST_DIR = os.path.join(os.path.dirname(__file__), "siterequest")
+
+# Set up logging
+logging.basicConfig(
+    filename='app.log',  # Logfile will be 'app.log' in the current working directory
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Ensure the siterequest directory exists
 if not os.path.exists(SITE_REQUEST_DIR):
@@ -227,39 +238,76 @@ def get_user_products(user_id):
     return users_products.get(user_id, [])
 
 def load_config():
+    """
+    Load the configuration from config.json, merging with default values.
+    If the file doesn't exist or is invalid, return the default config.
+    """
+    # Define the default configuration with all expected affiliates
     default_config = {
         "amazon_uk": {"ACCESS_KEY": "", "SECRET_KEY": "", "ASSOCIATE_TAG": "", "COUNTRY": ""},
         "ebay_uk": {"APP_ID": ""},
         "awin": {"API_TOKEN": ""},
-        "cj": {"API_KEY": "", "WEBSITE_ID": ""}
+        "cj": {"API_KEY": "", "WEBSITE_ID": ""},
+        "textmagic": {"USERNAME": "", "API_KEY": ""},
+        "tiny": {"API_KEY": ""}
     }
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, 'r') as f:
-                loaded_config = json.load(f)
-                for section in default_config:
-                    if section in loaded_config:
-                        default_config[section].update(loaded_config[section])
-                return loaded_config
-        except Exception as e:
-            print(f"Error loading {CONFIG_FILE}: {str(e)}")
-    return default_config
+    
+    # If config file doesn't exist, return the default config
+    if not os.path.exists(CONFIG_FILE):
+        return default_config
+
+    try:
+        with open(CONFIG_FILE, 'r') as f:
+            loaded_config = json.load(f)
+        
+        # Ensure loaded_config is a dictionary
+        if not isinstance(loaded_config, dict):
+            print(f"Error: {CONFIG_FILE} does not contain a valid JSON object. Using default config.")
+            return default_config
+
+        # Start with the default config as the base
+        result_config = default_config.copy()
+        
+        # Update with loaded config, preserving all existing data
+        for affiliate in loaded_config:
+            if affiliate in result_config:
+                # For known affiliates, update only the expected keys
+                result_config[affiliate].update(loaded_config[affiliate])
+            else:
+                # For unknown affiliates, add them as-is
+                result_config[affiliate] = loaded_config[affiliate]
+
+        return result_config
+    
+    except json.JSONDecodeError as e:
+        print(f"Error decoding {CONFIG_FILE}: {str(e)}. Returning default config.")
+        return default_config
+    except Exception as e:
+        print(f"Unexpected error loading {CONFIG_FILE}: {str(e)}. Returning default config.")
+        return default_config
 
 def save_config(config):
-    default_config = {
-        "amazon_uk": {"ACCESS_KEY": "", "SECRET_KEY": "", "ASSOCIATE_TAG": "", "COUNTRY": ""},
-        "ebay_uk": {"APP_ID": ""},
-        "awin": {"API_TOKEN": ""},
-        "cj": {"API_KEY": "", "WEBSITE_ID": ""}
-    }
-    for section in config:
-        if section in default_config:
-            default_config[section].update(config[section])
+    """
+    Save the provided configuration to config.json without modifying its structure.
+    """
     try:
+        # Ensure the config is a dictionary
+        if not isinstance(config, dict):
+            raise ValueError("Config must be a dictionary")
+
         with open(CONFIG_FILE, 'w') as f:
-            json.dump(default_config, f, indent=4)
-    except Exception as e:
+            json.dump(config, f, indent=4)
+        print(f"Config saved successfully to {CONFIG_FILE}")
+    
+    except IOError as e:
         print(f"Error saving {CONFIG_FILE}: {str(e)}")
+        raise
+    except ValueError as e:
+        print(f"Error: {str(e)}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error saving {CONFIG_FILE}: {str(e)}")
+        raise
 
 def get_amazon_category_title(browse_node_id):
     config = load_config()
@@ -365,14 +413,24 @@ def get_user_settings(user_id):
 def load_site_request(user_id):
     """Load site request data from <user_id> file in /siterequest folder."""
     file_path = os.path.join(SITE_REQUEST_DIR, user_id)
+    logger.debug(f"Attempting to load site request for user {user_id} from {file_path}")
+    
     if os.path.exists(file_path):
+        logger.debug(f"File exists: {file_path}")
         try:
             with open(file_path, 'r') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"Error loading site request for user {user_id}: {str(e)}")
+                data = json.load(f)
+                logger.debug(f"Successfully loaded data for user {user_id}: {json.dumps(data, indent=2)}")
+                return data
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error for user {user_id} at {file_path}: {str(e)}")
             return {}
-    return {}
+        except IOError as e:
+            logger.error(f"IO error loading file for user {user_id} at {file_path}: {str(e)}")
+            return {}
+    else:
+        logger.debug(f"No file found for user {user_id} at {file_path}")
+        return {}
 
 def save_site_request(user_id, site_request_data):
     """Save site request data to <user_id> file in /siterequest folder."""
@@ -1407,7 +1465,6 @@ def update_password():
 
 @app.route('/reset-password', methods=['POST'])
 def reset_password():
-    """Handle password reset by generating a new password and updating users_settings.json."""
     try:
         data = request.get_json()
         if not data:
@@ -1418,24 +1475,139 @@ def reset_password():
             return jsonify({"status": "error", "message": "Email is required"}), 400
 
         users_settings = load_users_settings()
+        matching_user_id = None
+        for user_id, settings in users_settings.items():
+            if settings.get("email_address", "").lower() == email.lower():
+                matching_user_id = user_id
+                break
 
-        if email not in users_settings:
+        if not matching_user_id:
             return jsonify({"status": "error", "message": "Email not found"}), 404
 
-        new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-        hashed_new_password = hashlib.sha256(new_password.encode('utf-8')).hexdigest()
-        users_settings[email]["password"] = hashed_new_password
+        user = users_settings[matching_user_id]
+        phone_number = user.get("phone_number", "").strip()
+        if not phone_number:
+            return jsonify({"status": "error", "message": "No phone number associated with this account"}), 400
 
-        phone = users_settings[email]["phone_number"]
-        print(f"New password for {email}: {new_password} (hashed: {hashed_new_password}, would be sent to {phone})")
+        otp = ''.join(random.choices(string.digits, k=6))
+        reset_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
 
-        save_users_settings(users_settings)
-        return jsonify({"status": "success", "message": "A new password has been generated and would be sent to your phone"}), 200
+        if "reset_codes" not in app.config:
+            app.config["reset_codes"] = {}
+        app.config["reset_codes"][matching_user_id] = {
+            "code": otp,
+            "expires": reset_expiry.isoformat()
+        }
+
+        config = load_config()
+        textmagic_config = config.get("textmagic", {})
+        username = textmagic_config.get("USERNAME")
+        api_key = textmagic_config.get("API_KEY")
+        if not username or not api_key:
+            return jsonify({"status": "error", "message": "TextMagic credentials not configured"}), 500
+
+        url = "https://rest.textmagic.com/api/v2/messages"
+        payload = {
+            "text": f"clubmadiera.io sent you a one-time password: {otp}. It expires in 15mins.",
+            "phones": phone_number
+        }
+        headers = {
+            "X-TM-Username": username,
+            "X-TM-Key": api_key,
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+
+        response = requests.post(url, data=payload, headers=headers)
+        if response.status_code == 201:
+            return jsonify({
+                "status": "success",
+                "message": "A one-time password has been sent to your phone"
+            }), 200
+        else:
+            return jsonify({
+                "status": "error",
+                "message": f"Failed to send SMS: {response.text}"
+            }), 500
 
     except Exception as e:
         print(f"Error in reset-password endpoint: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
+@app.route('/verify-reset-code', methods=['POST'])
+def verify_reset_code():
+    
+    try:
+        # Parse JSON safely
+        data = request.get_json(silent=True)
+        if not data or not isinstance(data, dict):
+            return jsonify({"status": "error", "message": "Invalid or missing JSON data"}), 400
+
+        email = data.get("email")
+        code = data.get("code")
+        new_password = data.get("new_password")
+        if not all([email, code, new_password]):
+            return jsonify({"status": "error", "message": "Email, code, and new password are required"}), 400
+
+        # Load user settings
+        try:
+            users_settings = load_users_settings()
+        except Exception as e:
+            print(f"Error loading users_settings: {str(e)}")
+            return jsonify({"status": "error", "message": "Failed to load user data"}), 500
+
+        # Find user by email
+        matching_user_id = None
+        for user_id, settings in users_settings.items():
+            if settings.get("email_address", "").lower() == email.lower():
+                matching_user_id = user_id
+                break
+
+        if not matching_user_id:
+            return jsonify({"status": "error", "message": "Email not found"}), 404
+
+        # Check stored OTP
+        stored_reset = app.config.get("reset_codes", {}).get(matching_user_id, {})
+        stored_code = stored_reset.get("code")
+        if not stored_code:
+            return jsonify({"status": "error", "message": "No reset code found for this user"}), 400
+
+        try:
+            expiry = datetime.datetime.fromisoformat(stored_reset.get("expires", "2000-01-01T00:00:00"))
+        except (ValueError, TypeError) as e:
+            print(f"Error parsing expiry: {str(e)}")
+            return jsonify({"status": "error", "message": "Invalid reset code expiry format"}), 500
+
+        if stored_code != code or datetime.datetime.utcnow() > expiry:
+            return jsonify({"status": "error", "message": "Invalid or expired reset code"}), 400
+
+        # Update password
+        try:
+            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            users_settings[matching_user_id]["password"] = hashed_password
+        except Exception as e:
+            print(f"Error hashing password: {str(e)}")
+            return jsonify({"status": "error", "message": "Failed to hash password"}), 500
+
+        # Save updated settings
+        try:
+            save_users_settings(users_settings)
+        except Exception as e:
+            print(f"Error saving users_settings: {str(e)}")
+            return jsonify({"status": "error", "message": "Failed to save updated user data"}), 500
+
+        # Clean up reset code
+        if matching_user_id in app.config.get("reset_codes", {}):
+            del app.config["reset_codes"][matching_user_id]
+
+        return jsonify({
+            "status": "success",
+            "message": "Password updated successfully"
+        }), 200
+
+    except Exception as e:
+        print(f"Unexpected error in verify-reset-code endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+        
 @app.route('/<USERid>/visits', methods=['GET'])
 def get_user_visits(USERid):
     """Fetch the list of visits for a user from users_settings.json."""
@@ -1489,9 +1661,9 @@ def community():
 def merchant():
     return render_template('merchant.html')
 
-@app.route('/wixpro')
+@app.route('/partner')
 def wixpro():
-    return render_template('wixpro.html')
+    return render_template('partner.html')
 
 @app.route('/<user_id>/siterequest', methods=['POST'])
 def save_site_request_endpoint(user_id):
@@ -1509,12 +1681,16 @@ def save_site_request_endpoint(user_id):
         if not user_id:
             return jsonify({"status": "error", "message": "User ID is required"}), 400
 
-        # Extract site request fields and include user_id
+        # Determine request type (optional field, defaults to "community" if not specified)
+        request_type = data.get("type", "community")
+
+        # Extract site request fields, supporting both merchant and community schemas
         site_request = {
-            "user_id": user_id,  # Include user_id in the saved data
-            "communityName": data.get("communityName", ""),
-            "aboutCommunity": data.get("aboutCommunity", ""),
-            "communityLogos": data.get("communityLogos", []),
+            "user_id": user_id,
+            "type": request_type,  # Store the type (merchant or community)
+            "communityName": data.get("communityName") or data.get("storeName") or "",  # Accept either
+            "aboutCommunity": data.get("aboutCommunity") or data.get("aboutStore") or "",  # Accept either
+            "communityLogos": data.get("communityLogos") or data.get("storeLogos") or [],  # Accept either
             "colorPrefs": data.get("colorPrefs", ""),
             "stylingDetails": data.get("stylingDetails", ""),
             "preferredDomain": data.get("preferredDomain", "mycommunity.org"),
@@ -1526,7 +1702,7 @@ def save_site_request_endpoint(user_id):
 
         # Validate required fields
         if not site_request["communityName"]:
-            return jsonify({"status": "error", "message": "Community name is required"}), 400
+            return jsonify({"status": "error", "message": "Community name or store name is required"}), 400
 
         # Validate domain format
         domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
@@ -1568,6 +1744,99 @@ def get_site_request(user_id):
 
     except Exception as e:
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+     
+@app.route('/siterequests', methods=['GET'])
+def list_site_requests():
+    try:
+        siterequest_dir = 'siterequest'
+        logger.debug(f"Looking in directory: {os.path.abspath(siterequest_dir)}")
+        if not os.path.exists(siterequest_dir):
+            logger.debug("Directory does not exist")
+            return jsonify({"status": "success", "siterequests": []}), 200
+
+        users_settings = load_users_settings()
+        siterequests = []
+        files = os.listdir(siterequest_dir)
+        logger.debug(f"Found files: {files}")
+        for filename in files:
+            user_id = filename.replace('.json', '')
+            logger.debug(f"Processing user_id: {user_id}")
+            site_request = load_site_request(user_id)
+            if not site_request:
+                logger.debug(f"No data loaded for {user_id}")
+                continue
+
+            contact_name = users_settings.get(user_id, {}).get('contact_name', '')
+            email = users_settings.get(user_id, {}).get('email_address', '')
+            request_type = site_request.get('type', '')
+            store_name = site_request.get('storeName')
+            community_name = site_request.get('communityName')
+            organisation = store_name if store_name else community_name if community_name else ''
+            received_at = site_request.get('submitted_at', '')
+
+            siterequests.append({
+                'user_id': user_id,
+                'type': request_type,
+                'received_at': received_at,
+                'contact_name': contact_name,
+                'email': email,
+                'organisation': organisation
+            })
+            logger.debug(f"Added request for {user_id}")
+
+        logger.debug(f"Total requests found: {len(siterequests)}")
+        siterequests.sort(key=lambda x: x['received_at'] or '', reverse=True)
+        return jsonify({"status": "success", "siterequests": siterequests}), 200
+
+    except Exception as e:
+        logger.error(f"Error in list_site_requests: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@app.route('/render-github-md/<owner>/<repo>/<branch>/<path:path>')
+def render_github_md(owner, repo, branch, path):
+    # Ensure the file is a Markdown file
+    if not path.endswith('.md'):
+        abort(404, "Not a Markdown file")
+    
+    # Construct the URL to fetch the raw Markdown content from GitHub
+    url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
+    
+    # Fetch the content
+    response = requests.get(url)
+    if response.status_code == 200:
+        md_content = response.text
+        # Convert Markdown to HTML with tables extension
+        html_content = markdown.markdown(md_content, extensions=['tables'])
+        # Render the HTML in a simple template
+        return render_template_string('''
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Rendered Markdown</title>
+                <style>
+                    table {
+                        border-collapse: collapse;
+                        width: 100%;
+                        margin: 20px 0;
+                    }
+                    th, td {
+                        border: 1px solid #ddd;
+                        padding: 8px;
+                        text-align: left;
+                    }
+                    th {
+                        background-color: #f2f2f2;
+                    }
+                </style>
+            </head>
+            <body>
+                {{ content | safe }}
+            </body>
+            </html>
+        ''', content=html_content)
+    else:
+        abort(404, "File not found")
     
 # endregion Logged in Endpoints
 
@@ -1634,7 +1903,7 @@ def login():
     elif "merchant" in user_permissions:
         redirect_url = url_for('merchant')
     elif "wixpro" in user_permissions:
-        redirect_url = url_for('wixpro')
+        redirect_url = url_for('partner')
 
     # Generate JWT token with permissions included
     token_payload = {

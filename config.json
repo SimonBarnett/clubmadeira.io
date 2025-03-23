@@ -1,0 +1,25 @@
+{
+    "amazon_uk": {
+        "ACCESS_KEY": "",
+        "SECRET_KEY": "",
+        "ASSOCIATE_TAG": "",
+        "COUNTRY": ""
+    },
+    "ebay_uk": {
+        "APP_ID": ""
+    },
+    "awin": {
+        "API_TOKEN": ""
+    },
+    "cj": {
+        "API_KEY": "",
+        "WEBSITE_ID": ""
+    },
+    "textmagic": {
+        "USERNAME": "simonbarnett1",
+        "API_KEY": "Nbi5wHksJdtXSlrHCNk9kt7KXnPyjO"
+    },
+    "tiny": {
+        "API_KEY": "ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp"
+    }
+}

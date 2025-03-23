@@ -68,6 +68,8 @@
                     <button onclick="showSection('ebay_uk')">eBay UK</button>
                     <button onclick="showSection('awin')">Awin</button>
                     <button onclick="showSection('cj')">CJ</button>
+                    <button onclick="showSection('textmagic')">TextMagic</button>
+                    <button onclick="showSection('tiny')">tiny</button>
                 </div>
                 <button onclick="toggleSubmenu('userManagement'); showSection('userManagementIntro')">User Management <i class="fas fa-caret-down"></i></button>
                 <div id="userManagement" class="submenu">
@@ -77,9 +79,9 @@
                 </div>
                 <button onclick="toggleSubmenu('testScripts'); showSection('testScriptsIntro')">Test Scripts <i class="fas fa-caret-down"></i></button>
                 <div id="testScripts" class="submenu">
+                    <button onclick="window.location.href='/partner'">Partner</button>
                     <button onclick="window.location.href='/community'">Community</button>
                     <button onclick="window.location.href='/merchant'">Merchant</button>
-                    <button onclick="window.location.href='/wixpro'">WixPro</button>
                     <button onclick="toggleSubmenu('referralTests'); showSection('referralTestsIntro')">Referral Tests <i class="fas fa-caret-down"></i></button>
                     <div id="referralTests" class="submenu">
                         <button onclick="showSection('page_visit_test')">Page Visit Referral Test</button>
@@ -104,6 +106,7 @@
 
             <div id="deal_listings" class="section">
                 <h2>Discounted Deal Listings</h2>
+                <p>This section displays all currently active deal listings available across your affiliate programs.</p>
                 <div style="display: flex; gap: 20px;">
                     <div style="flex: 1; max-width: 300px;">
                         <h3>Categories</h3>
@@ -191,12 +194,38 @@
                 </div>
             </div>
 
+            <div id="textmagic" class="section">
+                <h2>TextMagic Credentials</h2>
+                <div class="form">
+                    <label for="textmagicUsername">Username:</label>
+                    <input type="text" id="textmagicUsername" placeholder="Enter Username">
+                    <label for="textmagicApiKey">API Key:</label>
+                    <input type="text" id="textmagicApiKey" placeholder="Enter API Key">
+                    <button onclick="updateAffiliate('textmagic')">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
+                </div>
+            </div>
+
+            <div id="tiny" class="section">
+                <h2>tiny Credentials</h2>
+                <div class="form">
+                    <label for="tinyApiKey">API Key:</label>
+                    <input type="text" id="tinyApiKey" placeholder="Enter API Key">
+                    <button onclick="updateAffiliate('tiny')">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
+                </div>
+            </div>
+
             <div id="userManagementIntro" class="section">
                 <h2>User Management</h2>
                 <p>This section allows you to manage different types of users in your system.</p>
                 <p>Select a user type from the menu to view their details or modify their permissions:</p>
                 <ul>
-                    <li><strong>Partners:</strong> Manage users with WixPro permissions.</li>
+                    <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
                     <li><strong>Communities:</strong> View community users.</li>
                     <li><strong>Merchants:</strong> Manage merchant users.</li>
                 </ul>
@@ -282,7 +311,6 @@
         const apiUrl = 'https://clubmadeira.io';
         let userPermissions = [];
 
-        // Simple JWT decode function
         function decodeJWT(token) {
             if (!token || typeof token !== 'string') {
                 console.error('Invalid token: Token is not a string or is undefined/null');
@@ -429,6 +457,11 @@
                 } else if (section === 'cj') {
                     document.getElementById('cjApiKey').value = config.API_KEY || '';
                     document.getElementById('cjWebsiteId').value = config.WEBSITE_ID || '';
+                } else if (section === 'textmagic') {
+                    document.getElementById('textmagicUsername').value = config.USERNAME || '';
+                    document.getElementById('textmagicApiKey').value = config.API_KEY || '';
+                } else if (section === 'tiny') {
+                    document.getElementById('tinyApiKey').value = config.API_KEY || '';
                 }
                 toastr.success(`Loaded credentials for ${section}`);
             } catch (error) {
@@ -458,7 +491,7 @@
                 }
 
                 const select = document.getElementById(selectId);
-                select.innerHTML = ''; // Clear existing options
+                select.innerHTML = '';
                 communityUsers.forEach(user => {
                     const option = document.createElement('option');
                     option.value = user.USERid;
@@ -588,10 +621,14 @@
                     `;
                     if (section === 'partners') {
                         const hasAdmin = user.permissions.includes('admin');
+                        const hasMerchant = user.permissions.includes('merchant');
                         actionsHtml = `
                             <input type="checkbox" ${hasAdmin ? 'checked' : ''} 
                                 onchange="togglePermission('${user.USERid}', 'admin', '${section}', this.checked)">
                             Admin
+                            <input type="checkbox" ${hasMerchant ? 'checked' : ''} 
+                                onchange="togglePermission('${user.USERid}', 'merchant', '${section}', this.checked)">
+                            Merchant
                         ` + actionsHtml;
                     }
                 }
@@ -618,7 +655,7 @@
                 loadSection(section);
             } catch (error) {
                 toastr.error(`Error: ${error.message}`);
-                loadSection(section); // Reload to revert checkbox if failed
+                loadSection(section);
             }
         }
 
@@ -639,6 +676,15 @@
                 credentials = {
                     API_KEY: document.getElementById('cjApiKey').value.trim(),
                     WEBSITE_ID: document.getElementById('cjWebsiteId').value.trim()
+                };
+            } else if (affiliate === 'textmagic') {
+                credentials = {
+                    USERNAME: document.getElementById('textmagicUsername').value.trim(),
+                    API_KEY: document.getElementById('textmagicApiKey').value.trim()
+                };
+            } else if (affiliate === 'tiny') {
+                credentials = {
+                    API_KEY: document.getElementById('tinyApiKey').value.trim()
                 };
             }
 

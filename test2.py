@@ -1,115 +1,82 @@
 from flask import Flask, request, jsonify
-import os
-import json
 import datetime
-import re
+import random
+import string
+import bcrypt  # Ensure this is imported
 
 app = Flask(__name__)
 
-# Define the base directory for site requests
-SITE_REQUEST_DIR = os.path.join(os.path.dirname(__file__), "siterequest")
+@app.route('/verify-reset-code', methods=['POST'])
+def verify_reset_code():
+    
+    try:
+        # Parse JSON safely
+        data = request.get_json(silent=True)
+        if not data or not isinstance(data, dict):
+            return jsonify({"status": "error", "message": "Invalid or missing JSON data"}), 400
 
-# Ensure the siterequest directory exists
-if not os.path.exists(SITE_REQUEST_DIR):
-    os.makedirs(SITE_REQUEST_DIR)
+        email = data.get("email")
+        code = data.get("code")
+        new_password = data.get("new_password")
+        if not all([email, code, new_password]):
+            return jsonify({"status": "error", "message": "Email, code, and new password are required"}), 400
 
-def load_site_request(user_id):
-    """Load site request data from <user_id> file in /siterequest folder."""
-    file_path = os.path.join(SITE_REQUEST_DIR, user_id)
-    if os.path.exists(file_path):
+        # Load user settings
         try:
-            with open(file_path, 'r') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"Error loading site request for user {user_id}: {str(e)}")
-            return {}
-    return {}
+            users_settings = load_users_settings()
+        except Exception as e:
+            print(f"Error loading users_settings: {str(e)}")
+            return jsonify({"status": "error", "message": "Failed to load user data"}), 500
 
-def save_site_request(user_id, site_request_data):
-    """Save site request data to <user_id> file in /siterequest folder."""
-    file_path = os.path.join(SITE_REQUEST_DIR, user_id)
-    try:
-        with open(file_path, 'w') as f:
-            json.dump(site_request_data, f, indent=4)
-    except IOError as e:
-        raise Exception(f"Failed to save site request for user {user_id}: {str(e)}")
+        # Find user by email
+        matching_user_id = None
+        for user_id, settings in users_settings.items():
+            if settings.get("email_address", "").lower() == email.lower():
+                matching_user_id = user_id
+                break
 
-@app.route('/<user_id>/siterequest', methods=['POST'])
-def save_site_request_endpoint(user_id):
-    try:
-        # Get JSON data from request
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
+        if not matching_user_id:
+            return jsonify({"status": "error", "message": "Email not found"}), 404
 
-        # Validate user_id matches the one in the body (if provided)
-        body_user_id = data.get("userId")
-        if body_user_id and body_user_id != user_id:
-            return jsonify({"status": "error", "message": "User ID in body does not match URL"}), 400
+        # Check stored OTP
+        stored_reset = app.config.get("reset_codes", {}).get(matching_user_id, {})
+        stored_code = stored_reset.get("code")
+        if not stored_code:
+            return jsonify({"status": "error", "message": "No reset code found for this user"}), 400
 
-        if not user_id:
-            return jsonify({"status": "error", "message": "User ID is required"}), 400
+        try:
+            expiry = datetime.datetime.fromisoformat(stored_reset.get("expires", "2000-01-01T00:00:00"))
+        except (ValueError, TypeError) as e:
+            print(f"Error parsing expiry: {str(e)}")
+            return jsonify({"status": "error", "message": "Invalid reset code expiry format"}), 500
 
-        # Extract site request fields and include user_id
-        site_request = {
-            "user_id": user_id,  # Include user_id in the saved data
-            "communityName": data.get("communityName", ""),
-            "aboutCommunity": data.get("aboutCommunity", ""),
-            "communityLogos": data.get("communityLogos", []),
-            "colorPrefs": data.get("colorPrefs", ""),
-            "stylingDetails": data.get("stylingDetails", ""),
-            "preferredDomain": data.get("preferredDomain", "mycommunity.org"),
-            "emails": data.get("emails", []),
-            "pages": data.get("pages", []),
-            "widgets": data.get("widgets", []),
-            "submitted_at": datetime.datetime.utcnow().isoformat()
-        }
+        if stored_code != code or datetime.datetime.utcnow() > expiry:
+            return jsonify({"status": "error", "message": "Invalid or expired reset code"}), 400
 
-        # Validate required fields
-        if not site_request["communityName"]:
-            return jsonify({"status": "error", "message": "Community name is required"}), 400
+        # Update password
+        try:
+            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            users_settings[matching_user_id]["password"] = hashed_password
+        except Exception as e:
+            print(f"Error hashing password: {str(e)}")
+            return jsonify({"status": "error", "message": "Failed to hash password"}), 500
 
-        # Validate domain format
-        domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
-        if not re.match(domain_regex, site_request["preferredDomain"]):
-            return jsonify({"status": "error", "message": "Invalid domain name"}), 400
+        # Save updated settings
+        try:
+            save_users_settings(users_settings)
+        except Exception as e:
+            print(f"Error saving users_settings: {str(e)}")
+            return jsonify({"status": "error", "message": "Failed to save updated user data"}), 500
 
-        # Handle file data (assuming base64 strings or placeholders)
-        for page in site_request["pages"]:
-            if "images" in page and page["images"]:
-                page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
+        # Clean up reset code
+        if matching_user_id in app.config.get("reset_codes", {}):
+            del app.config["reset_codes"][matching_user_id]
 
-        # Save to file in /siterequest folder
-        save_site_request(user_id, site_request)
-
-        return jsonify({"status": "success", "message": "Site request saved successfully"}), 200
-
-    except Exception as e:
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@app.route('/<user_id>/siterequest', methods=['GET'])
-def get_site_request(user_id):
-    try:
-        # Load site request data from file
-        site_request = load_site_request(user_id)
-
-        # If no data exists, return an empty site_request
-        if not site_request:
-            return jsonify({
-                "status": "success",
-                "site_request": {}
-            }), 200
-
-        # Return the site request data
-        response = {
+        return jsonify({
             "status": "success",
-            "site_request": site_request
-        }
-        return jsonify(response), 200
+            "message": "Password updated successfully"
+        }), 200
 
     except Exception as e:
+        print(f"Unexpected error in verify-reset-code endpoint: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-# For local testing
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)

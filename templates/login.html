@@ -106,7 +106,33 @@
                 <label for="forgotEmail">Email:</label>
                 <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
             </div>
-            <button type="submit">Reset Password</button>
+            <button type="submit">Send OTP via SMS</button>
+        </form>
+        <div class="toggle-link">
+            <a onclick="showLogin()">Back to Login</a>
+        </div>
+    </div>
+
+    <div class="container" id="verifyOtpContainer" style="display: none;">
+        <h2>Verify OTP</h2>
+        <form id="verifyOtpForm">
+            <div class="form-group">
+                <label for="verifyEmail">Email:</label>
+                <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="otpCode">One-Time Password:</label>
+                <input type="text" id="otpCode" name="code" placeholder="Enter the OTP from SMS" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password:</label>
+                <input type="password" id="newPassword" name="new_password" placeholder="Enter new password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmNewPassword">Confirm New Password:</label>
+                <input type="password" id="confirmNewPassword" name="confirm_new_password" placeholder="Confirm new password" required>
+            </div>
+            <button type="submit">Update Password</button>
         </form>
         <div class="toggle-link">
             <a onclick="showLogin()">Back to Login</a>
@@ -116,7 +142,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        const apiUrl = 'https://clubmadeira.io';
+        const apiUrl = 'https://clubmadeira.io'; // Adjust based on your deployment
 
         toastr.options = {
             closeButton: true,
@@ -130,11 +156,20 @@
         function showLogin() {
             document.getElementById('loginContainer').style.display = 'block';
             document.getElementById('forgotPasswordContainer').style.display = 'none';
+            document.getElementById('verifyOtpContainer').style.display = 'none';
         }
 
         function showForgotPassword() {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('forgotPasswordContainer').style.display = 'block';
+            document.getElementById('verifyOtpContainer').style.display = 'none';
+        }
+
+        function showVerifyOtp(email) {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('forgotPasswordContainer').style.display = 'none';
+            document.getElementById('verifyOtpContainer').style.display = 'block';
+            document.getElementById('verifyEmail').value = email;
         }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -184,17 +219,75 @@
                     body: JSON.stringify({ email })
                 });
 
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.message || 'Reset request failed');
+                const rawText = await response.text();
+                console.log('Reset Raw Response:', rawText);
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (jsonError) {
+                    console.error('Reset JSON Parse Error:', jsonError);
+                    throw new Error('Invalid response from server');
                 }
 
-                const data = await response.json();
-                toastr.success('A reset link has been sent to your email.');
+                console.log('Reset Parsed Response:', data);
+                if (!response.ok) {
+                    throw new Error(data.message || 'Reset request failed');
+                }
+
+                toastr.success('A one-time password has been sent to your phone.');
+                showVerifyOtp(email);
+            } catch (error) {
+                toastr.error(error.message || 'Error sending OTP');
+                console.error('Reset Error:', error, 'Email Entered:', email);
+            }
+        });
+
+        document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('verifyEmail').value.trim();
+            const code = document.getElementById('otpCode').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            // Password validation
+            const passwordRegex = /^(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                toastr.error('New password must be at least 8 characters long and include numbers');
+                return;
+            }
+            if (newPassword !== confirmNewPassword) {
+                toastr.error('New password and confirmation do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}/verify-reset-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code, new_password: newPassword })
+                });
+
+                const rawText = await response.text();
+                console.log('Verify Raw Response:', rawText);
+
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (jsonError) {
+                    console.error('Verify JSON Parse Error:', jsonError);
+                    throw new Error('Invalid response from server');
+                }
+
+                console.log('Verify Parsed Response:', data);
+                if (!response.ok) {
+                    throw new Error(data.message || 'Verification failed');
+                }
+
+                toastr.success('Password updated successfully!');
                 showLogin();
             } catch (error) {
-                toastr.error(error.message || 'Error during password reset');
-                console.error('Reset Error:', error);
+                toastr.error(error.message || 'Error verifying OTP');
+                console.error('Verification Error:', error, 'Email:', email, 'Code:', code);
             }
         });
     </script>
