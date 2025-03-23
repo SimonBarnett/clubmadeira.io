@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, redirect, url_for
 from flask_cors import CORS
 from amazon_paapi import AmazonApi 
 import time
@@ -13,7 +13,7 @@ import hashlib
 from flask import Flask, request, jsonify
 import bcrypt
 import json
-import datetime
+import datetime, re
 
 app = Flask(__name__)
 # Enable CORS with verbose logging
@@ -31,8 +31,28 @@ USERS_PRODUCTS_FILE = "users_products.json"
 CONFIG_FILE = "config.json"
 DEFAULT_CATEGORIES = ["283155", "172282"]
 USERS_SETTINGS_FILE = "users_settings.json"
+# Define the base directory for site requests
+SITE_REQUEST_DIR = os.path.join(os.path.dirname(__file__), "siterequest")
+
+# Ensure the siterequest directory exists
+if not os.path.exists(SITE_REQUEST_DIR):
+    os.makedirs(SITE_REQUEST_DIR)
 
 # region Helper Functions
+def generate_code():
+    # Define the character set: 0-9 and A-Z (36 possible characters)
+    charset = string.digits + string.ascii_uppercase
+    
+    # Generate a random 7-character string
+    code = ''.join(random.choice(charset) for _ in range(7))
+    
+    # Calculate checksum
+    total = sum(charset.index(c) for c in code)
+    checksum = charset[total % 36]
+    
+    # Return 8-character code (7 digits + checksum)
+    return code + checksum
+
 def load_users_categories():
     if os.path.exists(USERS_FILE):
         try:
@@ -323,21 +343,46 @@ def load_users_settings():
         try:
             with open(USERS_SETTINGS_FILE, 'r') as f:
                 return json.load(f)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Invalid JSON in {USERS_SETTINGS_FILE}: {str(e)}")
         except Exception as e:
-            print(f"Error loading {USERS_SETTINGS_FILE}: {str(e)}")
-            return {}
+            raise Exception(f"Error loading {USERS_SETTINGS_FILE}: {str(e)}")
     return {}
 
 def save_users_settings(users_settings):
     try:
         with open(USERS_SETTINGS_FILE, 'w') as f:
             json.dump(users_settings, f, indent=4)
+    except IOError as e:
+        raise Exception(f"Failed to write to {USERS_SETTINGS_FILE}: {str(e)}")
     except Exception as e:
-        print(f"Error saving {USERS_SETTINGS_FILE}: {str(e)}")
-
+        raise Exception(f"Unexpected error saving {USERS_SETTINGS_FILE}: {str(e)}")
+    
 def get_user_settings(user_id):
     users_settings = load_users_settings()
     return users_settings.get(user_id, {})
+
+def load_site_request(user_id):
+    """Load site request data from <user_id> file in /siterequest folder."""
+    file_path = os.path.join(SITE_REQUEST_DIR, user_id)
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Error loading site request for user {user_id}: {str(e)}")
+            return {}
+    return {}
+
+def save_site_request(user_id, site_request_data):
+    """Save site request data to <user_id> file in /siterequest folder."""
+    file_path = os.path.join(SITE_REQUEST_DIR, user_id)
+    try:
+        with open(file_path, 'w') as f:
+            json.dump(site_request_data, f, indent=4)
+    except IOError as e:
+        raise Exception(f"Failed to save site request for user {user_id}: {str(e)}")
+
 # endregion Helper Functions
 
 # region Detailed Fetch
@@ -1003,25 +1048,79 @@ def search_wix_all(browse_node_id):
 # endregion Search
 
 # region Management Endpoints
-@app.route('/')
-def home():
-    return render_template('login.html')  # Serves login.html at /
 
-@app.route('/CatMgr')
-def catmgr():
-    return render_template('CatMgr.html')  # Serves CatMgr.html
+# GET /users - Retrieve list of all users
+@app.route('/users', methods=['GET'])
+def get_users():
+    users_settings = load_users_settings()
+    user_list = [
+        {
+            "USERid": user_id,
+            "email_address": user["email_address"],
+            "contact_name": user["contact_name"]
+        }
+        for user_id, user in users_settings.items()
+    ]
+    return jsonify({"status": "success", "users": user_list}), 200
 
-@app.route('/affiliate')
-def affiliate():
-    return render_template('affiliate.html')  # Serves affiliate.html
+# GET /users/<user_id> - Retrieve specific user details
+@app.route('/users/<user_id>', methods=['GET'])
+def get_user(user_id):
+    users_settings = load_users_settings()
+    if user_id not in users_settings:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    user = users_settings[user_id]
+    user_data = {
+        "USERid": user_id,
+        "email_address": user["email_address"],
+        "contact_name": user["contact_name"],
+        "permissions": user["permissions"],
+        "website_url": user.get("website_url", ""),
+        "wixClientId": user.get("wixClientId", ""),
+        "referrals": user.get("referrals", {"visits": [], "orders": []})
+    }
+    return jsonify({"status": "success", "user": user_data}), 200
 
-@app.route('/listings')
-def listings():
-    return render_template('listings.html')  # Serves listings.html
+# GET /permissions/<user_id> - Retrieve permissions for a specific user
+@app.route('/permissions/<user_id>', methods=['GET'])
+def get_permissions(user_id):
+    users_settings = load_users_settings()
+    if user_id not in users_settings:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    permissions = users_settings[user_id]['permissions']
+    return jsonify({"status": "success", "permissions": permissions}), 200
 
-@app.route('/test')
-def test():
-    return "Test route from madeira.py on 443!"
+# POST /permissions/<user_id> - Add a permission to a specific user
+@app.route('/permissions/<user_id>', methods=['POST'])
+def add_permission(user_id):
+    data = request.get_json()
+    if 'permission' not in data:
+        return jsonify({"status": "error", "message": "Permission field is required"}), 400
+    permission = data['permission']
+    users_settings = load_users_settings()
+    if user_id not in users_settings:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    if permission in users_settings[user_id]['permissions']:
+        return jsonify({"status": "error", "message": "Permission already exists"}), 400
+    users_settings[user_id]['permissions'].append(permission)
+    save_users_settings(users_settings)
+    return jsonify({"status": "success", "message": "Permission added"}), 200
+
+# DELETE /permissions/<user_id> - Remove a permission from a specific user
+@app.route('/permissions/<user_id>', methods=['DELETE'])
+def remove_permission(user_id):
+    data = request.get_json()
+    if 'permission' not in data:
+        return jsonify({"status": "error", "message": "Permission field is required"}), 400
+    permission = data['permission']
+    users_settings = load_users_settings()
+    if user_id not in users_settings:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    if permission not in users_settings[user_id]['permissions']:
+        return jsonify({"status": "error", "message": "Permission not found"}), 400
+    users_settings[user_id]['permissions'].remove(permission)
+    save_users_settings(users_settings)
+    return jsonify({"status": "success", "message": "Permission removed"}), 200
 
 @app.route('/config', methods=['GET'])
 def get_config():
@@ -1274,72 +1373,6 @@ def load_users_settings():
     except FileNotFoundError:
         return {}
 
-@app.route('/login', methods=['POST'])
-def login():
-    try:
-        data = request.get_json()
-        email = data.get("email", "").strip()
-        plain_password = data.get("password", "").strip()
-
-        if not email or not plain_password:
-            return jsonify({"status": "error", "message": "Email and password are required"}), 400
-
-        users_settings = load_users_settings()
-        matching_user_id = None
-        for user_id, settings in users_settings.items():
-            stored_email = settings.get("email_address", "").strip()
-            if stored_email and stored_email.lower() == email.lower():
-                stored_hashed_password = settings.get("password", "")
-                if isinstance(stored_hashed_password, str):
-                    stored_hashed_password = stored_hashed_password.encode('utf-8')
-                if bcrypt.checkpw(plain_password.encode('utf-8'), stored_hashed_password):
-                    matching_user_id = user_id
-                    break
-
-        if not matching_user_id:
-            return jsonify({"status": "error", "message": "Invalid email or password"}), 401
-
-        token_payload = {"userId": matching_user_id, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)}
-        token = jwt.encode(token_payload, SECRET_KEY, algorithm="HS256")
-
-        return jsonify({"status": "success", "message": "Login successful", "token": token, "userId": matching_user_id}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@app.route('/signup', methods=['POST'])
-def signup():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        email = data.get("email")
-        phone = data.get("phone")
-        plain_password = data.get("password")
-
-        if not email or not phone or not plain_password:
-            return jsonify({"status": "error", "message": "Email, phone, and password are required"}), 400
-
-        users_settings = load_users_settings()
-        if email in users_settings:
-            return jsonify({"status": "error", "message": "Email already registered"}), 400
-
-        hashed_password = bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt())
-        users_settings[email] = {
-            "email_address": email,
-            "phone_number": phone,
-            "password": hashed_password.decode('utf-8'),
-            "contact_name": "",
-            "website_url": "",
-            "wixClientId": "",
-            "referrals": {"visits": [], "orders": []}
-        }
-        save_users_settings(users_settings)
-        return jsonify({"status": "success", "message": "Signup successful"}), 201
-    except Exception as e:
-        print(f"Error in signup endpoint: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
 @app.route('/update-password', methods=['POST'])
 def update_password():
     try:
@@ -1443,7 +1476,242 @@ def get_user_orders(USERid):
 
 # endregion Management Endpoints
 
-# region Velo Public Endpoints
+# region Logged in Endpoints
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
+
+@app.route('/community')
+def community():
+    return render_template('community.html')
+
+@app.route('/merchant')
+def merchant():
+    return render_template('merchant.html')
+
+@app.route('/wixpro')
+def wixpro():
+    return render_template('wixpro.html')
+
+@app.route('/<user_id>/siterequest', methods=['POST'])
+def save_site_request_endpoint(user_id):
+    try:
+        # Get JSON data from request
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        # Validate user_id matches the one in the body (if provided)
+        body_user_id = data.get("userId")
+        if body_user_id and body_user_id != user_id:
+            return jsonify({"status": "error", "message": "User ID in body does not match URL"}), 400
+
+        if not user_id:
+            return jsonify({"status": "error", "message": "User ID is required"}), 400
+
+        # Extract site request fields and include user_id
+        site_request = {
+            "user_id": user_id,  # Include user_id in the saved data
+            "communityName": data.get("communityName", ""),
+            "aboutCommunity": data.get("aboutCommunity", ""),
+            "communityLogos": data.get("communityLogos", []),
+            "colorPrefs": data.get("colorPrefs", ""),
+            "stylingDetails": data.get("stylingDetails", ""),
+            "preferredDomain": data.get("preferredDomain", "mycommunity.org"),
+            "emails": data.get("emails", []),
+            "pages": data.get("pages", []),
+            "widgets": data.get("widgets", []),
+            "submitted_at": datetime.datetime.utcnow().isoformat()
+        }
+
+        # Validate required fields
+        if not site_request["communityName"]:
+            return jsonify({"status": "error", "message": "Community name is required"}), 400
+
+        # Validate domain format
+        domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+        if not re.match(domain_regex, site_request["preferredDomain"]):
+            return jsonify({"status": "error", "message": "Invalid domain name"}), 400
+
+        # Handle file data (assuming base64 strings or placeholders)
+        for page in site_request["pages"]:
+            if "images" in page and page["images"]:
+                page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
+
+        # Save to file in /siterequest folder
+        save_site_request(user_id, site_request)
+
+        return jsonify({"status": "success", "message": "Site request saved successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@app.route('/<user_id>/siterequest', methods=['GET'])
+def get_site_request(user_id):
+    try:
+        # Load site request data from file
+        site_request = load_site_request(user_id)
+
+        # If no data exists, return an empty site_request
+        if not site_request:
+            return jsonify({
+                "status": "success",
+                "site_request": {}
+            }), 200
+
+        # Return the site request data
+        response = {
+            "status": "success",
+            "site_request": site_request
+        }
+        return jsonify(response), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    
+# endregion Logged in Endpoints
+
+# region Public Endpoints
+
+@app.route('/')
+def home():
+    return render_template('login.html')  # Serves login.html at /
+
+@app.route('/branding')
+def branding():
+    try:
+        # Path to branding.json in the root directory
+        root_dir = os.path.dirname(os.path.abspath(__file__))
+        json_path = os.path.join(root_dir, 'branding.json')
+        
+        with open(json_path, 'r') as f:
+            branding_data = json.load(f)
+        return jsonify(branding_data)
+    except FileNotFoundError:
+        return jsonify({'content': '<h1>Branding content not found</h1>'}), 500
+    except Exception as e:
+        return jsonify({'content': f'Internal Server Error: {str(e)}'}), 500
+
+# Login endpoint
+@app.route('/login', methods=['POST'])
+def login():
+    # Get request data
+    data = request.get_json()
+    email = data.get("email", "").strip()
+    plain_password = data.get("password", "").strip()
+
+    # Validate input
+    if not email or not plain_password:
+        return jsonify({"status": "error", "message": "Email and password are required"}), 400
+
+    # Load user data
+    users_settings = load_users_settings()
+
+    # Find user by email and verify password
+    matching_user_id = None
+    for user_id, settings in users_settings.items():
+        if settings.get("email_address", "").lower() == email.lower():
+            stored_hashed_password = settings.get("password")
+            if isinstance(stored_hashed_password, str):
+                stored_hashed_password = stored_hashed_password.encode('utf-8')
+            if bcrypt.checkpw(plain_password.encode('utf-8'), stored_hashed_password):
+                matching_user_id = user_id
+                break
+
+    # If authentication fails
+    if not matching_user_id:
+        return jsonify({"status": "error", "message": "Invalid email or password"}), 401
+
+    # Get user permissions
+    user_permissions = users_settings[matching_user_id].get("permissions", [])
+
+    # Determine redirect URL based on permissions
+    redirect_url = None
+    if "admin" in user_permissions:
+        redirect_url = url_for('admin')
+    elif "community" in user_permissions:
+        redirect_url = url_for('community')
+    elif "merchant" in user_permissions:
+        redirect_url = url_for('merchant')
+    elif "wixpro" in user_permissions:
+        redirect_url = url_for('wixpro')
+
+    # Generate JWT token with permissions included
+    token_payload = {
+        "userId": matching_user_id,
+        "permissions": user_permissions,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    }
+    token = jwt.encode(token_payload, SECRET_KEY, algorithm="HS256")
+
+    # Prepare response
+    contact_name = users_settings[matching_user_id].get("contact_name", "User")
+    response_data = {
+        "status": "success",
+        "message": "Login successful",
+        "token": token,
+        "userId": matching_user_id,
+        "contact_name": contact_name
+    }
+
+    # Add redirect URL if applicable
+    if redirect_url:
+        response_data["redirect_url"] = redirect_url
+
+    return jsonify(response_data), 200
+
+@app.route('/signup', methods=['GET'])
+def signup_page():
+    return render_template('signup.html')
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    # Parse the incoming JSON data
+    data = request.get_json()
+
+    # Define required fields
+    required_fields = ['signup_type', 'contact_name', 'signup_email', 'signup_password']
+    
+    # Validate that all required fields are present
+    if not all(field in data for field in required_fields):
+        return jsonify({"status": "error", "message": "All fields are required"}), 400
+
+    # Load existing users
+    users_settings = load_users_settings()
+
+    # Check if the email already exists
+    if any(user['email_address'] == data['signup_email'] for user in users_settings.values()):
+        return jsonify({"status": "error", "message": "Email already exists"}), 400
+
+    # Generate a unique USERid
+    while True:
+        USERid = generate_code()
+        if USERid not in users_settings:
+            break
+
+    # Hash the password
+    hashed_password = bcrypt.hashpw(data['signup_password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    # Create the user entry with user_categories included
+    users_settings[USERid] = {
+        "email_address": data['signup_email'],
+        "password": hashed_password,
+        "contact_name": data['contact_name'],
+        "permissions": [data['signup_type']],  # Existing field for access control
+        "user_categories": [data['signup_type']],  # New field for categorization
+        "website_url": "",
+        "wixClientId": "",
+        "referrals": {"visits": [], "orders": []}
+    }
+
+    # Save the updated user settings
+    save_users_settings(users_settings)
+
+    # Return a success response
+    return jsonify({"status": "success", "message": "Signup successful"}), 201
+# endregion Sign up
+
+# region Velocify Public Endpoints
 @app.route('/<USERid>/discounted-products', methods=['GET'])
 def get_user_discounted_products(USERid):
     category_id = request.args.get('category_id')
@@ -1501,6 +1769,8 @@ def get_categories(USERid):
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error fetching categories: {str(e)}"}), 500
 # endregion Velo Public Endpoints
+
+# endregion Public Endpoints
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

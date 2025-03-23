@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clubmadeira.io | Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .header { 
+            height: 150px; 
+            background-color: #f4f4f4; 
+            margin-bottom: 25px; 
+            overflow: hidden;
+            position: relative;
+        }
+        .header-content { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .main-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
+        .menu-container { flex: 1; max-width: 300px; }
+        .content-container { flex: 2; }
+        .menu { margin-bottom: 20px; text-align: left; }
+        .menu button { 
+            padding: 10px; background-color: #007BFF; color: white; border: none; 
+            border-radius: 4px; cursor: pointer; font-size: 14px; text-align: left; 
+            width: 100%; margin-bottom: 5px; display: block;
+        }
+        .menu button:hover { background-color: #0056b3; }
+        .submenu { display: none; padding-left: 20px; }
+        .submenu.open { display: block; }
+        .section { display: none; }
+        .active { display: block; }
+        .form { display: flex; flex-direction: column; gap: 10px; max-width: 400px; }
+        .form label { font-weight: bold; }
+        .form input, .form select { padding: 5px; }
+        .form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; }
+        .form button:hover { background-color: #0056b3; }
+        .signup-instructions { margin-top: 15px; font-size: 0.9em; color: #555; }
+        .signup-instructions a { color: #007BFF; text-decoration: none; }
+        .signup-instructions a:hover { text-decoration: underline; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .deals-table th { background-color: #f2f2f2; }
+        .treeview { max-height: 600px; overflow-y: auto; margin-bottom: 10px; }
+        .treeview, .treeview ul, .treeview li { list-style-type: none; padding: 0; margin: 0; }
+        .treeview .node { display: flex; align-items: center; }
+        .treeview .toggle { cursor: pointer; width: 20px; text-align: center; font-weight: bold; }
+        .treeview .subcategories { display: none; padding-left: 20px; }
+        .treeview .subcategories.open { display: block; }
+        #toast-container > .toast-success { background-color: #28a745; border-color: #218838; }
+        #toast-container > .toast-error { background-color: #dc3545; border-color: #c82333; }
+        .action-cell { display: flex; gap: 10px; align-items: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" id="brandingContent">
+            <!-- Branding content will be loaded here -->
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="menu-container">
+            <div class="menu">
+                <button onclick="showSection('deal_listings')">Deal Listings</button>
+                <button onclick="toggleSubmenu('affiliatePrograms'); showSection('affiliateProgramsIntro')">Affiliate Programs <i class="fas fa-caret-down"></i></button>
+                <div id="affiliatePrograms" class="submenu">
+                    <button onclick="showSection('amazon_uk')">Amazon UK</button>
+                    <button onclick="showSection('ebay_uk')">eBay UK</button>
+                    <button onclick="showSection('awin')">Awin</button>
+                    <button onclick="showSection('cj')">CJ</button>
+                </div>
+                <button onclick="toggleSubmenu('userManagement'); showSection('userManagementIntro')">User Management <i class="fas fa-caret-down"></i></button>
+                <div id="userManagement" class="submenu">
+                    <button onclick="showSection('partners')">Partners</button>
+                    <button onclick="showSection('communities')">Communities</button>
+                    <button onclick="showSection('merchants')">Merchants</button>
+                </div>
+                <button onclick="toggleSubmenu('testScripts'); showSection('testScriptsIntro')">Test Scripts <i class="fas fa-caret-down"></i></button>
+                <div id="testScripts" class="submenu">
+                    <button onclick="window.location.href='/community'">Community</button>
+                    <button onclick="window.location.href='/merchant'">Merchant</button>
+                    <button onclick="window.location.href='/wixpro'">WixPro</button>
+                    <button onclick="toggleSubmenu('referralTests'); showSection('referralTestsIntro')">Referral Tests <i class="fas fa-caret-down"></i></button>
+                    <div id="referralTests" class="submenu">
+                        <button onclick="showSection('page_visit_test')">Page Visit Referral Test</button>
+                        <button onclick="showSection('order_test')">Order Referral Test</button>
+                    </div>
+                </div>
+                <button onclick="logOff()" style="background-color: #dc3545;">Log Off</button>
+            </div>
+        </div>
+        <div class="content-container">
+            <div id="welcome" class="section active">
+                <h2>Welcome to Admin Dashboard</h2>
+                <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
+                <p>Use the menu on the left to:</p>
+                <ul>
+                    <li>View and filter discounted deals in "Deal Listings"</li>
+                    <li>Manage affiliate credentials under "Affiliate Programs"</li>
+                    <li>Manage users under "User Management"</li>
+                    <li>Test referral tracking with "Test Scripts"</li>
+                </ul>
+            </div>
+
+            <div id="deal_listings" class="section">
+                <h2>Discounted Deal Listings</h2>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1; max-width: 300px;">
+                        <h3>Categories</h3>
+                        <div class="treeview" id="categoryTree"></div>
+                    </div>
+                    <div style="flex: 2;">
+                        <table class="deals-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Title</th>
+                                    <th>URL</th>
+                                    <th>Price</th>
+                                    <th>Original</th>
+                                    <th>Discount %</th>
+                                    <th>Image</th>
+                                    <th>QTY</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dealList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="affiliateProgramsIntro" class="section">
+                <h2>Affiliate Programs</h2>
+                <p>Use this section to manage your affiliate program credentials.</p>
+                <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
+            </div>
+
+            <div id="amazon_uk" class="section">
+                <h2>Amazon UK Credentials</h2>
+                <div class="form">
+                    <label for="amazonAccessKey">Access Key:</label>
+                    <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
+                    <label for="amazonSecretKey">Secret Key:</label>
+                    <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
+                    <label for="amazonAssociateTag">Associate Tag:</label>
+                    <input type="text" id="amazonAssociateTag" placeholder="Enter Associate Tag">
+                    <label for="amazonCountry">Country:</label>
+                    <input type="text" id="amazonCountry" placeholder="Enter Country (e.g., UK)">
+                    <button onclick="updateAffiliate('amazon_uk')">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
+                </div>
+            </div>
+
+            <div id="ebay_uk" class="section">
+                <h2>eBay UK Credentials</h2>
+                <div class="form">
+                    <label for="ebayAppId">App ID:</label>
+                    <input type="text" id="ebayAppId" placeholder="Enter App ID">
+                    <button onclick="updateAffiliate('ebay_uk')">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
+                </div>
+            </div>
+
+            <div id="awin" class="section">
+                <h2>Awin Credentials</h2>
+                <div class="form">
+                    <label for="awinApiToken">API Token:</label>
+                    <input type="text" id="awinApiToken" placeholder="Enter API Token">
+                    <button onclick="updateAffiliate('awin')">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
+                </div>
+            </div>
+
+            <div id="cj" class="section">
+                <h2>CJ Credentials</h2>
+                <div class="form">
+                    <label for="cjApiKey">API Key:</label>
+                    <input type="text" id="cjApiKey" placeholder="Enter API Key">
+                    <label for="cjWebsiteId">Website ID:</label>
+                    <input type="text" id="cjWebsiteId" placeholder="Enter Website ID">
+                    <button onclick="updateAffiliate('cj')">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
+                </div>
+            </div>
+
+            <div id="userManagementIntro" class="section">
+                <h2>User Management</h2>
+                <p>This section allows you to manage different types of users in your system.</p>
+                <p>Select a user type from the menu to view their details or modify their permissions:</p>
+                <ul>
+                    <li><strong>Partners:</strong> Manage users with WixPro permissions.</li>
+                    <li><strong>Communities:</strong> View community users.</li>
+                    <li><strong>Merchants:</strong> Manage merchant users.</li>
+                </ul>
+            </div>
+
+            <div id="merchants" class="section">
+                <h2>Merchant Management</h2>
+                <table>
+                    <thead>
+                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="merchantsList"></tbody>
+                </table>
+            </div>
+
+            <div id="communities" class="section">
+                <h2>Communities Management</h2>
+                <table>
+                    <thead>
+                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th></tr>
+                    </thead>
+                    <tbody id="communitiesList"></tbody>
+                </table>
+            </div>
+
+            <div id="partners" class="section">
+                <h2>Partner Management</h2>
+                <table>
+                    <thead>
+                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="partnersList"></tbody>
+                </table>
+            </div>
+
+            <div id="testScriptsIntro" class="section">
+                <h2>Test Scripts</h2>
+                <p>Use this section to test referral tracking and other scripts.</p>
+                <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
+            </div>
+
+            <div id="referralTestsIntro" class="section">
+                <h2>Referral Tests</h2>
+                <p>This section contains tools to test referral tracking functionality.</p>
+                <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
+            </div>
+
+            <div id="page_visit_test" class="section">
+                <h2>Page Visit Referral Test</h2>
+                <div class="form">
+                    <form id="pageVisitForm">
+                        <table>
+                            <tr><td><label for="pageReferer">Referer:</label></td><td><select id="pageReferer" name="referer"></select></td></tr>
+                            <tr><td><label for="page">Page:</label></td><td><input type="text" id="page" name="page" value="/home"></td></tr>
+                            <tr><td><label for="pageTimestamp">Timestamp:</label></td><td><input type="text" id="pageTimestamp" name="timestamp"></td></tr>
+                            <tr><td colspan="2"><button type="submit">Submit Page Visit</button></td></tr>
+                        </table>
+                    </form>
+                </div>
+            </div>
+
+            <div id="order_test" class="section">
+                <h2>Order Referral Test</h2>
+                <div class="form">
+                    <form id="orderForm">
+                        <table>
+                            <tr><td><label for="orderReferer">Referer:</label></td><td><select id="orderReferer" name="referer"></select></td></tr>
+                            <tr><td><label for="orderId">Order ID:</label></td><td><input type="text" id="orderId" name="orderId" value="ORD12345"></td></tr>
+                            <tr><td><label for="buyer">Buyer Name:</label></td><td><input type="text" id="buyer" name="buyer" value="John Doe"></td></tr>
+                            <tr><td><label for="total">Total Amount (£):</label></td><td><input type="number" id="total" name="total" value="99.99" step="0.01"></td></tr>
+                            <tr><td><label for="orderTimestamp">Timestamp:</label></td><td><input type="text" id="orderTimestamp" name="timestamp"></td></tr>
+                            <tr><td colspan="2"><button type="submit">Submit Order</button></td></tr>
+                        </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        const apiUrl = 'https://clubmadeira.io';
+        let userPermissions = [];
+
+        // Simple JWT decode function
+        function decodeJWT(token) {
+            if (!token || typeof token !== 'string') {
+                console.error('Invalid token: Token is not a string or is undefined/null');
+                return null;
+            }
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                console.error('Invalid token format: Must have 3 parts (header.payload.signature)');
+                return null;
+            }
+            try {
+                const base64Url = parts[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                console.error('Error decoding JWT:', error.message);
+                return null;
+            }
+        }
+
+        window.onload = function() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            const decoded = decodeJWT(token);
+            if (!decoded) {
+                window.location.href = '/';
+                return;
+            }
+            userPermissions = decoded.permissions || [];
+            if (!userPermissions.includes('admin')) {
+                toastr.error('Permission denied: Admin permission required');
+                window.location.href = '/';
+                return;
+            }
+            loadBranding();
+            showSection('welcome');
+        };
+
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
+        };
+
+        async function loadBranding() {
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/branding`);
+                if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('brandingContent').innerHTML = data.content || '<h1>Admin Dashboard</h1>';
+            } catch (error) {
+                toastr.error(`Error loading branding: ${error.message}`);
+                document.getElementById('brandingContent').innerHTML = '<h1>Admin Dashboard</h1>';
+            }
+        }
+
+        function getCurrentTimestamp() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        }
+
+        async function authenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('authToken');
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                toastr.error('Session expired. Please log in again.');
+                localStorage.removeItem('authToken');
+                window.location.href = '/';
+            }
+            return response;
+        }
+
+        function toggleSubmenu(submenuId) {
+            const submenu = document.getElementById(submenuId);
+            submenu.classList.toggle('open');
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            loadSection(section);
+        }
+
+        async function loadSection(section) {
+            if (section === 'welcome' || section === 'page_visit_test' || section === 'order_test' || 
+                section === 'affiliateProgramsIntro' || section === 'userManagementIntro' || 
+                section === 'testScriptsIntro' || section === 'referralTestsIntro') {
+                if (section === 'page_visit_test' || section === 'order_test') {
+                    document.getElementById(section === 'page_visit_test' ? 'pageTimestamp' : 'orderTimestamp').value = getCurrentTimestamp();
+                    await populateRefererDropdown(section === 'page_visit_test' ? 'pageReferer' : 'orderReferer');
+                }
+                return;
+            }
+
+            if (section === 'deal_listings') {
+                await loadCategories();
+                return;
+            }
+
+            if (section === 'merchants') {
+                await loadMerchants();
+                return;
+            }
+
+            if (section === 'communities') {
+                await loadCommunities();
+                return;
+            }
+
+            if (section === 'partners') {
+                await loadPartners();
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/config`);
+                if (!response.ok) throw new Error(`Failed to fetch /config: ${response.status}`);
+                const data = await response.json();
+                const config = data.config[section] || {};
+
+                if (section === 'amazon_uk') {
+                    document.getElementById('amazonAccessKey').value = config.ACCESS_KEY || '';
+                    document.getElementById('amazonSecretKey').value = config.SECRET_KEY || '';
+                    document.getElementById('amazonAssociateTag').value = config.ASSOCIATE_TAG || '';
+                    document.getElementById('amazonCountry').value = config.COUNTRY || '';
+                } else if (section === 'ebay_uk') {
+                    document.getElementById('ebayAppId').value = config.APP_ID || '';
+                } else if (section === 'awin') {
+                    document.getElementById('awinApiToken').value = config.API_TOKEN || '';
+                } else if (section === 'cj') {
+                    document.getElementById('cjApiKey').value = config.API_KEY || '';
+                    document.getElementById('cjWebsiteId').value = config.WEBSITE_ID || '';
+                }
+                toastr.success(`Loaded credentials for ${section}`);
+            } catch (error) {
+                toastr.error(`Error loading credentials: ${error.message}`);
+            }
+        }
+
+        async function populateRefererDropdown(selectId) {
+            try {
+                const usersResponse = await authenticatedFetch(`${apiUrl}/users`);
+                if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+                const usersData = await usersResponse.json();
+                const users = usersData.users;
+
+                const communityUsers = [];
+                for (const user of users) {
+                    const userResponse = await authenticatedFetch(`${apiUrl}/users/${user.USERid}`);
+                    if (!userResponse.ok) continue;
+                    const userData = await userResponse.json();
+                    const permissions = userData.user.permissions || [];
+                    if (permissions.includes('community') && !permissions.includes('admin')) {
+                        communityUsers.push({
+                            USERid: user.USERid,
+                            contact_name: user.contact_name
+                        });
+                    }
+                }
+
+                const select = document.getElementById(selectId);
+                select.innerHTML = ''; // Clear existing options
+                communityUsers.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.USERid;
+                    option.text = user.contact_name;
+                    select.appendChild(option);
+                });
+                if (communityUsers.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.text = 'No community users found';
+                    select.appendChild(option);
+                }
+            } catch (error) {
+                toastr.error(`Error loading referer options: ${error.message}`);
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">Error loading users</option>';
+            }
+        }
+
+        async function loadMerchants() {
+            try {
+                const usersResponse = await authenticatedFetch(`${apiUrl}/users`);
+                if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+                const usersData = await usersResponse.json();
+                const users = usersData.users;
+
+                const merchants = [];
+                for (const user of users) {
+                    const userResponse = await authenticatedFetch(`${apiUrl}/users/${user.USERid}`);
+                    if (!userResponse.ok) continue;
+                    const userData = await userResponse.json();
+                    const permissions = userData.user.permissions || [];
+                    if (permissions.includes('merchant') && !permissions.includes('admin')) {
+                        merchants.push({
+                            USERid: user.USERid,
+                            contact_name: user.contact_name,
+                            email_address: user.email_address,
+                            permissions: permissions
+                        });
+                    }
+                }
+
+                updateUserTable('merchantsList', merchants, 'merchants');
+                toastr.success('Merchants loaded successfully');
+            } catch (error) {
+                toastr.error(`Error loading merchants: ${error.message}`);
+            }
+        }
+
+        async function loadCommunities() {
+            try {
+                const usersResponse = await authenticatedFetch(`${apiUrl}/users`);
+                if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+                const usersData = await usersResponse.json();
+                const users = usersData.users;
+
+                const communities = [];
+                for (const user of users) {
+                    const userResponse = await authenticatedFetch(`${apiUrl}/users/${user.USERid}`);
+                    if (!userResponse.ok) continue;
+                    const userData = await userResponse.json();
+                    const permissions = userData.user.permissions || [];
+                    if (permissions.includes('community') && !permissions.includes('admin')) {
+                        communities.push({
+                            USERid: user.USERid,
+                            contact_name: user.contact_name,
+                            email_address: user.email_address,
+                            permissions: permissions
+                        });
+                    }
+                }
+
+                updateUserTable('communitiesList', communities, 'communities');
+                toastr.success('Communities loaded successfully');
+            } catch (error) {
+                toastr.error(`Error loading communities: ${error.message}`);
+            }
+        }
+
+        async function loadPartners() {
+            try {
+                const usersResponse = await authenticatedFetch(`${apiUrl}/users`);
+                if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+                const usersData = await usersResponse.json();
+                const users = usersData.users;
+
+                const partners = [];
+                for (const user of users) {
+                    const userResponse = await authenticatedFetch(`${apiUrl}/users/${user.USERid}`);
+                    if (!userResponse.ok) continue;
+                    const userData = await userResponse.json();
+                    const permissions = userData.user.permissions || [];
+                    if (permissions.includes('wixpro')) {
+                        partners.push({
+                            USERid: user.USERid,
+                            contact_name: user.contact_name,
+                            email_address: user.email_address,
+                            permissions: permissions
+                        });
+                    }
+                }
+
+                updateUserTable('partnersList', partners, 'partners');
+                toastr.success('Partners loaded successfully');
+            } catch (error) {
+                toastr.error(`Error loading partners: ${error.message}`);
+            }
+        }
+
+        function updateUserTable(tableId, users, section) {
+            const tbody = document.getElementById(tableId);
+            tbody.innerHTML = '';
+            if (users.length === 0) {
+                const colspan = section === 'communities' ? 3 : 4;
+                tbody.innerHTML = `<tr><td colspan="${colspan}">No users found</td></tr>`;
+                return;
+            }
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                let actionsHtml = '';
+                if (section !== 'communities') {
+                    const hasValidated = user.permissions.includes('validated');
+                    actionsHtml = `
+                        <input type="checkbox" ${hasValidated ? 'checked' : ''} 
+                            onchange="togglePermission('${user.USERid}', 'validated', '${section}', this.checked)">
+                        Validated
+                    `;
+                    if (section === 'partners') {
+                        const hasAdmin = user.permissions.includes('admin');
+                        actionsHtml = `
+                            <input type="checkbox" ${hasAdmin ? 'checked' : ''} 
+                                onchange="togglePermission('${user.USERid}', 'admin', '${section}', this.checked)">
+                            Admin
+                        ` + actionsHtml;
+                    }
+                }
+                row.innerHTML = `
+                    <td>${user.USERid}</td>
+                    <td>${user.contact_name}</td>
+                    <td>${user.email_address}</td>
+                    ${section !== 'communities' ? `<td class="action-cell">${actionsHtml}</td>` : ''}
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function togglePermission(userId, permission, section, isChecked) {
+            try {
+                const method = isChecked ? 'POST' : 'DELETE';
+                const response = await authenticatedFetch(`${apiUrl}/permissions/${userId}`, {
+                    method: method,
+                    body: JSON.stringify({ permission })
+                });
+                if (!response.ok) throw new Error(`Failed to ${isChecked ? 'add' : 'remove'} permission: ${response.status}`);
+                const data = await response.json();
+                toastr.success(data.message || `${isChecked ? 'Added' : 'Removed'} ${permission} permission for user ${userId}`);
+                loadSection(section);
+            } catch (error) {
+                toastr.error(`Error: ${error.message}`);
+                loadSection(section); // Reload to revert checkbox if failed
+            }
+        }
+
+        async function updateAffiliate(affiliate) {
+            let credentials = {};
+            if (affiliate === 'amazon_uk') {
+                credentials = {
+                    ACCESS_KEY: document.getElementById('amazonAccessKey').value.trim(),
+                    SECRET_KEY: document.getElementById('amazonSecretKey').value.trim(),
+                    ASSOCIATE_TAG: document.getElementById('amazonAssociateTag').value.trim(),
+                    COUNTRY: document.getElementById('amazonCountry').value.trim()
+                };
+            } else if (affiliate === 'ebay_uk') {
+                credentials = { APP_ID: document.getElementById('ebayAppId').value.trim() };
+            } else if (affiliate === 'awin') {
+                credentials = { API_TOKEN: document.getElementById('awinApiToken').value.trim() };
+            } else if (affiliate === 'cj') {
+                credentials = {
+                    API_KEY: document.getElementById('cjApiKey').value.trim(),
+                    WEBSITE_ID: document.getElementById('cjWebsiteId').value.trim()
+                };
+            }
+
+            credentials = Object.fromEntries(Object.entries(credentials).filter(([_, v]) => v !== ''));
+            if (Object.keys(credentials).length === 0) {
+                toastr.warning('No changes to update');
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/config/${affiliate}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(credentials)
+                });
+                if (!response.ok) throw new Error(`Failed to update: ${response.status}`);
+                const data = await response.json();
+                toastr.success(`Update successful: ${data.message}`);
+            } catch (error) {
+                toastr.error(`Error updating credentials: ${error.message}`);
+            }
+        }
+
+        async function submitReferral(formId, successMessage) {
+            const form = document.getElementById(formId);
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const jsonData = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await authenticatedFetch(`${apiUrl}/referal`, {
+                        method: 'POST',
+                        body: JSON.stringify(jsonData),
+                    });
+                    if (!response.ok) throw new Error((await response.json()).message || 'Unknown error');
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        toastr.success(`${successMessage} - Referer: ${data.referer}`);
+                    } else {
+                        toastr.error(data.message || 'Unknown error');
+                    }
+                } catch (error) {
+                    toastr.error(error.message || 'Failed to connect to server');
+                }
+            });
+        }
+
+        function logOff() {
+            if (confirm('Are you sure you want to log off?')) {
+                localStorage.removeItem('authToken');
+                toastr.success('Logged off successfully');
+                setTimeout(() => window.location.href = '/', 1000);
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/categories`);
+                if (!response.ok) throw new Error(`Failed to fetch /categories: ${response.status}`);
+                const data = await response.json();
+                const tree = document.getElementById('categoryTree');
+                tree.innerHTML = '';
+                const ul = document.createElement('ul');
+                data.categories.forEach(cat => {
+                    ul.appendChild(createTreeNode(cat));
+                });
+                tree.appendChild(ul);
+                toastr.success('Categories loaded successfully');
+            } catch (error) {
+                toastr.error(`Error loading categories: ${error.message}`);
+            }
+        }
+
+        function createTreeNode(category) {
+            const li = document.createElement('li');
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = 'node';
+
+            const toggle = document.createElement('span');
+            toggle.className = 'toggle';
+            toggle.textContent = '+';
+            toggle.onclick = () => toggleSubcategories(category.id, toggle);
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = category.id;
+            checkbox.onchange = () => handleCategorySelection(category.id, checkbox);
+
+            const span = document.createElement('span');
+            span.textContent = `${category.name} (${category.id})`;
+
+            nodeDiv.appendChild(toggle);
+            nodeDiv.appendChild(checkbox);
+            nodeDiv.appendChild(span);
+            li.appendChild(nodeDiv);
+
+            const subUl = document.createElement('ul');
+            subUl.className = 'subcategories';
+            li.appendChild(subUl);
+
+            return li;
+        }
+
+        async function toggleSubcategories(parentId, toggle) {
+            const li = toggle.closest('li');
+            const subUl = li.querySelector('.subcategories');
+
+            if (subUl.classList.contains('open')) {
+                subUl.classList.remove('open');
+                toggle.textContent = '+';
+            } else {
+                if (subUl.children.length === 0) {
+                    try {
+                        const response = await authenticatedFetch(`${apiUrl}/categories?parent_id=${parentId}`);
+                        if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
+                        const data = await response.json();
+                        data.categories.forEach(cat => {
+                            subUl.appendChild(createTreeNode(cat));
+                        });
+                        toastr.success(`Subcategories for ${parentId} loaded successfully`);
+                    } catch (error) {
+                        toastr.error(`Error loading subcategories: ${error.message}`);
+                        return;
+                    }
+                }
+                subUl.classList.add('open');
+                toggle.textContent = '-';
+            }
+        }
+
+        async function handleCategorySelection(categoryId, checkbox) {
+            document.querySelectorAll('#categoryTree input[type="checkbox"]').forEach(cb => {
+                if (cb !== checkbox) cb.checked = false;
+            });
+
+            if (checkbox.checked) {
+                try {
+                    const response = await authenticatedFetch(`${apiUrl}/discounted-products?category_id=${categoryId}&min_discount=20`);
+                    if (!response.ok) throw new Error(`Failed to fetch discounted products: ${response.status}`);
+                    const data = await response.json();
+                    const tbody = document.getElementById('dealList');
+                    tbody.innerHTML = '';
+                    data.products.forEach(product => tbody.appendChild(createDealRow(product)));
+                    toastr.success(`Loaded ${data.count} discounted products for category ${categoryId}`);
+                } catch (error) {
+                    toastr.error(`Error loading discounted products: ${error.message}`);
+                    checkbox.checked = false;
+                }
+            } else {
+                document.getElementById('dealList').innerHTML = '';
+            }
+        }
+
+        function createDealRow(product) {
+            const tr = document.createElement('tr');
+            const discountPercent = product.discount_percent || 
+                (product.original_price > product.current_price 
+                    ? ((product.original_price - product.current_price) / product.original_price * 100).toFixed(2) 
+                    : 'N/A');
+            tr.innerHTML = `
+                <td>${product.category || 'N/A'}</td>
+                <td>${product.title}</td>
+                <td><a href="${product.product_url}" target="_blank">Link</a></td>
+                <td>${product.current_price}</td>
+                <td>${product.original_price}</td>
+                <td>${discountPercent}</td>
+                <td><img src="${product.image_url}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
+                <td>${product.QTY || 'N/A'}</td>
+            `;
+            return tr;
+        }
+
+        submitReferral('pageVisitForm', 'Page visit recorded successfully');
+        submitReferral('orderForm', 'Order recorded successfully');
+    </script>
+</body>
+</html>

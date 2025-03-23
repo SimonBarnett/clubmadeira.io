@@ -1,11 +1,14 @@
 {
     "232": {
-        "Password": "$2b$12$QPjvIvgZr9O5Ov3cbJI5xOBGC9Rq9vG/E.6Wrjqcr1.awGTHFHNwS",
+        "password": "$2b$12$QPjvIvgZr9O5Ov3cbJI5xOBGC9Rq9vG/E.6Wrjqcr1.awGTHFHNwS",
         "contact_name": "Si",
         "website_url": "www.someurl.com",
         "email_address": "si@ntsa.uk",
         "phone_number": "07989389179",
         "wixClientId": "9fa0f271-1600-4282-9fae-d841be6aaff6",
+        "permissions": [
+            "admin"
+        ],
         "referrals": {
             "visits": [
                 {
@@ -35,8 +38,7 @@
                     "timestamp": "2025-03-21 14:03:04"
                 }
             ]
-        },
-        "password": "$2b$12$OC5HOTNzriWuBugxKF6qyOKC4gCGGq4Uj1p7VUKRrIMp8Vl.po5z6"
+        }
     },
     "test_user": {
         "contact_name": "",
@@ -60,6 +62,22 @@
                     "timestamp": "2025-03-21 11:41:37"
                 }
             ]
+        }
+    },
+    "3O6TR9I8": {
+        "email_address": "john@clubmadiera.uk",
+        "password": "$2b$12$NkLMSi4B7x8bfpyPw6CtT.1GSmjV5CPSjP86QFc.F2j/vSFzfhbsW",
+        "contact_name": "john",
+        "permissions": [
+            "wixpro",
+            "admin",
+            "validated"
+        ],
+        "website_url": "",
+        "wixClientId": "",
+        "referrals": {
+            "visits": [],
+            "orders": []
         }
     }
 }

@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clubmadeira.io | Community</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .header { height: 150px; background-color: #f4f4f4; margin-bottom: 25px; overflow: hidden; position: relative; }
+        .header-content { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .main-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
+        .menu-container { flex: 1; max-width: 300px; }
+        .content-container { flex: 2; }
+        .menu { margin-bottom: 20px; text-align: left; }
+        .menu button { padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-align: left; width: 100%; margin-bottom: 5px; display: block; }
+        .menu button:hover { background-color: #0056b3; }
+        .submenu { display: none; padding-left: 20px; }
+        .submenu.open { display: block; }
+        .section { display: none; }
+        .active { display: block; }
+        .settings-form { display: flex; flex-direction: column; gap: 10px; max-width: 600px; }
+        .settings-form label { font-weight: bold; }
+        .settings-form input, .settings-form textarea { padding: 5px; }
+        .settings-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; }
+        .settings-form button:hover { background-color: #0056b3; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .treeview { max-height: 600px; overflow-y: auto; margin-bottom: 10px; }
+        .treeview, .treeview ul, .treeview li { list-style-type: none; padding: 0; margin: 0; }
+        .treeview .node { display: flex; align-items: center; }
+        .treeview .toggle { cursor: pointer; width: 20px; text-align: center; font-weight: bold; }
+        .treeview .subcategories { display: none; padding-left: 20px; }
+        .treeview .subcategories.open { display: block; }
+        #toast-container > .toast-error { background-color: #dc3545; border-color: #c82333; }
+        .toggle-section { cursor: pointer; font-weight: bold; margin: 10px 0; background-color: #e9ecef; padding: 5px; border-radius: 4px; }
+        .toggle-content { display: none; }
+        .toggle-content.open { display: block; }
+        .page-section { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .email-section { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .widget-checkboxes div { margin-bottom: 10px; }
+        .remove-page-btn, .remove-email-btn { padding: 5px 10px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .remove-page-btn:hover, .remove-email-btn:hover { background-color: #c82333; }
+        .password-container { position: relative; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; }
+        .password-container input { width: 50%; padding-right: 30px; }
+        .password-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" id="brandingContent">
+            <!-- Branding content will be loaded here -->
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="menu-container">
+            <div class="menu" id="menu">
+                <input type="text" id="userId" style="display: none;">
+                <button onclick="toggleSubmenu('my_website'); showSection('my_website_intro')">My Web Site <i class="fas fa-caret-down"></i></button>
+                <div id="my_website" class="submenu">
+                    <button onclick="showSection('wix')">Wix</button>
+                    <button onclick="showSection('wordpress')">WordPress</button>
+                    <button onclick="showSection('squarespace')">Squarespace</button>
+                    <button onclick="showSection('weebly')">Weebly</button>
+                    <button onclick="showSection('joomla')">Joomla</button>
+                    <button onclick="showSection('no_website'); loadSiteRequest()">I Don’t Have a Website Yet</button>
+                </div>
+                <button onclick="showSection('categories')">My Categories</button>
+                <button onclick="toggleSubmenu('referrals'); showSection('referrals_intro')">My Referrals <i class="fas fa-caret-down"></i></button>
+                <div id="referrals" class="submenu">
+                    <button onclick="showSection('visits')">Visits</button>
+                    <button onclick="showSection('orders')">Orders</button>
+                </div>
+                <button onclick="showSection('settings')">My Account</button>
+                <button onclick="logout()" style="background-color: #dc3545;">Log Off</button>
+            </div>
+        </div>
+        <div class="content-container">
+            <div id="welcome" class="section active">
+                <h2>Welcome to Your Community Dashboard</h2>
+                <p>Welcome! This dashboard is your hub for managing your community account and tracking referrals.</p>
+                <p>Use the menu on the left to:</p>
+                <ul>
+                    <li>Learn how to add discounts to your website or request a site under "My Web Site"</li>
+                    <li>Select product categories for your site in "My Categories"</li>
+                    <li>View referral statistics under "My Referrals"</li>
+                    <li>Update your account details in "My Account"</li>
+                </ul>
+            </div>
+            <div id="settings" class="section">
+                <h2>My Account</h2>
+                <div class="settings-form">
+                    <label><strong>Referrer ID: <span id="referrerId"></span></strong></label>
+                    <label for="contactName">Contact Name:</label>
+                    <input type="text" id="contactName" placeholder="Enter contact name">
+                    <label for="websiteUrl">Website URL:</label>
+                    <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                    <label for="emailAddress">Email Address:</label>
+                    <input type="email" id="emailAddress" placeholder="Enter email address">
+                    <label for="phoneNumber">Phone Number:</label>
+                    <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                    <button onclick="saveSettings()">Save Settings</button>
+
+                    <h3>Change Password</h3>
+                    <div class="password-container">
+                        <label for="currentPassword">Current Password:</label>
+                        <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="confirmPassword">Confirm New Password:</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
+                    </div>
+                    <button onclick="savePassword()">Change Password</button>
+                </div>
+            </div>
+            <div id="categories" class="section">
+                <h2>My Categories</h2>
+                <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
+                <div class="treeview" id="categoryTree"></div>
+            </div>
+            <div id="referrals_intro" class="section">
+                <h2>My Referrals</h2>
+                <p>This section allows you to track your referral activity.</p>
+                <p>Select from the submenu options:</p>
+                <ul>
+                    <li><strong>Visits:</strong> View pages visited through your referral links.</li>
+                    <li><strong>Orders:</strong> See orders placed via your referrals.</li>
+                </ul>
+            </div>
+            <div id="visits" class="section">
+                <h2>Visits</h2>
+                <div class="toggle-section" onclick="toggleSection('visits_this_month')">This Month</div>
+                <div id="visits_this_month" class="toggle-content open">
+                    <table id="visitsTableThisMonth">
+                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                        <tbody id="visitsListThisMonth"></tbody>
+                    </table>
+                </div>
+                <div class="toggle-section" onclick="toggleSection('visits_last_month')">Last Month</div>
+                <div id="visits_last_month" class="toggle-content">
+                    <table id="visitsTableLastMonth">
+                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                        <tbody id="visitsListLastMonth"></tbody>
+                    </table>
+                </div>
+                <div class="toggle-section" onclick="toggleSection('visits_earlier')">Earlier</div>
+                <div id="visits_earlier" class="toggle-content">
+                    <table id="visitsTableEarlier">
+                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                        <tbody id="visitsListEarlier"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="orders" class="section">
+                <h2>Orders</h2>
+                <div class="toggle-section" onclick="toggleSection('orders_this_month')">This Month</div>
+                <div id="orders_this_month" class="toggle-content open">
+                    <table id="ordersTableThisMonth">
+                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                        <tbody id="ordersListThisMonth"></tbody>
+                    </table>
+                </div>
+                <div class="toggle-section" onclick="toggleSection('orders_last_month')">Last Month</div>
+                <div id="orders_last_month" class="toggle-content">
+                    <table id="ordersTableLastMonth">
+                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                        <tbody id="ordersListLastMonth"></tbody>
+                    </table>
+                </div>
+                <div class="toggle-section" onclick="toggleSection('orders_earlier')">Earlier</div>
+                <div id="orders_earlier" class="toggle-content">
+                    <table id="ordersTableEarlier">
+                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                        <tbody id="ordersListEarlier"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="my_website_intro" class="section">
+                <h2>My Web Site</h2>
+                <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
+                <ul>
+                    <li><strong>Wix:</strong> Easy drag-and-drop builder.</li>
+                    <li><strong>WordPress:</strong> Flexible CMS.</li>
+                    <li><strong>Squarespace:</strong> Stylish solution.</li>
+                    <li><strong>Weebly:</strong> Simple builder.</li>
+                    <li><strong>Joomla:</strong> Robust CMS.</li>
+                    <li><strong>I Don’t Have a Website Yet:</strong> Request a site setup.</li>
+                </ul>
+            </div>
+            <div id="wix" class="section">
+                <h2>Wix Integration</h2>
+                <p>Add discounts to your Wix site:</p>
+                <ol>
+                    <li>Log in to Wix and open the Editor.</li>
+                    <li>Click "+" > "Embed" > "Embed a Widget".</li>
+                    <li>Paste: <code id="wixCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Publish.</li>
+                </ol>
+            </div>
+            <div id="wordpress" class="section">
+                <h2>WordPress Integration</h2>
+                <p>Add discounts to WordPress:</p>
+                <ol>
+                    <li>Log in to WordPress admin.</li>
+                    <li>Go to "Pages" > "Add New".</li>
+                    <li>Add "Custom HTML" block: <code id="wordpressCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Publish.</li>
+                </ol>
+            </div>
+            <div id="squarespace" class="section">
+                <h2>Squarespace Integration</h2>
+                <p>Integrate discounts into Squarespace:</p>
+                <ol>
+                    <li>Log in to Squarespace editor.</li>
+                    <li>Add a new page.</li>
+                    <li>Add "Code" block: <code id="squarespaceCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Update site.</li>
+                </ol>
+            </div>
+            <div id="weebly" class="section">
+                <h2>Weebly Integration</h2>
+                <p>Add discounts to Weebly:</p>
+                <ol>
+                    <li>Log in to Weebly editor.</li>
+                    <li>Drag "Embed Code" onto page.</li>
+                    <li>Paste: <code id="weeblyCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Publish.</li>
+                </ol>
+            </div>
+            <div id="joomla" class="section">
+                <h2>Joomla Integration</h2>
+                <p>Integrate discounts into Joomla:</p>
+                <ol>
+                    <li>Log in to Joomla admin.</li>
+                    <li>Go to "Content" > "Articles" > "Add New".</li>
+                    <li>Paste in "Code" view: <code id="joomlaCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Save.</li>
+                </ol>
+            </div>
+            <div id="no_website" class="section">
+                <h2>I Don’t Have a Website Yet</h2>
+                <p>Request a custom Wix website for your community from our Wix Professionals. Fill out the form below to specify your needs:</p>
+                <form id="siteRequestForm" class="settings-form">
+                    <label for="communityName">Community Name:</label>
+                    <input type="text" id="communityName" name="communityName" placeholder="Enter your community name" required>
+
+                    <label for="aboutCommunity">About Our Community:</label>
+                    <textarea id="aboutCommunity" name="aboutCommunity" placeholder="Tell us about your community"></textarea>
+
+                    <label for="communityLogos">Community Logos:</label>
+                    <input type="file" id="communityLogos" name="communityLogos" accept="image/*" multiple>
+                    <small>Upload up to 5 logos (e.g., main logo, secondary logos).</small>
+
+                    <label for="colorPrefs">Color Preferences:</label>
+                    <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
+
+                    <label for="stylingDetails">Styling Details:</label>
+                    <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., modern layout, bold fonts"></textarea>
+
+                    <label for="preferredDomain">Preferred Domain Name:</label>
+                    <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mycommunity.org" oninput="updateEmailDomains()">
+                    <button type="button" onclick="checkDomainAvailability()">Check Availability</button>
+
+                    <label>Email Addresses to Set Up (up to 5):</label>
+                    <div id="emailsContainer">
+                        <div class="email-section" data-email="1">
+                            <label for="email1Name">Email Name:</label>
+                            <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
+                            <span id="email1Domain">@mycommunity.org</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addEmail()" id="addEmailBtn">Add Another Email</button>
+
+                    <label>Requested Pages (up to 5):</label>
+                    <div id="pagesContainer">
+                        <div class="page-section" data-page="1">
+                            <label for="page1Name">Page Name:</label>
+                            <input type="text" id="page1Name" name="page1Name" value="Home">
+                            <br><br>
+                            <label for="page1Content">Page Content:</label>
+                            <textarea id="page1Content" name="page1Content" placeholder="Describe this page"></textarea>
+                            <label for="page1Images">Additional Images:</label>
+                            <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addPage()" id="addPageBtn">Add Another Page</button>
+
+                    <label>Wix Widgets:</label>
+                    <div class="widget-checkboxes">
+                        <div><label><input type="checkbox" name="widgets" value="events"> Events</label> - Add an events calendar.</div>
+                        <div><label><input type="checkbox" name="widgets" value="socialMediaFeeds"> Social Media Feeds</label> - Display live social media feeds.</div>
+                        <div><label><input type="checkbox" name="widgets" value="gallery"> Gallery</label> - Showcase photos.</div>
+                        <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Simple contact form.</div>
+                        <div><label><input type="checkbox" name="widgets" value="blog"> Blog</label> - Share updates and stories.</div>
+                        <div><label><input type="checkbox" name="widgets" value="weather"> Weather</label> - Show real-time weather.</div>
+                        <div><label><input type="checkbox" name="widgets" value="socialMediaLinks"> Social Media Links</label> - Quick links to profiles.</div>
+                    </div>
+
+                    <button type="button" onclick="saveSiteRequest()">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        const apiUrl = 'https://clubmadeira.io';
+        let userPermissions = [];
+        let pageCount = 1;
+        let emailCount = 1;
+
+        function decodeJWT(token) {
+            if (!token || typeof token !== 'string') return null;
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            try {
+                const base64Url = parts[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                console.error('Error decoding JWT:', error.message);
+                return null;
+            }
+        }
+
+        window.onload = function() {
+            const token = localStorage.getItem('authToken');
+            const userId = localStorage.getItem('userId');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            const decoded = decodeJWT(token);
+            if (!decoded) {
+                window.location.href = '/';
+                return;
+            }
+            userPermissions = decoded.permissions || [];
+            if (!userPermissions.includes('admin') && !userPermissions.includes('community')) {
+                toastr.error('Permission denied: Community permission required');
+                window.location.href = '/';
+                return;
+            }
+            if (userId) document.getElementById('userId').value = userId;
+            checkAdminPermission();
+            loadBranding();
+            showSection('welcome');
+            initializeTinyMCE();
+        };
+
+        toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000 };
+
+        function initializeTinyMCE() {
+            tinymce.init({
+                selector: '#aboutCommunity, textarea[name$="Content"]',
+                height: 200,
+                menubar: false,
+                plugins: 'lists',
+                toolbar: 'bold italic | bullist numlist'
+            });
+        }
+
+        function checkAdminPermission() {
+            if (userPermissions.includes('admin')) {
+                const menu = document.getElementById('menu');
+                const backButton = document.createElement('button');
+                backButton.textContent = 'Back to Admin';
+                backButton.style.backgroundColor = '#dc3545';
+                backButton.onclick = () => window.location.href = '/admin';
+                const logOffButton = menu.querySelector('button[onclick="logout()"]');
+                menu.insertBefore(backButton, logOffButton);
+            }
+        }
+
+        async function loadBranding() {
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/branding`);
+                if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('brandingContent').innerHTML = data.content || '<h1>Community Dashboard</h1>';
+            } catch (error) {
+                toastr.error(`Error loading branding: ${error.message}`);
+                document.getElementById('brandingContent').innerHTML = '<h1>Community Dashboard</h1>';
+            }
+        }
+
+        async function authenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('authToken');
+            options.headers = { ...options.headers, 'Authorization': `Bearer ${token}`, 'Content-Type': options.body instanceof FormData ? undefined : 'application/json' };
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                toastr.error('Session expired. Please log in again.');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
+                window.location.href = '/';
+            }
+            return response;
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            if (section === 'settings') loadSettings();
+            else if (section === 'categories') loadCategories();
+            else if (section === 'visits') loadVisits();
+            else if (section === 'orders') loadOrders();
+            else if (section === 'no_website') loadSiteRequest();
+            else if (['wix', 'wordpress', 'squarespace', 'weebly', 'joomla'].includes(section)) updateIntegrationCode(section);
+        }
+
+        function toggleSubmenu(submenuId) {
+            const submenu = document.getElementById(submenuId);
+            submenu.classList.toggle('open');
+        }
+
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            content.classList.toggle('open');
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            window.location.href = '/';
+        }
+
+        async function loadSettings() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`);
+                if (!response.ok) throw new Error(`Failed to fetch settings: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('referrerId').textContent = userId;
+                document.getElementById('contactName').value = data.contact_name || '';
+                document.getElementById('websiteUrl').value = data.website_url || '';
+                document.getElementById('emailAddress').value = data.email_address || '';
+                document.getElementById('phoneNumber').value = data.phone_number || '';
+            } catch (error) {
+                toastr.error(`Error loading settings: ${error.message}`);
+            }
+        }
+
+        async function saveSettings() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+            const settings = {
+                contact_name: document.getElementById('contactName').value.trim(),
+                website_url: document.getElementById('websiteUrl').value.trim(),
+                email_address: document.getElementById('emailAddress').value.trim(),
+                phone_number: document.getElementById('phoneNumber').value.trim()
+            };
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`, { method: 'PUT', body: JSON.stringify(settings) });
+                if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
+            } catch (error) {
+                toastr.error(`Error saving settings: ${error.message}`);
+            }
+        }
+
+        function togglePassword(fieldId) {
+            const input = document.getElementById(fieldId);
+            const icon = input.nextElementSibling;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function savePassword() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            const passwordRegex = /^(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                toastr.error('New password must be at least 8 characters long and include numbers');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                toastr.error('New password and confirmation do not match');
+                return;
+            }
+
+            const passwordData = { currentPassword, newPassword };
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/password`, {
+                    method: 'POST',
+                    body: JSON.stringify(passwordData)
+                });
+                if (!response.ok) throw new Error(`Failed to change password: ${response.status}`);
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } catch (error) {
+                toastr.error(`Error changing password: ${error.message}`);
+            }
+        }
+
+        function updateIntegrationCode(section) {
+            const userId = document.getElementById('userId').value || 'YourUserID';
+            const codeElements = {
+                'wix': 'wixCode',
+                'wordpress': 'wordpressCode',
+                'squarespace': 'squarespaceCode',
+                'weebly': 'weeblyCode',
+                'joomla': 'joomlaCode'
+            };
+            const codeId = codeElements[section];
+            if (codeId) {
+                document.getElementById(codeId).textContent = `<iframe src="https://clubmadeira.io/discounts?referrer=${userId}" width="100%" height="600"></iframe>`;
+            }
+        }
+
+        async function loadCategories() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+            try {
+                const userResponse = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`);
+                if (!userResponse.ok) throw new Error(`Failed to fetch user categories: ${userResponse.status}`);
+                const userData = await userResponse.json();
+                const savedCategories = userData.categories || [];
+                const response = await authenticatedFetch(`${apiUrl}/categories`);
+                if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
+                const data = await response.json();
+                const tree = document.getElementById('categoryTree');
+                tree.innerHTML = '';
+                const ul = document.createElement('ul');
+                data.categories.forEach(cat => ul.appendChild(createTreeNode(cat, savedCategories)));
+                tree.appendChild(ul);
+            } catch (error) {
+                toastr.error(`Error loading categories: ${error.message}`);
+            }
+        }
+
+        function createTreeNode(category, savedCategories) {
+            const li = document.createElement('li');
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = 'node';
+            const toggle = document.createElement('span');
+            toggle.className = 'toggle';
+            toggle.textContent = '+';
+            toggle.onclick = () => toggleSubcategories(category.id, toggle);
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = category.id;
+            checkbox.checked = savedCategories.includes(category.id.toString());
+            checkbox.onchange = () => saveCategories();
+            const span = document.createElement('span');
+            span.textContent = `${category.name} (${category.id})`;
+            nodeDiv.appendChild(toggle);
+            nodeDiv.appendChild(checkbox);
+            nodeDiv.appendChild(span);
+            li.appendChild(nodeDiv);
+            const subUl = document.createElement('ul');
+            subUl.className = 'subcategories';
+            li.appendChild(subUl);
+            return li;
+        }
+
+        async function toggleSubcategories(parentId, toggle) {
+            const li = toggle.closest('li');
+            const subUl = li.querySelector('.subcategories');
+            if (subUl.classList.contains('open')) {
+                subUl.classList.remove('open');
+                toggle.textContent = '+';
+            } else {
+                if (subUl.children.length === 0) {
+                    try {
+                        const response = await authenticatedFetch(`${apiUrl}/categories?parent_id=${parentId}`);
+                        if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
+                        const data = await response.json();
+                        const userId = document.getElementById('userId').value;
+                        const userResponse = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`);
+                        if (!userResponse.ok) throw new Error(`Failed to fetch user categories: ${userResponse.status}`);
+                        const userData = await userResponse.json();
+                        const savedCategories = userData.categories || [];
+                        data.categories.forEach(cat => subUl.appendChild(createTreeNode(cat, savedCategories)));
+                    } catch (error) {
+                        toastr.error(`Error loading subcategories: ${error.message}`);
+                        return;
+                    }
+                }
+                subUl.classList.add('open');
+                toggle.textContent = '-';
+            }
+        }
+
+        async function saveCategories() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+            const checked = Array.from(document.querySelectorAll('#categoryTree input[type="checkbox"]:checked')).map(cb => cb.value);
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`, { method: 'PUT', body: JSON.stringify({ categories: checked }) });
+                if (!response.ok) throw new Error(`Failed to save categories: ${response.status}`);
+            } catch (error) {
+                toastr.error(`Error saving categories: ${error.message}`);
+            }
+        }
+
+        async function loadVisits() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/visits`);
+                if (!response.ok) throw new Error(`Failed to fetch visits: ${response.status}`);
+                const data = await response.json();
+                if (data.status === 'success') {
+                    const now = new Date();
+                    const thisMonth = now.getMonth();
+                    const thisYear = now.getFullYear();
+                    const visitsThisMonth = [];
+                    const visitsLastMonth = [];
+                    const visitsEarlier = [];
+                    data.visits.forEach(visit => {
+                        const visitDate = new Date(visit.timestamp);
+                        if (visitDate.getFullYear() === thisYear && visitDate.getMonth() === thisMonth) visitsThisMonth.push(visit);
+                        else if ((visitDate.getFullYear() === thisYear && visitDate.getMonth() === thisMonth - 1) || 
+                                 (visitDate.getFullYear() === thisYear - 1 && thisMonth === 0 && visitDate.getMonth() === 11)) visitsLastMonth.push(visit);
+                        else visitsEarlier.push(visit);
+                    });
+                    updateVisitsTable('visitsListThisMonth', visitsThisMonth);
+                    updateVisitsTable('visitsListLastMonth', visitsLastMonth);
+                    updateVisitsTable('visitsListEarlier', visitsEarlier);
+                }
+            } catch (error) {
+                toastr.error(`Error loading visits: ${error.message}`);
+            }
+        }
+
+        function updateVisitsTable(tableId, visits) {
+            const tbody = document.getElementById(tableId);
+            tbody.innerHTML = visits.length === 0 ? '<tr><td colspan="2">No visits found</td></tr>' : '';
+            visits.forEach(visit => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${visit.page}</td><td>${visit.timestamp}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function loadOrders() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/orders`);
+                if (!response.ok) throw new Error(`Failed to fetch orders: ${response.status}`);
+                const data = await response.json();
+                if (data.status === 'success') {
+                    const now = new Date();
+                    const thisMonth = now.getMonth();
+                    const thisYear = now.getFullYear();
+                    const ordersThisMonth = [];
+                    const ordersLastMonth = [];
+                    const ordersEarlier = [];
+                    data.orders.forEach(order => {
+                        const orderDate = new Date(order.timestamp);
+                        if (orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth) ordersThisMonth.push(order);
+                        else if ((orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth - 1) || 
+                                 (orderDate.getFullYear() === thisYear - 1 && thisMonth === 0 && orderDate.getMonth() === 11)) ordersLastMonth.push(order);
+                        else ordersEarlier.push(order);
+                    });
+                    updateOrdersTable('ordersListThisMonth', ordersThisMonth);
+                    updateOrdersTable('ordersListLastMonth', ordersLastMonth);
+                    updateOrdersTable('ordersListEarlier', ordersEarlier);
+                }
+            } catch (error) {
+                toastr.error(`Error loading orders: ${error.message}`);
+            }
+        }
+
+        function updateOrdersTable(tableId, orders) {
+            const tbody = document.getElementById(tableId);
+            tbody.innerHTML = orders.length === 0 ? '<tr><td colspan="4">No orders found</td></tr>' : '';
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${order.orderId}</td><td>${order.buyer}</td><td>$${order.total}</td><td>${order.timestamp}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function loadSiteRequest() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/siterequest`);
+                if (!response.ok) throw new Error(`Failed to fetch site request: ${response.status}`);
+                const data = await response.json();
+                const siteRequest = data.site_request || {};
+
+                document.getElementById('communityName').value = siteRequest.communityName || '';
+                tinymce.get('aboutCommunity')?.setContent(siteRequest.aboutCommunity || '');
+                document.getElementById('colorPrefs').value = siteRequest.colorPrefs || '';
+                document.getElementById('stylingDetails').value = siteRequest.stylingDetails || '';
+                document.getElementById('preferredDomain').value = siteRequest.preferredDomain || 'mycommunity.org';
+
+                const emails = siteRequest.emails || ['info'];
+                emailCount = 0;
+                const emailsContainer = document.getElementById('emailsContainer');
+                emailsContainer.innerHTML = '';
+                emails.forEach((email, index) => {
+                    emailCount++;
+                    const emailDiv = document.createElement('div');
+                    emailDiv.className = 'email-section';
+                    emailDiv.dataset.email = emailCount;
+                    emailDiv.innerHTML = `
+                        <label for="email${emailCount}Name">Email Name:</label>
+                        <input type="text" id="email${emailCount}Name" name="email${emailCount}Name" value="${email}">
+                        <span id="email${emailCount}Domain">@${siteRequest.preferredDomain || 'mycommunity.org'}</span>
+                        ${emailCount > 1 ? `<button type="button" class="remove-email-btn" onclick="removeEmail(${emailCount})">Remove Email</button>` : ''}
+                    `;
+                    emailsContainer.appendChild(emailDiv);
+                });
+
+                const pages = siteRequest.pages && siteRequest.pages.length > 0 ? siteRequest.pages : [{ name: 'Home', content: '' }];
+                pageCount = 0;
+                const pagesContainer = document.getElementById('pagesContainer');
+                pagesContainer.innerHTML = '';
+                pages.forEach((page, index) => {
+                    pageCount++;
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'page-section';
+                    pageDiv.dataset.page = pageCount;
+                    pageDiv.innerHTML = `
+                        <label for="page${pageCount}Name">Page Name:</label>
+                        <input type="text" id="page${pageCount}Name" name="page${pageCount}Name" value="${page.name || ''}">
+                        <br><br>
+                        <label for="page${pageCount}Content">Page Content:</label>
+                        <textarea id="page${pageCount}Content" name="page${pageCount}Content">${page.content || ''}</textarea>
+                        <label for="page${pageCount}Images">Additional Images:</label>
+                        <input type="file" id="page${pageCount}Images" name="page${pageCount}Images" accept="image/*" multiple>
+                        ${pageCount > 1 ? `<button type="button" class="remove-page-btn" onclick="removePage(${pageCount})">Remove Page</button>` : ''}
+                    `;
+                    pagesContainer.appendChild(pageDiv);
+                });
+
+                const widgets = siteRequest.widgets || [];
+                document.querySelectorAll('input[name="widgets"]').forEach(checkbox => {
+                    checkbox.checked = widgets.includes(checkbox.value);
+                });
+
+                tinymce.remove();
+                initializeTinyMCE();
+                updateEmailDomains();
+            } catch (error) {
+                toastr.error(`Error loading site request: ${error.message}`);
+            }
+        }
+
+        async function saveSiteRequest() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                toastr.error('User ID not found in session');
+                return;
+            }
+
+            const siteRequest = {
+                userId: userId,
+                communityName: document.getElementById('communityName').value.trim(),
+                aboutCommunity: tinymce.get('aboutCommunity').getContent(),
+                communityLogos: [],
+                colorPrefs: document.getElementById('colorPrefs').value.trim(),
+                stylingDetails: document.getElementById('stylingDetails').value.trim(),
+                preferredDomain: document.getElementById('preferredDomain').value.trim() || 'mycommunity.org',
+                emails: [],
+                pages: [],
+                widgets: Array.from(document.querySelectorAll('input[name="widgets"]:checked')).map(cb => cb.value)
+            };
+
+            if (!siteRequest.communityName) {
+                toastr.error('Community name is required');
+                return;
+            }
+
+            const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+            if (!domainRegex.test(siteRequest.preferredDomain)) {
+                toastr.error('Invalid domain name (e.g., mycommunity.org)');
+                return;
+            }
+
+            const logoFiles = document.getElementById('communityLogos').files;
+            if (logoFiles.length > 5) {
+                toastr.error('Maximum of 5 logos allowed');
+                return;
+            }
+            for (let i = 0; i < logoFiles.length; i++) {
+                const reader = new FileReader();
+                await new Promise(resolve => {
+                    reader.onload = () => {
+                        siteRequest.communityLogos.push(reader.result);
+                        resolve();
+                    };
+                    reader.readAsDataURL(logoFiles[i]);
+                });
+            }
+
+            for (let i = 1; i <= emailCount; i++) {
+                const emailInput = document.getElementById(`email${i}Name`);
+                if (emailInput && emailInput.value.trim()) {
+                    siteRequest.emails.push(emailInput.value.trim());
+                }
+            }
+
+            for (let i = 1; i <= pageCount; i++) {
+                const nameInput = document.getElementById(`page${i}Name`);
+                const contentEditor = tinymce.get(`page${i}Content`);
+                const imagesInput = document.getElementById(`page${i}Images`);
+                if (nameInput && nameInput.value.trim()) {
+                    const page = {
+                        name: nameInput.value.trim(),
+                        content: contentEditor ? contentEditor.getContent() : '',
+                        images: []
+                    };
+                    if (imagesInput && imagesInput.files.length > 0) {
+                        for (let j = 0; j < imagesInput.files.length; j++) {
+                            const reader = new FileReader();
+                            await new Promise(resolve => {
+                                reader.onload = () => {
+                                    page.images.push(reader.result);
+                                    resolve();
+                                };
+                                reader.readAsDataURL(imagesInput.files[j]);
+                            });
+                        }
+                    }
+                    siteRequest.pages.push(page);
+                }
+            }
+
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/siterequest`, {
+                    method: 'POST',
+                    body: JSON.stringify(siteRequest)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Failed to save site request: ${response.status}`);
+                }
+                toastr.success('Site request saved successfully');
+            } catch (error) {
+                toastr.error(`Error saving site request: ${error.message}`);
+            }
+        }
+
+        function addPage() {
+            if (pageCount >= 5) {
+                toastr.error('Maximum of 5 pages allowed');
+                return;
+            }
+            pageCount++;
+            const container = document.getElementById('pagesContainer');
+            const newPage = document.createElement('div');
+            newPage.className = 'page-section';
+            newPage.dataset.page = pageCount;
+            newPage.innerHTML = `
+                <label for="page${pageCount}Name">Page Name:</label>
+                <input type="text" id="page${pageCount}Name" name="page${pageCount}Name" placeholder="e.g., Events">
+                <br><br>
+                <label for="page${pageCount}Content">Page Content:</label>
+                <textarea id="page${pageCount}Content" name="page${pageCount}Content" placeholder="Describe this page"></textarea>
+                <label for="page${pageCount}Images">Additional Images:</label>
+                <input type="file" id="page${pageCount}Images" name="page${pageCount}Images" accept="image/*" multiple>
+                <button type="button" class="remove-page-btn" onclick="removePage(${pageCount})">Remove Page</button>
+            `;
+            container.appendChild(newPage);
+            tinymce.remove();
+            initializeTinyMCE();
+        }
+
+        function removePage(pageNum) {
+            if (pageCount <= 1) {
+                toastr.error('Cannot remove the last page');
+                return;
+            }
+            const pageSection = document.querySelector(`.page-section[data-page="${pageNum}"]`);
+            if (pageSection) {
+                pageSection.remove();
+                pageCount--;
+                tinymce.remove();
+                initializeTinyMCE();
+            }
+        }
+
+        function addEmail() {
+            if (emailCount >= 5) {
+                toastr.error('Maximum of 5 email addresses allowed');
+                return;
+            }
+            emailCount++;
+            const container = document.getElementById('emailsContainer');
+            const domain = document.getElementById('preferredDomain').value || 'mycommunity.org';
+            const newEmail = document.createElement('div');
+            newEmail.className = 'email-section';
+            newEmail.dataset.email = emailCount;
+            newEmail.innerHTML = `
+                <label for="email${emailCount}Name">Email Name:</label>
+                <input type="text" id="email${emailCount}Name" name="email${emailCount}Name" placeholder="e.g., contact">
+                <span id="email${emailCount}Domain">@${domain}</span>
+                <button type="button" class="remove-email-btn" onclick="removeEmail(${emailCount})">Remove Email</button>
+            `;
+            container.appendChild(newEmail);
+            updateEmailDomains();
+        }
+
+        function removeEmail(emailNum) {
+            if (emailCount <= 1) {
+                toastr.error('Cannot remove the last email');
+                return;
+            }
+            const emailSection = document.querySelector(`.email-section[data-email="${emailNum}"]`);
+            if (emailSection) {
+                emailSection.remove();
+                emailCount--;
+                updateEmailDomains();
+            }
+        }
+
+        function updateEmailDomains() {
+            const domain = document.getElementById('preferredDomain').value || 'mycommunity.org';
+            for (let i = 1; i <= emailCount; i++) {
+                const domainSpan = document.getElementById(`email${i}Domain`);
+                if (domainSpan) domainSpan.textContent = `@${domain}`;
+            }
+        }
+
+        function checkDomainAvailability() {
+            const domain = document.getElementById('preferredDomain').value;
+            const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+            if (!domain) {
+                toastr.error('Please enter a preferred domain name');
+                return;
+            }
+            if (!domainRegex.test(domain)) {
+                toastr.error('Invalid domain name (e.g., mycommunity.org)');
+                return;
+            }
+            toastr.info(`Checking availability for ${domain}...`);
+            setTimeout(() => toastr.success('This is a placeholder - domain check not implemented'), 1000);
+        }
+    </script>
+</body>
+</html>

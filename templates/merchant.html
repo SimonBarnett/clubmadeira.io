@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clubmadeira.io | Merchant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .header { height: 150px; background-color: #f4f4f4; margin-bottom: 25px; overflow: hidden; position: relative; }
+        .header-content { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .main-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
+        .menu-container { flex: 1; max-width: 300px; }
+        .content-container { flex: 2; }
+        .menu { margin-bottom: 20px; text-align: left; }
+        .menu button { padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-align: left; width: 100%; margin-bottom: 5px; display: block; }
+        .menu button:hover { background-color: #0056b3; }
+        .menu .btn-logoff { background-color: #dc3545; }
+        .menu .btn-logoff:hover { background-color: #c82333; }
+        .sub-menu { display: none; padding-left: 20px; }
+        .sub-menu.active { display: block; }
+        .sub-button { padding: 8px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; margin-bottom: 5px; display: block; }
+        .sub-button:hover { background-color: #218838; }
+        .section { display: none; }
+        .active { display: block; }
+        .settings-form { display: flex; flex-direction: column; gap: 10px; max-width: 400px; }
+        .settings-form label { font-weight: bold; }
+        .settings-form input, .settings-form textarea { padding: 5px; width: 100%; box-sizing: border-box; }
+        .settings-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; }
+        .settings-form button:hover { background-color: #0056b3; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .hidden { display: none; }
+        #toast-container > .toast-error { background-color: #dc3545; border-color: #c82333; }
+        .password-container { position: relative; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; }
+        .password-container input { width: 50%; padding-right: 30px; }
+        .password-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; }
+        #my-store .settings-form { max-width: 600px; }
+        .page-section, .email-section { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .remove-page-btn, .remove-email-btn { padding: 5px 10px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .remove-page-btn:hover, .remove-email-btn:hover { background-color: #c82333; }
+        .widget-checkboxes div { margin-bottom: 10px; }
+        #my-store .email-section input[type="text"] { width: 50%; }
+        #my-store .widget-checkboxes input[type="checkbox"] { width: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" id="brandingContent">
+            <!-- Branding content will be loaded here -->
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="menu-container">
+            <div class="menu" id="menu">
+                <input type="text" id="userId" style="display: none;">
+                <button onclick="showSection('my-products')">My Products</button>
+                <button onclick="showSection('my-store')">My Store</button>
+                <button onclick="toggleSubMenu('api-sub-menu', 'my-api-keys')">My API Keys</button>
+                <div id="api-sub-menu" class="sub-menu">
+                    <button class="sub-button" onclick="showSection('wix-keys')">Wix Keys</button>
+                </div>
+                <button onclick="showSection('my-account')">My Account</button>
+                <button class="btn-logoff" onclick="window.location.href='/admin'">Back to Admin</button>
+                <button class="btn-logoff" onclick="logout()">Log Off</button>
+            </div>
+        </div>
+        <div class="content-container">
+            <div id="info" class="section active">
+                <h2>Welcome to Your Merchant Dashboard</h2>
+                <p>This dashboard allows you to link the parts on your Wix site to a network of community groups, who show relevant discounted products on their websites from clubmadeira.io.</p>
+            </div>
+            <div id="my-account" class="section">
+                <h2>My Account</h2>
+                <div class="settings-form">
+                    <label for="contactName">Contact Name:</label>
+                    <input type="text" id="contactName" placeholder="Enter contact name">
+                    <label for="websiteUrl">Website URL:</label>
+                    <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                    <label for="emailAddress">Email Address:</label>
+                    <input type="email" id="emailAddress" placeholder="Enter email address">
+                    <label for="phoneNumber">Phone Number:</label>
+                    <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                    <button onclick="saveSettings()">Save Settings</button>
+                    <h3>Change Password</h3>
+                    <div class="password-container">
+                        <label for="currentPassword">Current Password:</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="confirmPassword">Confirm New Password:</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
+                    </div>
+                    <button onclick="savePassword()">Change Password</button>
+                </div>
+            </div>
+            <div id="my-products" class="section">
+                <h2>My Products</h2>
+                <p>These are the products from your parts feed.</p>
+                <table id="productTable">
+                    <thead>
+                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
+                    </thead>
+                    <tbody id="productList"></tbody>
+                </table>
+            </div>
+            <div id="my-api-keys" class="section">
+                <h2>My API Keys</h2>
+                <p>Your Wix professional will update this for you.</p>
+            </div>
+            <div id="wix-keys" class="section">
+                <h2>Wix Keys</h2>
+                <p>Your Wix Client ID is used to integrate your merchant account with Wix services. Ensure it matches the key provided in your Wix developer dashboard.</p>
+                <div class="settings-form">
+                    <label for="wixClientId">Wix Client ID:</label>
+                    <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
+                    <button onclick="saveWixClientId()">Save Wix Client ID</button>
+                </div>
+            </div>
+            <div id="my-store" class="section">
+                <h2>My Store</h2>
+                <p>Request a custom Wix store to sell your products online. Provide details below to set up your store (minimum: Home and Returns Policy pages).</p>
+                <form id="storeRequestForm" class="settings-form">
+                    <label for="storeName">Store Name:</label>
+                    <input type="text" id="storeName" name="storeName" placeholder="Enter your store name" required>
+
+                    <label for="aboutStore">About Your Store:</label>
+                    <textarea id="aboutStore" name="aboutStore" placeholder="Describe your store (e.g., product focus, target audience)"></textarea>
+
+                    <label for="storeLogos">Store Logos:</label>
+                    <input type="file" id="storeLogos" name="storeLogos" accept="image/*" multiple>
+                    <small>Upload up to 5 logos (e.g., main logo, favicon).</small>
+
+                    <label for="colorPrefs">Color Preferences:</label>
+                    <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
+
+                    <label for="stylingDetails">Styling Details:</label>
+                    <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., sleek design, minimalistic"></textarea>
+
+                    <label for="preferredDomain">Preferred Domain Name:</label>
+                    <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mystore.uk" oninput="updateDomainPreview()">
+                    <button type="button" onclick="checkDomainAvailability()">Check Availability</button>
+                    <span id="domainPreview">@mystore.uk</span>
+
+                    <label>Email Addresses to Set Up (up to 5):</label>
+                    <div id="emailsContainer">
+                        <div class="email-section" data-email="1">
+                            <label for="email1Name">Email Name:</label>
+                            <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
+                            <span id="email1Domain">@mystore.uk</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addEmail()" id="addEmailBtn">Add Another Email</button>
+
+                    <label>Required Pages:</label>
+                    <div id="pagesContainer">
+                        <div class="page-section" data-page="1">
+                            <label for="page1Name">Page Name:</label>
+                            <input type="text" id="page1Name" name="page1Name" value="Home" readonly>
+                            <br><br>
+                            <label for="page1Content">Home Page Content:</label>
+                            <textarea id="page1Content" name="page1Content" placeholder="Describe your home page (e.g., welcome message, featured products)"></textarea>
+                            <label for="page1Images">Additional Images:</label>
+                            <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+                        </div>
+                        <div class="page-section" data-page="2">
+                            <label for="page2Name">Page Name:</label>
+                            <input type="text" id="page2Name" name="page2Name" value="Returns Policy" readonly>
+                            <br><br>
+                            <label for="page2Content">Returns Policy Content:</label>
+                            <textarea id="page2Content" name="page2Content" placeholder="Outline your returns policy"></textarea>
+                            <label for="page2Images">Additional Images:</label>
+                            <input type="file" id="page2Images" name="page2Images" accept="image/*" multiple>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addPage()" id="addPageBtn">Add Another Page</button>
+
+                    <label>Wix Store Widgets:</label>
+                    <div class="widget-checkboxes">
+                        <div><label><input type="checkbox" name="widgets" value="productCatalog"> Product Catalog</label> - Display your products.</div>
+                        <div><label><input type="checkbox" name="widgets" value="checkout"> Checkout</label> - Enable direct purchases.</div>
+                        <div><label><input type="checkbox" name="widgets" value="cart"> Shopping Cart</label> - Add a cart for customers.</div>
+                        <div><label><input type="checkbox" name="widgets" value="promotions"> Promotions</label> - Highlight sales and discounts.</div>
+                        <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Customer inquiries.</div>
+                    </div>
+
+                    <button type="button" onclick="saveStoreRequest()">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        const apiUrl = 'https://clubmadeira.io';
+        let userPermissions = [];
+        let pageCount = 2; // Start with Home and Returns Policy
+        let emailCount = 1; // Start with one email
+
+        function decodeJWT(token) {
+            if (!token || typeof token !== 'string') {
+                console.error('Invalid token');
+                return null;
+            }
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            try {
+                const base64Url = parts[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                console.error('Error decoding JWT:', error.message);
+                return null;
+            }
+        }
+
+        window.onload = function() {
+            const token = localStorage.getItem('authToken');
+            const userId = localStorage.getItem('userId');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            const decoded = decodeJWT(token);
+            if (!decoded) {
+                window.location.href = '/';
+                return;
+            }
+            userPermissions = decoded.permissions || [];
+            if (!userPermissions.includes('admin') && !userPermissions.includes('merchant')) {
+                toastr.error('Permission denied: Merchant permission required');
+                window.location.href = '/';
+                return;
+            }
+            if (userId) document.getElementById('userId').value = userId;
+            checkAdminPermission();
+            loadBranding();
+            showSection('info');
+            initializeTinyMCE();
+        };
+
+        toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000, showMethod: 'slideDown', hideMethod: 'slideUp' };
+
+        function initializeTinyMCE() {
+            tinymce.init({
+                selector: '#aboutStore, textarea[name$="Content"]',
+                height: 200,
+                menubar: false,
+                plugins: 'lists',
+                toolbar: 'bold italic | bullist numlist'
+            });
+        }
+
+        function checkAdminPermission() {
+            const menu = document.getElementById('menu');
+            const backButton = menu.querySelector('button[onclick="window.location.href=\'/admin\'"]');
+            if (!userPermissions.includes('admin')) backButton.style.display = 'none';
+        }
+
+        async function loadBranding() {
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/branding`);
+                if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('brandingContent').innerHTML = data.content || '<h1>Merchant Dashboard</h1>';
+            } catch (error) {
+                toastr.error(`Error loading branding: ${error.message}`);
+                document.getElementById('brandingContent').innerHTML = '<h1>Merchant Dashboard</h1>';
+            }
+        }
+
+        async function authenticatedFetch(url, options = {}) {
+            const token = localStorage.getItem('authToken');
+            options.headers = { ...options.headers, 'Authorization': `Bearer ${token}`, 'Content-Type': options.body instanceof FormData ? undefined : 'application/json' };
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                toastr.error('Session expired. Please log in again.');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
+                window.location.href = '/';
+            }
+            return response;
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            if (section === 'my-account') loadSettings();
+            else if (section === 'my-products') loadProducts();
+            else if (section === 'wix-keys') loadWixClientId();
+            else if (section === 'my-store') loadStoreRequest();
+            else if (section === 'my-api-keys') document.getElementById('my-api-keys').classList.add('active');
+        }
+
+        function toggleSubMenu(subMenuId, sectionId) {
+            const subMenu = document.getElementById(subMenuId);
+            const isActive = subMenu.classList.contains('active');
+            document.querySelectorAll('.sub-menu').forEach(sm => sm.classList.remove('active'));
+            if (!isActive) {
+                subMenu.classList.add('active');
+            }
+            // Always show the "My API Keys" section when clicked, even if collapsing
+            showSection(sectionId);
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            window.location.href = '/';
+        }
+
+        async function loadSettings() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) { toastr.error('User ID not found in session'); return; }
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`);
+                if (!response.ok) throw new Error(`Failed to fetch settings: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('contactName').value = data.contact_name || '';
+                document.getElementById('websiteUrl').value = data.website_url || '';
+                document.getElementById('emailAddress').value = data.email_address || '';
+                document.getElementById('phoneNumber').value = data.phone_number || '';
+            } catch (error) {
+                toastr.error(`Error loading settings: ${error.message}`);
+            }
+        }
+
+        async function saveSettings() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) { toastr.error('User ID not found in session'); return; }
+            const settings = {
+                contact_name: document.getElementById('contactName').value.trim(),
+                website_url: document.getElementById('websiteUrl').value.trim(),
+                email_address: document.getElementById('emailAddress').value.trim(),
+                phone_number: document.getElementById('phoneNumber').value.trim()
+            };
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`, { method: 'PATCH', body: JSON.stringify(settings) });
+                if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
+            } catch (error) {
+                toastr.error(`Error saving settings: ${error.message}`);
+            }
+        }
+
+        function togglePassword(fieldId) {
+            const input = document.getElementById(fieldId);
+            const icon = input.nextElementSibling;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function savePassword() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) { toastr.error('User ID not found in session'); return; }
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            const passwordRegex = /^(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                toastr.error('New password must be at least 8 characters long and include numbers');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                toastr.error('New password and confirmation do not match');
+                return;
+            }
+
+            const passwordData = { currentPassword, newPassword };
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/password`, {
+                    method: 'POST',
+                    body: JSON.stringify(passwordData)
+                });
+                if (!response.ok) throw new Error(`Failed to change password: ${response.status}`);
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } catch (error) {
+                toastr.error(`Error changing password: ${error.message}`);
+            }
+        }
+
+        async function loadProducts() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) { toastr.error('User ID not found in session'); return; }
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/products`);
+                if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
+                const data = await response.json();
+                const tbody = document.getElementById('productList');
+                tbody.innerHTML = '';
+                data.products.forEach(product => tbody.appendChild(createProductRow(product)));
+            } catch (error) {
+                toastr.error(`Error loading products: ${error.message}`);
+            }
+        }
+
+        function createProductRow(product) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="hidden">${product.id}</td>
+                <td>${product.category}</td>
+                <td>${product.title}</td>
+                <td><a href="${product.product_url}" target="_blank">Link</a></td>
+                <td>${product.current_price}</td>
+                <td>${product.original_price}</td>
+                <td><img src="${product.image_url}" width="50"></td>
+                <td>${product.qty}</td>
+            `;
+            return tr;
+        }
+
+        async function loadWixClientId() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) { toastr.error('User ID not found in session'); return; }
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`);
+                if (!response.ok) throw new Error(`Failed to fetch Wix Client ID: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('wixClientId').value = data.wixClientId || '';
+            } catch (error) {
+                toastr.error(`Error loading Wix Client ID: ${error.message}`);
+            }
+        }
+
+        async function saveWixClientId() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) { toastr.error('User ID not found in session'); return; }
+            const wixClientId = document.getElementById('wixClientId').value.trim();
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ wixClientId })
+                });
+                if (!response.ok) throw new Error(`Failed to save Wix Client ID: ${response.status}`);
+            } catch (error) {
+                toastr.error(`Error saving Wix Client ID: ${error.message}`);
+            }
+        }
+
+        async function loadStoreRequest() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) { toastr.error('User ID not found in session'); return; }
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/siterequest`);
+                if (!response.ok) throw new Error(`Failed to fetch store request: ${response.status}`);
+                const data = await response.json();
+                const storeRequest = data.site_request || {};
+
+                document.getElementById('storeName').value = storeRequest.storeName || '';
+                tinymce.get('aboutStore')?.setContent(storeRequest.aboutStore || '');
+                document.getElementById('colorPrefs').value = storeRequest.colorPrefs || '';
+                document.getElementById('stylingDetails').value = storeRequest.stylingDetails || '';
+                document.getElementById('preferredDomain').value = storeRequest.preferredDomain || 'mystore.uk';
+
+                const emails = storeRequest.emails || ['info'];
+                emailCount = 0;
+                const emailsContainer = document.getElementById('emailsContainer');
+                emailsContainer.innerHTML = '';
+                emails.forEach((email, index) => {
+                    emailCount++;
+                    const emailDiv = document.createElement('div');
+                    emailDiv.className = 'email-section';
+                    emailDiv.dataset.email = emailCount;
+                    emailDiv.innerHTML = `
+                        <label for="email${emailCount}Name">Email Name:</label>
+                        <input type="text" id="email${emailCount}Name" name="email${emailCount}Name" value="${email}">
+                        <span id="email${emailCount}Domain">@${storeRequest.preferredDomain || 'mystore.uk'}</span>
+                        ${emailCount > 1 ? `<button type="button" class="remove-email-btn" onclick="removeEmail(${emailCount})">Remove Email</button>` : ''}
+                    `;
+                    emailsContainer.appendChild(emailDiv);
+                });
+
+                const pages = storeRequest.pages && storeRequest.pages.length >= 2 ? storeRequest.pages : [
+                    { name: 'Home', content: '' },
+                    { name: 'Returns Policy', content: '' }
+                ];
+                pageCount = 0;
+                const pagesContainer = document.getElementById('pagesContainer');
+                pagesContainer.innerHTML = '';
+                pages.forEach((page, index) => {
+                    pageCount++;
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'page-section';
+                    pageDiv.dataset.page = pageCount;
+                    pageDiv.innerHTML = `
+                        <label for="page${pageCount}Name">Page Name:</label>
+                        <input type="text" id="page${pageCount}Name" name="page${pageCount}Name" value="${page.name || ''}" ${pageCount <= 2 ? 'readonly' : ''}>
+                        <br><br>
+                        <label for="page${pageCount}Content">${pageCount === 1 ? 'Home Page' : pageCount === 2 ? 'Returns Policy' : 'Page'} Content:</label>
+                        <textarea id="page${pageCount}Content" name="page${pageCount}Content">${page.content || ''}</textarea>
+                        <label for="page${pageCount}Images">Additional Images:</label>
+                        <input type="file" id="page${pageCount}Images" name="page${pageCount}Images" accept="image/*" multiple>
+                        ${pageCount > 2 ? `<button type="button" class="remove-page-btn" onclick="removePage(${pageCount})">Remove Page</button>` : ''}
+                    `;
+                    pagesContainer.appendChild(pageDiv);
+                });
+
+                const widgets = storeRequest.widgets || [];
+                document.querySelectorAll('input[name="widgets"]').forEach(checkbox => {
+                    checkbox.checked = widgets.includes(checkbox.value);
+                });
+
+                tinymce.remove();
+                initializeTinyMCE();
+                updateDomainPreview();
+            } catch (error) {
+                toastr.error(`Error loading store request: ${error.message}`);
+            }
+        }
+
+        async function saveStoreRequest() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) { toastr.error('User ID not found in session'); return; }
+
+            const storeRequest = {
+                userId: userId,
+                storeName: document.getElementById('storeName').value.trim(),
+                aboutStore: tinymce.get('aboutStore').getContent(),
+                storeLogos: [],
+                colorPrefs: document.getElementById('colorPrefs').value.trim(),
+                stylingDetails: document.getElementById('stylingDetails').value.trim(),
+                preferredDomain: document.getElementById('preferredDomain').value.trim() || 'mystore.uk',
+                emails: [],
+                pages: [],
+                widgets: Array.from(document.querySelectorAll('input[name="widgets"]:checked')).map(cb => cb.value)
+            };
+
+            if (!storeRequest.storeName) {
+                toastr.error('Store name is required');
+                return;
+            }
+
+            const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+            if (!domainRegex.test(storeRequest.preferredDomain)) {
+                toastr.error('Invalid domain name (e.g., mystore.uk)');
+                return;
+            }
+
+            const logoFiles = document.getElementById('storeLogos').files;
+            if (logoFiles.length > 5) {
+                toastr.error('Maximum of 5 logos allowed');
+                return;
+            }
+            for (let i = 0; i < logoFiles.length; i++) {
+                const reader = new FileReader();
+                await new Promise(resolve => {
+                    reader.onload = () => {
+                        storeRequest.storeLogos.push(reader.result);
+                        resolve();
+                    };
+                    reader.readAsDataURL(logoFiles[i]);
+                });
+            }
+
+            for (let i = 1; i <= emailCount; i++) {
+                const emailInput = document.getElementById(`email${i}Name`);
+                if (emailInput && emailInput.value.trim()) {
+                    storeRequest.emails.push(emailInput.value.trim());
+                }
+            }
+
+            for (let i = 1; i <= pageCount; i++) {
+                const nameInput = document.getElementById(`page${i}Name`);
+                const contentEditor = tinymce.get(`page${i}Content`);
+                const imagesInput = document.getElementById(`page${i}Images`);
+                if (nameInput && nameInput.value.trim()) {
+                    const page = {
+                        name: nameInput.value.trim(),
+                        content: contentEditor ? contentEditor.getContent() : '',
+                        images: []
+                    };
+                    if (imagesInput && imagesInput.files.length > 0) {
+                        for (let j = 0; j < imagesInput.files.length; j++) {
+                            const reader = new FileReader();
+                            await new Promise(resolve => {
+                                reader.onload = () => {
+                                    page.images.push(reader.result);
+                                    resolve();
+                                };
+                                reader.readAsDataURL(imagesInput.files[j]);
+                            });
+                        }
+                    }
+                    storeRequest.pages.push(page);
+                }
+            }
+
+            if (storeRequest.pages.length < 2 || !storeRequest.pages.some(p => p.name === 'Home') || !storeRequest.pages.some(p => p.name === 'Returns Policy')) {
+                toastr.error('Home and Returns Policy pages are required');
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch(`${apiUrl}/${userId}/siterequest`, {
+                    method: 'POST',
+                    body: JSON.stringify(storeRequest)
+                });
+                if (!response.ok) throw new Error(`Failed to save store request: ${response.status}`);
+            } catch (error) {
+                toastr.error(`Error saving store request: ${error.message}`);
+            }
+        }
+
+        function addPage() {
+            if (pageCount >= 5) {
+                toastr.error('Maximum of 5 pages allowed');
+                return;
+            }
+            pageCount++;
+            const container = document.getElementById('pagesContainer');
+            const newPage = document.createElement('div');
+            newPage.className = 'page-section';
+            newPage.dataset.page = pageCount;
+            newPage.innerHTML = `
+                <label for="page${pageCount}Name">Page Name:</label>
+                <input type="text" id="page${pageCount}Name" name="page${pageCount}Name" placeholder="e.g., Products">
+                <br><br>
+                <label for="page${pageCount}Content">Page Content:</label>
+                <textarea id="page${pageCount}Content" name="page${pageCount}Content" placeholder="Describe this page"></textarea>
+                <label for="page${pageCount}Images">Additional Images:</label>
+                <input type="file" id="page${pageCount}Images" name="page${pageCount}Images" accept="image/*" multiple>
+                <button type="button" class="remove-page-btn" onclick="removePage(${pageCount})">Remove Page</button>
+            `;
+            container.appendChild(newPage);
+            tinymce.remove();
+            initializeTinyMCE();
+        }
+
+        function removePage(pageNum) {
+            if (pageCount <= 2) {
+                toastr.error('Cannot remove Home or Returns Policy pages');
+                return;
+            }
+            const pageSection = document.querySelector(`.page-section[data-page="${pageNum}"]`);
+            if (pageSection) {
+                pageSection.remove();
+                pageCount--;
+                tinymce.remove();
+                initializeTinyMCE();
+            }
+        }
+
+        function addEmail() {
+            if (emailCount >= 5) {
+                toastr.error('Maximum of 5 email addresses allowed');
+                return;
+            }
+            emailCount++;
+            const container = document.getElementById('emailsContainer');
+            const domain = document.getElementById('preferredDomain').value || 'mystore.uk';
+            const newEmail = document.createElement('div');
+            newEmail.className = 'email-section';
+            newEmail.dataset.email = emailCount;
+            newEmail.innerHTML = `
+                <label for="email${emailCount}Name">Email Name:</label>
+                <input type="text" id="email${emailCount}Name" name="email${emailCount}Name" placeholder="e.g., contact">
+                <span id="email${emailCount}Domain">@${domain}</span>
+                <button type="button" class="remove-email-btn" onclick="removeEmail(${emailCount})">Remove Email</button>
+            `;
+            container.appendChild(newEmail);
+            updateDomainPreview();
+        }
+
+        function removeEmail(emailNum) {
+            if (emailCount <= 1) {
+                toastr.error('Cannot remove the last email');
+                return;
+            }
+            const emailSection = document.querySelector(`.email-section[data-email="${emailNum}"]`);
+            if (emailSection) {
+                emailSection.remove();
+                emailCount--;
+                updateDomainPreview();
+            }
+        }
+
+        function updateDomainPreview() {
+            const domain = document.getElementById('preferredDomain').value || 'mystore.uk';
+            document.getElementById('domainPreview').textContent = `@${domain}`;
+            for (let i = 1; i <= emailCount; i++) {
+                const domainSpan = document.getElementById(`email${i}Domain`);
+                if (domainSpan) domainSpan.textContent = `@${domain}`;
+            }
+        }
+
+        function checkDomainAvailability() {
+            const domain = document.getElementById('preferredDomain').value;
+            const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+            if (!domain) {
+                toastr.error('Please enter a preferred domain name');
+                return;
+            }
+            if (!domainRegex.test(domain)) {
+                toastr.error('Invalid domain name (e.g., mystore.uk)');
+                return;
+            }
+            toastr.info(`Checking availability for ${domain}...`);
+            setTimeout(() => toastr.success('This is a placeholder - domain check not implemented'), 1000);
+        }
+    </script>
+</body>
+</html>

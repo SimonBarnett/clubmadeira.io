@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login & Signup</title>
-    <!-- Toastr CSS -->
+    <title>Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         body {
@@ -70,7 +69,6 @@
         .toggle-link a:hover {
             text-decoration: underline;
         }
-        /* Toastr Custom Styles */
         #toast-container > .toast-success {
             background-color: #28a745;
             border-color: #218838;
@@ -96,30 +94,8 @@
             <button type="submit">Login</button>
         </form>
         <div class="toggle-link">
-            <a onclick="showSignup()">Need an account? Sign Up</a><br>
+            <a href="/signup">Need an account? Sign Up</a><br>
             <a onclick="showForgotPassword()">Forgot Password?</a>
-        </div>
-    </div>
-
-    <div class="container" id="signupContainer" style="display: none;">
-        <h2>Sign Up</h2>
-        <form id="signupForm">
-            <div class="form-group">
-                <label for="signupEmail">Email:</label>
-                <input type="email" id="signupEmail" name="email" placeholder="Enter your email" required>
-            </div>
-            <div class="form-group">
-                <label for="signupPhone">Phone Number:</label>
-                <input type="tel" id="signupPhone" name="phone" placeholder="Enter your phone (e.g., +447123456789)" pattern="\+[0-9]{10,14}" required>
-            </div>
-            <div class="form-group">
-                <label for="signupPassword">Password:</label>
-                <input type="password" id="signupPassword" name="password" placeholder="Enter your password" required>
-            </div>
-            <button type="submit">Sign Up</button>
-        </form>
-        <div class="toggle-link">
-            <a onclick="showLogin()">Already have an account? Login</a>
         </div>
     </div>
 
@@ -137,14 +113,11 @@
         </div>
     </div>
 
-    <!-- jQuery (required for Toastr) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         const apiUrl = 'https://clubmadeira.io';
 
-        // Configure Toastr options
         toastr.options = {
             closeButton: true,
             progressBar: true,
@@ -154,64 +127,26 @@
             hideMethod: 'slideUp'
         };
 
-        // Toggle between forms
         function showLogin() {
             document.getElementById('loginContainer').style.display = 'block';
-            document.getElementById('signupContainer').style.display = 'none';
-            document.getElementById('forgotPasswordContainer').style.display = 'none';
-        }
-
-        function showSignup() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('signupContainer').style.display = 'block';
             document.getElementById('forgotPasswordContainer').style.display = 'none';
         }
 
         function showForgotPassword() {
             document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('signupContainer').style.display = 'none';
             document.getElementById('forgotPasswordContainer').style.display = 'block';
         }
 
-        // Signup Form Submission
-        document.getElementById('signupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('signupEmail').value.trim();
-            const phone = document.getElementById('signupPhone').value.trim();
-            const password = document.getElementById('signupPassword').value;
-
-            try {
-                const response = await fetch(`${apiUrl}/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, phone, password }) // Send plain password; hashing should be server-side
-                });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.message || 'Signup failed');
-                }
-
-                const data = await response.json();
-                toastr.success('Account created successfully! Please log in.');
-                showLogin();
-            } catch (error) {
-                toastr.error(error.message || 'Error during signup');
-                console.error('Signup Error:', error);
-            }
-        });
-
-        // Login Form Submission with HTTP Token
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
-            
+
             try {
                 const response = await fetch(`${apiUrl}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password }) // Send plain password; server should hash and verify
+                    body: JSON.stringify({ email, password })
                 });
 
                 if (!response.ok) {
@@ -220,18 +155,24 @@
                 }
 
                 const data = await response.json();
-                // Store the token and userId (if provided) in localStorage
-                localStorage.setItem('authToken', data.token);
-                if (data.userId) localStorage.setItem('userId', data.userId);
-                toastr.success(`Welcome back, ${email}!`);
-                window.location.href = '/CatMgr'; // Redirect to protected page
+                if (data.status === 'success') {
+                    localStorage.setItem('authToken', data.token);
+                    if (data.userId) localStorage.setItem('userId', data.userId);
+
+                    const contactName = data.contact_name || 'User';
+                    toastr.success(`Welcome back, ${contactName}!`);
+
+                    const redirectPath = data.redirect_url || '/';
+                    window.location.href = redirectPath;
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
             } catch (error) {
                 toastr.error(error.message || 'Error during login');
                 console.error('Login Error:', error);
             }
         });
 
-        // Forgot Password Form Submission
         document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('forgotEmail').value.trim();

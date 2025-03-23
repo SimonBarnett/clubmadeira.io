@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .signup-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .options {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .option {
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            transition: border 0.3s ease;
+        }
+        .option.selected {
+            border: 3px solid #007BFF;
+            border-radius: 5px;
+        }
+        .option img {
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .option span {
+            display: block;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+        .option input[type="radio"] {
+            display: none;
+        }
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-right: 100px; /* Shifts form 100px left */
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            max-width: 200px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .form-group label {
+            font-weight: bold;
+            flex: 1;
+            text-align: right;
+            margin-bottom: 0;
+        }
+        .form-group .input-container {
+            position: relative;
+            width: 192px; /* 160px + 20% = 192px */
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            padding-right: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .form-group .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h1>Sign Up - I am a...</h1>
+        <form id="signupForm" autocomplete="off">
+            <!-- Dummy fields to trick autofill -->
+            <input type="text" class="hidden" autocomplete="off">
+            <input type="text" class="hidden" autocomplete="off">
+            <div class="options">
+                <label class="option">
+                    <input type="radio" name="signup_type" value="community">
+                    <img src="{{ url_for('static', filename='community.jpg') }}" alt="Scout leader in uniform, neck down">
+                    <span>Community Group</span>
+                </label>
+                <label class="option">
+                    <input type="radio" name="signup_type" value="seller">
+                    <img src="{{ url_for('static', filename='merchant.jpg') }}" alt="White man in business suit, neck down">
+                    <span>Merchant</span>
+                </label>
+                <label class="option">
+                    <input type="radio" name="signup_type" value="wixpro">
+                    <img src="{{ url_for('static', filename='wixpro.jpg') }}" alt="Female ethnic web designer in casual dress, neck down">
+                    <span>Partner</span>
+                </label>
+            </div>
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="contact_name">Contact Name:</label>
+                    <div class="input-container">
+                        <input type="text" id="contact_name" name="contact_name" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email:</label>
+                    <div class="input-container">
+                        <input type="text" id="signup-email" name="signup_email" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password:</label>
+                    <div class="input-container">
+                        <input type="text" id="signup-password" name="signup_password" required autocomplete="new-password">
+                        <i class="fas fa-eye toggle-password" data-target="signup-password"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm-password">Confirm Password:</label>
+                    <div class="input-container">
+                        <input type="password" id="signup-confirm-password" name="signup_confirm_password" required autocomplete="new-password">
+                        <i class="fas fa-eye toggle-password" data-target="signup-confirm-password"></i>
+                    </div>
+                </div>
+                <button type="submit">Sign Me Up</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Set correct input types and clear fields after load
+        window.onload = function() {
+            const emailInput = document.getElementById('signup-email');
+            const passwordInput = document.getElementById('signup-password');
+            const confirmPasswordInput = document.getElementById('signup-confirm-password');
+
+            // Set proper types
+            emailInput.type = 'email';
+            passwordInput.type = 'password';
+
+            // Double-clear strategy
+            setTimeout(function() {
+                emailInput.value = '';
+                passwordInput.value = '';
+                confirmPasswordInput.value = '';
+            }, 100);
+
+            setTimeout(function() {
+                emailInput.value = '';
+                passwordInput.value = '';
+                confirmPasswordInput.value = '';
+            }, 500); // Extra delay for Chrome
+        };
+
+        // Clear fields on focus
+        document.getElementById('signup-email').addEventListener('focus', function() {
+            this.value = '';
+        });
+        document.getElementById('signup-password').addEventListener('focus', function() {
+            this.value = '';
+        });
+        document.getElementById('signup-confirm-password').addEventListener('focus', function() {
+            this.value = '';
+        });
+
+        // Highlight selected option
+        document.querySelectorAll('input[name="signup_type"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.option').forEach(function(option) {
+                    option.classList.remove('selected');
+                });
+                if (this.checked) {
+                    this.closest('.option').classList.add('selected');
+                }
+            });
+        });
+
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(function(icon) {
+            icon.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.classList.remove('fa-eye');
+                    this.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    this.classList.remove('fa-eye-slash');
+                    this.classList.add('fa-eye');
+                }
+            });
+        });
+
+        // Form submission
+        $('#signupForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const signupType = $('input[name="signup_type"]:checked').val();
+            if (!signupType) {
+                toastr.error('Please select a signup type (Merchant, Community Group, or Wix Professional).');
+                return;
+            }
+
+            const contactName = $('#contact_name').val().trim();
+            const email = $('#signup-email').val().trim();
+            const password = $('#signup-password').val().trim();
+            const confirmPassword = $('#signup-confirm-password').val().trim();
+
+            if (!contactName || !email || !password || !confirmPassword) {
+                toastr.error('All fields must be filled.');
+                return;
+            }
+
+            // Password complexity check
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                toastr.error('Password must be at least 8 characters long and contain both letters and numbers.');
+                return;
+            }
+
+            // Confirm password match
+            if (password !== confirmPassword) {
+                toastr.error('Passwords do not match.');
+                return;
+            }
+
+            const signupData = {
+                signup_type: signupType,
+                contact_name: contactName,
+                signup_email: email,
+                signup_password: password
+            };
+
+            $.ajax({
+                url: '/signup',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(signupData),
+                success: function(response) {
+                    if (response.status === 'success') {
+                        toastr.success('Signup successful! Redirecting...');
+                        setTimeout(() => window.location.href = '/login', 2000);
+                    } else {
+                        toastr.error(response.message || 'Signup failed.');
+                    }
+                },
+                error: function(xhr) {
+                    toastr.error('Error connecting to server: ' + (xhr.responseJSON?.message || xhr.statusText));
+                }
+            });
+        });
+
+        // Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000
+        };
+    </script>
+</body>
+</html>
