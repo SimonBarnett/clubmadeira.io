@@ -7,50 +7,66 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .header { height: 150px; background-color: #f4f4f4; margin-bottom: 25px; overflow: hidden; position: relative; }
-        .header-content { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .main-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
-        .menu-container { flex: 1; max-width: 300px; }
-        .content-container { flex: 2; }
-        .menu { margin-bottom: 20px; text-align: left; }
-        .menu button { padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-align: left; width: 100%; margin-bottom: 5px; display: block; }
+        /* Existing styles remain unchanged */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { width: 100%; background-color: #007BFF; margin-bottom: 25px; flex-shrink: 0; display: block; }
+        .header-content { max-width: 1200px; margin: 0 auto; padding: 20px; color: white; display: flex; align-items: center; gap: 20px; }
+        .header-content img { border-radius: 50%; width: 50px; height: 50px; }
+        .header-content h1 { margin: 0; font-size: 24px; }
+        .header-content p { margin: 5px 0 0; font-size: 16px; }
+        .main-container { max-width: 1200px; width: 1200px; margin: 0 auto; display: flex; flex-direction: row; gap: 20px; flex-grow: 1; }
+        .menu-container { width: 300px; display: flex; flex-direction: column; align-items: flex-start; }
+        .content-container { width: calc(1200px - 320px); padding: 20px; }
+        .menu { width: 100%; margin-bottom: 20px; text-align: left; display: flex; flex-direction: column; align-items: flex-start; }
+        .menu button { padding: 12px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-align: left; width: 100%; margin-bottom: 2px; display: block; }
         .menu button:hover { background-color: #0056b3; }
         .menu .btn-admin { background-color: #dc3545; }
         .menu .btn-admin:hover { background-color: #c82333; }
-        .sub-menu { display: none; margin-left: 20px; }
-        .sub-menu button { background-color: #17a2b8; }
-        .sub-menu button:hover { background-color: #138496; }
-        .section { display: none; }
-        .active { display: block; }
-        .settings-form { display: flex; flex-direction: column; gap: 10px; max-width: 600px; }
-        .settings-form label { font-weight: bold; }
-        .settings-form input, .settings-form textarea { padding: 5px; }
-        .settings-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        .menu .btn-logoff { background-color: #dc3545; }
+        .menu .btn-logoff:hover { background-color: #c82333; }
+        .submenu { display: none; padding-left: 20px; width: 100%; }
+        .submenu.open { display: block; }
+        .submenu button { background-color: #17a2b8; }
+        .submenu button:hover { background-color: #138496; }
+        .section { display: none; min-height: 200px; visibility: visible; opacity: 1; }
+        .section.active { display: block; }
+        .settings-form { display: flex; flex-direction: column; gap: 20px; max-width: 600px; padding: 20px 0; }
+        .settings-form label { font-weight: bold; margin-bottom: 5px; }
+        .settings-form input, .settings-form textarea { padding: 10px; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
+        .settings-form button { padding: 12px; background-color: #007BFF; color: white; border: none; cursor: pointer; border-radius: 4px; width: auto; align-self: flex-start; }
         .settings-form button:hover { background-color: #0056b3; }
         #toast-container > .toast-success { background-color: #28a745; border-color: #218838; }
         #toast-container > .toast-error { background-color: #dc3545; border-color: #c82333; }
-        .password-container { position: relative; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; }
-        .password-container input { width: 150px; padding-right: 30px; }
-        .password-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .password-container { position: relative; display: flex; flex-direction: column; margin-bottom: 20px; }
+        .password-container input { padding-right: 40px; }
+        .password-toggle { position: absolute; right: 10px; top: 65%; transform: translateY(-50%); cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        #productTable th, #productTable td { min-width: 100px; }
+        #productTable th:nth-child(1), #productTable td:nth-child(1) { width: 0; }
+        #productTable th:nth-child(2), #productTable td:nth-child(2) { width: 15%; }
+        #productTable th:nth-child(3), #productTable td:nth-child(3) { width: 25%; }
+        #productTable th:nth-child(4), #productTable td:nth-child(4) { width: 20%; }
+        #productTable th:nth-child(5), #productTable td:nth-child(5) { width: 10%; }
+        #productTable th:nth-child(6), #productTable td:nth-child(6) { width: 10%; }
+        #productTable th:nth-child(7), #productTable td:nth-child(7) { width: 10%; }
+        #productTable th:nth-child(8), #productTable td:nth-child(8) { width: 10%; }
         .hidden { display: none; }
         tr.clickable:hover { background-color: #f5f5f5; cursor: pointer; }
-        #siteRequestsTable button { padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        #siteRequestsTable button { padding: 6px 12px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
         #siteRequestsTable button:hover { background-color: #0056b3; }
         .site-request-detail { max-width: 600px; }
-        .site-request-detail label { font-weight: bold; display: block; margin-top: 10px; }
+        .site-request-detail label { font-weight: bold; display: block; margin-top: 15px; }
         .site-request-detail p { margin: 5px 0; }
         .site-request-detail img { max-width: 100px; margin: 5px; vertical-align: middle; }
-        .site-request-detail .page-section, .site-request-detail .email-section { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .site-request-detail .page-section, .site-request-detail .email-section { margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; }
-        .modal-content { background-color: white; margin: 15% auto; padding: 20px; border-radius: 4px; width: 80%; max-width: 400px; }
+        .modal-content { background-color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; border-radius: 4px; width: 80%; max-width: 400px; }
         .modal-content label { font-weight: bold; display: block; margin-bottom: 5px; }
-        .modal-content input { width: 100%; padding: 5px; margin-bottom: 10px; }
-        .modal-content button { width: 100%; }
+        .modal-content input { width: 100%; padding: 8px; margin-bottom: 15px; }
+        .modal-content button { width: 100%; padding: 10px; }
         .close { float: right; font-size: 20px; cursor: pointer; }
-        #documentation-content { padding: 20px; }
+        #documentation-content { padding: 20px; visibility: visible; opacity: 1; }
     </style>
 </head>
 <body>
@@ -63,9 +79,7 @@
         <div class="menu-container">
             <div class="menu" id="menu">
                 <input type="text" id="userId" style="display: none;">
-                <button onclick="showSection('my-account')">My Account</button>
-                <button class="btn-admin" onclick="window.location.href='/admin'">Back to Admin</button>
-                <button onclick="logout()" style="background-color: #dc3545;">Log Off</button>
+                <!-- Menu items will be dynamically generated -->
             </div>
         </div>
         <div class="content-container">
@@ -84,24 +98,24 @@
                     <input type="email" id="emailAddress" placeholder="Enter email address">
                     <label for="phoneNumber">Phone Number:</label>
                     <input type="tel" id="phoneNumber" placeholder="Enter phone number">
-                    <button onclick="saveSettings()">Save Settings</button>
+                    <button data-action="saveSettings">Save Settings</button>
                     <h3>Change Password</h3>
                     <div class="password-container">
                         <label for="currentPassword">Current Password:</label>
                         <input type="password" id="currentPassword" placeholder="Enter current password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                        <i class="fas fa-eye password-toggle" data-field="currentPassword"></i>
                     </div>
                     <div class="password-container">
                         <label for="newPassword">New Password:</label>
                         <input type="password" id="newPassword" placeholder="Enter new password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                        <i class="fas fa-eye password-toggle" data-field="newPassword"></i>
                     </div>
                     <div class="password-container">
                         <label for="confirmPassword">Confirm New Password:</label>
                         <input type="password" id="confirmPassword" placeholder="Confirm new password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
+                        <i class="fas fa-eye password-toggle" data-field="confirmPassword"></i>
                     </div>
-                    <button onclick="savePassword()">Change Password</button>
+                    <button data-action="savePassword">Change Password</button>
                 </div>
             </div>
             <div id="my-products" class="section">
@@ -120,7 +134,7 @@
                 <div class="settings-form">
                     <label for="wixClientId">Wix Client ID:</label>
                     <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
-                    <button onclick="saveWixClientId()">Save Wix Client ID</button>
+                    <button data-action="saveWixClientId">Save Wix Client ID</button>
                 </div>
             </div>
             <div id="site-requests" class="section">
@@ -143,22 +157,23 @@
             <div id="site-request-detail" class="section">
                 <h2>Site Request Details</h2>
                 <div class="settings-form">
-                    <button onclick="showSection('site-requests')">Back to Site Requests</button>
+                    <button data-section="site-requests">Back to Site Requests</button>
                     <div id="siteRequestContent"></div>
                 </div>
             </div>
             <div id="documentation" class="section">
                 <h2>Documentation</h2>
-                <div id="documentation-content"></div>
+                <div id="documentation-content">
+                    <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
+                </div>
             </div>
-            <!-- Modal for API Key -->
             <div id="apiKeyModal" class="modal">
                 <div class="modal-content">
-                    <span class="close" onclick="closeApiKeyModal()">×</span>
+                    <span class="close" data-action="closeApiKeyModal">×</span>
                     <h3>Enter API Key</h3>
                     <label for="merchantWixClientId">Wix Client ID:</label>
                     <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
-                    <button onclick="saveMerchantWixClientId()">Save</button>
+                    <button data-action="saveMerchantWixClientId">Save</button>
                 </div>
             </div>
         </div>
@@ -166,6 +181,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
     <script>
         const apiUrl = 'https://clubmadeira.io';
         let userPermissions = [];
@@ -173,20 +189,18 @@
 
         function decodeJWT(token) {
             if (!token || typeof token !== 'string') {
-                console.error('Invalid token: Token is not a string or is undefined/null');
+                console.error('Invalid token');
+                return null;
+            }
+            if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
+                console.error('Invalid token format');
                 return null;
             }
             const parts = token.split('.');
-            if (parts.length !== 3) {
-                console.error('Invalid token format: Must have 3 parts (header.payload.signature)');
-                return null;
-            }
             try {
                 const base64Url = parts[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
                 return JSON.parse(jsonPayload);
             } catch (error) {
                 console.error('Error decoding JWT:', error.message);
@@ -194,15 +208,26 @@
             }
         }
 
-        window.onload = function() {
+        function initializePartner() {
+            console.log('Initializing partner page');
             const token = localStorage.getItem('authToken');
-            const userId = localStorage.getItem('userId');
+            currentUserId = localStorage.getItem('userId') || '';
             if (!token) {
+                console.error('No token found, redirecting to /');
+                window.location.href = '/';
+                return;
+            }
+            if (!currentUserId) {
+                console.error('No user ID found in session, redirecting to /');
+                toastr.error('User ID not found in session. Please log in again.');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
                 window.location.href = '/';
                 return;
             }
             const decoded = decodeJWT(token);
             if (!decoded) {
+                console.error('Invalid token, redirecting to /');
                 window.location.href = '/';
                 return;
             }
@@ -212,81 +237,207 @@
                 window.location.href = '/';
                 return;
             }
-            if (userId) {
-                document.getElementById('userId').value = userId;
-            }
+            document.getElementById('userId').value = currentUserId;
             updateMenu();
             loadBranding();
-        };
+            showSection('welcome');
+            attachEventListeners();
+        }
 
         toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000, showMethod: 'slideDown', hideMethod: 'slideUp' };
 
+        async function fetchProtectedPage(url) {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                toastr.error('No authentication token found. Please log in.');
+                window.location.href = '/';
+                return;
+            }
+            try {
+                const response = await fetch(`${apiUrl}${url}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'text/html'
+                    }
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server returned ${response.status}: ${errorText}`);
+                }
+                const html = await response.text();
+
+                // Clear the event listeners Map before replacing the DOM
+                if (document.__eventListeners) {
+                    console.log('Before DOM replacement - Clearing event listeners Map. Size before:', document.__eventListeners.size);
+                    document.__eventListeners.clear();
+                    console.log('Map cleared. Size after:', document.__eventListeners.size);
+                } else {
+                    console.log('No event listeners Map found. Will create one after DOM update.');
+                }
+
+                // Replace the DOM content
+                document.body.innerHTML = html;
+
+                // Reinitialize the page
+                initializePartner();
+            } catch (error) {
+                toastr.error(error.message || 'Failed to load protected page');
+                window.location.href = '/';
+            }
+        }
+
+        function attachEventListeners() {
+            console.log('Attaching event listeners');
+            const existingListeners = document.__eventListeners || new Map();
+            document.__eventListeners = existingListeners;
+            console.log('Map size at start:', existingListeners.size);
+
+            // Navigation buttons (e.g., "Back to Admin")
+            document.querySelectorAll('.menu button[data-href]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const href = button.getAttribute('data-href');
+                        console.log(`Fetching protected page: ${href}`);
+                        await fetchProtectedPage(href);
+                    });
+                    existingListeners.set(button, true);
+                    console.log('Listener attached to navigation button');
+                }
+            });
+
+            // Top-level menu buttons (e.g., "Site Requests", "My Products")
+            document.querySelectorAll('.menu button[data-section]:not([data-type])').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const section = button.getAttribute('data-section');
+                        const submenu = button.getAttribute('data-submenu');
+                        console.log(`Top-level button clicked: ${section}${submenu ? ' (submenu)' : ''}`);
+                        if (submenu) toggleSubmenu(submenu);
+                        showSection(section);
+                    });
+                    existingListeners.set(button, true);
+                    console.log('Listener attached to top-level menu button');
+                }
+            });
+
+            // Submenu buttons (e.g., "Velo Docs", "Flask Docs")
+            document.querySelectorAll('.submenu button[data-section][data-type]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const section = button.getAttribute('data-section');
+                        const type = button.getAttribute('data-type');
+                        console.log(`Submenu button clicked: ${section} (${type})`);
+                        showSection(section, type);
+                    });
+                    existingListeners.set(button, true);
+                    console.log('Listener attached to submenu button');
+                }
+            });
+
+            // Action buttons in settings forms (e.g., "Save Settings", "Change Password")
+            document.querySelectorAll('.settings-form button[data-action]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', () => {
+                        const action = button.getAttribute('data-action');
+                        console.log(`Action button clicked: ${action}`);
+                        if (action === 'saveSettings') saveSettings();
+                        else if (action === 'savePassword') savePassword();
+                        else if (action === 'saveWixClientId') saveWixClientId();
+                        else if (action === 'saveMerchantWixClientId') saveMerchantWixClientId();
+                    });
+                    existingListeners.set(button, true);
+                    console.log('Listener attached to settings action button');
+                }
+            });
+
+            // Password toggle icons
+            document.querySelectorAll('.password-toggle').forEach(toggle => {
+                if (!existingListeners.has(toggle)) {
+                    toggle.addEventListener('click', () => {
+                        const fieldId = toggle.getAttribute('data-field');
+                        togglePassword(fieldId);
+                    });
+                    existingListeners.set(toggle, true);
+                    console.log('Listener attached to password toggle');
+                }
+            });
+
+            // Site request table rows (click to view details)
+            document.querySelectorAll('#siteRequestsList tr.clickable').forEach(row => {
+                if (!existingListeners.has(row)) {
+                    row.addEventListener('click', (e) => {
+                        if (e.target.tagName !== 'BUTTON') {
+                            const userId = row.dataset.userId;
+                            loadSiteRequestDetail(userId);
+                        }
+                    });
+                    existingListeners.set(row, true);
+                    console.log('Listener attached to site request row');
+                }
+            });
+
+            // Action buttons in site requests table (e.g., "Enter API Key")
+            document.querySelectorAll('#siteRequestsTable button[data-user-id]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', () => {
+                        const userId = button.getAttribute('data-user-id');
+                        openApiKeyModal(userId);
+                    });
+                    existingListeners.set(button, true);
+                    console.log('Listener attached to site request action button');
+                }
+            });
+
+            // Logoff button
+            const logOffBtn = document.getElementById('logOffBtn');
+            if (logOffBtn && !existingListeners.has(logOffBtn)) {
+                logOffBtn.addEventListener('click', logOff);
+                existingListeners.set(logOffBtn, true);
+                console.log('Listener attached to logOffBtn');
+            }
+
+            // Modal close button
+            const closeModalBtn = document.querySelector('.close[data-action="closeApiKeyModal"]');
+            if (closeModalBtn && !existingListeners.has(closeModalBtn)) {
+                closeModalBtn.addEventListener('click', closeApiKeyModal);
+                existingListeners.set(closeModalBtn, true);
+                console.log('Listener attached to modal close button');
+            }
+
+            console.log('Map size at end:', existingListeners.size);
+        }
+
         function updateMenu() {
             const menu = document.getElementById('menu');
-            const staticButtons = menu.querySelectorAll('button');
-            staticButtons.forEach(btn => btn.remove());
+            menu.innerHTML = '<input type="text" id="userId" style="display: none;" value="' + currentUserId + '">';
 
             if (userPermissions.includes('wixpro') && userPermissions.includes('validated')) {
-                const siteRequestsButton = document.createElement('button');
-                siteRequestsButton.textContent = 'Site Requests';
-                siteRequestsButton.onclick = () => showSection('site-requests');
-                menu.appendChild(siteRequestsButton);
+                menu.innerHTML += '<button data-section="site-requests">Site Requests</button>';
             }
 
             if (userPermissions.includes('merchant')) {
-                const productsButton = document.createElement('button');
-                productsButton.textContent = 'My Products';
-                productsButton.onclick = () => showSection('my-products');
-                menu.appendChild(productsButton);
+                menu.innerHTML += '<button data-section="my-products">My Products</button>';
+                menu.innerHTML += '<button data-section="wix-keys">Wix Keys</button>';
             }
 
-            if (userPermissions.includes('merchant')) {
-                const wixKeysButton = document.createElement('button');
-                wixKeysButton.textContent = 'Wix Keys';
-                wixKeysButton.onclick = () => showSection('wix-keys');
-                menu.appendChild(wixKeysButton);
-            }
-
-            const myAccountButton = document.createElement('button');
-            myAccountButton.textContent = 'My Account';
-            myAccountButton.onclick = () => showSection('my-account');
-            menu.appendChild(myAccountButton);
-
-            // Add Documentation button with sub-menu
-            const docButton = document.createElement('button');
-            docButton.textContent = 'Documentation';
-            docButton.onclick = toggleDocumentation;
-            menu.appendChild(docButton);
-
-            const subMenu = document.createElement('div');
-            subMenu.className = 'sub-menu';
-            subMenu.id = 'documentation-sub-menu';
-
-            const veloButton = document.createElement('button');
-            veloButton.textContent = 'Velo Docs';
-            veloButton.onclick = () => showDocumentation('velo');
-            subMenu.appendChild(veloButton);
-
-            const flaskButton = document.createElement('button');
-            flaskButton.textContent = 'Flask Docs';
-            flaskButton.onclick = () => showDocumentation('flask');
-            subMenu.appendChild(flaskButton);
-
-            menu.appendChild(subMenu);
+            menu.innerHTML += '<button data-section="my-account">My Account</button>';
+            menu.innerHTML += '<button data-section="documentation" data-submenu="documentation">Documentation <i class="fas fa-caret-down"></i></button>';
+            menu.innerHTML += `
+                <div id="documentation" class="submenu">
+                    <button data-section="documentation" data-type="velo">Velo Docs</button>
+                    <button data-section="documentation" data-type="flask">Flask Docs</button>
+                </div>
+            `;
 
             if (userPermissions.includes('admin')) {
-                const backButton = document.createElement('button');
-                backButton.textContent = 'Back to Admin';
-                backButton.className = 'btn-admin';
-                backButton.onclick = () => window.location.href = '/admin';
-                menu.appendChild(backButton);
+                menu.innerHTML += '<button data-href="/admin" class="btn-admin">Back to Admin</button>';
             }
 
-            const logOffButton = document.createElement('button');
-            logOffButton.textContent = 'Log Off';
-            logOffButton.style.backgroundColor = '#dc3545';
-            logOffButton.onclick = logout;
-            menu.appendChild(logOffButton);
+            menu.innerHTML += '<button id="logOffBtn" class="btn-logoff">Log Off</button>';
         }
 
         async function loadBranding() {
@@ -294,10 +445,22 @@
                 const response = await authenticatedFetch(`${apiUrl}/branding`);
                 if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
                 const data = await response.json();
-                document.getElementById('brandingContent').innerHTML = data.content || '<h1>Partner Dashboard</h1>';
+                document.getElementById('brandingContent').innerHTML = data.content || `
+                    <img src="https://via.placeholder.com/50" alt="User Avatar">
+                    <div>
+                        <h1>Welcome to Your Admin Hub</h1>
+                        <p>Manage affiliates, deals, and users with ease!</p>
+                    </div>
+                `;
             } catch (error) {
                 toastr.error(`Error loading branding: ${error.message}`);
-                document.getElementById('brandingContent').innerHTML = '<h1>Partner Dashboard</h1>';
+                document.getElementById('brandingContent').innerHTML = `
+                    <img src="https://via.placeholder.com/50" alt="User Avatar">
+                    <div>
+                        <h1>Welcome to Your Admin Hub</h1>
+                        <p>Manage affiliates, deals, and users with ease!</p>
+                    </div>
+                `;
             }
         }
 
@@ -314,61 +477,100 @@
             return response;
         }
 
-        function showSection(section) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(section).classList.add('active');
+        function showSection(section, type = null) {
+            console.log(`Showing section: ${section}${type ? ` (${type})` : ''}`);
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            const activeSection = document.getElementById(section);
+            if (activeSection) {
+                activeSection.classList.add('active');
+                activeSection.style.display = 'block';
+                activeSection.style.visibility = 'visible';
+                activeSection.style.opacity = '1';
+                console.log(`Section ${section} is now visible, display: ${activeSection.style.display}, visibility: ${activeSection.style.visibility}, opacity: ${activeSection.style.opacity}`);
+            } else {
+                console.error(`Section ${section} not found`);
+            }
             if (section === 'my-account') loadSettings();
             else if (section === 'my-products') loadProducts();
             else if (section === 'wix-keys') loadWixClientId();
             else if (section === 'site-requests') loadSiteRequests();
+            else if (section === 'documentation') loadDocumentation(type);
         }
 
-        function toggleDocumentation() {
-            const subMenu = document.getElementById('documentation-sub-menu');
-            const isVisible = subMenu.style.display === 'block';
-            subMenu.style.display = isVisible ? 'none' : 'block';
-            showSection('documentation');
-            document.getElementById('documentation-content').innerHTML = `
-                <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic below:</p>
-                <ul>
-                    <li><strong>Velo Docs</strong>: Information on using Velo for Wix integrations.</li>
-                    <li><strong>Flask Docs</strong>: Details on the Flask backend implementation.</li>
-                </ul>
-            `;
+        function toggleSubmenu(submenuId) {
+            const submenu = document.getElementById(submenuId);
+            if (submenu) {
+                submenu.classList.toggle('open');
+                console.log(`Toggled submenu: ${submenuId}, now ${submenu.classList.contains('open') ? 'open' : 'closed'}`);
+            } else {
+                console.error(`Submenu with ID ${submenuId} not found`);
+            }
         }
 
-        async function showDocumentation(type) {
-            showSection('documentation');
+        async function loadDocumentation(type) {
             const contentDiv = document.getElementById('documentation-content');
+            if (!contentDiv) {
+                console.error('Documentation content div not found');
+                return;
+            }
+            console.log('Loading documentation, type:', type);
+            contentDiv.innerHTML = `
+                <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
+            `;
+            console.log('Set default documentation content');
+            if (!type) {
+                return;
+            }
             let url;
             if (type === 'velo') {
-                url = `${apiUrl}/render-github-md/SimonBarnett/Madeira/main/velo.md`;
+                url = `https://raw.githubusercontent.com/SimonBarnett/Madeira/main/velo.md`;
             } else if (type === 'flask') {
-                url = `${apiUrl}/render-github-md/SimonBarnett/Madeira/main/flask.md`;
+                url = `https://raw.githubusercontent.com/SimonBarnett/Madeira/main/flask.md`;
+            } else {
+                console.error(`Invalid documentation type: ${type}`);
+                return;
             }
+            console.log(`Fetching documentation from: ${url}`);
             try {
-                const response = await authenticatedFetch(url);
-                if (!response.ok) throw new Error(`Failed to load ${type} documentation: ${response.status}`);
-                const html = await response.text();
-                contentDiv.innerHTML = html;
+                const response = await fetch(url);
+                console.log(`Response status: ${response.status}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to load ${type} documentation: ${response.status} - ${errorText}`);
+                }
+                const markdown = await response.text();
+                console.log(`Loaded ${type} markdown: ${markdown.substring(0, 100)}...`);
+                try {
+                    const html = marked.parse(markdown);
+                    console.log(`Parsed HTML: ${html.substring(0, 100)}...`);
+                    contentDiv.innerHTML = html;
+                } catch (parseError) {
+                    console.error(`Error parsing Markdown: ${parseError.message}`);
+                    contentDiv.innerHTML = `<p>Error parsing ${type} documentation: ${parseError.message}</p>`;
+                }
             } catch (error) {
+                console.error(`Error loading ${type} documentation: ${error.message}`);
                 toastr.error(`Error loading ${type} documentation: ${error.message}`);
-                contentDiv.innerHTML = `<p>Failed to load ${type} documentation.</p>`;
+                contentDiv.innerHTML = `<p>Failed to load ${type} documentation: ${error.message}</p>`;
             }
         }
 
-        function logout() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userId');
-            toastr.success('Logged out successfully');
-            window.location.href = '/';
+        function logOff() {
+            if (confirm('Are you sure you want to log off?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
+                toastr.success('Logged off successfully');
+                setTimeout(() => window.location.href = '/', 1000);
+            }
         }
 
         async function loadSettings() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) { toastr.error('User ID not found in session'); return; }
+            if (!currentUserId) { toastr.error('User ID not found in session'); return; }
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`);
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/user`);
                 if (!response.ok) throw new Error(`Failed to fetch settings: ${response.status}`);
                 const data = await response.json();
                 document.getElementById('contactName').value = data.contact_name || '';
@@ -381,8 +583,7 @@
         }
 
         async function saveSettings() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) { toastr.error('User ID not found in session'); return; }
+            if (!currentUserId) { toastr.error('User ID not found in session'); return; }
             const settings = {
                 contact_name: document.getElementById('contactName').value.trim(),
                 website_url: document.getElementById('websiteUrl').value.trim(),
@@ -390,7 +591,7 @@
                 phone_number: document.getElementById('phoneNumber').value.trim()
             };
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`, { method: 'PUT', body: JSON.stringify(settings) });
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/user`, { method: 'PATCH', body: JSON.stringify(settings) });
                 if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
                 toastr.success('Settings saved successfully');
             } catch (error) {
@@ -413,8 +614,7 @@
         }
 
         async function savePassword() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) { toastr.error('User ID not found in session'); return; }
+            if (!currentUserId) { toastr.error('User ID not found in session'); return; }
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -431,7 +631,7 @@
 
             const passwordData = { currentPassword, newPassword };
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/password`, {
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/password`, {
                     method: 'POST',
                     body: JSON.stringify(passwordData)
                 });
@@ -446,10 +646,9 @@
         }
 
         async function loadProducts() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) { toastr.error('User ID not found in session'); return; }
+            if (!currentUserId) { toastr.error('User ID not found in session'); return; }
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/products`);
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/products`);
                 if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
                 const data = await response.json();
                 const tbody = document.getElementById('productList');
@@ -464,22 +663,21 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="hidden">${product.id}</td>
-                <td>${product.category}</td>
+                <td>${product.category || 'N/A'}</td>
                 <td>${product.title}</td>
                 <td><a href="${product.product_url}" target="_blank">Link</a></td>
                 <td>${product.current_price}</td>
                 <td>${product.original_price}</td>
-                <td><img src="${product.image_url}" width="50"></td>
-                <td>${product.qty}</td>
+                <td><img src="${product.image_url}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
+                <td>${product.qty || 'N/A'}</td>
             `;
             return tr;
         }
 
         async function loadWixClientId() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) { toastr.error('User ID not found in session'); return; }
+            if (!currentUserId) { toastr.error('User ID not found in session'); return; }
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`);
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/user`);
                 if (!response.ok) throw new Error(`Failed to fetch Wix Client ID: ${response.status}`);
                 const data = await response.json();
                 document.getElementById('wixClientId').value = data.wixClientId || '';
@@ -489,11 +687,10 @@
         }
 
         async function saveWixClientId() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) { toastr.error('User ID not found in session'); return; }
+            if (!currentUserId) { toastr.error('User ID not found in session'); return; }
             const wixClientId = document.getElementById('wixClientId').value.trim();
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`, {
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/user`, {
                     method: 'PATCH',
                     body: JSON.stringify({ wixClientId })
                 });
@@ -508,10 +705,7 @@
             try {
                 const url = `${apiUrl}/siterequests`;
                 const response = await authenticatedFetch(url);
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to fetch site requests: ${response.status} - ${errorText}`);
-                }
+                if (!response.ok) throw new Error(`Failed to fetch site requests: ${response.status}`);
                 const data = await response.json();
                 const tbody = document.getElementById('siteRequestsList');
                 tbody.innerHTML = '';
@@ -525,7 +719,6 @@
                     tbody.innerHTML = '<tr><td colspan="6">No site requests found.</td></tr>';
                 }
             } catch (error) {
-                console.error('Error:', error);
                 toastr.error(`Error loading site requests: ${error.message}`);
                 const tbody = document.getElementById('siteRequestsList');
                 tbody.innerHTML = `<tr><td colspan="6">Error loading site requests: ${error.message}</td></tr>`;
@@ -534,6 +727,7 @@
 
         function createSiteRequestRow(request) {
             const tr = document.createElement('tr');
+            tr.dataset.userId = request.user_id;
             tr.innerHTML = `
                 <td>${request.type || ''}</td>
                 <td>${request.received_at || ''}</td>
@@ -541,17 +735,11 @@
                 <td>${request.email || ''}</td>
                 <td>${request.organisation || ''}</td>
                 <td>${
-                    request.type === 'merchant' 
-                        ? `<button onclick="openApiKeyModal('${request.user_id}')">Enter API Key</button>` 
+                    request.type === 'merchant'
+                        ? `<button data-user-id="${request.user_id}">Enter API Key</button>`
                         : ''
                 }</td>
             `;
-            tr.dataset.userId = request.user_id;
-            tr.addEventListener('click', (e) => {
-                if (e.target.tagName !== 'BUTTON') {
-                    loadSiteRequestDetail(request.user_id);
-                }
-            });
             return tr;
         }
 
@@ -559,21 +747,18 @@
             try {
                 const url = `${apiUrl}/${userId}/siterequest`;
                 const response = await authenticatedFetch(url);
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to fetch site request details: ${response.status} - ${errorText}`);
-                }
+                if (!response.ok) throw new Error(`Failed to fetch site request details: ${response.status}`);
                 const data = await response.json();
                 const content = document.getElementById('siteRequestContent');
                 if (data.status === 'success' && Object.keys(data.site_request).length > 0) {
                     const siteRequest = data.site_request;
                     content.innerHTML = `
                         <label>Community Name:</label>
-                        <p>${siteRequest.communityName || ''}</p>
-                        <label>About Our Community:</label>
-                        <p>${siteRequest.aboutCommunity || ''}</p>
-                        <label>Community Logos:</label>
-                        <div>${(siteRequest.communityLogos || []).map(logo => `<img src="${logo}" alt="Community Logo">`).join(' ')}</div>
+                        <p>${siteRequest.communityName || siteRequest.storeName || ''}</p>
+                        <label>About Our Community/Store:</label>
+                        <p>${siteRequest.aboutCommunity || siteRequest.aboutStore || ''}</p>
+                        <label>Logos:</label>
+                        <div>${(siteRequest.communityLogos || siteRequest.storeLogos || []).map(logo => `<img src="${logo}" alt="Logo">`).join(' ')}</div>
                         <label>Color Preferences:</label>
                         <p>${siteRequest.colorPrefs || ''}</p>
                         <label>Styling Details:</label>
@@ -633,16 +818,15 @@
                     method: 'PATCH',
                     body: JSON.stringify({ wixClientId })
                 });
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to save Wix Client ID: ${response.status} - ${errorText}`);
-                }
+                if (!response.ok) throw new Error(`Failed to save Wix Client ID: ${response.status}`);
                 toastr.success('Wix Client ID saved successfully');
                 closeApiKeyModal();
             } catch (error) {
                 toastr.error(`Error saving Wix Client ID: ${error.message}`);
             }
         }
+
+        initializePartner();
     </script>
 </body>
 </html>

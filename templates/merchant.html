@@ -8,39 +8,167 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .header { height: 150px; background-color: #f4f4f4; margin-bottom: 25px; overflow: hidden; position: relative; }
-        .header-content { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .main-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
-        .menu-container { flex: 1; max-width: 300px; }
-        .content-container { flex: 2; }
-        .menu { margin-bottom: 20px; text-align: left; }
-        .menu button { padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-align: left; width: 100%; margin-bottom: 5px; display: block; }
-        .menu button:hover { background-color: #0056b3; }
-        .menu .btn-logoff { background-color: #dc3545; }
-        .menu .btn-logoff:hover { background-color: #c82333; }
-        .section { display: none; }
-        .active { display: block; }
-        .settings-form { display: flex; flex-direction: column; gap: 10px; max-width: 400px; }
-        .settings-form label { font-weight: bold; }
-        .settings-form input, .settings-form textarea { padding: 5px; width: 100%; box-sizing: border-box; }
-        .settings-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; }
-        .settings-form button:hover { background-color: #0056b3; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .hidden { display: none; }
-        #toast-container > .toast-error { background-color: #dc3545; border-color: #c82333; }
-        #toast-container > .toast-success { background-color: #28a745; border-color: #218838; }
-        .password-container { position: relative; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; }
-        .password-container input { width: 50%; padding-right: 30px; }
-        .password-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; }
-        #my-store .settings-form { max-width: 600px; }
-        .page-section, .email-section { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .remove-page-btn, .remove-email-btn { padding: 5px 10px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-        .remove-page-btn:hover, .remove-email-btn:hover { background-color: #c82333; }
-        .widget-checkboxes div { margin-bottom: 10px; }
-        #my-store .email-section input[type="text"] { width: 50%; }
-        #my-store .widget-checkboxes input[type="checkbox"] { width: 10px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; /* Stack children vertically */
+            min-height: 100vh; /* Ensure body takes full height */
+        }
+        .header { 
+            height: 150px; 
+            width: 100%; /* Full width */
+            background-color: #f4f4f4; 
+            margin-bottom: 25px; 
+            overflow: hidden; 
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+        .header-content { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .main-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            display: flex; 
+            flex-direction: row; /* Menu and content side by side */
+            gap: 20px; 
+            padding: 20px; 
+            flex-grow: 1; /* Allow main content to take remaining space */
+        }
+        .menu-container { 
+            flex: 1; 
+            max-width: 300px; 
+        }
+        .content-container { 
+            flex: 2; 
+        }
+        .menu { 
+            margin-bottom: 20px; 
+            text-align: left; 
+        }
+        .menu button { 
+            padding: 10px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            text-align: left; 
+            width: 100%; 
+            margin-bottom: 5px; 
+            display: block; 
+        }
+        .menu button:hover { 
+            background-color: #0056b3; 
+        }
+        .menu .btn-logoff { 
+            background-color: #dc3545; 
+        }
+        .menu .btn-logoff:hover { 
+            background-color: #c82333; 
+        }
+        .section { 
+            display: none; 
+        }
+        .section.active { 
+            display: block; 
+        }
+        .settings-form { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            max-width: 400px; 
+        }
+        .settings-form label { 
+            font-weight: bold; 
+        }
+        .settings-form input, .settings-form textarea { 
+            padding: 5px; 
+            width: 100%; 
+            box-sizing: border-box; 
+        }
+        .settings-form button { 
+            padding: 10px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+        }
+        .settings-form button:hover { 
+            background-color: #0056b3; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        .hidden { 
+            display: none; 
+        }
+        #toast-container > .toast-error { 
+            background-color: #dc3545; 
+            border-color: #c82333; 
+        }
+        #toast-container > .toast-success { 
+            background-color: #28a745; 
+            border-color: #218838; 
+        }
+        .password-container { 
+            position: relative; 
+            display: flex; 
+            justify-content: flex-end; 
+            align-items: center; 
+            margin-bottom: 10px; 
+        }
+        .password-container input { 
+            width: 50%; 
+            padding-right: 30px; 
+        }
+        .password-toggle { 
+            position: absolute; 
+            right: 5px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            cursor: pointer; 
+        }
+        #my-store .settings-form { 
+            max-width: 600px; 
+        }
+        .page-section, .email-section { 
+            margin-top: 10px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        .remove-page-btn, .remove-email-btn { 
+            padding: 5px 10px; 
+            background-color: #dc3545; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-top: 10px; 
+        }
+        .remove-page-btn:hover, .remove-email-btn:hover { 
+            background-color: #c82333; 
+        }
+        .widget-checkboxes div { 
+            margin-bottom: 10px; 
+        }
+        #my-store .email-section input[type="text"] { 
+            width: 50%; 
+        }
+        #my-store .widget-checkboxes input[type="checkbox"] { 
+            width: 10px; 
+        }
     </style>
 </head>
 <body>
@@ -53,16 +181,16 @@
         <div class="menu-container">
             <div class="menu" id="menu">
                 <input type="text" id="userId" style="display: none;">
-                <button onclick="showSection('my-products')">My Products</button>
-                <button onclick="showSection('my-store')">My Store</button>
-                <button onclick="showSection('wix-keys')">Wix Keys</button>
-                <button onclick="showSection('my-account')">My Account</button>
-                <button class="btn-logoff" onclick="window.location.href='/admin'">Back to Admin</button>
-                <button class="btn-logoff" onclick="logout()">Log Off</button>
+                <button data-section="my-products">My Products</button>
+                <button data-section="my-store">My Store</button>
+                <button data-section="wix-keys">Wix Keys</button>
+                <button data-section="my-account">My Account</button>
+                <button data-href="/admin" class="btn-logoff">Back to Admin</button>
+                <button id="logOffBtn" class="btn-logoff">Log Off</button>
             </div>
         </div>
         <div class="content-container">
-            <div id="info" class="section active">
+            <div id="info" class="section">
                 <h2>Welcome to Your Merchant Dashboard</h2>
                 <p>This dashboard allows you to link the parts on your Wix site to a network of community groups, who show relevant discounted products on their websites from clubmadeira.io.</p>
             </div>
@@ -77,7 +205,7 @@
                     <input type="email" id="emailAddress" placeholder="Enter email address">
                     <label for="phoneNumber">Phone Number:</label>
                     <input type="tel" id="phoneNumber" placeholder="Enter phone number">
-                    <button onclick="saveSettings()">Save Settings</button>
+                    <button data-action="saveSettings">Save Settings</button>
                     <h3>Change Password</h3>
                     <div class="password-container">
                         <label for="currentPassword">Current Password:</label>
@@ -94,7 +222,7 @@
                         <input type="password" id="confirmPassword" placeholder="Confirm new password">
                         <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
                     </div>
-                    <button onclick="savePassword()">Change Password</button>
+                    <button data-action="savePassword">Change Password</button>
                 </div>
             </div>
             <div id="my-products" class="section">
@@ -113,7 +241,7 @@
                 <div class="settings-form">
                     <label for="wixClientId">Wix Client ID:</label>
                     <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
-                    <button onclick="saveWixClientId()">Save Wix Client ID</button>
+                    <button data-action="saveWixClientId">Save Wix Client ID</button>
                 </div>
             </div>
             <div id="my-store" class="section">
@@ -138,7 +266,7 @@
 
                     <label for="preferredDomain">Preferred Domain Name:</label>
                     <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mystore.uk" oninput="updateDomainPreview()">
-                    <button type="button" onclick="checkDomainAvailability()">Check Availability</button>
+                    <button type="button" data-action="checkDomainAvailability">Check Availability</button>
                     <span id="domainPreview">@mystore.uk</span>
 
                     <label>Email Addresses to Set Up (up to 5):</label>
@@ -149,7 +277,7 @@
                             <span id="email1Domain">@mystore.uk</span>
                         </div>
                     </div>
-                    <button type="button" onclick="addEmail()" id="addEmailBtn">Add Another Email</button>
+                    <button type="button" data-action="addEmail">Add Another Email</button>
 
                     <label>Required Pages:</label>
                     <div id="pagesContainer">
@@ -172,7 +300,7 @@
                             <input type="file" id="page2Images" name="page2Images" accept="image/*" multiple>
                         </div>
                     </div>
-                    <button type="button" onclick="addPage()" id="addPageBtn">Add Another Page</button>
+                    <button type="button" data-action="addPage">Add Another Page</button>
 
                     <label>Wix Store Widgets:</label>
                     <div class="widget-checkboxes">
@@ -183,7 +311,7 @@
                         <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Customer inquiries.</div>
                     </div>
 
-                    <button type="button" onclick="saveStoreRequest()">Submit Request</button>
+                    <button type="button" data-action="saveStoreRequest">Submit Request</button>
                 </form>
             </div>
         </div>
@@ -202,8 +330,11 @@
                 console.error('Invalid token');
                 return null;
             }
+            if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
+                console.error('Invalid token format');
+                return null;
+            }
             const parts = token.split('.');
-            if (parts.length !== 3) return null;
             try {
                 const base64Url = parts[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -215,21 +346,24 @@
             }
         }
 
-        window.onload = function() {
+        function initializeMerchant() {
+            console.log('Initializing merchant page');
             const token = localStorage.getItem('authToken');
             const userId = localStorage.getItem('userId');
             if (!token) {
+                console.error('No token found, redirecting to /');
                 window.location.href = '/';
                 return;
             }
             const decoded = decodeJWT(token);
             if (!decoded) {
+                console.error('Invalid token, redirecting to /');
                 window.location.href = '/';
                 return;
             }
             userPermissions = decoded.permissions || [];
-            if (!userPermissions.includes('admin') && !userPermissions.includes('merchant')) {
-                toastr.error('Permission denied: Merchant permission required');
+            if (!userPermissions.includes('merchant') && !userPermissions.includes('admin')) {
+                toastr.error('Permission denied: Merchant or Admin permission required');
                 window.location.href = '/';
                 return;
             }
@@ -237,25 +371,164 @@
             checkAdminPermission();
             loadBranding();
             showSection('info');
-            initializeTinyMCE();
-        };
+            attachEventListeners();
+            waitForTinyMCE(initializeTinyMCE);
+        }
 
         toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000, showMethod: 'slideDown', hideMethod: 'slideUp' };
 
+        async function fetchProtectedPage(url) {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                toastr.error('No authentication token found. Please log in.');
+                window.location.href = '/';
+                return;
+            }
+            try {
+                const response = await fetch(`${apiUrl}${url}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'text/html'
+                    }
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server returned ${response.status}: ${errorText}`);
+                }
+                const html = await response.text();
+                document.body.innerHTML = html;
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const scripts = doc.querySelectorAll('script[src]');
+                const scriptPromises = [];
+
+                for (const script of scripts) {
+                    const newScript = document.createElement('script');
+                    newScript.src = script.src;
+                    newScript.async = false;
+                    document.head.appendChild(newScript);
+                    scriptPromises.push(new Promise(resolve => {
+                        newScript.onload = resolve;
+                        newScript.onerror = () => {
+                            console.error(`Failed to load script: ${script.src}`);
+                            resolve();
+                        };
+                    }));
+                }
+
+                await Promise.all(scriptPromises);
+
+                doc.querySelectorAll('script:not([src])').forEach(script => {
+                    if (script.innerHTML.trim()) {
+                        try {
+                            const scriptFn = new Function(script.innerHTML);
+                            scriptFn();
+                        } catch (e) {
+                            console.error('Error executing inline script:', e);
+                        }
+                    }
+                });
+
+                attachEventListeners();
+                waitForTinyMCE(initializeTinyMCE);
+            } catch (error) {
+                toastr.error(error.message || 'Failed to load protected page');
+                window.location.href = '/';
+            }
+        }
+
+        function waitForTinyMCE(callback) {
+            if (typeof tinymce !== 'undefined' && tinymce.init) {
+                console.log('TinyMCE is loaded, executing callback');
+                callback();
+            } else {
+                console.log('Waiting for TinyMCE to load...');
+                const script = document.querySelector('script[src*="tinymce.min.js"]');
+                if (script) {
+                    script.onload = () => {
+                        console.log('TinyMCE script loaded');
+                        callback();
+                    };
+                    script.onerror = () => console.error('TinyMCE failed to load');
+                } else {
+                    setTimeout(() => waitForTinyMCE(callback), 100);
+                }
+            }
+        }
+
         function initializeTinyMCE() {
+            console.log('Initializing TinyMCE');
+            tinymce.remove();
             tinymce.init({
                 selector: '#aboutStore, textarea[name$="Content"]',
                 height: 200,
                 menubar: false,
                 plugins: 'lists',
-                toolbar: 'bold italic | bullist numlist'
+                toolbar: 'bold italic | bullist numlist',
+                setup: editor => {
+                    editor.on('init', () => console.log('TinyMCE editor initialized'));
+                }
             });
         }
 
+        function attachEventListeners() {
+            console.log('Attaching event listeners');
+            const existingListeners = document.__eventListeners || new Map();
+            document.__eventListeners = existingListeners;
+
+            document.querySelectorAll('.menu button[data-section]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', () => {
+                        const section = button.getAttribute('data-section');
+                        console.log(`Section button clicked: ${section}`);
+                        showSection(section);
+                    });
+                    existingListeners.set(button, true);
+                }
+            });
+
+            document.querySelectorAll('.menu button[data-href]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', async () => {
+                        const href = button.getAttribute('data-href');
+                        console.log(`Fetching protected page: ${href}`);
+                        await fetchProtectedPage(href);
+                    });
+                    existingListeners.set(button, true);
+                }
+            });
+
+            document.querySelectorAll('.settings-form button[data-action]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', () => {
+                        const action = button.getAttribute('data-action');
+                        console.log(`Action button clicked: ${action}`);
+                        if (action === 'saveSettings') saveSettings();
+                        else if (action === 'savePassword') savePassword();
+                        else if (action === 'saveWixClientId') saveWixClientId();
+                        else if (action === 'saveStoreRequest') saveStoreRequest();
+                        else if (action === 'addPage') addPage();
+                        else if (action === 'addEmail') addEmail();
+                        else if (action === 'checkDomainAvailability') checkDomainAvailability();
+                    });
+                    existingListeners.set(button, true);
+                }
+            });
+
+            const logOffBtn = document.getElementById('logOffBtn');
+            if (logOffBtn && !existingListeners.has(logOffBtn)) {
+                logOffBtn.addEventListener('click', logOff);
+                existingListeners.set(logOffBtn, true);
+            }
+        }
+
         function checkAdminPermission() {
-            const menu = document.getElementById('menu');
-            const backButton = menu.querySelector('button[onclick="window.location.href=\'/admin\'"]');
-            if (!userPermissions.includes('admin')) backButton.style.display = 'none';
+            const backButton = document.querySelector('button[data-href="/admin"]');
+            if (backButton) {
+                backButton.style.display = userPermissions.includes('admin') ? 'block' : 'none';
+            }
         }
 
         async function loadBranding() {
@@ -263,10 +536,16 @@
                 const response = await authenticatedFetch(`${apiUrl}/branding`);
                 if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
                 const data = await response.json();
-                document.getElementById('brandingContent').innerHTML = data.content || '<h1>Merchant Dashboard</h1>';
+                const brandingContent = document.getElementById('brandingContent');
+                if (brandingContent) {
+                    brandingContent.innerHTML = data.content || '<h1>Merchant Dashboard</h1>';
+                }
             } catch (error) {
                 toastr.error(`Error loading branding: ${error.message}`);
-                document.getElementById('brandingContent').innerHTML = '<h1>Merchant Dashboard</h1>';
+                const brandingContent = document.getElementById('brandingContent');
+                if (brandingContent) {
+                    brandingContent.innerHTML = '<h1>Merchant Dashboard</h1>';
+                }
             }
         }
 
@@ -284,18 +563,30 @@
         }
 
         function showSection(section) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(section).classList.add('active');
+            console.log(`Showing section: ${section}`);
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            const activeSection = document.getElementById(section);
+            if (activeSection) {
+                activeSection.classList.add('active');
+                activeSection.style.display = 'block';
+            }
             if (section === 'my-account') loadSettings();
             else if (section === 'my-products') loadProducts();
             else if (section === 'wix-keys') loadWixClientId();
             else if (section === 'my-store') loadStoreRequest();
+            else if (section === 'info') return;
         }
 
-        function logout() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userId');
-            window.location.href = '/';
+        function logOff() {
+            if (confirm('Are you sure you want to log off?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
+                toastr.success('Logged off successfully');
+                setTimeout(() => window.location.href = '/', 1000);
+            }
         }
 
         async function loadSettings() {
@@ -326,6 +617,7 @@
             try {
                 const response = await authenticatedFetch(`${apiUrl}/${userId}/user`, { method: 'PATCH', body: JSON.stringify(settings) });
                 if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
+                toastr.success('Settings saved successfully');
             } catch (error) {
                 toastr.error(`Error saving settings: ${error.message}`);
             }
@@ -369,6 +661,7 @@
                     body: JSON.stringify(passwordData)
                 });
                 if (!response.ok) throw new Error(`Failed to change password: ${response.status}`);
+                toastr.success('Password changed successfully');
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
@@ -385,8 +678,10 @@
                 if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
                 const data = await response.json();
                 const tbody = document.getElementById('productList');
-                tbody.innerHTML = '';
-                data.products.forEach(product => tbody.appendChild(createProductRow(product)));
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    data.products.forEach(product => tbody.appendChild(createProductRow(product)));
+                }
             } catch (error) {
                 toastr.error(`Error loading products: ${error.message}`);
             }
@@ -396,13 +691,13 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="hidden">${product.id}</td>
-                <td>${product.category}</td>
+                <td>${product.category || 'N/A'}</td>
                 <td>${product.title}</td>
                 <td><a href="${product.product_url}" target="_blank">Link</a></td>
                 <td>${product.current_price}</td>
                 <td>${product.original_price}</td>
-                <td><img src="${product.image_url}" width="50"></td>
-                <td>${product.qty}</td>
+                <td><img src="${product.image_url}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
+                <td>${product.qty || 'N/A'}</td>
             `;
             return tr;
         }
@@ -430,6 +725,7 @@
                     body: JSON.stringify({ wixClientId })
                 });
                 if (!response.ok) throw new Error(`Failed to save Wix Client ID: ${response.status}`);
+                toastr.success('Wix Client ID saved successfully');
             } catch (error) {
                 toastr.error(`Error saving Wix Client ID: ${error.message}`);
             }
@@ -499,7 +795,7 @@
                 });
 
                 tinymce.remove();
-                initializeTinyMCE();
+                waitForTinyMCE(initializeTinyMCE);
                 updateDomainPreview();
             } catch (error) {
                 toastr.error(`Error loading store request: ${error.message}`);
@@ -512,9 +808,9 @@
 
             const storeRequest = {
                 userId: userId,
-                type: "merchant", // Added hidden type field set to "merchant"
+                type: "merchant",
                 storeName: document.getElementById('storeName').value.trim(),
-                aboutStore: tinymce.get('aboutStore').getContent(),
+                aboutStore: tinymce.get('aboutStore')?.getContent() || '',
                 storeLogos: [],
                 colorPrefs: document.getElementById('colorPrefs').value.trim(),
                 stylingDetails: document.getElementById('stylingDetails').value.trim(),
@@ -623,7 +919,7 @@
             `;
             container.appendChild(newPage);
             tinymce.remove();
-            initializeTinyMCE();
+            waitForTinyMCE(initializeTinyMCE);
         }
 
         function removePage(pageNum) {
@@ -636,7 +932,7 @@
                 pageSection.remove();
                 pageCount--;
                 tinymce.remove();
-                initializeTinyMCE();
+                waitForTinyMCE(initializeTinyMCE);
             }
         }
 
@@ -697,6 +993,8 @@
             toastr.info(`Checking availability for ${domain}...`);
             setTimeout(() => toastr.success('This is a placeholder - domain check not implemented'), 1000);
         }
+
+        initializeMerchant();
     </script>
 </body>
 </html>

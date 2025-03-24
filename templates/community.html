@@ -8,45 +8,227 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .header { height: 150px; background-color: #f4f4f4; margin-bottom: 25px; overflow: hidden; position: relative; }
-        .header-content { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .main-container { max-width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
-        .menu-container { flex: 1; max-width: 300px; }
-        .content-container { flex: 2; }
-        .menu { margin-bottom: 20px; text-align: left; }
-        .menu button { padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-align: left; width: 100%; margin-bottom: 5px; display: block; }
-        .menu button:hover { background-color: #0056b3; }
-        .submenu { display: none; padding-left: 20px; }
-        .submenu.open { display: block; }
-        .section { display: none; }
-        .active { display: block; }
-        .settings-form { display: flex; flex-direction: column; gap: 10px; max-width: 600px; }
-        .settings-form label { font-weight: bold; }
-        .settings-form input, .settings-form textarea { padding: 5px; }
-        .settings-form button { padding: 10px; background-color: #007BFF; color: white; border: none; cursor: pointer; }
-        .settings-form button:hover { background-color: #0056b3; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .treeview { max-height: 600px; overflow-y: auto; margin-bottom: 10px; }
-        .treeview, .treeview ul, .treeview li { list-style-type: none; padding: 0; margin: 0; }
-        .treeview .node { display: flex; align-items: center; }
-        .treeview .toggle { cursor: pointer; width: 20px; text-align: center; font-weight: bold; }
-        .treeview .subcategories { display: none; padding-left: 20px; }
-        .treeview .subcategories.open { display: block; }
-        #toast-container > .toast-error { background-color: #dc3545; border-color: #c82333; }
-        #toast-container > .toast-success { background-color: #28a745; border-color: #218838; }
-        .toggle-section { cursor: pointer; font-weight: bold; margin: 10px 0; background-color: #e9ecef; padding: 5px; border-radius: 4px; }
-        .toggle-content { display: none; }
-        .toggle-content.open { display: block; }
-        .page-section { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .email-section { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .widget-checkboxes div { margin-bottom: 10px; }
-        .remove-page-btn, .remove-email-btn { padding: 5px 10px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-        .remove-page-btn:hover, .remove-email-btn:hover { background-color: #c82333; }
-        .password-container { position: relative; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; }
-        .password-container input { width: 50%; padding-right: 30px; }
-        .password-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            display: block; 
+        }
+        .header { 
+            height: 150px; 
+            width: 100%; 
+            background-color: #f4f4f4; 
+            margin-bottom: 25px; 
+            overflow: hidden; 
+            position: relative; 
+            display: block; 
+        }
+        .header-content { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .main-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            display: flex; 
+            gap: 20px; 
+        }
+        .menu-container { 
+            flex: 1; 
+            max-width: 300px; 
+        }
+        .content-container { 
+            flex: 2; 
+        }
+        .menu { 
+            margin-bottom: 20px; 
+            text-align: left; 
+        }
+        .menu button { 
+            padding: 10px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            text-align: left; 
+            width: 100%; 
+            margin-bottom: 5px; 
+            display: block; 
+        }
+        .menu button:hover { 
+            background-color: #0056b3; 
+        }
+        .menu .btn-admin { 
+            background-color: #dc3545; 
+        }
+        .menu .btn-admin:hover { 
+            background-color: #c82333; 
+        }
+        .menu .btn-logoff { 
+            background-color: #dc3545; 
+        }
+        .menu .btn-logoff:hover { 
+            background-color: #c82333; 
+        }
+        .submenu { 
+            display: none; 
+            padding-left: 20px; 
+        }
+        .submenu.open { 
+            display: block; 
+        }
+        .section { 
+            display: none; 
+        }
+        .section.active { 
+            display: block; 
+        }
+        .settings-form { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            max-width: 600px; 
+        }
+        .settings-form label { 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+        }
+        .settings-form input, 
+        .settings-form textarea { 
+            padding: 8px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        .settings-form button { 
+            padding: 10px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 4px; 
+        }
+        .settings-form button:hover { 
+            background-color: #0056b3; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        .treeview { 
+            max-height: 600px; 
+            overflow-y: auto; 
+            margin-bottom: 10px; 
+        }
+        .treeview, .treeview ul, .treeview li { 
+            list-style-type: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+        .treeview .node { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 5px 0; 
+        }
+        .treeview .toggle { 
+            cursor: pointer; 
+            width: 20px; 
+            text-align: center; 
+            font-weight: bold; 
+            flex-shrink: 0; 
+        }
+        .treeview input[type="checkbox"] { 
+            width: 16px !important; 
+            height: 16px !important; 
+            margin: 0; 
+            flex-shrink: 0; 
+        }
+        .treeview .subcategories { 
+            display: none; 
+            padding-left: 20px; 
+        }
+        .treeview .subcategories.open { 
+            display: block; 
+        }
+        #toast-container > .toast-error { 
+            background-color: #dc3545; 
+            border-color: #c82333; 
+        }
+        #toast-container > .toast-success { 
+            background-color: #28a745; 
+            border-color: #218838; 
+        }
+        .toggle-section { 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin: 10px 0; 
+            background-color: #e9ecef; 
+            padding: 5px; 
+            border-radius: 4px; 
+        }
+        .toggle-content { 
+            display: none; 
+        }
+        .toggle-content.open { 
+            display: block; 
+        }
+        .page-section { 
+            margin-top: 10px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        .email-section { 
+            margin-top: 10px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        .widget-checkboxes div { 
+            margin-bottom: 10px; 
+        }
+        .remove-page-btn, .remove-email-btn { 
+            padding: 5px 10px; 
+            background-color: #dc3545; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-top: 10px; 
+        }
+        .remove-page-btn:hover, .remove-email-btn:hover { 
+            background-color: #c82333; 
+        }
+        .password-container { 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            margin-bottom: 15px; 
+        }
+        .password-container input { 
+            padding: 8px 30px 8px 8px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        .password-toggle { 
+            position: absolute; 
+            right: 10px; 
+            top: 65%; 
+            transform: translateY(-50%); 
+            cursor: pointer; 
+        }
     </style>
 </head>
 <body>
@@ -59,23 +241,7 @@
         <div class="menu-container">
             <div class="menu" id="menu">
                 <input type="text" id="userId" style="display: none;">
-                <button onclick="toggleSubmenu('my_website'); showSection('my_website_intro')">My Web Site <i class="fas fa-caret-down"></i></button>
-                <div id="my_website" class="submenu">
-                    <button onclick="showSection('wix')">Wix</button>
-                    <button onclick="showSection('wordpress')">WordPress</button>
-                    <button onclick="showSection('squarespace')">Squarespace</button>
-                    <button onclick="showSection('weebly')">Weebly</button>
-                    <button onclick="showSection('joomla')">Joomla</button>
-                    <button onclick="showSection('no_website'); loadSiteRequest()">I Don’t Have a Website Yet</button>
-                </div>
-                <button onclick="showSection('categories')">My Categories</button>
-                <button onclick="toggleSubmenu('referrals'); showSection('referrals_intro')">My Referrals <i class="fas fa-caret-down"></i></button>
-                <div id="referrals" class="submenu">
-                    <button onclick="showSection('visits')">Visits</button>
-                    <button onclick="showSection('orders')">Orders</button>
-                </div>
-                <button onclick="showSection('settings')">My Account</button>
-                <button onclick="logout()" style="background-color: #dc3545;">Log Off</button>
+                <!-- Menu items will be dynamically generated -->
             </div>
         </div>
         <div class="content-container">
@@ -102,25 +268,25 @@
                     <input type="email" id="emailAddress" placeholder="Enter email address">
                     <label for="phoneNumber">Phone Number:</label>
                     <input type="tel" id="phoneNumber" placeholder="Enter phone number">
-                    <button onclick="saveSettings()">Save Settings</button>
+                    <button data-action="saveSettings">Save Settings</button>
 
                     <h3>Change Password</h3>
                     <div class="password-container">
                         <label for="currentPassword">Current Password:</label>
                         <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                        <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
                     </div>
                     <div class="password-container">
                         <label for="newPassword">New Password:</label>
                         <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                        <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
                     </div>
                     <div class="password-container">
                         <label for="confirmPassword">Confirm New Password:</label>
                         <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
+                        <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
                     </div>
-                    <button onclick="savePassword()">Change Password</button>
+                    <button data-action="savePassword">Change Password</button>
                 </div>
             </div>
             <div id="categories" class="section">
@@ -139,21 +305,21 @@
             </div>
             <div id="visits" class="section">
                 <h2>Visits</h2>
-                <div class="toggle-section" onclick="toggleSection('visits_this_month')">This Month</div>
+                <div class="toggle-section" data-toggle="visits_this_month">This Month</div>
                 <div id="visits_this_month" class="toggle-content open">
                     <table id="visitsTableThisMonth">
                         <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
                         <tbody id="visitsListThisMonth"></tbody>
                     </table>
                 </div>
-                <div class="toggle-section" onclick="toggleSection('visits_last_month')">Last Month</div>
+                <div class="toggle-section" data-toggle="visits_last_month">Last Month</div>
                 <div id="visits_last_month" class="toggle-content">
                     <table id="visitsTableLastMonth">
                         <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
                         <tbody id="visitsListLastMonth"></tbody>
                     </table>
                 </div>
-                <div class="toggle-section" onclick="toggleSection('visits_earlier')">Earlier</div>
+                <div class="toggle-section" data-toggle="visits_earlier">Earlier</div>
                 <div id="visits_earlier" class="toggle-content">
                     <table id="visitsTableEarlier">
                         <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
@@ -163,21 +329,21 @@
             </div>
             <div id="orders" class="section">
                 <h2>Orders</h2>
-                <div class="toggle-section" onclick="toggleSection('orders_this_month')">This Month</div>
+                <div class="toggle-section" data-toggle="orders_this_month">This Month</div>
                 <div id="orders_this_month" class="toggle-content open">
                     <table id="ordersTableThisMonth">
                         <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
                         <tbody id="ordersListThisMonth"></tbody>
                     </table>
                 </div>
-                <div class="toggle-section" onclick="toggleSection('orders_last_month')">Last Month</div>
+                <div class="toggle-section" data-toggle="orders_last_month">Last Month</div>
                 <div id="orders_last_month" class="toggle-content">
                     <table id="ordersTableLastMonth">
                         <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
                         <tbody id="ordersListLastMonth"></tbody>
                     </table>
                 </div>
-                <div class="toggle-section" onclick="toggleSection('orders_earlier')">Earlier</div>
+                <div class="toggle-section" data-toggle="orders_earlier">Earlier</div>
                 <div id="orders_earlier" class="toggle-content">
                     <table id="ordersTableEarlier">
                         <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
@@ -269,7 +435,7 @@
 
                     <label for="preferredDomain">Preferred Domain Name:</label>
                     <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mycommunity.org" oninput="updateEmailDomains()">
-                    <button type="button" onclick="checkDomainAvailability()">Check Availability</button>
+                    <button type="button" data-action="checkDomainAvailability">Check Availability</button>
 
                     <label>Email Addresses to Set Up (up to 5):</label>
                     <div id="emailsContainer">
@@ -279,7 +445,7 @@
                             <span id="email1Domain">@mycommunity.org</span>
                         </div>
                     </div>
-                    <button type="button" onclick="addEmail()" id="addEmailBtn">Add Another Email</button>
+                    <button type="button" data-action="addEmail">Add Another Email</button>
 
                     <label>Requested Pages (up to 5):</label>
                     <div id="pagesContainer">
@@ -293,7 +459,7 @@
                             <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
                         </div>
                     </div>
-                    <button type="button" onclick="addPage()" id="addPageBtn">Add Another Page</button>
+                    <button type="button" data-action="addPage">Add Another Page</button>
 
                     <label>Wix Widgets:</label>
                     <div class="widget-checkboxes">
@@ -306,7 +472,7 @@
                         <div><label><input type="checkbox" name="widgets" value="socialMediaLinks"> Social Media Links</label> - Quick links to profiles.</div>
                     </div>
 
-                    <button type="button" onclick="saveSiteRequest()">Submit Request</button>
+                    <button type="button" data-action="saveSiteRequest">Submit Request</button>
                 </form>
             </div>
         </div>
@@ -315,15 +481,25 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
+        // Global variables
         const apiUrl = 'https://clubmadeira.io';
         let userPermissions = [];
         let pageCount = 1;
         let emailCount = 1;
+        let currentUserId = null;
+        let savedCategories = []; // Store user's saved categories
 
+        // Decode JWT token
         function decodeJWT(token) {
-            if (!token || typeof token !== 'string') return null;
+            if (!token || typeof token !== 'string') {
+                console.error('Invalid token');
+                return null;
+            }
+            if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
+                console.error('Invalid token format');
+                return null;
+            }
             const parts = token.split('.');
-            if (parts.length !== 3) return null;
             try {
                 const base64Url = parts[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -335,83 +511,325 @@
             }
         }
 
-        window.onload = function() {
+        // Initialize the community page
+        function initializeCommunity() {
+            console.log('Initializing community page');
             const token = localStorage.getItem('authToken');
-            const userId = localStorage.getItem('userId');
+            currentUserId = localStorage.getItem('userId');
+
             if (!token) {
+                console.error('No token found, redirecting to /');
                 window.location.href = '/';
                 return;
             }
+
             const decoded = decodeJWT(token);
             if (!decoded) {
+                console.error('Invalid token, redirecting to /');
                 window.location.href = '/';
                 return;
             }
+
             userPermissions = decoded.permissions || [];
             if (!userPermissions.includes('admin') && !userPermissions.includes('community')) {
                 toastr.error('Permission denied: Community permission required');
+                console.error('No community permission, redirecting to /');
                 window.location.href = '/';
                 return;
             }
-            if (userId) document.getElementById('userId').value = userId;
-            checkAdminPermission();
+
+            if (!currentUserId) {
+                toastr.error('User ID not found in session, redirecting to login');
+                console.error('No userId found in localStorage');
+                window.location.href = '/';
+                return;
+            }
+
+            document.getElementById('userId').value = currentUserId;
+            updateMenu();
             loadBranding();
             showSection('welcome');
-            initializeTinyMCE();
+            waitForTinyMCE(initializeTinyMCE);
+            attachEventListeners();
+            console.log('Community page initialized successfully');
+        }
+
+        // Toastr configuration
+        toastr.options = { 
+            closeButton: true, 
+            progressBar: true, 
+            positionClass: 'toast-top-right', 
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
         };
 
-        toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000 };
+        // Fetch protected page content
+        async function fetchProtectedPage(url) {
+            console.log('Fetching protected page:', url);
+            const token = localStorage.getItem('authToken');
+            if (!token || !currentUserId) {
+                toastr.error('No authentication token or user ID found. Please log in.');
+                window.location.href = '/';
+                return;
+            }
+            const finalUrl = `${apiUrl}${url}`.replace('[YourUserID]', currentUserId);
+            console.log('Final URL:', finalUrl);
+            try {
+                const response = await fetch(finalUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'text/html'
+                    }
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server returned ${response.status}: ${errorText}`);
+                }
+                const html = await response.text();
+                document.open();
+                document.write(html);
+                document.close();
+                const event = new Event('DOMContentLoaded', { bubbles: true, cancelable: true });
+                document.dispatchEvent(event);
+                console.log('Protected page loaded:', url);
+            } catch (error) {
+                toastr.error(error.message || 'Failed to load protected page');
+                console.error('Fetch error:', error);
+            }
+        }
 
+        // Wait for TinyMCE to load
+        function waitForTinyMCE(callback) {
+            console.log('Checking if TinyMCE is loaded');
+            if (typeof tinymce !== 'undefined' && tinymce.init) {
+                console.log('TinyMCE is loaded, executing callback');
+                callback();
+            } else {
+                console.log('Waiting for TinyMCE to load...');
+                const script = document.querySelector('script[src*="tinymce.min.js"]');
+                if (script) {
+                    script.onload = () => {
+                        console.log('TinyMCE script loaded');
+                        callback();
+                    };
+                    script.onerror = () => console.error('TinyMCE failed to load');
+                } else {
+                    setTimeout(() => waitForTinyMCE(callback), 100);
+                }
+            }
+        }
+
+        // Initialize TinyMCE editors
         function initializeTinyMCE() {
+            console.log('Initializing TinyMCE');
+            tinymce.remove();
             tinymce.init({
                 selector: '#aboutCommunity, textarea[name$="Content"]',
                 height: 200,
                 menubar: false,
                 plugins: 'lists',
-                toolbar: 'bold italic | bullist numlist'
+                toolbar: 'bold italic | bullist numlist',
+                setup: editor => {
+                    editor.on('init', () => console.log('TinyMCE editor initialized'));
+                }
             });
         }
 
-        function checkAdminPermission() {
-            if (userPermissions.includes('admin')) {
-                const menu = document.getElementById('menu');
-                const backButton = document.createElement('button');
-                backButton.textContent = 'Back to Admin';
-                backButton.style.backgroundColor = '#dc3545';
-                backButton.onclick = () => window.location.href = '/admin';
-                const logOffButton = menu.querySelector('button[onclick="logout()"]');
-                menu.insertBefore(backButton, logOffButton);
+        // Attach event listeners with duplicate prevention
+        function attachEventListeners() {
+            console.log('Attaching event listeners');
+            const existingListeners = document.__eventListeners || new Map();
+            document.__eventListeners = existingListeners;
+
+            document.querySelectorAll('.menu button[data-section]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', () => {
+                        const section = button.getAttribute('data-section');
+                        const submenu = button.getAttribute('data-submenu');
+                        console.log('Button clicked:', { section, submenu });
+                        if (submenu) toggleSubmenu(submenu);
+                        if (section) showSection(section);
+                    });
+                    existingListeners.set(button, true);
+                }
+            });
+
+            document.querySelectorAll('.menu button[data-href]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', async () => {
+                        const href = button.getAttribute('data-href');
+                        console.log(`Fetching protected page: ${href}`);
+                        await fetchProtectedPage(href);
+                    });
+                    existingListeners.set(button, true);
+                }
+            });
+
+            document.querySelectorAll('.toggle-section').forEach(toggle => {
+                if (!existingListeners.has(toggle)) {
+                    toggle.addEventListener('click', () => {
+                        const sectionId = toggle.getAttribute('data-toggle');
+                        toggleSection(sectionId);
+                    });
+                    existingListeners.set(toggle, true);
+                }
+            });
+
+            document.querySelectorAll('.password-toggle').forEach(toggle => {
+                if (!existingListeners.has(toggle)) {
+                    toggle.addEventListener('click', () => {
+                        const fieldId = toggle.getAttribute('data-target');
+                        togglePassword(fieldId);
+                    });
+                    existingListeners.set(toggle, true);
+                }
+            });
+
+            document.querySelectorAll('button[data-action]').forEach(button => {
+                if (!existingListeners.has(button)) {
+                    button.addEventListener('click', () => {
+                        const action = button.getAttribute('data-action');
+                        console.log('Action button clicked:', action);
+                        if (action === 'saveSettings') saveSettings();
+                        else if (action === 'savePassword') savePassword();
+                        else if (action === 'addPage') addPage();
+                        else if (action === 'addEmail') addEmail();
+                        else if (action === 'checkDomainAvailability') checkDomainAvailability();
+                        else if (action === 'saveSiteRequest') saveSiteRequest();
+                    });
+                    existingListeners.set(button, true);
+                }
+            });
+
+            document.querySelectorAll('.treeview .toggle').forEach(toggle => {
+                if (!existingListeners.has(toggle)) {
+                    toggle.addEventListener('click', () => {
+                        const parentId = toggle.getAttribute('data-id');
+                        toggleSubcategories(parentId, toggle);
+                    });
+                    existingListeners.set(toggle, true);
+                }
+            });
+
+            document.querySelectorAll('#categoryTree input[type="checkbox"]').forEach(checkbox => {
+                if (!existingListeners.has(checkbox)) {
+                    checkbox.addEventListener('change', saveCategories);
+                    existingListeners.set(checkbox, true);
+                }
+            });
+
+            const logOffBtn = document.getElementById('logOffBtn');
+            if (logOffBtn && !existingListeners.has(logOffBtn)) {
+                logOffBtn.addEventListener('click', logout);
+                existingListeners.set(logOffBtn, true);
             }
+
+            document.querySelectorAll('.remove-page-btn').forEach(btn => {
+                if (!existingListeners.has(btn)) {
+                    btn.addEventListener('click', () => {
+                        const pageNum = btn.getAttribute('data-page');
+                        removePage(pageNum);
+                    });
+                    existingListeners.set(btn, true);
+                }
+            });
+
+            document.querySelectorAll('.remove-email-btn').forEach(btn => {
+                if (!existingListeners.has(btn)) {
+                    btn.addEventListener('click', () => {
+                        const emailNum = btn.getAttribute('data-email');
+                        removeEmail(emailNum);
+                    });
+                    existingListeners.set(btn, true);
+                }
+            });
+            console.log('Event listeners attached');
         }
 
+        // Update the menu dynamically
+        function updateMenu() {
+            console.log('Updating menu');
+            const menu = document.getElementById('menu');
+            menu.innerHTML = `<input type="text" id="userId" style="display: none;" value="${currentUserId || ''}">`;
+            menu.innerHTML += `
+                <button data-submenu="my_website" data-section="my_website_intro">My Web Site <i class="fas fa-caret-down"></i></button>
+                <div id="my_website" class="submenu">
+                    <button data-section="wix">Wix</button>
+                    <button data-section="wordpress">WordPress</button>
+                    <button data-section="squarespace">Squarespace</button>
+                    <button data-section="weebly">Weebly</button>
+                    <button data-section="joomla">Joomla</button>
+                    <button data-section="no_website">I Don’t Have a Website Yet</button>
+                </div>
+                <button data-section="categories">My Categories</button>
+                <button data-submenu="referrals" data-section="referrals_intro">My Referrals <i class="fas fa-caret-down"></i></button>
+                <div id="referrals" class="submenu">
+                    <button data-section="visits">Visits</button>
+                    <button data-section="orders">Orders</button>
+                </div>
+                <button data-section="settings">My Account</button>
+            `;
+            if (userPermissions.includes('admin')) {
+                menu.innerHTML += '<button data-href="/admin" class="btn-admin">Back to Admin</button>';
+            }
+            menu.innerHTML += '<button id="logOffBtn" class="btn-logoff">Log Off</button>';
+            console.log('Menu updated');
+        }
+
+        // Load branding content
         async function loadBranding() {
+            console.log('Loading branding');
             try {
                 const response = await authenticatedFetch(`${apiUrl}/branding`);
                 if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
                 const data = await response.json();
                 document.getElementById('brandingContent').innerHTML = data.content || '<h1>Community Dashboard</h1>';
+                console.log('Branding loaded');
             } catch (error) {
                 toastr.error(`Error loading branding: ${error.message}`);
                 document.getElementById('brandingContent').innerHTML = '<h1>Community Dashboard</h1>';
+                console.error('Branding load error:', error);
             }
         }
 
+        // Authenticated fetch with token
         async function authenticatedFetch(url, options = {}) {
+            console.log('Making authenticated fetch to:', url);
             const token = localStorage.getItem('authToken');
-            options.headers = { ...options.headers, 'Authorization': `Bearer ${token}`, 'Content-Type': options.body instanceof FormData ? undefined : 'application/json' };
+            options.headers = { 
+                ...options.headers, 
+                'Authorization': `Bearer ${token}`, 
+                'Content-Type': options.body instanceof FormData ? undefined : 'application/json' 
+            };
             const response = await fetch(url, options);
             if (response.status === 401) {
                 toastr.error('Session expired. Please log in again.');
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userId');
+                currentUserId = null;
                 window.location.href = '/';
             }
+            console.log('Fetch completed:', response.status);
             return response;
         }
 
+        // Show a specific section
         function showSection(section) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(section).classList.add('active');
+            console.log('Showing section:', section);
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            const activeSection = document.getElementById(section);
+            if (activeSection) {
+                activeSection.classList.add('active');
+                activeSection.style.display = 'block';
+                console.log('Section activated:', section);
+            } else {
+                console.error('Section not found:', section);
+            }
             if (section === 'settings') loadSettings();
             else if (section === 'categories') loadCategories();
             else if (section === 'visits') loadVisits();
@@ -420,45 +838,60 @@
             else if (['wix', 'wordpress', 'squarespace', 'weebly', 'joomla'].includes(section)) updateIntegrationCode(section);
         }
 
+        // Toggle submenu visibility
         function toggleSubmenu(submenuId) {
             const submenu = document.getElementById(submenuId);
             submenu.classList.toggle('open');
+            console.log('Toggled submenu:', submenuId, submenu.classList.contains('open') ? 'open' : 'closed');
         }
 
+        // Toggle section content visibility
         function toggleSection(sectionId) {
             const content = document.getElementById(sectionId);
             content.classList.toggle('open');
+            console.log('Toggled section:', sectionId, content.classList.contains('open') ? 'open' : 'closed');
         }
 
+        // Logout function
         function logout() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userId');
-            window.location.href = '/';
+            console.log('Logging out');
+            if (confirm('Are you sure you want to log off?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
+                currentUserId = null;
+                toastr.success('Logged out successfully');
+                setTimeout(() => window.location.href = '/', 1000);
+                console.log('Logout completed');
+            }
         }
 
+        // Load user settings
         async function loadSettings() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
+            console.log('Loading settings');
+            if (!currentUserId) {
                 toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`);
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/user`);
                 if (!response.ok) throw new Error(`Failed to fetch settings: ${response.status}`);
                 const data = await response.json();
-                document.getElementById('referrerId').textContent = userId;
+                document.getElementById('referrerId').textContent = currentUserId;
                 document.getElementById('contactName').value = data.contact_name || '';
                 document.getElementById('websiteUrl').value = data.website_url || '';
                 document.getElementById('emailAddress').value = data.email_address || '';
                 document.getElementById('phoneNumber').value = data.phone_number || '';
+                console.log('Settings loaded for user:', currentUserId);
             } catch (error) {
                 toastr.error(`Error loading settings: ${error.message}`);
+                console.error('Settings load error:', error);
             }
         }
 
+        // Save user settings
         async function saveSettings() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
+            console.log('Saving settings');
+            if (!currentUserId) {
                 toastr.error('User ID not found in session');
                 return;
             }
@@ -469,13 +902,20 @@
                 phone_number: document.getElementById('phoneNumber').value.trim()
             };
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/user`, { method: 'PUT', body: JSON.stringify(settings) });
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/user`, { 
+                    method: 'PUT', 
+                    body: JSON.stringify(settings) 
+                });
                 if (!response.ok) throw new Error(`Failed to save settings: ${response.status}`);
+                toastr.success('Settings saved successfully');
+                console.log('Settings saved for user:', currentUserId);
             } catch (error) {
                 toastr.error(`Error saving settings: ${error.message}`);
+                console.error('Settings save error:', error);
             }
         }
 
+        // Toggle password visibility
         function togglePassword(fieldId) {
             const input = document.getElementById(fieldId);
             const icon = input.nextElementSibling;
@@ -488,11 +928,13 @@
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
             }
+            console.log('Toggled password visibility for:', fieldId);
         }
 
+        // Save new password
         async function savePassword() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
+            console.log('Saving password');
+            if (!currentUserId) {
                 toastr.error('User ID not found in session');
                 return;
             }
@@ -512,7 +954,7 @@
 
             const passwordData = { currentPassword, newPassword };
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/password`, {
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/password`, {
                     method: 'POST',
                     body: JSON.stringify(passwordData)
                 });
@@ -520,13 +962,17 @@
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
+                toastr.success('Password changed successfully');
+                console.log('Password changed for user:', currentUserId);
             } catch (error) {
                 toastr.error(`Error changing password: ${error.message}`);
+                console.error('Password change error:', error);
             }
         }
 
+        // Update integration code for web platforms
         function updateIntegrationCode(section) {
-            const userId = document.getElementById('userId').value || 'YourUserID';
+            console.log('Updating integration code for:', section);
             const codeElements = {
                 'wix': 'wixCode',
                 'wordpress': 'wordpressCode',
@@ -536,110 +982,151 @@
             };
             const codeId = codeElements[section];
             if (codeId) {
-                document.getElementById(codeId).textContent = `<iframe src="https://clubmadeira.io/discounts?referrer=${userId}" width="100%" height="600"></iframe>`;
+                document.getElementById(codeId).textContent = `<iframe src="https://clubmadeira.io/discounts?referrer=${currentUserId || 'unknown'}" width="100%" height="600"></iframe>`;
+                console.log('Updated integration code for:', section);
             }
         }
 
+        // Load categories for treeview
         async function loadCategories() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
+            console.log('Loading categories');
+            if (!currentUserId) {
                 toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const userResponse = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`);
+                // Load user's saved categories
+                const userResponse = await authenticatedFetch(`${apiUrl}/${currentUserId}/mycategories`);
                 if (!userResponse.ok) throw new Error(`Failed to fetch user categories: ${userResponse.status}`);
                 const userData = await userResponse.json();
-                const savedCategories = userData.categories || [];
+                savedCategories = userData.categories || [];
+                console.log('Saved categories:', savedCategories);
+
+                // Load top-level categories
                 const response = await authenticatedFetch(`${apiUrl}/categories`);
                 if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
                 const data = await response.json();
-                const tree = document.getElementById('categoryTree');
-                tree.innerHTML = '';
+
+                const treeElement = document.getElementById('categoryTree');
+                treeElement.innerHTML = '';
                 const ul = document.createElement('ul');
-                data.categories.forEach(cat => ul.appendChild(createTreeNode(cat, savedCategories)));
-                tree.appendChild(ul);
+                const topLevelCategories = data.categories.filter(cat => !cat.parent_id);
+                topLevelCategories.forEach(cat => {
+                    ul.appendChild(createTreeNode(cat));
+                });
+                treeElement.appendChild(ul);
+
+                attachEventListeners();
+                console.log('Top-level categories loaded');
             } catch (error) {
                 toastr.error(`Error loading categories: ${error.message}`);
+                console.error('Categories load error:', error);
             }
         }
 
-        function createTreeNode(category, savedCategories) {
+        // Create a tree node for categories
+        function createTreeNode(category) {
+            console.log('Creating tree node for category:', category.id);
             const li = document.createElement('li');
             const nodeDiv = document.createElement('div');
             nodeDiv.className = 'node';
+
             const toggle = document.createElement('span');
             toggle.className = 'toggle';
-            toggle.textContent = '+';
-            toggle.onclick = () => toggleSubcategories(category.id, toggle);
+            toggle.setAttribute('data-id', category.id);
+            toggle.textContent = '+'; // Always show '+' initially, assuming potential subcategories
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.value = category.id;
             checkbox.checked = savedCategories.includes(category.id.toString());
-            checkbox.onchange = () => saveCategories();
+
             const span = document.createElement('span');
             span.textContent = `${category.name} (${category.id})`;
+
             nodeDiv.appendChild(toggle);
             nodeDiv.appendChild(checkbox);
             nodeDiv.appendChild(span);
             li.appendChild(nodeDiv);
+
             const subUl = document.createElement('ul');
             subUl.className = 'subcategories';
             li.appendChild(subUl);
+
             return li;
         }
 
+        // Toggle subcategories visibility and load dynamically
         async function toggleSubcategories(parentId, toggle) {
+            console.log('Toggling subcategories for parentId:', parentId);
             const li = toggle.closest('li');
             const subUl = li.querySelector('.subcategories');
+
             if (subUl.classList.contains('open')) {
                 subUl.classList.remove('open');
                 toggle.textContent = '+';
+                console.log('Subcategories closed');
             } else {
                 if (subUl.children.length === 0) {
                     try {
                         const response = await authenticatedFetch(`${apiUrl}/categories?parent_id=${parentId}`);
                         if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
                         const data = await response.json();
-                        const userId = document.getElementById('userId').value;
-                        const userResponse = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`);
-                        if (!userResponse.ok) throw new Error(`Failed to fetch user categories: ${userResponse.status}`);
-                        const userData = await userResponse.json();
-                        const savedCategories = userData.categories || [];
-                        data.categories.forEach(cat => subUl.appendChild(createTreeNode(cat, savedCategories)));
+                        if (data.categories && data.categories.length > 0) {
+                            data.categories.forEach(cat => {
+                                subUl.appendChild(createTreeNode(cat));
+                            });
+                            attachEventListeners(); // Reattach listeners for new nodes
+                            console.log('Subcategories loaded for:', parentId);
+                        } else {
+                            toggle.textContent = ' '; // No subcategories, remove toggle
+                            console.log('No subcategories found for:', parentId);
+                        }
                     } catch (error) {
                         toastr.error(`Error loading subcategories: ${error.message}`);
+                        console.error('Subcategories load error:', error);
+                        toggle.textContent = ' ';
                         return;
                     }
                 }
                 subUl.classList.add('open');
                 toggle.textContent = '-';
+                console.log('Subcategories opened');
             }
         }
 
+        // Save selected categories
         async function saveCategories() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
+            console.log('Saving categories');
+            if (!currentUserId) {
                 toastr.error('User ID not found in session');
                 return;
             }
             const checked = Array.from(document.querySelectorAll('#categoryTree input[type="checkbox"]:checked')).map(cb => cb.value);
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/mycategories`, { method: 'PUT', body: JSON.stringify({ categories: checked }) });
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/mycategories`, { 
+                    method: 'PUT', 
+                    body: JSON.stringify({ categories: checked }) 
+                });
                 if (!response.ok) throw new Error(`Failed to save categories: ${response.status}`);
+                savedCategories = checked;
+                toastr.success('Categories saved successfully');
+                console.log('Categories saved:', checked);
             } catch (error) {
                 toastr.error(`Error saving categories: ${error.message}`);
+                console.error('Categories save error:', error);
             }
         }
 
+        // Load referral visits
         async function loadVisits() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
+            console.log('Loading visits');
+            if (!currentUserId) {
                 toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/visits`);
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/visits`);
                 if (!response.ok) throw new Error(`Failed to fetch visits: ${response.status}`);
                 const data = await response.json();
                 if (data.status === 'success') {
@@ -659,13 +1146,17 @@
                     updateVisitsTable('visitsListThisMonth', visitsThisMonth);
                     updateVisitsTable('visitsListLastMonth', visitsLastMonth);
                     updateVisitsTable('visitsListEarlier', visitsEarlier);
+                    console.log('Visits loaded');
                 }
             } catch (error) {
                 toastr.error(`Error loading visits: ${error.message}`);
+                console.error('Visits load error:', error);
             }
         }
 
+        // Update visits table
         function updateVisitsTable(tableId, visits) {
+            console.log('Updating visits table:', tableId);
             const tbody = document.getElementById(tableId);
             tbody.innerHTML = visits.length === 0 ? '<tr><td colspan="2">No visits found</td></tr>' : '';
             visits.forEach(visit => {
@@ -673,16 +1164,18 @@
                 row.innerHTML = `<td>${visit.page}</td><td>${visit.timestamp}</td>`;
                 tbody.appendChild(row);
             });
+            console.log('Visits table updated:', tableId);
         }
 
+        // Load referral orders
         async function loadOrders() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
+            console.log('Loading orders');
+            if (!currentUserId) {
                 toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/orders`);
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/orders`);
                 if (!response.ok) throw new Error(`Failed to fetch orders: ${response.status}`);
                 const data = await response.json();
                 if (data.status === 'success') {
@@ -702,13 +1195,17 @@
                     updateOrdersTable('ordersListThisMonth', ordersThisMonth);
                     updateOrdersTable('ordersListLastMonth', ordersLastMonth);
                     updateOrdersTable('ordersListEarlier', ordersEarlier);
+                    console.log('Orders loaded');
                 }
             } catch (error) {
                 toastr.error(`Error loading orders: ${error.message}`);
+                console.error('Orders load error:', error);
             }
         }
 
+        // Update orders table
         function updateOrdersTable(tableId, orders) {
+            console.log('Updating orders table:', tableId);
             const tbody = document.getElementById(tableId);
             tbody.innerHTML = orders.length === 0 ? '<tr><td colspan="4">No orders found</td></tr>' : '';
             orders.forEach(order => {
@@ -716,16 +1213,18 @@
                 row.innerHTML = `<td>${order.orderId}</td><td>${order.buyer}</td><td>$${order.total}</td><td>${order.timestamp}</td>`;
                 tbody.appendChild(row);
             });
+            console.log('Orders table updated:', tableId);
         }
 
+        // Load site request form data
         async function loadSiteRequest() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
+            console.log('Loading site request');
+            if (!currentUserId) {
                 toastr.error('User ID not found in session');
                 return;
             }
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/siterequest`);
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/siterequest`);
                 if (!response.ok) throw new Error(`Failed to fetch site request: ${response.status}`);
                 const data = await response.json();
                 const siteRequest = data.site_request || {};
@@ -749,7 +1248,7 @@
                         <label for="email${emailCount}Name">Email Name:</label>
                         <input type="text" id="email${emailCount}Name" name="email${emailCount}Name" value="${email}">
                         <span id="email${emailCount}Domain">@${siteRequest.preferredDomain || 'mycommunity.org'}</span>
-                        ${emailCount > 1 ? `<button type="button" class="remove-email-btn" onclick="removeEmail(${emailCount})">Remove Email</button>` : ''}
+                        ${emailCount > 1 ? `<button type="button" class="remove-email-btn" data-email="${emailCount}">Remove Email</button>` : ''}
                     `;
                     emailsContainer.appendChild(emailDiv);
                 });
@@ -771,7 +1270,7 @@
                         <textarea id="page${pageCount}Content" name="page${pageCount}Content">${page.content || ''}</textarea>
                         <label for="page${pageCount}Images">Additional Images:</label>
                         <input type="file" id="page${pageCount}Images" name="page${pageCount}Images" accept="image/*" multiple>
-                        ${pageCount > 1 ? `<button type="button" class="remove-page-btn" onclick="removePage(${pageCount})">Remove Page</button>` : ''}
+                        ${pageCount > 1 ? `<button type="button" class="remove-page-btn" data-page="${pageCount}">Remove Page</button>` : ''}
                     `;
                     pagesContainer.appendChild(pageDiv);
                 });
@@ -782,25 +1281,28 @@
                 });
 
                 tinymce.remove();
-                initializeTinyMCE();
+                waitForTinyMCE(initializeTinyMCE);
                 updateEmailDomains();
+                console.log('Site request loaded');
             } catch (error) {
                 toastr.error(`Error loading site request: ${error.message}`);
+                console.error('Site request load error:', error);
             }
         }
 
+        // Save site request form data
         async function saveSiteRequest() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
-                toastr.error('User ID not found in session');
+            console.log('Saving site request');
+            if (!currentUserId) {
+                toastr.error('User ID not found in SESSION');
                 return;
             }
 
             const siteRequest = {
-                userId: userId,
-                type: "community", // Added hidden type field set to "community"
+                userId: currentUserId,
+                type: "community",
                 communityName: document.getElementById('communityName').value.trim(),
-                aboutCommunity: tinymce.get('aboutCommunity').getContent(),
+                aboutCommunity: tinymce.get('aboutCommunity')?.getContent() || '',
                 communityLogos: [],
                 colorPrefs: document.getElementById('colorPrefs').value.trim(),
                 stylingDetails: document.getElementById('stylingDetails').value.trim(),
@@ -871,7 +1373,7 @@
             }
 
             try {
-                const response = await authenticatedFetch(`${apiUrl}/${userId}/siterequest`, {
+                const response = await authenticatedFetch(`${apiUrl}/${currentUserId}/siterequest`, {
                     method: 'POST',
                     body: JSON.stringify(siteRequest)
                 });
@@ -880,12 +1382,16 @@
                     throw new Error(errorData.message || `Failed to save site request: ${response.status}`);
                 }
                 toastr.success('Site request saved successfully');
+                console.log('Site request saved');
             } catch (error) {
                 toastr.error(`Error saving site request: ${error.message}`);
+                console.error('Site request save error:', error);
             }
         }
 
+        // Add a new page to the site request form
         function addPage() {
+            console.log('Adding new page');
             if (pageCount >= 5) {
                 toastr.error('Maximum of 5 pages allowed');
                 return;
@@ -903,14 +1409,17 @@
                 <textarea id="page${pageCount}Content" name="page${pageCount}Content" placeholder="Describe this page"></textarea>
                 <label for="page${pageCount}Images">Additional Images:</label>
                 <input type="file" id="page${pageCount}Images" name="page${pageCount}Images" accept="image/*" multiple>
-                <button type="button" class="remove-page-btn" onclick="removePage(${pageCount})">Remove Page</button>
+                <button type="button" class="remove-page-btn" data-page="${pageCount}">Remove Page</button>
             `;
             container.appendChild(newPage);
             tinymce.remove();
-            initializeTinyMCE();
+            waitForTinyMCE(initializeTinyMCE);
+            console.log('Added page:', pageCount);
         }
 
+        // Remove a page from the site request form
         function removePage(pageNum) {
+            console.log('Removing page:', pageNum);
             if (pageCount <= 1) {
                 toastr.error('Cannot remove the last page');
                 return;
@@ -920,11 +1429,14 @@
                 pageSection.remove();
                 pageCount--;
                 tinymce.remove();
-                initializeTinyMCE();
+                waitForTinyMCE(initializeTinyMCE);
+                console.log('Removed page:', pageNum);
             }
         }
 
+        // Add a new email to the site request form
         function addEmail() {
+            console.log('Adding new email');
             if (emailCount >= 5) {
                 toastr.error('Maximum of 5 email addresses allowed');
                 return;
@@ -939,13 +1451,16 @@
                 <label for="email${emailCount}Name">Email Name:</label>
                 <input type="text" id="email${emailCount}Name" name="email${emailCount}Name" placeholder="e.g., contact">
                 <span id="email${emailCount}Domain">@${domain}</span>
-                <button type="button" class="remove-email-btn" onclick="removeEmail(${emailCount})">Remove Email</button>
+                <button type="button" class="remove-email-btn" data-email="${emailCount}">Remove Email</button>
             `;
             container.appendChild(newEmail);
             updateEmailDomains();
+            console.log('Added email:', emailCount);
         }
 
+        // Remove an email from the site request form
         function removeEmail(emailNum) {
+            console.log('Removing email:', emailNum);
             if (emailCount <= 1) {
                 toastr.error('Cannot remove the last email');
                 return;
@@ -955,18 +1470,24 @@
                 emailSection.remove();
                 emailCount--;
                 updateEmailDomains();
+                console.log('Removed email:', emailNum);
             }
         }
 
+        // Update email domains based on preferred domain
         function updateEmailDomains() {
+            console.log('Updating email domains');
             const domain = document.getElementById('preferredDomain').value || 'mycommunity.org';
             for (let i = 1; i <= emailCount; i++) {
                 const domainSpan = document.getElementById(`email${i}Domain`);
                 if (domainSpan) domainSpan.textContent = `@${domain}`;
             }
+            console.log('Updated email domains to:', domain);
         }
 
+        // Check domain availability (placeholder)
         function checkDomainAvailability() {
+            console.log('Checking domain availability');
             const domain = document.getElementById('preferredDomain').value;
             const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
             if (!domain) {
@@ -979,7 +1500,11 @@
             }
             toastr.info(`Checking availability for ${domain}...`);
             setTimeout(() => toastr.success('This is a placeholder - domain check not implemented'), 1000);
+            console.log('Checked domain availability for:', domain);
         }
+
+        // Start the initialization
+        initializeCommunity();
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>clubmadeira.io | Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         body {
@@ -142,7 +142,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        const apiUrl = 'https://clubmadeira.io'; // Adjust based on your deployment
+        const apiUrl = window.location.origin; // 'https://clubmadeira.io'
 
         toastr.options = {
             closeButton: true,
@@ -172,24 +172,103 @@
             document.getElementById('verifyEmail').value = email;
         }
 
+        async function fetchProtectedPage(url) {
+            const token = localStorage.getItem('authToken');
+            console.log('Fetching Protected URL:', `${apiUrl}${url}`);
+            console.log('Token:', token || 'None');
+
+            if (!token) {
+                toastr.error('No authentication token found. Please log in.');
+                console.error('No token in localStorage');
+                showLogin();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}${url}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'text/html'
+                    }
+                });
+
+                console.log('Protected Response Status:', response.status);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Protected Response Error:', errorText);
+                    throw new Error(`Server returned ${response.status}: ${errorText}`);
+                }
+
+                const html = await response.text();
+                console.log('Received HTML:', html.substring(0, 200));
+                document.body.innerHTML = html;
+
+                // Re-attach external scripts and execute inline script
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const scripts = doc.querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.src) {
+                        const newScript = document.createElement('script');
+                        newScript.src = script.src;
+                        newScript.async = false;
+                        document.head.appendChild(newScript);
+                        console.log('Loaded external script:', script.src);
+                    } else if (script.innerHTML.trim()) {
+                        try {
+                            const scriptFn = new Function(script.innerHTML);
+                            scriptFn();
+                            console.log('Executed inline script');
+                        } catch (e) {
+                            console.error('Error executing inline script:', e);
+                        }
+                    }
+                });
+            } catch (error) {
+                toastr.error(error.message || 'Failed to load protected page');
+                console.error('Protected Fetch Error:', error);
+                showLogin();
+            }
+        }
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
+            const loginUrl = `${apiUrl}/login`;
+            console.log('Origin:', window.location.origin);
+            console.log('Login URL:', loginUrl);
+            console.log('Request Payload:', { email, password });
+
             try {
-                const response = await fetch(`${apiUrl}/login`, {
+                const response = await fetch(loginUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ email, password })
                 });
 
+                console.log('Login Response Status:', response.status);
+                console.log('Response Headers:', [...response.headers.entries()]);
+
                 if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.message || 'Login failed');
+                    const errText = await response.text();
+                    console.error('Login Error Response:', errText);
+                    let errData;
+                    try {
+                        errData = JSON.parse(errText);
+                    } catch (e) {
+                        throw new Error(`Login failed with status ${response.status}: ${errText}`);
+                    }
+                    throw new Error(errData.message || `Login failed with status ${response.status}`);
                 }
 
                 const data = await response.json();
+                console.log('Login Response Data:', data);
+
                 if (data.status === 'success') {
                     localStorage.setItem('authToken', data.token);
                     if (data.userId) localStorage.setItem('userId', data.userId);
@@ -198,13 +277,15 @@
                     toastr.success(`Welcome back, ${contactName}!`);
 
                     const redirectPath = data.redirect_url || '/';
-                    window.location.href = redirectPath;
+                    await fetchProtectedPage(redirectPath);
                 } else {
                     throw new Error(data.message || 'Login failed');
                 }
             } catch (error) {
-                toastr.error(error.message || 'Error during login');
-                console.error('Login Error:', error);
+                toastr.error(error.message || 'Unable to connect to server.');
+                console.error('Login Fetch Error:', error);
+                console.log('Error Name:', error.name);
+                console.log('Error Message:', error.message);
             }
         });
 
@@ -249,7 +330,6 @@
             const newPassword = document.getElementById('newPassword').value;
             const confirmNewPassword = document.getElementById('confirmNewPassword').value;
 
-            // Password validation
             const passwordRegex = /^(?=.*\d).{8,}$/;
             if (!passwordRegex.test(newPassword)) {
                 toastr.error('New password must be at least 8 characters long and include numbers');
@@ -288,6 +368,15 @@
             } catch (error) {
                 toastr.error(error.message || 'Error verifying OTP');
                 console.error('Verification Error:', error, 'Email:', email, 'Code:', code);
+            }
+        });
+
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('authToken');
+            const path = window.location.pathname;
+            console.log('Page Load - Path:', path, 'Token Exists:', !!token);
+            if (token && path !== '/' && path !== '/signup') {
+                fetchProtectedPage(path);
             }
         });
     </script>

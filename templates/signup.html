@@ -153,6 +153,12 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label for="signup-phone">Phone Number:</label>
+                    <div class="input-container">
+                        <input type="tel" id="signup-phone" name="signup_phone" required autocomplete="off" pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
+                    </div>
+                </div>
+                <div class="form-group">
                     <label for="signup-email">Email:</label>
                     <div class="input-container">
                         <input type="text" id="signup-email" name="signup_email" required autocomplete="off">
@@ -185,6 +191,7 @@
             const emailInput = document.getElementById('signup-email');
             const passwordInput = document.getElementById('signup-password');
             const confirmPasswordInput = document.getElementById('signup-confirm-password');
+            const phoneInput = document.getElementById('signup-phone');
 
             // Set proper types
             emailInput.type = 'email';
@@ -195,12 +202,14 @@
                 emailInput.value = '';
                 passwordInput.value = '';
                 confirmPasswordInput.value = '';
+                phoneInput.value = '';
             }, 100);
 
             setTimeout(function() {
                 emailInput.value = '';
                 passwordInput.value = '';
                 confirmPasswordInput.value = '';
+                phoneInput.value = '';
             }, 500); // Extra delay for Chrome
         };
 
@@ -212,6 +221,9 @@
             this.value = '';
         });
         document.getElementById('signup-confirm-password').addEventListener('focus', function() {
+            this.value = '';
+        });
+        document.getElementById('signup-phone').addEventListener('focus', function() {
             this.value = '';
         });
 
@@ -255,11 +267,12 @@
             }
 
             const contactName = $('#contact_name').val().trim();
+            const phone = $('#signup-phone').val().trim();
             const email = $('#signup-email').val().trim();
             const password = $('#signup-password').val().trim();
             const confirmPassword = $('#signup-confirm-password').val().trim();
 
-            if (!contactName || !email || !password || !confirmPassword) {
+            if (!contactName || !phone || !email || !password || !confirmPassword) {
                 toastr.error('All fields must be filled.');
                 return;
             }
@@ -277,9 +290,17 @@
                 return;
             }
 
+            // Phone number validation
+            const phoneRegex = /^\d{10}$/;
+            if (!phoneRegex.test(phone)) {
+                toastr.error('Please enter a valid 10-digit phone number with no spaces or special characters.');
+                return;
+            }
+
             const signupData = {
                 signup_type: signupType,
                 contact_name: contactName,
+                signup_phone: phone,
                 signup_email: email,
                 signup_password: password
             };
