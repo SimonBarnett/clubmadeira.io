@@ -1,4 +1,7 @@
-referral_bp = Blueprint('referral', __name__
+from flask import Blueprint, jsonify, request 
+from utils.users import load_users_settings, save_users_settings 
+ 
+referral_bp = Blueprint('referral', __name__) 
  
 @referral_bp.route('/referal', methods=['POST']) 
 def handle_referral(): 

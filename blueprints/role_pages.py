@@ -1,4 +1,7 @@
-role_pages_bp = Blueprint('role_pages', __name__
+from flask import Blueprint, render_template 
+from utils.auth import login_required 
+ 
+role_pages_bp = Blueprint('role_pages', __name__) 
  
 @role_pages_bp.route('/admin', methods=['GET']) 
 @login_required(["admin"], require_all=True) 

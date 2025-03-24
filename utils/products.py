@@ -1,3 +1,7 @@
+from .config import load_config 
+from amazon_paapi import AmazonApi 
+ 
+def search_all_discounted(category_id): 
     config = load_config() 
     items = [] 
     if all(config.get("amazon_uk", {}).values()): 

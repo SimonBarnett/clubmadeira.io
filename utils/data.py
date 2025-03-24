@@ -1,3 +1,7 @@
+import os 
+import json 
+ 
+SITE_REQUEST_DIR = os.path.join(os.path.dirname(__file__), "siterequest") 
  
 def load_site_request(user_id): 
     file_path = os.path.join(SITE_REQUEST_DIR, user_id) 

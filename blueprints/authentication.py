@@ -1,4 +1,11 @@
-authentication_bp = Blueprint('authentication', __name__
+from flask import Blueprint, jsonify, request, render_template 
+from utils.auth import login_user, signup_user 
+from utils.users import load_users_settings, save_users_settings 
+import jwt 
+import datetime 
+from flask import current_app 
+ 
+authentication_bp = Blueprint('authentication', __name__) 
  
 @authentication_bp.route('/login', methods=['POST']) 
 def login(): 

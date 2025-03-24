@@ -1,3 +1,11 @@
+import jwt 
+import datetime 
+from flask import current_app, request, jsonify 
+from functools import wraps 
+import bcrypt 
+from .users import load_users_settings, save_users_settings, generate_code 
+ 
+def login_required(required_permissions, require_all=True): 
     def decorator(f): 
         @wraps(f) 
         def decorated_function(*args, **kwargs): 
@@ -6,7 +14,7 @@
                 return jsonify({"status": "error", "message": "Token required"}), 401 
             try: 
                 payload = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=["HS256"]) 
-                if datetime.datetime.utcnow().timestamp() 
+                if datetime.datetime.utcnow().timestamp() > payload["exp"]: 
                     return jsonify({"status": "error", "message": "Token expired"}), 401 
                 request.user_id = payload["userId"] 
                 request.permissions = payload.get("permissions", []) 

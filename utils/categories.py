@@ -1,3 +1,8 @@
+from amazon_paapi import AmazonApi 
+from .config import load_config 
+from pseudo_categories import PSEUDO_CATEGORIES 
+ 
+def get_all_categories(parent_id=None): 
     config = load_config() 
     if parent_id and all(config.get("amazon_uk", {}).values()): 
         amazon = AmazonApi(config["amazon_uk"]["ACCESS_KEY"], config["amazon_uk"]["SECRET_KEY"], config["amazon_uk"]["ASSOCIATE_TAG"], config["amazon_uk"]["COUNTRY"]) 
