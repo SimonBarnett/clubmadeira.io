@@ -3,165 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>clubmadeira.io | Admin</title>
+    <title>clubmadeira.io | Partner</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            display: block;
-        }
-        .header { 
-            height: 150px; 
-            width: 100%;
-            background-color: #f4f4f4; 
-            margin-bottom: 25px; 
-            overflow: hidden;
-            position: relative;
-            display: block;
-        }
-        .header-content { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 20px; 
-        }
-        .main-container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            display: flex; 
-            gap: 20px; 
-        }
-        .menu-container { 
-            flex: 1; 
-            max-width: 300px; 
-        }
-        .content-container { 
-            flex: 2; 
-        }
-        .menu { 
-            margin-bottom: 20px; 
-            text-align: left; 
-        }
-        .menu button { 
-            padding: 10px; 
-            background-color: #007BFF; 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            font-size: 14px; 
-            text-align: left; 
-            width: 100%; 
-            margin-bottom: 5px; 
-            display: block; 
-        }
-        .menu button:hover { 
-            background-color: #0056b3; 
-        }
-        .submenu { 
-            display: none; 
-            padding-left: 20px; 
-        }
-        .submenu.open { 
-            display: block; 
-        }
-        .section { 
-            display: none; 
-        }
-        .section.active { 
-            display: block; 
-        }
-        .form { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            max-width: 400px; 
-        }
-        .form label { 
-            font-weight: bold; 
-        }
-        .form input, .form select { 
-            padding: 5px; 
-        }
-        .form button { 
-            padding: 10px; 
-            background-color: #007BFF; 
-            color: white; 
-            border: none; 
-            cursor: pointer; 
-        }
-        .form button:hover { 
-            background-color: #0056b3; 
-        }
-        .signup-instructions { 
-            margin-top: 15px; 
-            font-size: 0.9em; 
-            color: #555; 
-        }
-        .signup-instructions a { 
-            color: #007BFF; 
-            text-decoration: none; 
-        }
-        .signup-instructions a:hover { 
-            text-decoration: underline; 
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 8px; 
-            text-align: left; 
-        }
-        .deals-table th { 
-            background-color: #f2f2f2; 
-        }
-        .treeview { 
-            max-height: 600px; 
-            overflow-y: auto; 
-            margin-bottom: 10px; 
-        }
-        .treeview, .treeview ul, .treeview li { 
-            list-style-type: none; 
-            padding: 0; 
-            margin: 0; 
-        }
-        .treeview .node { 
-            display: flex; 
-            align-items: center; 
-        }
-        .treeview .toggle { 
-            cursor: pointer; 
-            width: 20px; 
-            text-align: center; 
-            font-weight: bold; 
-        }
-        .treeview .subcategories { 
-            display: none; 
-            padding-left: 20px; 
-        }
-        .treeview .subcategories.open { 
-            display: block; 
-        }
-        #toast-container > .toast-success { 
-            background-color: #28a745; 
-            border-color: #218838; 
-        }
-        #toast-container > .toast-error { 
-            background-color: #dc3545; 
-            border-color: #c82333; 
-        }
-        .action-cell { 
-            display: flex; 
-            gap: 10px; 
-            align-items: center; 
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="header">
@@ -171,1049 +16,119 @@
     </div>
     <div class="main-container">
         <div class="menu-container">
-            <div class="menu">
-                <button data-section="deal_listings">Deal Listings</button>
-                <button data-submenu="affiliatePrograms" data-section="affiliateProgramsIntro">Affiliate Programs <i class="fas fa-caret-down"></i></button>
-                <div id="affiliatePrograms" class="submenu">
-                    <button data-section="amazon_uk">Amazon UK</button>
-                    <button data-section="ebay_uk">eBay UK</button>
-                    <button data-section="awin">Awin</button>
-                    <button data-section="cj">CJ</button>
-                    <button data-section="textmagic">TextMagic</button>
-                    <button data-section="tiny">tiny</button>
-                </div>
-                <button data-submenu="userManagement" data-section="userManagementIntro">User Management <i class="fas fa-caret-down"></i></button>
-                <div id="userManagement" class="submenu">
-                    <button data-section="partners">Partners</button>
-                    <button data-section="communities">Communities</button>
-                    <button data-section="merchants">Merchants</button>
-                </div>
-                <button data-submenu="testScripts" data-section="testScriptsIntro">Test Scripts <i class="fas fa-caret-down"></i></button>
-                <div id="testScripts" class="submenu">
-                    <button data-href="/partner">Partner</button>
-                    <button data-href="/community">Community</button>
-                    <button data-href="/merchant">Merchant</button>
-                    <button data-submenu="referralTests" data-section="referralTestsIntro">Referral Tests <i class="fas fa-caret-down"></i></button>
-                    <div id="referralTests" class="submenu">
-                        <button data-section="page_visit_test">Page Visit Referral Test</button>
-                        <button data-section="order_test">Order Referral Test</button>
-                    </div>
-                </div>
-                <button id="logOffBtn" style="background-color: #dc3545;">Log Off</button>
+            <div class="menu" id="menu">
+                <input type="text" id="userId" style="display: none;">
+                <!-- Menu items will be dynamically generated -->
             </div>
         </div>
         <div class="content-container">
             <div id="welcome" class="section active">
-                <h2>Welcome to Admin Dashboard</h2>
-                <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
-                <p>Use the menu on the left to:</p>
-                <ul>
-                    <li>View and filter discounted deals in "Deal Listings"</li>
-                    <li>Manage affiliate credentials under "Affiliate Programs"</li>
-                    <li>Manage users under "User Management"</li>
-                    <li>Test referral tracking with "Test Scripts"</li>
-                </ul>
+                <h2>Welcome to Your Partner Dashboard</h2>
+                <p>This dashboard is designed for partners to manage merchant integrations with clubmadeira.io. Use the "My Account" section to update your contact details or change your password. If you have admin privileges, you can return to the admin panel using the "Back to Admin" button.</p>
             </div>
-
-            <div id="deal_listings" class="section">
-                <h2>Discounted Deal Listings</h2>
-                <p>This section displays all currently active deal listings available across your affiliate programs.</p>
-                <div style="display: flex; gap: 20px;">
-                    <div style="flex: 1; max-width: 300px;">
-                        <h3>Categories</h3>
-                        <div class="treeview" id="categoryTree"></div>
+            <div id="my-account" class="section">
+                <h2>My Account</h2>
+                <div class="settings-form">
+                    <label for="contactName">Contact Name:</label>
+                    <input type="text" id="contactName" placeholder="Enter contact name">
+                    <label for="websiteUrl">Website URL:</label>
+                    <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                    <label for="emailAddress">Email Address:</label>
+                    <input type="email" id="emailAddress" placeholder="Enter email address">
+                    <label for="phoneNumber">Phone Number:</label>
+                    <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                    <button data-action="saveSettings">Save Settings</button>
+                    <h3>Change Password</h3>
+                    <div class="password-container">
+                        <label for="currentPassword">Current Password:</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password">
+                        <i class="fas fa-eye password-toggle" data-field="currentPassword"></i>
                     </div>
-                    <div style="flex: 2;">
-                        <table class="deals-table">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Title</th>
-                                    <th>URL</th>
-                                    <th>Price</th>
-                                    <th>Original</th>
-                                    <th>Discount %</th>
-                                    <th>Image</th>
-                                    <th>QTY</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dealList"></tbody>
-                        </table>
+                    <div class="password-container">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password">
+                        <i class="fas fa-eye password-toggle" data-field="newPassword"></i>
                     </div>
+                    <div class="password-container">
+                        <label for="confirmPassword">Confirm New Password:</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                        <i class="fas fa-eye password-toggle" data-field="confirmPassword"></i>
+                    </div>
+                    <button data-action="savePassword">Change Password</button>
                 </div>
             </div>
-
-            <div id="affiliateProgramsIntro" class="section">
-                <h2>Affiliate Programs</h2>
-                <p>Use this section to manage your affiliate program credentials.</p>
-                <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
-            </div>
-
-            <div id="amazon_uk" class="section">
-                <h2>Amazon UK Credentials</h2>
-                <div class="form">
-                    <label for="amazonAccessKey">Access Key:</label>
-                    <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
-                    <label for="amazonSecretKey">Secret Key:</label>
-                    <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
-                    <label for="amazonAssociateTag">Associate Tag:</label>
-                    <input type="text" id="amazonAssociateTag" placeholder="Enter Associate Tag">
-                    <label for="amazonCountry">Country:</label>
-                    <input type="text" id="amazonCountry" placeholder="Enter Country (e.g., UK)">
-                    <button data-affiliate="amazon_uk">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
-                </div>
-            </div>
-
-            <div id="ebay_uk" class="section">
-                <h2>eBay UK Credentials</h2>
-                <div class="form">
-                    <label for="ebayAppId">App ID:</label>
-                    <input type="text" id="ebayAppId" placeholder="Enter App ID">
-                    <button data-affiliate="ebay_uk">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
-                </div>
-            </div>
-
-            <div id="awin" class="section">
-                <h2>Awin Credentials</h2>
-                <div class="form">
-                    <label for="awinApiToken">API Token:</label>
-                    <input type="text" id="awinApiToken" placeholder="Enter API Token">
-                    <button data-affiliate="awin">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
-                </div>
-            </div>
-
-            <div id="cj" class="section">
-                <h2>CJ Credentials</h2>
-                <div class="form">
-                    <label for="cjApiKey">API Key:</label>
-                    <input type="text" id="cjApiKey" placeholder="Enter API Key">
-                    <label for="cjWebsiteId">Website ID:</label>
-                    <input type="text" id="cjWebsiteId" placeholder="Enter Website ID">
-                    <button data-affiliate="cj">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
-                </div>
-            </div>
-
-            <div id="textmagic" class="section">
-                <h2>TextMagic Credentials</h2>
-                <div class="form">
-                    <label for="textmagicUsername">Username:</label>
-                    <input type="text" id="textmagicUsername" placeholder="Enter Username">
-                    <label for="textmagicApiKey">API Key:</label>
-                    <input type="text" id="textmagicApiKey" placeholder="Enter API Key">
-                    <button data-affiliate="textmagic">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
-                </div>
-            </div>
-
-            <div id="tiny" class="section">
-                <h2>tiny Credentials</h2>
-                <div class="form">
-                    <label for="tinyApiKey">API Key:</label>
-                    <input type="text" id="tinyApiKey" placeholder="Enter API Key">
-                    <button data-affiliate="tiny">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
-                </div>
-            </div>
-
-            <div id="userManagementIntro" class="section">
-                <h2>User Management</h2>
-                <p>This section allows you to manage different types of users in your system.</p>
-                <p>Select a user type from the menu to view their details or modify their permissions:</p>
-                <ul>
-                    <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
-                    <li><strong>Communities:</strong> View community users.</li>
-                    <li><strong>Merchants:</strong> Manage merchant users.</li>
-                </ul>
-            </div>
-
-            <div id="merchants" class="section">
-                <h2>Merchant Management</h2>
-                <table>
+            <div id="my-products" class="section">
+                <h2>My Products</h2>
+                <p>These are the products from your parts feed.</p>
+                <table id="productTable">
                     <thead>
-                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
                     </thead>
-                    <tbody id="merchantsList"></tbody>
+                    <tbody id="productList"></tbody>
                 </table>
             </div>
-
-            <div id="communities" class="section">
-                <h2>Communities Management</h2>
-                <table>
-                    <thead>
-                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th></tr>
-                    </thead>
-                    <tbody id="communitiesList"></tbody>
-                </table>
-            </div>
-
-            <div id="partners" class="section">
-                <h2>Partner Management</h2>
-                <table>
-                    <thead>
-                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="partnersList"></tbody>
-                </table>
-            </div>
-
-            <div id="testScriptsIntro" class="section">
-                <h2>Test Scripts</h2>
-                <p>Use this section to test referral tracking and other scripts.</p>
-                <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
-            </div>
-
-            <div id="referralTestsIntro" class="section">
-                <h2>Referral Tests</h2>
-                <p>This section contains tools to test referral tracking functionality.</p>
-                <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
-            </div>
-
-            <div id="page_visit_test" class="section">
-                <h2>Page Visit Referral Test</h2>
-                <div class="form">
-                    <form id="pageVisitForm">
-                        <table>
-                            <tr><td><label for="pageReferer">Referer:</label></td><td><select id="pageReferer" name="referer"></select></td></tr>
-                            <tr><td><label for="page">Page:</label></td><td><input type="text" id="page" name="page" value="/home"></td></tr>
-                            <tr><td><label for="pageTimestamp">Timestamp:</label></td><td><input type="text" id="pageTimestamp" name="timestamp"></td></tr>
-                            <tr><td colspan="2"><button type="submit">Submit Page Visit</button></td></tr>
-                        </table>
-                    </form>
+            <div id="wix-keys" class="section">
+                <h2>Wix Keys</h2>
+                <p>Your Wix Client ID is used to integrate your merchant account with Wix services. Ensure it matches the key provided in your Wix developer dashboard.</p>
+                <div class="settings-form">
+                    <label for="wixClientId">Wix Client ID:</label>
+                    <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
+                    <button data-action="saveWixClientId">Save Wix Client ID</button>
                 </div>
             </div>
-
-            <div id="order_test" class="section">
-                <h2>Order Referral Test</h2>
-                <div class="form">
-                    <form id="orderForm">
-                        <table>
-                            <tr><td><label for="orderReferer">Referer:</label></td><td><select id="orderReferer" name="referer"></select></td></tr>
-                            <tr><td><label for="orderId">Order ID:</label></td><td><input type="text" id="orderId" name="orderId" value="ORD12345"></td></tr>
-                            <tr><td><label for="buyer">Buyer Name:</label></td><td><input type="text" id="buyer" name="buyer" value="John Doe"></td></tr>
-                            <tr><td><label for="total">Total Amount (£):</label></td><td><input type="number" id="total" name="total" value="99.99" step="0.01"></td></tr>
-                            <tr><td><label for="orderTimestamp">Timestamp:</label></td><td><input type="text" id="orderTimestamp" name="timestamp"></td></tr>
-                            <tr><td colspan="2"><button type="submit">Submit Order</button></td></tr>
-                        </table>
-                    </form>
+            <div id="site-requests" class="section">
+                <h2>Site Requests</h2>
+                <p>View and manage site requests from merchants and communities. Click a row to see details.</p>
+                <table id="siteRequestsTable">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Received At</th>
+                            <th>Contact Name</th>
+                            <th>Email</th>
+                            <th>Organisation</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="siteRequestsList"></tbody>
+                </table>
+            </div>
+            <div id="site-request-detail" class="section">
+                <h2>Site Request Details</h2>
+                <div class="settings-form">
+                    <button data-section="site-requests">Back to Site Requests</button>
+                    <div id="siteRequestContent"></div>
+                </div>
+            </div>
+            <div id="documentation" class="section">
+                <h2>Documentation</h2>
+                <div id="documentation-content">
+                    <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
+                </div>
+            </div>
+            <div id="apiKeyModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" data-action="closeApiKeyModal">×</span>
+                    <h3>Enter API Key</h3>
+                    <label for="merchantWixClientId">Wix Client ID:</label>
+                    <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
+                    <button data-action="saveMerchantWixClientId">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
+    <script src="/js/site-auth.js"></script>
+    <script src="/js/site-navigation.js"></script>
+    <script src="/js/page-load.js"></script>
+    <script src="/js/user-management.js"></script>
+    <script src="/js/partner-page.js"></script>
     <script>
-        // Global variables defined once
-        if (typeof window.apiUrl === 'undefined') window.apiUrl = 'https://clubmadeira.io';
-        if (typeof window.userPermissions === 'undefined') window.userPermissions = [];
-
-        (function() { // Self-executing function to isolate scope
-            console.log('Admin inline script running'); // Debug log to confirm script execution
-
-            function decodeJWT(token) {
-                console.log('Decoding JWT:', token); // Debug: Log token being decoded
-                if (!token || typeof token !== 'string') {
-                    console.warn('Invalid token: null or not a string');
-                    return null;
-                }
-                if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
-                    console.warn('Token does not match JWT format');
-                    return null;
-                }
-                const parts = token.split('.');
-                try {
-                    const base64Url = parts[1];
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-                    const decoded = JSON.parse(jsonPayload);
-                    console.log('Decoded JWT payload:', decoded); // Debug: Log decoded payload
-                    return decoded;
-                } catch (error) {
-                    console.error('Error decoding JWT:', error.message);
-                    return null;
-                }
-            }
-
-            function initializeAdmin() {
-                console.log('Initializing admin page'); // Existing debug log
-                const token = localStorage.getItem('authToken');
-                console.log('Auth token from localStorage:', token); // Debug: Log token
-                if (!token) {
-                    console.warn('No auth token found, redirecting to /');
-                    window.location.href = '/';
-                    return;
-                }
-                const decoded = decodeJWT(token);
-                console.log('Decoded token:', decoded); // Debug: Log decoded token
-                if (!decoded) {
-                    console.warn('Failed to decode token, redirecting to /');
-                    window.location.href = '/';
-                    return;
-                }
-                window.userPermissions = decoded.permissions || [];
-                console.log('User permissions set:', window.userPermissions); // Debug: Log permissions
-                if (!window.userPermissions.includes('admin')) {
-                    console.warn('Admin permission not found:', window.userPermissions);
-                    toastr.error('Permission denied: Admin permission required');
-                    window.location.href = '/';
-                    return;
-                }
-                loadBranding();
-                attachEventListeners();
-            }
-
-            // Define window.initPage for dynamic initialization
-            window.initPage = function() {
-                console.log('window.initPage called'); // Debug: Log initPage invocation
-                initializeAdmin();
-            };
-
-            toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000, showMethod: 'slideDown', hideMethod: 'slideUp' };
-
-            async function fetchProtectedPage(url) {
-                console.log('fetchProtectedPage called with URL:', url); // Debug: Log function call
-                window.initPage = null; 
-                const token = localStorage.getItem('authToken');
-                console.log('Token for fetch:', token); // Debug: Log token
-                if (!token) {
-                    console.warn('No token for fetch, redirecting to /');
-                    toastr.error('No authentication token found. Please log in.');
-                    window.location.href = '/';
-                    return;
-                }
-                try {
-                    console.log('Requested URL:', url); // Existing debug
-                    const timestamp = Date.now();
-                    const fetchUrl = `${window.apiUrl}${url}?t=${timestamp}`; 
-                    console.log('Fetching from:', fetchUrl); // Existing debug
-                    const response = await fetch(fetchUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'text/html'
-                        }
-                    });
-                    console.log('Response status:', response.status); // Existing debug
-                    console.log('Fetched URL:', response.url); // Existing debug
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('Fetch failed with status:', response.status, 'Error text:', errorText);
-                        throw new Error(`Server returned ${response.status}: ${errorText}`);
-                    }
-                    const html = await response.text();
-                    console.log('Fetched HTML for', url, ':', html); // Existing debug
-                    document.body.innerHTML = html;
-                    console.log('Body updated with new HTML'); // Debug: Confirm body update
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const scripts = doc.querySelectorAll('script:not([src])');
-                    console.log('Found', scripts.length, 'inline scripts to execute'); // Debug: Log script count
-                    scripts.forEach((script, index) => {
-                        if (script.innerHTML.trim()) {
-                            console.log(`Executing inline script ${index + 1}`); // Existing debug
-                            try {
-                                new Function(script.innerHTML)();
-                                console.log(`Inline script ${index + 1} executed successfully`); // Existing debug
-                            } catch (e) {
-                                console.error(`Error executing inline script ${index + 1}:`, e); // Existing debug
-                            }
-                        }
-                    });
-                    if (typeof window.initPage === 'function') {
-                        console.log('Calling window.initPage'); // Existing debug
-                        window.initPage();
-                    } else {
-                        console.warn('No initPage function found for this page'); // Existing debug
-                    }
-                } catch (error) {
-                    console.error('Error fetching protected page:', error);
-                    toastr.error(error.message || 'Failed to load protected page');
-                    setTimeout(() => window.location.href = '/', 3000);
-                }
-            }
-
-            function handleSectionClick(event) {
-                const section = this.getAttribute('data-section');
-                const submenu = this.getAttribute('data-submenu');
-                console.log('Section clicked:', section, 'Submenu:', submenu); // Debug: Log click event
-                if (submenu) toggleSubmenu(submenu);
-                if (section) showSection(section);
-            }
-
-            function handleHrefClick() {
-                const href = this.getAttribute('data-href');
-                console.log('Href clicked:', href); // Debug: Log href click
-                fetchProtectedPage(href);
-            }
-
-            function handleAffiliateClick() {
-                const affiliate = this.getAttribute('data-affiliate');
-                console.log('Affiliate button clicked:', affiliate); // Debug: Log affiliate click
-                updateAffiliate(affiliate);
-            }
-
-            function attachEventListeners() {
-                console.log('Attaching event listeners'); // Debug: Log listener attachment
-                const sectionButtons = document.querySelectorAll('.menu button[data-section]');
-                sectionButtons.forEach(button => {
-                    button.removeEventListener('click', handleSectionClick);
-                    button.addEventListener('click', handleSectionClick);
-                });
-
-                const hrefButtons = document.querySelectorAll('.menu button[data-href]');
-                hrefButtons.forEach(button => {
-                    button.removeEventListener('click', handleHrefClick);
-                    button.addEventListener('click', handleHrefClick);
-                });
-
-                const affiliateButtons = document.querySelectorAll('.form button[data-affiliate]');
-                affiliateButtons.forEach(button => {
-                    button.removeEventListener('click', handleAffiliateClick);
-                    button.addEventListener('click', handleAffiliateClick);
-                });
-
-                const logOffBtn = document.getElementById('logOffBtn');
-                if (logOffBtn) {
-                    logOffBtn.removeEventListener('click', logOff);
-                    logOffBtn.addEventListener('click', logOff);
-                }
-
-                submitReferral('pageVisitForm', 'Page visit recorded successfully');
-                submitReferral('orderForm', 'Order recorded successfully');
-            }
-
-            async function loadBranding() {
-                console.log('Loading branding'); // Debug: Log branding load start
-                try {
-                    const response = await authenticatedFetch(`${window.apiUrl}/branding`);
-                    if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
-                    const data = await response.json();
-                    console.log('Branding data:', data); // Debug: Log fetched branding data
-                    document.getElementById('brandingContent').innerHTML = data.content || '<h1>Admin Dashboard</h1>';
-                    console.log('Branding content updated'); // Debug: Confirm branding update
-                } catch (error) {
-                    console.error('Error loading branding:', error.message);
-                    toastr.error(`Error loading branding: ${error.message}`);
-                    document.getElementById('brandingContent').innerHTML = '<h1>Admin Dashboard</h1>';
-                }
-            }
-
-            function getCurrentTimestamp() {
-                const now = new Date();
-                const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-                console.log('Generated timestamp:', timestamp); // Debug: Log timestamp
-                return timestamp;
-            }
-
-            async function authenticatedFetch(url, options = {}) {
-                const token = localStorage.getItem('authToken');
-                console.log('Authenticated fetch to:', url, 'with token:', token); // Debug: Log fetch details
-                options.headers = {
-                    ...options.headers,
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                };
-                const response = await fetch(url, options);
-                console.log('Fetch response status:', response.status); // Debug: Log response status
-                if (response.status === 401) {
-                    console.warn('Unauthorized fetch, redirecting to /');
-                    toastr.error('Session expired. Please log in again.');
-                    localStorage.removeItem('authToken');
-                    window.location.href = '/';
-                }
-                return response;
-            }
-
-            function toggleSubmenu(submenuId) {
-                const submenu = document.getElementById(submenuId);
-                console.log('Toggling submenu:', submenuId, 'Element:', submenu); // Debug: Log submenu toggle
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                }
-            }
-
-            function showSection(section) {
-                console.log('Showing section:', section); // Debug: Log section show
-                document.querySelectorAll('.section').forEach(s => {
-                    s.classList.remove('active');
-                    s.style.display = 'none';
-                });
-                const activeSection = document.getElementById(section);
-                if (activeSection) {
-                    activeSection.classList.add('active');
-                    activeSection.style.display = 'block';
-                    loadSection(section);
-                } else {
-                    console.warn('Section not found:', section); // Debug: Warn if section missing
-                }
-            }
-
-            async function loadSection(section) {
-                console.log('Loading section:', section); // Debug: Log section load
-                if (section === 'welcome' || section === 'page_visit_test' || section === 'order_test' || 
-                    section === 'affiliateProgramsIntro' || section === 'userManagementIntro' || 
-                    section === 'testScriptsIntro' || section === 'referralTestsIntro') {
-                    if (section === 'page_visit_test' || section === 'order_test') {
-                        const timestampId = section === 'page_visit_test' ? 'pageTimestamp' : 'orderTimestamp';
-                        const timestampElement = document.getElementById(timestampId);
-                        console.log('Timestamp element:', timestampElement); // Debug: Log timestamp element
-                        if (timestampElement) {
-                            timestampElement.value = getCurrentTimestamp();
-                            console.log('Set timestamp for', timestampId); // Debug: Confirm timestamp set
-                        } else {
-                            console.error('Timestamp element not found:', timestampId); // Debug: Error if element missing
-                        }
-                        await populateRefererDropdown(section === 'page_visit_test' ? 'pageReferer' : 'orderReferer');
-                    }
-                    return;
-                }
-
-                if (section === 'deal_listings') {
-                    await loadCategories();
-                    return;
-                }
-
-                if (section === 'merchants') {
-                    await loadMerchants();
-                    return;
-                }
-
-                if (section === 'communities') {
-                    await loadCommunities();
-                    return;
-                }
-
-                if (section === 'partners') {
-                    await loadPartners();
-                    return;
-                }
-
-                try {
-                    const response = await authenticatedFetch(`${window.apiUrl}/config`);
-                    if (!response.ok) throw new Error(`Failed to fetch /config: ${response.status}`);
-                    const data = await response.json();
-                    const config = data.config[section] || {};
-                    console.log('Config data for', section, ':', config); // Debug: Log config data
-
-                    if (section === 'amazon_uk') {
-                        const elements = {
-                            amazonAccessKey: 'ACCESS_KEY',
-                            amazonSecretKey: 'SECRET_KEY',
-                            amazonAssociateTag: 'ASSOCIATE_TAG',
-                            amazonCountry: 'COUNTRY'
-                        };
-                        Object.entries(elements).forEach(([id, key]) => {
-                            const el = document.getElementById(id);
-                            console.log(`Checking element ${id}:`, el); // Debug: Log each element
-                            if (el) {
-                                el.value = config[key] || '';
-                                console.log(`Set ${id} to:`, el.value); // Debug: Confirm value set
-                            } else {
-                                console.error(`Element ${id} not found`); // Debug: Error if element missing
-                            }
-                        });
-                    } else if (section === 'ebay_uk') {
-                        const el = document.getElementById('ebayAppId');
-                        console.log('eBay App ID element:', el); // Debug: Log element
-                        if (el) {
-                            el.value = config.APP_ID || '';
-                            console.log('Set ebayAppId to:', el.value); // Debug: Confirm value set
-                        } else {
-                            console.error('Element ebayAppId not found'); // Debug: Error if element missing
-                        }
-                    } else if (section === 'awin') {
-                        const el = document.getElementById('awinApiToken');
-                        console.log('Awin API Token element:', el); // Debug: Log element
-                        if (el) {
-                            el.value = config.API_TOKEN || '';
-                            console.log('Set awinApiToken to:', el.value); // Debug: Confirm value set
-                        } else {
-                            console.error('Element awinApiToken not found'); // Debug: Error if element missing
-                        }
-                    } else if (section === 'cj') {
-                        const elements = {
-                            cjApiKey: 'API_KEY',
-                            cjWebsiteId: 'WEBSITE_ID'
-                        };
-                        Object.entries(elements).forEach(([id, key]) => {
-                            const el = document.getElementById(id);
-                            console.log(`Checking element ${id}:`, el); // Debug: Log each element
-                            if (el) {
-                                el.value = config[key] || '';
-                                console.log(`Set ${id} to:`, el.value); // Debug: Confirm value set
-                            } else {
-                                console.error(`Element ${id} not found`); // Debug: Error if element missing
-                            }
-                        });
-                    } else if (section === 'textmagic') {
-                        const elements = {
-                            textmagicUsername: 'USERNAME',
-                            textmagicApiKey: 'API_KEY'
-                        };
-                        Object.entries(elements).forEach(([id, key]) => {
-                            const el = document.getElementById(id);
-                            console.log(`Checking element ${id}:`, el); // Debug: Log each element
-                            if (el) {
-                                el.value = config[key] || '';
-                                console.log(`Set ${id} to:`, el.value); // Debug: Confirm value set
-                            } else {
-                                console.error(`Element ${id} not found`); // Debug: Error if element missing
-                            }
-                        });
-                    } else if (section === 'tiny') {
-                        const el = document.getElementById('tinyApiKey');
-                        console.log('Tiny API Key element:', el); // Debug: Log element
-                        if (el) {
-                            el.value = config.API_KEY || '';
-                            console.log('Set tinyApiKey to:', el.value); // Debug: Confirm value set
-                        } else {
-                            console.error('Element tinyApiKey not found'); // Debug: Error if element missing
-                        }
-                    }
-                    toastr.success(`Loaded credentials for ${section}`);
-                } catch (error) {
-                    console.error('Error loading section credentials:', error.message); // Debug: Log error
-                    toastr.error(`Error loading credentials: ${error.message}`);
-                }
-            }
-
-            async function populateRefererDropdown(selectId) {
-                console.log('Populating referer dropdown:', selectId); // Debug: Log dropdown population
-                try {
-                    const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
-                    if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
-                    const usersData = await usersResponse.json();
-                    const users = usersData.users;
-                    console.log('Fetched users:', users); // Debug: Log users data
-
-                    const communityUsers = [];
-                    for (const user of users) {
-                        const userResponse = await authenticatedFetch(`${window.apiUrl}/users/${user.USERid}`);
-                        if (!userResponse.ok) continue;
-                        const userData = await userResponse.json();
-                        const permissions = userData.user.permissions || [];
-                        if (permissions.includes('community') && !permissions.includes('admin')) {
-                            communityUsers.push({ USERid: user.USERid, contact_name: user.contact_name });
-                        }
-                    }
-                    console.log('Filtered community users:', communityUsers); // Debug: Log filtered users
-
-                    const select = document.getElementById(selectId);
-                    console.log('Select element:', select); // Debug: Log select element
-                    if (!select) {
-                        console.error('Select element not found:', selectId); // Debug: Error if element missing
-                        return;
-                    }
-                    select.innerHTML = '';
-                    communityUsers.forEach(user => {
-                        const option = document.createElement('option');
-                        option.value = user.USERid;
-                        option.text = user.contact_name;
-                        select.appendChild(option);
-                    });
-                    if (communityUsers.length === 0) {
-                        select.innerHTML = '<option value="">No community users found</option>';
-                    }
-                    console.log('Dropdown populated with', communityUsers.length, 'options'); // Debug: Confirm population
-                } catch (error) {
-                    console.error('Error populating referer dropdown:', error.message); // Debug: Log error
-                    toastr.error(`Error loading referer options: ${error.message}`);
-                    document.getElementById(selectId).innerHTML = '<option value="">Error loading users</option>';
-                }
-            }
-
-            async function loadMerchants() {
-                console.log('Loading merchants'); // Debug: Log merchants load
-                try {
-                    const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
-                    if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
-                    const usersData = await usersResponse.json();
-                    const users = usersData.users;
-
-                    const merchants = [];
-                    for (const user of users) {
-                        const userResponse = await authenticatedFetch(`${window.apiUrl}/users/${user.USERid}`);
-                        if (!userResponse.ok) continue;
-                        const userData = await userResponse.json();
-                        const permissions = userData.user.permissions || [];
-                        if (permissions.includes('merchant') && !permissions.includes('admin')) {
-                            merchants.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
-                        }
-                    }
-                    console.log('Merchants data:', merchants); // Debug: Log merchants data
-                    updateUserTable('merchantsList', merchants, 'merchants');
-                    toastr.success('Merchants loaded successfully');
-                } catch (error) {
-                    console.error('Error loading merchants:', error.message); // Debug: Log error
-                    toastr.error(`Error loading merchants: ${error.message}`);
-                }
-            }
-
-            async function loadCommunities() {
-                console.log('Loading communities'); // Debug: Log communities load
-                try {
-                    const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
-                    if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
-                    const usersData = await usersResponse.json();
-                    const users = usersData.users;
-
-                    const communities = [];
-                    for (const user of users) {
-                        const userResponse = await authenticatedFetch(`${window.apiUrl}/users/${user.USERid}`);
-                        if (!userResponse.ok) continue;
-                        const userData = await userResponse.json();
-                        const permissions = userData.user.permissions || [];
-                        if (permissions.includes('community') && !permissions.includes('admin')) {
-                            communities.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
-                        }
-                    }
-                    console.log('Communities data:', communities); // Debug: Log communities data
-                    updateUserTable('communitiesList', communities, 'communities');
-                    toastr.success('Communities loaded successfully');
-                } catch (error) {
-                    console.error('Error loading communities:', error.message); // Debug: Log error
-                    toastr.error(`Error loading communities: ${error.message}`);
-                }
-            }
-
-            async function loadPartners() {
-                console.log('Loading partners'); // Debug: Log partners load
-                try {
-                    const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
-                    if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
-                    const usersData = await usersResponse.json();
-                    const users = usersData.users;
-
-                    const partners = [];
-                    for (const user of users) {
-                        const userResponse = await authenticatedFetch(`${window.apiUrl}/users/${user.USERid}`);
-                        if (!userResponse.ok) continue;
-                        const userData = await userResponse.json();
-                        const permissions = userData.user.permissions || [];
-                        if (permissions.includes('wixpro')) {
-                            partners.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
-                        }
-                    }
-                    console.log('Partners data:', partners); // Debug: Log partners data
-                    updateUserTable('partnersList', partners, 'partners');
-                    toastr.success('Partners loaded successfully');
-                } catch (error) {
-                    console.error('Error loading partners:', error.message); // Debug: Log error
-                    toastr.error(`Error loading partners: ${error.message}`);
-                }
-            }
-
-            function updateUserTable(tableId, users, section) {
-                console.log('Updating table:', tableId, 'with users:', users); // Debug: Log table update
-                const tbody = document.getElementById(tableId);
-                if (!tbody) {
-                    console.error('Table body not found:', tableId); // Debug: Error if tbody missing
-                    return;
-                }
-                tbody.innerHTML = '';
-                if (users.length === 0) {
-                    const colspan = section === 'communities' ? 3 : 4;
-                    tbody.innerHTML = `<tr><td colspan="${colspan}">No users found</td></tr>`;
-                    return;
-                }
-                users.forEach(user => {
-                    const row = document.createElement('tr');
-                    let actionsHtml = '';
-                    if (section !== 'communities') {
-                        const hasValidated = user.permissions.includes('validated');
-                        actionsHtml = `
-                            <input type="checkbox" ${hasValidated ? 'checked' : ''} 
-                                onchange="togglePermission('${user.USERid}', 'validated', '${section}', this.checked)">
-                            Validated
-                        `;
-                        if (section === 'partners') {
-                            const hasAdmin = user.permissions.includes('admin');
-                            const hasMerchant = user.permissions.includes('merchant');
-                            actionsHtml = `
-                                <input type="checkbox" ${hasAdmin ? 'checked' : ''} 
-                                    onchange="togglePermission('${user.USERid}', 'admin', '${section}', this.checked)">
-                                Admin
-                                <input type="checkbox" ${hasMerchant ? 'checked' : ''} 
-                                    onchange="togglePermission('${user.USERid}', 'merchant', '${section}', this.checked)">
-                                Merchant
-                            ` + actionsHtml;
-                        }
-                    }
-                    row.innerHTML = `
-                        <td>${user.USERid}</td>
-                        <td>${user.contact_name}</td>
-                        <td>${user.email_address}</td>
-                        ${section !== 'communities' ? `<td class="action-cell">${actionsHtml}</td>` : ''}
-                    `;
-                    tbody.appendChild(row);
-                });
-                console.log('Table updated:', tableId); // Debug: Confirm table update
-            }
-
-            async function togglePermission(userId, permission, section, isChecked) {
-                console.log('Toggling permission:', permission, 'for user:', userId, 'checked:', isChecked); // Debug: Log permission toggle
-                try {
-                    const method = isChecked ? 'POST' : 'DELETE';
-                    const response = await authenticatedFetch(`${window.apiUrl}/permissions/${userId}`, {
-                        method: method,
-                        body: JSON.stringify({ permission })
-                    });
-                    if (!response.ok) throw new Error(`Failed to ${isChecked ? 'add' : 'remove'} permission: ${response.status}`);
-                    const data = await response.json();
-                    toastr.success(data.message || `${isChecked ? 'Added' : 'Removed'} ${permission} permission for user ${userId}`);
-                    loadSection(section);
-                } catch (error) {
-                    console.error('Error toggling permission:', error.message); // Debug: Log error
-                    toastr.error(`Error: ${error.message}`);
-                    loadSection(section);
-                }
-            }
-
-            async function updateAffiliate(affiliate) {
-                console.log('Updating affiliate:', affiliate); // Debug: Log affiliate update
-                let credentials = {};
-                if (affiliate === 'amazon_uk') {
-                    credentials = {
-                        ACCESS_KEY: document.getElementById('amazonAccessKey').value.trim(),
-                        SECRET_KEY: document.getElementById('amazonSecretKey').value.trim(),
-                        ASSOCIATE_TAG: document.getElementById('amazonAssociateTag').value.trim(),
-                        COUNTRY: document.getElementById('amazonCountry').value.trim()
-                    };
-                } else if (affiliate === 'ebay_uk') {
-                    credentials = { APP_ID: document.getElementById('ebayAppId').value.trim() };
-                } else if (affiliate === 'awin') {
-                    credentials = { API_TOKEN: document.getElementById('awinApiToken').value.trim() };
-                } else if (affiliate === 'cj') {
-                    credentials = {
-                        API_KEY: document.getElementById('cjApiKey').value.trim(),
-                        WEBSITE_ID: document.getElementById('cjWebsiteId').value.trim()
-                    };
-                } else if (affiliate === 'textmagic') {
-                    credentials = {
-                        USERNAME: document.getElementById('textmagicUsername').value.trim(),
-                        API_KEY: document.getElementById('textmagicApiKey').value.trim()
-                    };
-                } else if (affiliate === 'tiny') {
-                    credentials = { API_KEY: document.getElementById('tinyApiKey').value.trim() };
-                }
-
-                credentials = Object.fromEntries(Object.entries(credentials).filter(([_, v]) => v !== ''));
-                console.log('Credentials to update:', credentials); // Debug: Log credentials
-                if (Object.keys(credentials).length === 0) {
-                    console.warn('No credentials to update'); // Debug: Warn if no changes
-                    toastr.warning('No changes to update');
-                    return;
-                }
-
-                try {
-                    const response = await authenticatedFetch(`${window.apiUrl}/config/${affiliate}`, {
-                        method: 'PATCH',
-                        body: JSON.stringify(credentials)
-                    });
-                    if (!response.ok) throw new Error(`Failed to update: ${response.status}`);
-                    const data = await response.json();
-                    console.log('Update response:', data); // Debug: Log update response
-                    toastr.success(`Update successful: ${data.message}`);
-                } catch (error) {
-                    console.error('Error updating affiliate:', error.message); // Debug: Log error
-                    toastr.error(`Error updating credentials: ${error.message}`);
-                }
-            }
-
-            async function submitReferral(formId, successMessage) {
-                const form = document.getElementById(formId);
-                console.log('Setting up referral form:', formId, 'Form element:', form); // Debug: Log form setup
-                if (form.dataset.listenerAdded) return;
-                form.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const formData = new FormData(form);
-                    const jsonData = Object.fromEntries(formData.entries());
-                    console.log('Referral form data:', jsonData); // Debug: Log form data
-                    try {
-                        const response = await authenticatedFetch(`${window.apiUrl}/referal`, {
-                            method: 'POST',
-                            body: JSON.stringify(jsonData),
-                        });
-                        if (!response.ok) throw new Error((await response.json()).message || 'Unknown error');
-                        const data = await response.json();
-                        console.log('Referral response:', data); // Debug: Log referral response
-                        if (data.status === 'success') {
-                            toastr.success(`${successMessage} - Referer: ${data.referer}`);
-                        } else {
-                            toastr.error(data.message || 'Unknown error');
-                        }
-                    } catch (error) {
-                        console.error('Error submitting referral:', error.message); // Debug: Log error
-                        toastr.error(error.message || 'Failed to connect to server');
-                    }
-                });
-                form.dataset.listenerAdded = 'true';
-            }
-
-            function logOff() {
-                console.log('Log off initiated'); // Debug: Log logoff start
-                if (confirm('Are you sure you want to log off?')) {
-                    localStorage.removeItem('authToken');
-                    console.log('Auth token removed'); // Debug: Confirm token removal
-                    toastr.success('Logged off successfully');
-                    setTimeout(() => window.location.href = '/', 1000);
-                }
-            }
-
-            async function loadCategories() {
-                console.log('Loading categories'); // Debug: Log categories load
-                try {
-                    const response = await authenticatedFetch(`${window.apiUrl}/categories`);
-                    if (!response.ok) throw new Error(`Failed to fetch /categories: ${response.status}`);
-                    const data = await response.json();
-                    console.log('Categories data:', data); // Debug: Log categories data
-                    const tree = document.getElementById('categoryTree');
-                    if (!tree) {
-                        console.error('Category tree element not found'); // Debug: Error if element missing
-                        return;
-                    }
-                    tree.innerHTML = '';
-                    const ul = document.createElement('ul');
-                    data.categories.forEach(cat => ul.appendChild(createTreeNode(cat)));
-                    tree.appendChild(ul);
-                    toastr.success('Categories loaded successfully');
-                } catch (error) {
-                    console.error('Error loading categories:', error.message); // Debug: Log error
-                    toastr.error(`Error loading categories: ${error.message}`);
-                }
-            }
-
-            function createTreeNode(category) {
-                console.log('Creating tree node for category:', category); // Debug: Log node creation
-                const li = document.createElement('li');
-                const nodeDiv = document.createElement('div');
-                nodeDiv.className = 'node';
-
-                const toggle = document.createElement('span');
-                toggle.className = 'toggle';
-                toggle.textContent = '+';
-                toggle.onclick = () => toggleSubcategories(category.id, toggle);
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = category.id;
-                checkbox.onchange = () => handleCategorySelection(category.id, checkbox);
-
-                const span = document.createElement('span');
-                span.textContent = `${category.name} (${category.id})`;
-
-                nodeDiv.appendChild(toggle);
-                nodeDiv.appendChild(checkbox);
-                nodeDiv.appendChild(span);
-                li.appendChild(nodeDiv);
-
-                const subUl = document.createElement('ul');
-                subUl.className = 'subcategories';
-                li.appendChild(subUl);
-
-                return li;
-            }
-
-            async function toggleSubcategories(parentId, toggle) {
-                console.log('Toggling subcategories for parentId:', parentId); // Debug: Log toggle
-                const li = toggle.closest('li');
-                const subUl = li.querySelector('.subcategories');
-
-                if (subUl.classList.contains('open')) {
-                    subUl.classList.remove('open');
-                    toggle.textContent = '+';
-                } else {
-                    if (subUl.children.length === 0) {
-                        try {
-                            const response = await authenticatedFetch(`${window.apiUrl}/categories?parent_id=${parentId}`);
-                            if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
-                            const data = await response.json();
-                            console.log('Subcategories data for', parentId, ':', data); // Debug: Log subcategories
-                            if (data.categories.length === 0) {
-                                toastr.info(`No subcategories for ${parentId}`);
-                                return;
-                            }
-                            data.categories.forEach(cat => subUl.appendChild(createTreeNode(cat)));
-                            toastr.success(`Subcategories for ${parentId} loaded successfully`);
-                        } catch (error) {
-                            console.error('Error loading subcategories:', error.message); // Debug: Log error
-                            toastr.error(`Error loading subcategories: ${error.message}`);
-                            return;
-                        }
-                    }
-                    subUl.classList.add('open');
-                    toggle.textContent = '-';
-                }
-            }
-
-            async function handleCategorySelection(categoryId, checkbox) {
-                console.log('Handling category selection:', categoryId, 'Checked:', checkbox.checked); // Debug: Log selection
-                document.querySelectorAll('#categoryTree input[type="checkbox"]').forEach(cb => {
-                    if (cb !== checkbox) cb.checked = false;
-                });
-
-                if (checkbox.checked) {
-                    try {
-                        const response = await authenticatedFetch(`${window.apiUrl}/discounted-products?category_id=${categoryId}&min_discount=20`);
-                        if (!response.ok) throw new Error(`Failed to fetch discounted products: ${response.status}`);
-                        const data = await response.json();
-                        console.log('Discounted products data:', data); // Debug: Log products data
-                        const tbody = document.getElementById('dealList');
-                        if (!tbody) {
-                            console.error('Deal list tbody not found'); // Debug: Error if tbody missing
-                            return;
-                        }
-                        tbody.innerHTML = '';
-                        data.products.forEach(product => tbody.appendChild(createDealRow(product)));
-                        toastr.success(`Loaded ${data.count} discounted products for category ${categoryId}`);
-                    } catch (error) {
-                        console.error('Error loading discounted products:', error.message); // Debug: Log error
-                        toastr.error(`Error loading discounted products: ${error.message}`);
-                        checkbox.checked = false;
-                    }
-                } else {
-                    document.getElementById('dealList').innerHTML = '';
-                }
-            }
-
-            function createDealRow(product) {
-                console.log('Creating deal row for product:', product); // Debug: Log row creation
-                const tr = document.createElement('tr');
-                const discountPercent = product.discount_percent || 
-                    (product.original_price > product.current_price 
-                        ? ((product.original_price - product.current_price) / product.original_price * 100).toFixed(2) 
-                        : 'N/A');
-                tr.innerHTML = `
-                    <td>${product.category || 'N/A'}</td>
-                    <td>${product.title}</td>
-                    <td><a href="${product.product_url}" target="_blank">Link</a></td>
-                    <td>${product.current_price}</td>
-                    <td>${product.original_price}</td>
-                    <td>${discountPercent}</td>
-                    <td><img src="${product.image_url}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
-                    <td>${product.QTY || 'N/A'}</td>
-                `;
-                return tr;
-            }
-
-            // Initial page load
-            console.log('Starting initial admin load'); // Debug: Log initial load
-            initializeAdmin();
-        })();
+        // Initialize the partner page using page-load.js
+        initialize('partner');
     </script>
 </body>
 </html>

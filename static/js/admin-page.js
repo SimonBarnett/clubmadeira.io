@@ -137,21 +137,17 @@ async function populateRefererDropdown(selectId) {
         console.log('populateRefererDropdown - Community users filtered - Count:', communityUsers.length);
 
         const select = document.getElementById(selectId);
-        if (select) {
-            select.innerHTML = '';
-            communityUsers.forEach(user => {
-                const option = document.createElement('option');
-                option.value = user.USERid;
-                option.text = user.contact_name;
-                select.appendChild(option);
-            });
-            if (communityUsers.length === 0) {
-                select.innerHTML = '<option value="">No community users found</option>';
-            }
-            console.log('populateRefererDropdown - Dropdown populated - Select ID:', selectId);
-        } else {
-            console.warn('populateRefererDropdown - Select element not found - ID:', selectId);
+        select.innerHTML = '';
+        communityUsers.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.USERid;
+            option.text = user.contact_name;
+            select.appendChild(option);
+        });
+        if (communityUsers.length === 0) {
+            select.innerHTML = '<option value="">No community users found</option>';
         }
+        console.log('populateRefererDropdown - Dropdown populated - Select ID:', selectId);
     } catch (error) {
         console.error('populateRefererDropdown - Error loading referer options - Error:', error.message, 'Stack:', error.stack);
         toastr.error(`Error loading referer options: ${error.message}`);
@@ -249,4 +245,90 @@ async function loadPartners() {
     }
 }
 
-// Updates user tables for merchantsSorry about that, something didn't go as planned. Please try again, and if you're still seeing this message, go ahead and restart the app.
+// Updates the user table for merchants, communities, or partners.
+function updateUserTable(tableId, users, section) {
+    console.log('updateUserTable - Updating table - Table ID:', tableId, 'Section:', section, 'User count:', users.length);
+    const tbody = document.getElementById(tableId);
+    tbody.innerHTML = '';
+    if (users.length === 0) {
+        const colspan = section === 'communities' ? 3 : 4;
+        tbody.innerHTML = `<tr><td colspan="${colspan}">No users found</td></tr>`;
+        console.log('updateUserTable - No users found - Table ID:', tableId);
+        return;
+    }
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        let actionsHtml = '';
+        if (section !== 'communities') {
+            const hasValidated = user.permissions.includes('validated');
+            actionsHtml = `
+                <input type="checkbox" ${hasValidated ? 'checked' : ''} 
+                    onchange="togglePermission('${user.USERid}', 'validated', '${section}', this.checked)">
+                Validated
+            `;
+            if (section === 'partners') {
+                const hasAdmin = user.permissions.includes('admin');
+                const hasMerchant = user.permissions.includes('merchant');
+                actionsHtml = `
+                    <input type="checkbox" ${hasAdmin ? 'checked' : ''} 
+                        onchange="togglePermission('${user.USERid}', 'admin', '${section}', this.checked)">
+                    Admin
+                    <input type="checkbox" ${hasMerchant ? 'checked' : ''} 
+                        onchange="togglePermission('${user.USERid}', 'merchant', '${section}', this.checked)">
+                    Merchant
+                ` + actionsHtml;
+            }
+        }
+        row.innerHTML = `
+            <td>${user.USERid}</td>
+            <td>${user.contact_name}</td>
+            <td>${user.email_address}</td>
+            ${section !== 'communities' ? `<td class="action-cell">${actionsHtml}</td>` : ''}
+        `;
+        tbody.appendChild(row);
+    });
+    console.log('updateUserTable - Table updated - Table ID:', tableId);
+}
+
+// Toggles a user’s permission status.
+async function togglePermission(userId, permission, section, isChecked) {
+    console.log('togglePermission - Toggling permission - User ID:', userId, 'Permission:', permission, 'Section:', section, 'Checked:', isChecked);
+    try {
+        const method = isChecked ? 'POST' : 'DELETE';
+        const response = await authenticatedFetch(`${window.apiUrl}/permissions/${userId}`, {
+            method: method,
+            body: JSON.stringify({ permission })
+        });
+        if (!response.ok) throw new Error(`Failed to ${isChecked ? 'add' : 'remove'} permission: ${response.status}`);
+        const data = await response.json();
+        console.log('togglePermission - Permission toggled - Response:', JSON.stringify(data));
+        toastr.success(data.message || `${isChecked ? 'Added' : 'Removed'} ${permission} permission for user ${userId}`);
+        loadSection(section); // Refresh section
+    } catch (error) {
+        console.error('togglePermission - Error toggling permission - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Error: ${error.message}`);
+        loadSection(section); // Refresh on error
+    }
+}
+
+// Creates a deal row for discounted products (admin-specific).
+function createDealRow(product) {
+    console.log('createDealRow - Creating deal row - Product:', JSON.stringify(product));
+    const tr = document.createElement('tr');
+    const discountPercent = product.discount_percent || 
+        (product.original_price > product.current_price 
+            ? ((product.original_price - product.current_price) / product.original_price * 100).toFixed(2) 
+            : 'N/A');
+    tr.innerHTML = `
+        <td>${product.category || 'N/A'}</td>
+        <td>${product.title}</td>
+        <td><a href="${product.product_url}" target="_blank">Link</a></td>
+        <td>${product.current_price}</td>
+        <td>${product.original_price}</td>
+        <td>${discountPercent}</td>
+        <td><img src="${product.image_url}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
+        <td>${product.QTY || 'N/A'}</td>
+    `;
+    console.log('createDealRow - Deal row created - Product ID:', product.id || 'N/A');
+    return tr;
+}
