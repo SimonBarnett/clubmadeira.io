@@ -203,7 +203,7 @@
             </div>
         </div>
         <div class="content-container">
-            <div id="welcome" class="section active">
+            <div id="welcome" class="section">
                 <h2>Welcome to Admin Dashboard</h2>
                 <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
                 <p>Use the menu on the left to:</p>
@@ -420,28 +420,18 @@
         // Global variables defined once
         if (typeof window.apiUrl === 'undefined') window.apiUrl = 'https://clubmadeira.io';
         if (typeof window.userPermissions === 'undefined') window.userPermissions = [];
+        if (typeof window.currentState === 'undefined') window.currentState = { activeSection: 'welcome', openSubmenus: [] };
 
         (function() { // Self-executing function to isolate scope
-            console.log('Admin inline script running'); // Debug log to confirm script execution
-
             function decodeJWT(token) {
-                console.log('Decoding JWT:', token); // Debug: Log token being decoded
-                if (!token || typeof token !== 'string') {
-                    console.warn('Invalid token: null or not a string');
-                    return null;
-                }
-                if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
-                    console.warn('Token does not match JWT format');
-                    return null;
-                }
+                if (!token || typeof token !== 'string') return null;
+                if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) return null;
                 const parts = token.split('.');
                 try {
                     const base64Url = parts[1];
                     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                     const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-                    const decoded = JSON.parse(jsonPayload);
-                    console.log('Decoded JWT payload:', decoded); // Debug: Log decoded payload
-                    return decoded;
+                    return JSON.parse(jsonPayload);
                 } catch (error) {
                     console.error('Error decoding JWT:', error.message);
                     return null;
@@ -449,125 +439,139 @@
             }
 
             function initializeAdmin() {
-                console.log('Initializing admin page'); // Existing debug log
+                console.log('Initializing admin page');
                 const token = localStorage.getItem('authToken');
-                console.log('Auth token from localStorage:', token); // Debug: Log token
                 if (!token) {
-                    console.warn('No auth token found, redirecting to /');
                     window.location.href = '/';
                     return;
                 }
                 const decoded = decodeJWT(token);
-                console.log('Decoded token:', decoded); // Debug: Log decoded token
                 if (!decoded) {
-                    console.warn('Failed to decode token, redirecting to /');
                     window.location.href = '/';
                     return;
                 }
                 window.userPermissions = decoded.permissions || [];
-                console.log('User permissions set:', window.userPermissions); // Debug: Log permissions
                 if (!window.userPermissions.includes('admin')) {
-                    console.warn('Admin permission not found:', window.userPermissions);
                     toastr.error('Permission denied: Admin permission required');
                     window.location.href = '/';
                     return;
                 }
                 loadBranding();
+                restoreState();
                 attachEventListeners();
             }
-
-            // Define window.initPage for dynamic initialization
-            window.initPage = function() {
-                console.log('window.initPage called'); // Debug: Log initPage invocation
-                initializeAdmin();
-            };
 
             toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000, showMethod: 'slideDown', hideMethod: 'slideUp' };
 
             async function fetchProtectedPage(url) {
-                console.log('fetchProtectedPage called with URL:', url); // Debug: Log function call
-                window.initPage = null; 
                 const token = localStorage.getItem('authToken');
-                console.log('Token for fetch:', token); // Debug: Log token
                 if (!token) {
-                    console.warn('No token for fetch, redirecting to /');
                     toastr.error('No authentication token found. Please log in.');
                     window.location.href = '/';
                     return;
                 }
+
+                saveState();
                 try {
-                    console.log('Requested URL:', url); // Existing debug
-                    const timestamp = Date.now();
-                    const fetchUrl = `${window.apiUrl}${url}?t=${timestamp}`; 
-                    console.log('Fetching from:', fetchUrl); // Existing debug
-                    const response = await fetch(fetchUrl, {
+                    const response = await fetch(`${window.apiUrl}${url}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Accept': 'text/html'
                         }
                     });
-                    console.log('Response status:', response.status); // Existing debug
-                    console.log('Fetched URL:', response.url); // Existing debug
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('Fetch failed with status:', response.status, 'Error text:', errorText);
                         throw new Error(`Server returned ${response.status}: ${errorText}`);
                     }
                     const html = await response.text();
-                    console.log('Fetched HTML for', url, ':', html); // Existing debug
+
+                    // Reset global state to ensure a clean reinitialization
+                    window.currentState = { activeSection: 'welcome', openSubmenus: [] };
+                    window.userPermissions = [];
+
                     document.body.innerHTML = html;
-                    console.log('Body updated with new HTML'); // Debug: Confirm body update
+
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    const scripts = doc.querySelectorAll('script:not([src])');
-                    console.log('Found', scripts.length, 'inline scripts to execute'); // Debug: Log script count
-                    scripts.forEach((script, index) => {
+
+                    // Reload external scripts to ensure dependencies are fresh
+                    const scripts = doc.querySelectorAll('script[src]');
+                    const scriptPromises = [];
+                    for (const script of scripts) {
+                        const newScript = document.createElement('script');
+                        newScript.src = script.src;
+                        newScript.async = false;
+                        document.head.appendChild(newScript);
+                        scriptPromises.push(new Promise(resolve => {
+                            newScript.onload = resolve;
+                            newScript.onerror = () => {
+                                console.error(`Failed to load script: ${script.src}`);
+                                resolve();
+                            };
+                        }));
+                    }
+                    await Promise.all(scriptPromises);
+
+                    // Execute inline scripts
+                    doc.querySelectorAll('script:not([src])').forEach(script => {
                         if (script.innerHTML.trim()) {
-                            console.log(`Executing inline script ${index + 1}`); // Existing debug
                             try {
                                 new Function(script.innerHTML)();
-                                console.log(`Inline script ${index + 1} executed successfully`); // Existing debug
                             } catch (e) {
-                                console.error(`Error executing inline script ${index + 1}:`, e); // Existing debug
+                                console.error('Error executing inline script:', e);
                             }
                         }
                     });
-                    if (typeof window.initPage === 'function') {
-                        console.log('Calling window.initPage'); // Existing debug
-                        window.initPage();
-                    } else {
-                        console.warn('No initPage function found for this page'); // Existing debug
+
+                    // Ensure admin initialization runs when returning to admin
+                    if (url === '/admin') {
+                        initializeAdmin();
                     }
                 } catch (error) {
-                    console.error('Error fetching protected page:', error);
                     toastr.error(error.message || 'Failed to load protected page');
-                    setTimeout(() => window.location.href = '/', 3000);
+                    window.location.href = '/';
                 }
+            }
+
+            function saveState() {
+                const activeSection = document.querySelector('.section.active')?.id || 'welcome';
+                const openSubmenus = Array.from(document.querySelectorAll('.submenu.open')).map(sub => sub.id);
+                window.currentState = { activeSection, openSubmenus };
+                localStorage.setItem('adminState', JSON.stringify(window.currentState));
+            }
+
+            function restoreState() {
+                const savedState = JSON.parse(localStorage.getItem('adminState') || '{}');
+                window.currentState = {
+                    activeSection: savedState.activeSection || 'welcome',
+                    openSubmenus: savedState.openSubmenus || []
+                };
+                showSection(window.currentState.activeSection);
+                window.currentState.openSubmenus.forEach(submenuId => {
+                    const submenu = document.getElementById(submenuId);
+                    if (submenu) submenu.classList.add('open');
+                });
             }
 
             function handleSectionClick(event) {
                 const section = this.getAttribute('data-section');
                 const submenu = this.getAttribute('data-submenu');
-                console.log('Section clicked:', section, 'Submenu:', submenu); // Debug: Log click event
                 if (submenu) toggleSubmenu(submenu);
                 if (section) showSection(section);
             }
 
             function handleHrefClick() {
                 const href = this.getAttribute('data-href');
-                console.log('Href clicked:', href); // Debug: Log href click
                 fetchProtectedPage(href);
             }
 
             function handleAffiliateClick() {
                 const affiliate = this.getAttribute('data-affiliate');
-                console.log('Affiliate button clicked:', affiliate); // Debug: Log affiliate click
                 updateAffiliate(affiliate);
             }
 
             function attachEventListeners() {
-                console.log('Attaching event listeners'); // Debug: Log listener attachment
                 const sectionButtons = document.querySelectorAll('.menu button[data-section]');
                 sectionButtons.forEach(button => {
                     button.removeEventListener('click', handleSectionClick);
@@ -597,16 +601,12 @@
             }
 
             async function loadBranding() {
-                console.log('Loading branding'); // Debug: Log branding load start
                 try {
                     const response = await authenticatedFetch(`${window.apiUrl}/branding`);
                     if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
                     const data = await response.json();
-                    console.log('Branding data:', data); // Debug: Log fetched branding data
                     document.getElementById('brandingContent').innerHTML = data.content || '<h1>Admin Dashboard</h1>';
-                    console.log('Branding content updated'); // Debug: Confirm branding update
                 } catch (error) {
-                    console.error('Error loading branding:', error.message);
                     toastr.error(`Error loading branding: ${error.message}`);
                     document.getElementById('brandingContent').innerHTML = '<h1>Admin Dashboard</h1>';
                 }
@@ -614,23 +614,18 @@
 
             function getCurrentTimestamp() {
                 const now = new Date();
-                const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-                console.log('Generated timestamp:', timestamp); // Debug: Log timestamp
-                return timestamp;
+                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
             }
 
             async function authenticatedFetch(url, options = {}) {
                 const token = localStorage.getItem('authToken');
-                console.log('Authenticated fetch to:', url, 'with token:', token); // Debug: Log fetch details
                 options.headers = {
                     ...options.headers,
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 };
                 const response = await fetch(url, options);
-                console.log('Fetch response status:', response.status); // Debug: Log response status
                 if (response.status === 401) {
-                    console.warn('Unauthorized fetch, redirecting to /');
                     toastr.error('Session expired. Please log in again.');
                     localStorage.removeItem('authToken');
                     window.location.href = '/';
@@ -640,14 +635,18 @@
 
             function toggleSubmenu(submenuId) {
                 const submenu = document.getElementById(submenuId);
-                console.log('Toggling submenu:', submenuId, 'Element:', submenu); // Debug: Log submenu toggle
                 if (submenu) {
                     submenu.classList.toggle('open');
+                    if (submenu.classList.contains('open') && !window.currentState.openSubmenus.includes(submenuId)) {
+                        window.currentState.openSubmenus.push(submenuId);
+                    } else if (!submenu.classList.contains('open')) {
+                        window.currentState.openSubmenus = window.currentState.openSubmenus.filter(id => id !== submenuId);
+                    }
+                    saveState();
                 }
             }
 
             function showSection(section) {
-                console.log('Showing section:', section); // Debug: Log section show
                 document.querySelectorAll('.section').forEach(s => {
                     s.classList.remove('active');
                     s.style.display = 'none';
@@ -656,27 +655,18 @@
                 if (activeSection) {
                     activeSection.classList.add('active');
                     activeSection.style.display = 'block';
+                    window.currentState.activeSection = section;
+                    saveState();
                     loadSection(section);
-                } else {
-                    console.warn('Section not found:', section); // Debug: Warn if section missing
                 }
             }
 
             async function loadSection(section) {
-                console.log('Loading section:', section); // Debug: Log section load
                 if (section === 'welcome' || section === 'page_visit_test' || section === 'order_test' || 
                     section === 'affiliateProgramsIntro' || section === 'userManagementIntro' || 
                     section === 'testScriptsIntro' || section === 'referralTestsIntro') {
                     if (section === 'page_visit_test' || section === 'order_test') {
-                        const timestampId = section === 'page_visit_test' ? 'pageTimestamp' : 'orderTimestamp';
-                        const timestampElement = document.getElementById(timestampId);
-                        console.log('Timestamp element:', timestampElement); // Debug: Log timestamp element
-                        if (timestampElement) {
-                            timestampElement.value = getCurrentTimestamp();
-                            console.log('Set timestamp for', timestampId); // Debug: Confirm timestamp set
-                        } else {
-                            console.error('Timestamp element not found:', timestampId); // Debug: Error if element missing
-                        }
+                        document.getElementById(section === 'page_visit_test' ? 'pageTimestamp' : 'orderTimestamp').value = getCurrentTimestamp();
                         await populateRefererDropdown(section === 'page_visit_test' ? 'pageReferer' : 'orderReferer');
                     }
                     return;
@@ -707,98 +697,37 @@
                     if (!response.ok) throw new Error(`Failed to fetch /config: ${response.status}`);
                     const data = await response.json();
                     const config = data.config[section] || {};
-                    console.log('Config data for', section, ':', config); // Debug: Log config data
 
                     if (section === 'amazon_uk') {
-                        const elements = {
-                            amazonAccessKey: 'ACCESS_KEY',
-                            amazonSecretKey: 'SECRET_KEY',
-                            amazonAssociateTag: 'ASSOCIATE_TAG',
-                            amazonCountry: 'COUNTRY'
-                        };
-                        Object.entries(elements).forEach(([id, key]) => {
-                            const el = document.getElementById(id);
-                            console.log(`Checking element ${id}:`, el); // Debug: Log each element
-                            if (el) {
-                                el.value = config[key] || '';
-                                console.log(`Set ${id} to:`, el.value); // Debug: Confirm value set
-                            } else {
-                                console.error(`Element ${id} not found`); // Debug: Error if element missing
-                            }
-                        });
+                        document.getElementById('amazonAccessKey').value = config.ACCESS_KEY || '';
+                        document.getElementById('amazonSecretKey').value = config.SECRET_KEY || '';
+                        document.getElementById('amazonAssociateTag').value = config.ASSOCIATE_TAG || '';
+                        document.getElementById('amazonCountry').value = config.COUNTRY || '';
                     } else if (section === 'ebay_uk') {
-                        const el = document.getElementById('ebayAppId');
-                        console.log('eBay App ID element:', el); // Debug: Log element
-                        if (el) {
-                            el.value = config.APP_ID || '';
-                            console.log('Set ebayAppId to:', el.value); // Debug: Confirm value set
-                        } else {
-                            console.error('Element ebayAppId not found'); // Debug: Error if element missing
-                        }
+                        document.getElementById('ebayAppId').value = config.APP_ID || '';
                     } else if (section === 'awin') {
-                        const el = document.getElementById('awinApiToken');
-                        console.log('Awin API Token element:', el); // Debug: Log element
-                        if (el) {
-                            el.value = config.API_TOKEN || '';
-                            console.log('Set awinApiToken to:', el.value); // Debug: Confirm value set
-                        } else {
-                            console.error('Element awinApiToken not found'); // Debug: Error if element missing
-                        }
+                        document.getElementById('awinApiToken').value = config.API_TOKEN || '';
                     } else if (section === 'cj') {
-                        const elements = {
-                            cjApiKey: 'API_KEY',
-                            cjWebsiteId: 'WEBSITE_ID'
-                        };
-                        Object.entries(elements).forEach(([id, key]) => {
-                            const el = document.getElementById(id);
-                            console.log(`Checking element ${id}:`, el); // Debug: Log each element
-                            if (el) {
-                                el.value = config[key] || '';
-                                console.log(`Set ${id} to:`, el.value); // Debug: Confirm value set
-                            } else {
-                                console.error(`Element ${id} not found`); // Debug: Error if element missing
-                            }
-                        });
+                        document.getElementById('cjApiKey').value = config.API_KEY || '';
+                        document.getElementById('cjWebsiteId').value = config.WEBSITE_ID || '';
                     } else if (section === 'textmagic') {
-                        const elements = {
-                            textmagicUsername: 'USERNAME',
-                            textmagicApiKey: 'API_KEY'
-                        };
-                        Object.entries(elements).forEach(([id, key]) => {
-                            const el = document.getElementById(id);
-                            console.log(`Checking element ${id}:`, el); // Debug: Log each element
-                            if (el) {
-                                el.value = config[key] || '';
-                                console.log(`Set ${id} to:`, el.value); // Debug: Confirm value set
-                            } else {
-                                console.error(`Element ${id} not found`); // Debug: Error if element missing
-                            }
-                        });
+                        document.getElementById('textmagicUsername').value = config.USERNAME || '';
+                        document.getElementById('textmagicApiKey').value = config.API_KEY || '';
                     } else if (section === 'tiny') {
-                        const el = document.getElementById('tinyApiKey');
-                        console.log('Tiny API Key element:', el); // Debug: Log element
-                        if (el) {
-                            el.value = config.API_KEY || '';
-                            console.log('Set tinyApiKey to:', el.value); // Debug: Confirm value set
-                        } else {
-                            console.error('Element tinyApiKey not found'); // Debug: Error if element missing
-                        }
+                        document.getElementById('tinyApiKey').value = config.API_KEY || '';
                     }
                     toastr.success(`Loaded credentials for ${section}`);
                 } catch (error) {
-                    console.error('Error loading section credentials:', error.message); // Debug: Log error
                     toastr.error(`Error loading credentials: ${error.message}`);
                 }
             }
 
             async function populateRefererDropdown(selectId) {
-                console.log('Populating referer dropdown:', selectId); // Debug: Log dropdown population
                 try {
                     const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
                     if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
                     const usersData = await usersResponse.json();
                     const users = usersData.users;
-                    console.log('Fetched users:', users); // Debug: Log users data
 
                     const communityUsers = [];
                     for (const user of users) {
@@ -810,14 +739,8 @@
                             communityUsers.push({ USERid: user.USERid, contact_name: user.contact_name });
                         }
                     }
-                    console.log('Filtered community users:', communityUsers); // Debug: Log filtered users
 
                     const select = document.getElementById(selectId);
-                    console.log('Select element:', select); // Debug: Log select element
-                    if (!select) {
-                        console.error('Select element not found:', selectId); // Debug: Error if element missing
-                        return;
-                    }
                     select.innerHTML = '';
                     communityUsers.forEach(user => {
                         const option = document.createElement('option');
@@ -828,16 +751,13 @@
                     if (communityUsers.length === 0) {
                         select.innerHTML = '<option value="">No community users found</option>';
                     }
-                    console.log('Dropdown populated with', communityUsers.length, 'options'); // Debug: Confirm population
                 } catch (error) {
-                    console.error('Error populating referer dropdown:', error.message); // Debug: Log error
                     toastr.error(`Error loading referer options: ${error.message}`);
                     document.getElementById(selectId).innerHTML = '<option value="">Error loading users</option>';
                 }
             }
 
             async function loadMerchants() {
-                console.log('Loading merchants'); // Debug: Log merchants load
                 try {
                     const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
                     if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
@@ -854,17 +774,15 @@
                             merchants.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
                         }
                     }
-                    console.log('Merchants data:', merchants); // Debug: Log merchants data
+
                     updateUserTable('merchantsList', merchants, 'merchants');
                     toastr.success('Merchants loaded successfully');
                 } catch (error) {
-                    console.error('Error loading merchants:', error.message); // Debug: Log error
                     toastr.error(`Error loading merchants: ${error.message}`);
                 }
             }
 
             async function loadCommunities() {
-                console.log('Loading communities'); // Debug: Log communities load
                 try {
                     const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
                     if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
@@ -881,17 +799,15 @@
                             communities.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
                         }
                     }
-                    console.log('Communities data:', communities); // Debug: Log communities data
+
                     updateUserTable('communitiesList', communities, 'communities');
                     toastr.success('Communities loaded successfully');
                 } catch (error) {
-                    console.error('Error loading communities:', error.message); // Debug: Log error
                     toastr.error(`Error loading communities: ${error.message}`);
                 }
             }
 
             async function loadPartners() {
-                console.log('Loading partners'); // Debug: Log partners load
                 try {
                     const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
                     if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
@@ -908,22 +824,16 @@
                             partners.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
                         }
                     }
-                    console.log('Partners data:', partners); // Debug: Log partners data
+
                     updateUserTable('partnersList', partners, 'partners');
                     toastr.success('Partners loaded successfully');
                 } catch (error) {
-                    console.error('Error loading partners:', error.message); // Debug: Log error
                     toastr.error(`Error loading partners: ${error.message}`);
                 }
             }
 
             function updateUserTable(tableId, users, section) {
-                console.log('Updating table:', tableId, 'with users:', users); // Debug: Log table update
                 const tbody = document.getElementById(tableId);
-                if (!tbody) {
-                    console.error('Table body not found:', tableId); // Debug: Error if tbody missing
-                    return;
-                }
                 tbody.innerHTML = '';
                 if (users.length === 0) {
                     const colspan = section === 'communities' ? 3 : 4;
@@ -961,11 +871,9 @@
                     `;
                     tbody.appendChild(row);
                 });
-                console.log('Table updated:', tableId); // Debug: Confirm table update
             }
 
             async function togglePermission(userId, permission, section, isChecked) {
-                console.log('Toggling permission:', permission, 'for user:', userId, 'checked:', isChecked); // Debug: Log permission toggle
                 try {
                     const method = isChecked ? 'POST' : 'DELETE';
                     const response = await authenticatedFetch(`${window.apiUrl}/permissions/${userId}`, {
@@ -977,14 +885,12 @@
                     toastr.success(data.message || `${isChecked ? 'Added' : 'Removed'} ${permission} permission for user ${userId}`);
                     loadSection(section);
                 } catch (error) {
-                    console.error('Error toggling permission:', error.message); // Debug: Log error
                     toastr.error(`Error: ${error.message}`);
                     loadSection(section);
                 }
             }
 
             async function updateAffiliate(affiliate) {
-                console.log('Updating affiliate:', affiliate); // Debug: Log affiliate update
                 let credentials = {};
                 if (affiliate === 'amazon_uk') {
                     credentials = {
@@ -1012,9 +918,7 @@
                 }
 
                 credentials = Object.fromEntries(Object.entries(credentials).filter(([_, v]) => v !== ''));
-                console.log('Credentials to update:', credentials); // Debug: Log credentials
                 if (Object.keys(credentials).length === 0) {
-                    console.warn('No credentials to update'); // Debug: Warn if no changes
                     toastr.warning('No changes to update');
                     return;
                 }
@@ -1026,23 +930,19 @@
                     });
                     if (!response.ok) throw new Error(`Failed to update: ${response.status}`);
                     const data = await response.json();
-                    console.log('Update response:', data); // Debug: Log update response
                     toastr.success(`Update successful: ${data.message}`);
                 } catch (error) {
-                    console.error('Error updating affiliate:', error.message); // Debug: Log error
                     toastr.error(`Error updating credentials: ${error.message}`);
                 }
             }
 
             async function submitReferral(formId, successMessage) {
                 const form = document.getElementById(formId);
-                console.log('Setting up referral form:', formId, 'Form element:', form); // Debug: Log form setup
                 if (form.dataset.listenerAdded) return;
                 form.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const formData = new FormData(form);
                     const jsonData = Object.fromEntries(formData.entries());
-                    console.log('Referral form data:', jsonData); // Debug: Log form data
                     try {
                         const response = await authenticatedFetch(`${window.apiUrl}/referal`, {
                             method: 'POST',
@@ -1050,14 +950,12 @@
                         });
                         if (!response.ok) throw new Error((await response.json()).message || 'Unknown error');
                         const data = await response.json();
-                        console.log('Referral response:', data); // Debug: Log referral response
                         if (data.status === 'success') {
                             toastr.success(`${successMessage} - Referer: ${data.referer}`);
                         } else {
                             toastr.error(data.message || 'Unknown error');
                         }
                     } catch (error) {
-                        console.error('Error submitting referral:', error.message); // Debug: Log error
                         toastr.error(error.message || 'Failed to connect to server');
                     }
                 });
@@ -1065,40 +963,31 @@
             }
 
             function logOff() {
-                console.log('Log off initiated'); // Debug: Log logoff start
                 if (confirm('Are you sure you want to log off?')) {
                     localStorage.removeItem('authToken');
-                    console.log('Auth token removed'); // Debug: Confirm token removal
+                    localStorage.removeItem('adminState');
                     toastr.success('Logged off successfully');
                     setTimeout(() => window.location.href = '/', 1000);
                 }
             }
 
             async function loadCategories() {
-                console.log('Loading categories'); // Debug: Log categories load
                 try {
                     const response = await authenticatedFetch(`${window.apiUrl}/categories`);
                     if (!response.ok) throw new Error(`Failed to fetch /categories: ${response.status}`);
                     const data = await response.json();
-                    console.log('Categories data:', data); // Debug: Log categories data
                     const tree = document.getElementById('categoryTree');
-                    if (!tree) {
-                        console.error('Category tree element not found'); // Debug: Error if element missing
-                        return;
-                    }
                     tree.innerHTML = '';
                     const ul = document.createElement('ul');
                     data.categories.forEach(cat => ul.appendChild(createTreeNode(cat)));
                     tree.appendChild(ul);
                     toastr.success('Categories loaded successfully');
                 } catch (error) {
-                    console.error('Error loading categories:', error.message); // Debug: Log error
                     toastr.error(`Error loading categories: ${error.message}`);
                 }
             }
 
             function createTreeNode(category) {
-                console.log('Creating tree node for category:', category); // Debug: Log node creation
                 const li = document.createElement('li');
                 const nodeDiv = document.createElement('div');
                 nodeDiv.className = 'node';
@@ -1129,7 +1018,6 @@
             }
 
             async function toggleSubcategories(parentId, toggle) {
-                console.log('Toggling subcategories for parentId:', parentId); // Debug: Log toggle
                 const li = toggle.closest('li');
                 const subUl = li.querySelector('.subcategories');
 
@@ -1142,7 +1030,6 @@
                             const response = await authenticatedFetch(`${window.apiUrl}/categories?parent_id=${parentId}`);
                             if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
                             const data = await response.json();
-                            console.log('Subcategories data for', parentId, ':', data); // Debug: Log subcategories
                             if (data.categories.length === 0) {
                                 toastr.info(`No subcategories for ${parentId}`);
                                 return;
@@ -1150,7 +1037,6 @@
                             data.categories.forEach(cat => subUl.appendChild(createTreeNode(cat)));
                             toastr.success(`Subcategories for ${parentId} loaded successfully`);
                         } catch (error) {
-                            console.error('Error loading subcategories:', error.message); // Debug: Log error
                             toastr.error(`Error loading subcategories: ${error.message}`);
                             return;
                         }
@@ -1161,7 +1047,6 @@
             }
 
             async function handleCategorySelection(categoryId, checkbox) {
-                console.log('Handling category selection:', categoryId, 'Checked:', checkbox.checked); // Debug: Log selection
                 document.querySelectorAll('#categoryTree input[type="checkbox"]').forEach(cb => {
                     if (cb !== checkbox) cb.checked = false;
                 });
@@ -1171,17 +1056,11 @@
                         const response = await authenticatedFetch(`${window.apiUrl}/discounted-products?category_id=${categoryId}&min_discount=20`);
                         if (!response.ok) throw new Error(`Failed to fetch discounted products: ${response.status}`);
                         const data = await response.json();
-                        console.log('Discounted products data:', data); // Debug: Log products data
                         const tbody = document.getElementById('dealList');
-                        if (!tbody) {
-                            console.error('Deal list tbody not found'); // Debug: Error if tbody missing
-                            return;
-                        }
                         tbody.innerHTML = '';
                         data.products.forEach(product => tbody.appendChild(createDealRow(product)));
                         toastr.success(`Loaded ${data.count} discounted products for category ${categoryId}`);
                     } catch (error) {
-                        console.error('Error loading discounted products:', error.message); // Debug: Log error
                         toastr.error(`Error loading discounted products: ${error.message}`);
                         checkbox.checked = false;
                     }
@@ -1191,7 +1070,6 @@
             }
 
             function createDealRow(product) {
-                console.log('Creating deal row for product:', product); // Debug: Log row creation
                 const tr = document.createElement('tr');
                 const discountPercent = product.discount_percent || 
                     (product.original_price > product.current_price 
@@ -1210,8 +1088,6 @@
                 return tr;
             }
 
-            // Initial page load
-            console.log('Starting initial admin load'); // Debug: Log initial load
             initializeAdmin();
         })();
     </script>

@@ -1,49 +1,36 @@
-from flask import abort, render_template_string
-import requests
-import markdown
+from flask import Flask, request, jsonify
+import whois  # Requires 'pip install python-whois'
+from auth import require_permissions  # Placeholder import for your custom decorator
 
-@app.route('/render-github-md/<owner>/<repo>/<branch>/<path:path>')
-def render_github_md(owner, repo, branch, path):
-    # Ensure the file is a Markdown file
-    if not path.endswith('.md'):
-        abort(404, "Not a Markdown file")
+app = Flask(__name__)
+
+@app.route('/check-domain', methods=['GET'])
+@require_permissions(["allauth"], require_all=False)  # Custom decorator applied
+def check_domain():
+    # Get domain from query parameter
+    domain = request.args.get('domain')
     
-    # Construct the URL to fetch the raw Markdown content from GitHub
-    url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
+    # Basic validation (matches client-side regex: /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/)
+    if not domain:
+        return jsonify({"error": "Please provide a domain name"}), 400
     
-    # Fetch the content
-    response = requests.get(url)
-    if response.status_code == 200:
-        md_content = response.text
-        # Convert Markdown to HTML with tables extension
-        html_content = markdown.markdown(md_content, extensions=['tables'])
-        # Render the HTML in a simple template
-        return render_template_string('''
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Rendered Markdown</title>
-                <style>
-                    table {
-                        border-collapse: collapse;
-                        width: 100%;
-                        margin: 20px 0;
-                    }
-                    th, td {
-                        border: 1px solid #ddd;
-                        padding: 8px;
-                        text-align: left;
-                    }
-                    th {
-                        background-color: #f2f2f2;
-                    }
-                </style>
-            </head>
-            <body>
-                {{ content | safe }}
-            </body>
-            </html>
-        ''', content=html_content)
-    else:
-        abort(404, "File not found")
+    if not all(c.isalnum() or c in '-.' for c in domain) or \
+       not '.' in domain or \
+       len(domain.split('.')[-1]) < 2:
+        return jsonify({"error": "Invalid domain name (e.g., mystore.uk)"}), 400
+    
+    # Query WHOIS data using python-whois
+    try:
+        w = whois.whois(domain)
+        # If no registration data exists (e.g., creation_date is None), domain is available
+        is_available = w.creation_date is None
+        return jsonify({
+            "domain": domain,
+            "available": is_available
+        }), 200
+    except Exception as e:
+        # Handle WHOIS query failures (e.g., timeouts, invalid TLDs)
+        return jsonify({"error": f"Failed to check domain availability: {str(e)}"}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)

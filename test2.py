@@ -1,258 +1,636 @@
-from flask import Flask, request, jsonify
-from functools import wraps
-import jwt
-import datetime
-import re
 
-app = Flask(__name__)
+        // Global variables defined once
+        if (typeof window.apiUrl === 'undefined') window.apiUrl = 'https://clubmadeira.io';
+        if (typeof window.userPermissions === 'undefined') window.userPermissions = [];
 
-# Secret key for JWT (replace with your actual secret)
-SECRET_KEY = "itsananagramjanet"
+        (function() { // Self-executing function to isolate scope
+            console.log('Admin inline script running'); // Debug log to confirm script execution
 
-# Custom decorator for permissions
-def require_permissions(required_permissions, require_all=True):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            auth_header = request.headers.get("Authorization")
-            if not auth_header or not auth_header.startswith("Bearer "):
-                return jsonify({"status": "error", "message": "Authorization token required"}), 401
-            
-            token = auth_header.split(" ")[1]
-            try:
-                payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-                if datetime.datetime.utcnow().timestamp() > payload["exp"]:
-                    return jsonify({"status": "error", "message": "Token has expired"}), 401
-                user_permissions = payload.get("permissions", [])
-                request.user_id = payload["userId"]
-                request.permissions = user_permissions
-            except jwt.InvalidTokenError:
-                return jsonify({"status": "error", "message": "Invalid token"}), 401
-            except Exception as e:
-                return jsonify({"status": "error", "message": f"Token error: {str(e)}"}), 500
+            function decodeJWT(token) {
+                if (!token || typeof token !== 'string') return null;
+                if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) return null;
+                const parts = token.split('.');
+                try {
+                    const base64Url = parts[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                    return JSON.parse(jsonPayload);
+                } catch (error) {
+                    console.error('Error decoding JWT:', error.message);
+                    return null;
+                }
+            }
 
-            # Handle shorthands
-            effective_perms = []
-            for perm in required_permissions:
-                if perm == "allauth":
-                    effective_perms.extend(["admin", "merchant", "community", "wixpro"])
-                elif perm == "self":
-                    user_id_in_route = next((v for v in kwargs.values() if isinstance(v, str)), None)
-                    if user_id_in_route and request.user_id != user_id_in_route:
-                        effective_perms.append(None)  # Fails unless other perms allow
-                    elif not user_id_in_route:  # For endpoints like /update-password
-                        effective_perms.append("self")  # Check in function
-                else:
-                    effective_perms.append(perm)
+            function initializeAdmin() {
+                console.log('Initializing admin page'); // Debug log
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    window.location.href = '/';
+                    return;
+                }
+                const decoded = decodeJWT(token);
+                if (!decoded) {
+                    window.location.href = '/';
+                    return;
+                }
+                window.userPermissions = decoded.permissions || [];
+                if (!window.userPermissions.includes('admin')) {
+                    toastr.error('Permission denied: Admin permission required');
+                    window.location.href = '/';
+                    return;
+                }
+                loadBranding();
+                attachEventListeners();
+            }
 
-            # Permission check
-            if require_all:
-                if not all(perm in user_permissions for perm in effective_perms if perm is not None and perm != "self"):
-                    return jsonify({"status": "error", "message": f"Insufficient permissions: {effective_perms}"}), 403
-            else:
-                if not any(perm in user_permissions for perm in effective_perms if perm is not None and perm != "self"):
-                    return jsonify({"status": "error", "message": f"Insufficient permissions: {effective_perms}"}), 403
+            // Define window.initPage for dynamic initialization
+            window.initPage = function() {
+                initializeAdmin();
+            };
 
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+            toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000, showMethod: 'slideDown', hideMethod: 'slideUp' };
 
-# Public Endpoints
-@app.route('/', methods=['GET'])
-def home():
-    return jsonify({"message": "Welcome to the application"})
+            async function fetchProtectedPage(url) {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    toastr.error('No authentication token found. Please log in.');
+                    window.location.href = '/';
+                    return;
+                }
+                try {
+                    console.log('Requested URL:', url); // Debug: Log requested URL
+                    const timestamp = Date.now();
+                    const fetchUrl = `${window.apiUrl}${url}?t=${timestamp}`; // Prevent caching
+                    console.log('Fetching from:', fetchUrl); // Debug: Log fetch URL with timestamp
+                    const response = await fetch(fetchUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'text/html'
+                        }
+                    });
+                    console.log('Response status:', response.status); // Debug: Log response status
+                    console.log('Fetched URL:', response.url); // Debug: Log final URL after redirects
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server returned ${response.status}: ${errorText}`);
+                    }
+                    const html = await response.text();
+                    console.log('Fetched HTML for', url, ':', html); // Debug: Log fetched HTML
+                    document.body.innerHTML = html;
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const scripts = doc.querySelectorAll('script:not([src])');
+                    scripts.forEach((script, index) => {
+                        if (script.innerHTML.trim()) {
+                            console.log(`Executing inline script ${index + 1}`); // Debug: Before script execution
+                            try {
+                                new Function(script.innerHTML)();
+                                console.log(`Inline script ${index + 1} executed successfully`); // Debug: After successful execution
+                            } catch (e) {
+                                console.error(`Error executing inline script ${index + 1}:`, e); // Debug: Log execution errors
+                            }
+                        }
+                    });
+                    if (typeof window.initPage === 'function') {
+                        console.log('Calling window.initPage'); // Debug: Before calling initPage
+                        window.initPage();
+                    } else {
+                        console.warn('No initPage function found for this page'); // Debug: Warn if initPage is missing
+                    }
+                } catch (error) {
+                    console.error('Error fetching protected page:', error);
+                    toastr.error(error.message || 'Failed to load protected page');
+                    setTimeout(() => window.location.href = '/', 3000);
+                }
+            }
 
-@app.route('/branding', methods=['GET'])
-def branding():
-    # Placeholder: Load branding from branding.json
-    return jsonify({"status": "success", "branding": {"name": "Example"}})
+            function handleSectionClick(event) {
+                const section = this.getAttribute('data-section');
+                const submenu = this.getAttribute('data-submenu');
+                if (submenu) toggleSubmenu(submenu);
+                if (section) showSection(section);
+            }
 
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'GET':
-        return jsonify({"message": "Signup page"})
-    data = request.get_json()
-    # Placeholder: Register user
-    return jsonify({"status": "success", "message": "User registered"})
+            function handleHrefClick() {
+                const href = this.getAttribute('data-href');
+                fetchProtectedPage(href);
+            }
 
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    # Placeholder: Authenticate and return JWT
-    token = jwt.encode({"userId": "123", "permissions": ["user"], "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)}, SECRET_KEY)
-    return jsonify({"status": "success", "token": token})
+            function handleAffiliateClick() {
+                const affiliate = this.getAttribute('data-affiliate');
+                updateAffiliate(affiliate);
+            }
 
-@app.route('/reset-password', methods=['POST'])
-def reset_password():
-    data = request.get_json()
-    # Placeholder: Send OTP
-    return jsonify({"status": "success", "message": "OTP sent"})
+            function attachEventListeners() {
+                const sectionButtons = document.querySelectorAll('.menu button[data-section]');
+                sectionButtons.forEach(button => {
+                    button.removeEventListener('click', handleSectionClick);
+                    button.addEventListener('click', handleSectionClick);
+                });
 
-@app.route('/verify-reset-code', methods=['POST'])
-def verify_reset_code():
-    data = request.get_json()
-    # Placeholder: Verify OTP and update password
-    return jsonify({"status": "success", "message": "Password reset"})
+                const hrefButtons = document.querySelectorAll('.menu button[data-href]');
+                hrefButtons.forEach(button => {
+                    button.removeEventListener('click', handleHrefClick);
+                    button.addEventListener('click', handleHrefClick);
+                });
 
-@app.route('/discounted-products', methods=['GET'])
-def get_all_discounted_products():
-    category_id = request.args.get('category_id')
-    # Placeholder: Fetch discounted products
-    return jsonify({"status": "success", "products": []})
+                const affiliateButtons = document.querySelectorAll('.form button[data-affiliate]');
+                affiliateButtons.forEach(button => {
+                    button.removeEventListener('click', handleAffiliateClick);
+                    button.addEventListener('click', handleAffiliateClick);
+                });
 
-@app.route('/<USERid>/categories', methods=['GET'])
-def get_user_categories_public(USERid):
-    # Placeholder: Fetch categories with discounted products
-    return jsonify({"status": "success", "categories": []})
+                const logOffBtn = document.getElementById('logOffBtn');
+                if (logOffBtn) {
+                    logOffBtn.removeEventListener('click', logOff);
+                    logOffBtn.addEventListener('click', logOff);
+                }
 
-@app.route('/referal', methods=['POST'])
-def handle_referral():
-    data = request.get_json()
-    # Placeholder: Handle referral callback
-    return jsonify({"status": "success", "message": "Referral recorded"})
+                submitReferral('pageVisitForm', 'Page visit recorded successfully');
+                submitReferral('orderForm', 'Order recorded successfully');
+            }
 
-@app.route('/<USERid>/discounted-products', methods=['GET'])
-def get_user_discounted_products(USERid):
-    # Placeholder: Fetch user's discounted products
-    return jsonify({"status": "success", "products": []})
+            async function loadBranding() {
+                try {
+                    const response = await authenticatedFetch(`${window.apiUrl}/branding`);
+                    if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
+                    const data = await response.json();
+                    document.getElementById('brandingContent').innerHTML = data.content || '<h1>Admin Dashboard</h1>';
+                } catch (error) {
+                    toastr.error(`Error loading branding: ${error.message}`);
+                    document.getElementById('brandingContent').innerHTML = '<h1>Admin Dashboard</h1>';
+                }
+            }
 
-@app.route('/<USERid>/products/<product_id>', methods=['GET'])
-def reduce_product_quantity(USERid, product_id):
-    # Placeholder: Reduce product quantity (should be PATCH?)
-    return jsonify({"status": "success", "message": f"Quantity reduced for {product_id}"})
+            function getCurrentTimestamp() {
+                const now = new Date();
+                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            }
 
-# Private Endpoints
-@app.route('/update-password', methods=['POST'])
-@require_permissions(["allauth"], require_all=False)
-def update_password():
-    data = request.get_json()
-    if not data or "userId" not in data or request.user_id != data["userId"]:
-        return jsonify({"status": "error", "message": "Unauthorized: Can only update own password"}), 403
-    # Placeholder: Update password
-    return jsonify({"status": "success", "message": "Password updated"})
+            async function authenticatedFetch(url, options = {}) {
+                const token = localStorage.getItem('authToken');
+                options.headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+                const response = await fetch(url, options);
+                if (response.status === 401) {
+                    toastr.error('Session expired. Please log in again.');
+                    localStorage.removeItem('authToken');
+                    window.location.href = '/';
+                }
+                return response;
+            }
 
-@app.route('/render-github-md/<owner>/<repo>/<branch>/<path:path>', methods=['GET'])
-@require_permissions(["allauth"], require_all=False)
-def render_github_md(owner, repo, branch, path):
-    # Placeholder: Render Markdown
-    return jsonify({"status": "success", "content": "Rendered Markdown"})
+            function toggleSubmenu(submenuId) {
+                const submenu = document.getElementById(submenuId);
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                }
+            }
 
-@app.route('/users', methods=['GET'])
-@require_permissions(["admin"], require_all=True)
-def get_users():
-    # Placeholder: List all users
-    return jsonify({"status": "success", "users": []})
+            function showSection(section) {
+                document.querySelectorAll('.section').forEach(s => {
+                    s.classList.remove('active');
+                    s.style.display = 'none';
+                });
+                const activeSection = document.getElementById(section);
+                if (activeSection) {
+                    activeSection.classList.add('active');
+                    activeSection.style.display = 'block';
+                    loadSection(section);
+                }
+            }
 
-@app.route('/users/<user_id>', methods=['GET'])
-@require_permissions(["admin"], require_all=True)
-def get_user(user_id):
-    # Placeholder: Get user details
-    return jsonify({"status": "success", "user": {}})
+            async function loadSection(section) {
+                if (section === 'welcome' || section === 'page_visit_test' || section === 'order_test' || 
+                    section === 'affiliateProgramsIntro' || section === 'userManagementIntro' || 
+                    section === 'testScriptsIntro' || section === 'referralTestsIntro') {
+                    if (section === 'page_visit_test' || section === 'order_test') {
+                        document.getElementById(section === 'page_visit_test' ? 'pageTimestamp' : 'orderTimestamp').value = getCurrentTimestamp();
+                        await populateRefererDropdown(section === 'page_visit_test' ? 'pageReferer' : 'orderReferer');
+                    }
+                    return;
+                }
 
-@app.route('/permissions/<user_id>', methods=['GET', 'POST', 'DELETE'])
-@require_permissions(["admin"], require_all=True)
-def manage_permissions(user_id):
-    # Placeholder: Manage permissions
-    return jsonify({"status": "success", "message": "Permissions updated"})
+                if (section === 'deal_listings') {
+                    await loadCategories();
+                    return;
+                }
 
-@app.route('/<USERid>/user', methods=['GET', 'PUT', 'PATCH'])
-@require_permissions(["self", "admin", "wixpro"], require_all=False)
-def user_settings_endpoint(USERid):
-    if request.method in ['GET', 'PUT'] and not (request.user_id == USERid or "admin" in request.permissions):
-        return jsonify({"status": "error", "message": "Unauthorized: Requires self or admin"}), 403
-    if request.method == 'PATCH' and "wixpro" in request.permissions and not (request.user_id == USERid or "admin" in request.permissions):
-        data = request.get_json()
-        if not data or any(key != "wixClientId" for key in data.keys()):
-            return jsonify({"status": "error", "message": "Wixpro can only update wixClientId"}), 403
-    # Placeholder: User settings logic
-    return jsonify({"status": "success", "settings": {}})
+                if (section === 'merchants') {
+                    await loadMerchants();
+                    return;
+                }
 
-@app.route('/<USERid>/visits', methods=['GET'])
-@require_permissions(["self", "admin"], require_all=False)
-def get_visits(USERid):
-    # Placeholder: Fetch visits
-    return jsonify({"status": "success", "visits": []})
+                if (section === 'communities') {
+                    await loadCommunities();
+                    return;
+                }
 
-@app.route('/<USERid>/orders', methods=['GET'])
-@require_permissions(["self", "admin"], require_all=False)
-def get_orders(USERid):
-    # Placeholder: Fetch orders
-    return jsonify({"status": "success", "orders": []})
+                if (section === 'partners') {
+                    await loadPartners();
+                    return;
+                }
 
-@app.route('/config', methods=['GET'])
-@require_permissions(["admin"], require_all=True)
-def get_config():
-    # Placeholder: Fetch config
-    return jsonify({"status": "success", "config": {}})
+                try {
+                    const response = await authenticatedFetch(`${window.apiUrl}/config`);
+                    if (!response.ok) throw new Error(`Failed to fetch /config: ${response.status}`);
+                    const data = await response.json();
+                    const config = data.config[section] || {};
 
-@app.route('/config/<affiliate>', methods=['PATCH'])
-@require_permissions(["admin"], require_all=True)
-def update_config(affiliate):
-    # Placeholder: Update config
-    return jsonify({"status": "success", "message": "Config updated"})
+                    if (section === 'amazon_uk') {
+                        document.getElementById('amazonAccessKey').value = config.ACCESS_KEY || '';
+                        document.getElementById('amazonSecretKey').value = config.SECRET_KEY || '';
+                        document.getElementById('amazonAssociateTag').value = config.ASSOCIATE_TAG || '';
+                        document.getElementById('amazonCountry').value = config.COUNTRY || '';
+                    } else if (section === 'ebay_uk') {
+                        document.getElementById('ebayAppId').value = config.APP_ID || '';
+                    } else if (section === 'awin') {
+                        document.getElementById('awinApiToken').value = config.API_TOKEN || '';
+                    } else if (section === 'cj') {
+                        document.getElementById('cjApiKey').value = config.API_KEY || '';
+                        document.getElementById('cjWebsiteId').value = config.WEBSITE_ID || '';
+                    } else if (section === 'textmagic') {
+                        document.getElementById('textmagicUsername').value = config.USERNAME || '';
+                        document.getElementById('textmagicApiKey').value = config.API_KEY || '';
+                    } else if (section === 'tiny') {
+                        document.getElementById('tinyApiKey').value = config.API_KEY || '';
+                    }
+                    toastr.success(`Loaded credentials for ${section}`);
+                } catch (error) {
+                    toastr.error(`Error loading credentials: ${error.message}`);
+                }
+            }
 
-@app.route('/<USERid>/mycategories', methods=['GET', 'PUT', 'PATCH', 'DELETE'])
-@require_permissions(["self"], require_all=False)
-def manage_mycategories(USERid):
-    # Placeholder: Manage categories
-    return jsonify({"status": "success", "categories": []})
+            async function populateRefererDropdown(selectId) {
+                try {
+                    const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
+                    if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+                    const usersData = await usersResponse.json();
+                    const users = usersData.users;
 
-@app.route('/categories', methods=['GET'])
-@require_permissions(["allauth"], require_all=False)
-def get_categories():
-    # Placeholder: Fetch all categories
-    return jsonify({"status": "success", "categories": []})
+                    const communityUsers = [];
+                    for (const user of users) {
+                        const userResponse = await authenticatedFetch(`${window.apiUrl}/users/${user.USERid}`);
+                        if (!userResponse.ok) continue;
+                        const userData = await userResponse.json();
+                        const permissions = userData.user.permissions || [];
+                        if (permissions.includes('community') && !permissions.includes('admin')) {
+                            communityUsers.push({ USERid: user.USERid, contact_name: user.contact_name });
+                        }
+                    }
 
-@app.route('/<USERid>/products', methods=['GET'])
-@require_permissions(["self"], require_all=False)
-def get_products(USERid):
-    # Placeholder: Fetch user's products
-    return jsonify({"status": "success", "products": []})
+                    const select = document.getElementById(selectId);
+                    select.innerHTML = '';
+                    communityUsers.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.USERid;
+                        option.text = user.contact_name;
+                        select.appendChild(option);
+                    });
+                    if (communityUsers.length === 0) {
+                        select.innerHTML = '<option value="">No community users found</option>';
+                    }
+                } catch (error) {
+                    toastr.error(`Error loading referer options: ${error.message}`);
+                    document.getElementById(selectId).innerHTML = '<option value="">Error loading users</option>';
+                }
+            }
 
-@app.route('/<user_id>/siterequest', methods=['POST'])
-@require_permissions(["admin", "merchant", "community"], require_all=False)
-def save_site_request_post(user_id):
-    if request.user_id != user_id:
-        return jsonify({"status": "error", "message": "Unauthorized: Must match user_id"}), 403
-    data = request.get_json()
-    # Placeholder: Save site request
-    return jsonify({"status": "success", "message": "Site request saved"})
+            async function loadMerchants() {
+                try {
+                    const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
+                    if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+                    const usersData = await usersResponse.json();
+                    const users = usersData.users;
 
-@app.route('/<user_id>/siterequest', methods=['GET'])
-@require_permissions(["admin", "wixpro"], require_all=False)
-def get_site_request(user_id):
-    # Placeholder: Fetch site request
-    return jsonify({"status": "success", "site_request": {}})
+                    const merchants = [];
+                    for (const user of users) {
+                        const userResponse = await authenticatedFetch(`${window.apiUrl}/users/${user.USERid}`);
+                        if (!userResponse.ok) continue;
+                        const userData = await userResponse.json();
+                        const permissions = userData.user.permissions || [];
+                        if (permissions.includes('merchant') && !permissions.includes('admin')) {
+                            merchants.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
+                        }
+                    }
 
-@app.route('/siterequests', methods=['GET'])
-@require_permissions(["admin", "wixpro"], require_all=False)
-def get_site_requests():
-    # Placeholder: Fetch all site requests
-    return jsonify({"status": "success", "site_requests": []})
+                    updateUserTable('merchantsList', merchants, 'merchants');
+                    toastr.success('Merchants loaded successfully');
+                } catch (error) {
+                    toastr.error(`Error loading merchants: ${error.message}`);
+                }
+            }
 
-@app.route('/admin', methods=['GET'])
-@require_permissions(["admin"], require_all=True)
-def admin_dashboard():
-    # Placeholder: Admin dashboard
-    return jsonify({"status": "success", "message": "Admin dashboard"})
+            async function loadCommunities() {
+                try {
+                    const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
+                    if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+                    const usersData = await usersResponse.json();
+                    const users = usersData.users;
 
-@app.route('/community', methods=['GET'])
-@require_permissions(["community", "admin"], require_all=False)
-def community_dashboard():
-    # Placeholder: Community dashboard
-    return jsonify({"status": "success", "message": "Community dashboard"})
+                    const communities = [];
+                    for (const user of users) {
+                        const userResponse = await authenticatedFetch(`${window.apiUrl}/users/${user.USERid}`);
+                        if (!userResponse.ok) continue;
+                        const userData = await userResponse.json();
+                        const permissions = userData.user.permissions || [];
+                        if (permissions.includes('community') && !permissions.includes('admin')) {
+                            communities.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
+                        }
+                    }
 
-@app.route('/merchant', methods=['GET'])
-@require_permissions(["merchant", "admin"], require_all=False)
-def merchant_dashboard():
-    # Placeholder: Merchant dashboard
-    return jsonify({"status": "success", "message": "Merchant dashboard"})
+                    updateUserTable('communitiesList', communities, 'communities');
+                    toastr.success('Communities loaded successfully');
+                } catch (error) {
+                    toastr.error(`Error loading communities: ${error.message}`);
+                }
+            }
 
-@app.route('/partner', methods=['GET'])
-@require_permissions(["wixpro", "admin"], require_all=False)
-def partner_dashboard():
-    # Placeholder: Partner (Wixpro) dashboard
-    return jsonify({"status": "success", "message": "Partner dashboard"})
+            async function loadPartners() {
+                try {
+                    const usersResponse = await authenticatedFetch(`${window.apiUrl}/users`);
+                    if (!usersResponse.ok) throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+                    const usersData = await usersResponse.json();
+                    const users = usersData.users;
 
-if __name__ == '__main__':
-    app.run(debug=True)
+                    const partners = [];
+                    for (const user of users) {
+                        const userResponse = await authenticatedFetch(`${window.apiUrl}/users/${user.USERid}`);
+                        if (!userResponse.ok) continue;
+                        const userData = await userResponse.json();
+                        const permissions = userData.user.permissions || [];
+                        if (permissions.includes('wixpro')) {
+                            partners.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
+                        }
+                    }
+
+                    updateUserTable('partnersList', partners, 'partners');
+                    toastr.success('Partners loaded successfully');
+                } catch (error) {
+                    toastr.error(`Error loading partners: ${error.message}`);
+                }
+            }
+
+            function updateUserTable(tableId, users, section) {
+                const tbody = document.getElementById(tableId);
+                tbody.innerHTML = '';
+                if (users.length === 0) {
+                    const colspan = section === 'communities' ? 3 : 4;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}">No users found</td></tr>`;
+                    return;
+                }
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    let actionsHtml = '';
+                    if (section !== 'communities') {
+                        const hasValidated = user.permissions.includes('validated');
+                        actionsHtml = `
+                            <input type="checkbox" ${hasValidated ? 'checked' : ''} 
+                                onchange="togglePermission('${user.USERid}', 'validated', '${section}', this.checked)">
+                            Validated
+                        `;
+                        if (section === 'partners') {
+                            const hasAdmin = user.permissions.includes('admin');
+                            const hasMerchant = user.permissions.includes('merchant');
+                            actionsHtml = `
+                                <input type="checkbox" ${hasAdmin ? 'checked' : ''} 
+                                    onchange="togglePermission('${user.USERid}', 'admin', '${section}', this.checked)">
+                                Admin
+                                <input type="checkbox" ${hasMerchant ? 'checked' : ''} 
+                                    onchange="togglePermission('${user.USERid}', 'merchant', '${section}', this.checked)">
+                                Merchant
+                            ` + actionsHtml;
+                        }
+                    }
+                    row.innerHTML = `
+                        <td>${user.USERid}</td>
+                        <td>${user.contact_name}</td>
+                        <td>${user.email_address}</td>
+                        ${section !== 'communities' ? `<td class="action-cell">${actionsHtml}</td>` : ''}
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            async function togglePermission(userId, permission, section, isChecked) {
+                try {
+                    const method = isChecked ? 'POST' : 'DELETE';
+                    const response = await authenticatedFetch(`${window.apiUrl}/permissions/${userId}`, {
+                        method: method,
+                        body: JSON.stringify({ permission })
+                    });
+                    if (!response.ok) throw new Error(`Failed to ${isChecked ? 'add' : 'remove'} permission: ${response.status}`);
+                    const data = await response.json();
+                    toastr.success(data.message || `${isChecked ? 'Added' : 'Removed'} ${permission} permission for user ${userId}`);
+                    loadSection(section);
+                } catch (error) {
+                    toastr.error(`Error: ${error.message}`);
+                    loadSection(section);
+                }
+            }
+
+            async function updateAffiliate(affiliate) {
+                let credentials = {};
+                if (affiliate === 'amazon_uk') {
+                    credentials = {
+                        ACCESS_KEY: document.getElementById('amazonAccessKey').value.trim(),
+                        SECRET_KEY: document.getElementById('amazonSecretKey').value.trim(),
+                        ASSOCIATE_TAG: document.getElementById('amazonAssociateTag').value.trim(),
+                        COUNTRY: document.getElementById('amazonCountry').value.trim()
+                    };
+                } else if (affiliate === 'ebay_uk') {
+                    credentials = { APP_ID: document.getElementById('ebayAppId').value.trim() };
+                } else if (affiliate === 'awin') {
+                    credentials = { API_TOKEN: document.getElementById('awinApiToken').value.trim() };
+                } else if (affiliate === 'cj') {
+                    credentials = {
+                        API_KEY: document.getElementById('cjApiKey').value.trim(),
+                        WEBSITE_ID: document.getElementById('cjWebsiteId').value.trim()
+                    };
+                } else if (affiliate === 'textmagic') {
+                    credentials = {
+                        USERNAME: document.getElementById('textmagicUsername').value.trim(),
+                        API_KEY: document.getElementById('textmagicApiKey').value.trim()
+                    };
+                } else if (affiliate === 'tiny') {
+                    credentials = { API_KEY: document.getElementById('tinyApiKey').value.trim() };
+                }
+
+                credentials = Object.fromEntries(Object.entries(credentials).filter(([_, v]) => v !== ''));
+                if (Object.keys(credentials).length === 0) {
+                    toastr.warning('No changes to update');
+                    return;
+                }
+
+                try {
+                    const response = await authenticatedFetch(`${window.apiUrl}/config/${affiliate}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify(credentials)
+                    });
+                    if (!response.ok) throw new Error(`Failed to update: ${response.status}`);
+                    const data = await response.json();
+                    toastr.success(`Update successful: ${data.message}`);
+                } catch (error) {
+                    toastr.error(`Error updating credentials: ${error.message}`);
+                }
+            }
+
+            async function submitReferral(formId, successMessage) {
+                const form = document.getElementById(formId);
+                if (form.dataset.listenerAdded) return;
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(form);
+                    const jsonData = Object.fromEntries(formData.entries());
+                    try {
+                        const response = await authenticatedFetch(`${window.apiUrl}/referal`, {
+                            method: 'POST',
+                            body: JSON.stringify(jsonData),
+                        });
+                        if (!response.ok) throw new Error((await response.json()).message || 'Unknown error');
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            toastr.success(`${successMessage} - Referer: ${data.referer}`);
+                        } else {
+                            toastr.error(data.message || 'Unknown error');
+                        }
+                    } catch (error) {
+                        toastr.error(error.message || 'Failed to connect to server');
+                    }
+                });
+                form.dataset.listenerAdded = 'true';
+            }
+
+            function logOff() {
+                if (confirm('Are you sure you want to log off?')) {
+                    localStorage.removeItem('authToken');
+                    toastr.success('Logged off successfully');
+                    setTimeout(() => window.location.href = '/', 1000);
+                }
+            }
+
+            async function loadCategories() {
+                try {
+                    const response = await authenticatedFetch(`${window.apiUrl}/categories`);
+                    if (!response.ok) throw new Error(`Failed to fetch /categories: ${response.status}`);
+                    const data = await response.json();
+                    const tree = document.getElementById('categoryTree');
+                    tree.innerHTML = '';
+                    const ul = document.createElement('ul');
+                    data.categories.forEach(cat => ul.appendChild(createTreeNode(cat)));
+                    tree.appendChild(ul);
+                    toastr.success('Categories loaded successfully');
+                } catch (error) {
+                    toastr.error(`Error loading categories: ${error.message}`);
+                }
+            }
+
+            function createTreeNode(category) {
+                const li = document.createElement('li');
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'node';
+
+                const toggle = document.createElement('span');
+                toggle.className = 'toggle';
+                toggle.textContent = '+';
+                toggle.onclick = () => toggleSubcategories(category.id, toggle);
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = category.id;
+                checkbox.onchange = () => handleCategorySelection(category.id, checkbox);
+
+                const span = document.createElement('span');
+                span.textContent = `${category.name} (${category.id})`;
+
+                nodeDiv.appendChild(toggle);
+                nodeDiv.appendChild(checkbox);
+                nodeDiv.appendChild(span);
+                li.appendChild(nodeDiv);
+
+                const subUl = document.createElement('ul');
+                subUl.className = 'subcategories';
+                li.appendChild(subUl);
+
+                return li;
+            }
+
+            async function toggleSubcategories(parentId, toggle) {
+                const li = toggle.closest('li');
+                const subUl = li.querySelector('.subcategories');
+
+                if (subUl.classList.contains('open')) {
+                    subUl.classList.remove('open');
+                    toggle.textContent = '+';
+                } else {
+                    if (subUl.children.length === 0) {
+                        try {
+                            const response = await authenticatedFetch(`${window.apiUrl}/categories?parent_id=${parentId}`);
+                            if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
+                            const data = await response.json();
+                            if (data.categories.length === 0) {
+                                toastr.info(`No subcategories for ${parentId}`);
+                                return;
+                            }
+                            data.categories.forEach(cat => subUl.appendChild(createTreeNode(cat)));
+                            toastr.success(`Subcategories for ${parentId} loaded successfully`);
+                        } catch (error) {
+                            toastr.error(`Error loading subcategories: ${error.message}`);
+                            return;
+                        }
+                    }
+                    subUl.classList.add('open');
+                    toggle.textContent = '-';
+                }
+            }
+
+            async function handleCategorySelection(categoryId, checkbox) {
+                document.querySelectorAll('#categoryTree input[type="checkbox"]').forEach(cb => {
+                    if (cb !== checkbox) cb.checked = false;
+                });
+
+                if (checkbox.checked) {
+                    try {
+                        const response = await authenticatedFetch(`${window.apiUrl}/discounted-products?category_id=${categoryId}&min_discount=20`);
+                        if (!response.ok) throw new Error(`Failed to fetch discounted products: ${response.status}`);
+                        const data = await response.json();
+                        const tbody = document.getElementById('dealList');
+                        tbody.innerHTML = '';
+                        data.products.forEach(product => tbody.appendChild(createDealRow(product)));
+                        toastr.success(`Loaded ${data.count} discounted products for category ${categoryId}`);
+                    } catch (error) {
+                        toastr.error(`Error loading discounted products: ${error.message}`);
+                        checkbox.checked = false;
+                    }
+                } else {
+                    document.getElementById('dealList').innerHTML = '';
+                }
+            }
+
+            function createDealRow(product) {
+                const tr = document.createElement('tr');
+                const discountPercent = product.discount_percent || 
+                    (product.original_price > product.current_price 
+                        ? ((product.original_price - product.current_price) / product.original_price * 100).toFixed(2) 
+                        : 'N/A');
+                tr.innerHTML = `
+                    <td>${product.category || 'N/A'}</td>
+                    <td>${product.title}</td>
+                    <td><a href="${product.product_url}" target="_blank">Link</a></td>
+                    <td>${product.current_price}</td>
+                    <td>${product.original_price}</td>
+                    <td>${discountPercent}</td>
+                    <td><img src="${product.image_url}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
+                    <td>${product.QTY || 'N/A'}</td>
+                `;
+                return tr;
+            }
+
+            // Initial page load
+            initializeAdmin();
+        })();
+    

@@ -18,8 +18,6 @@ import markdown
 from functools import wraps
 
 app = Flask(__name__)
-USERS_FILE = "users_categories.json"
-USERS_PRODUCTS_FILE = "users_products.json"
 CONFIG_FILE = "config.json"
 DEFAULT_CATEGORIES = ["283155", "172282"]
 USERS_SETTINGS_FILE = "users_settings.json"
@@ -1527,35 +1525,115 @@ def list_site_requests():
         logger.error(f"Error in list_site_requests: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
-@app.route('/render-github-md/<owner>/<repo>/<branch>/<path:path>', methods=['GET'])
+@app.route('/render-md/<path:full_path>', methods=['GET'])
 @require_permissions(["allauth"], require_all=False)
-def render_github_md(owner, repo, branch, path):
-    if not path.endswith('.md'):
-        abort(404, "Not a Markdown file")
-    url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        md_content = response.text
+def render_md(full_path):
+    """
+    Render Markdown files from the static folder or GitHub based on the URL path.
+    Returns an HTML response using templates from static/error/<status_code>.md.
+    """
+    try:
+        # Parse the full_path, removing trailing slashes
+        segments = full_path.rstrip('/').split('/')
+        if not segments or segments == ['']:
+            raise ValueError("Invalid path provided")
+
+        # Determine source: static folder or GitHub
+        if segments[0] == 'static':
+            # Handle static file
+            if len(segments) < 2:
+                raise ValueError("No file path provided after 'static'")
+            file_path = '/'.join(segments[1:])
+            if not file_path.endswith('.md'):
+                raise ValueError("Only .md files are supported")
+            static_file = os.path.join(app.static_folder, file_path)
+            if not os.path.isfile(static_file):
+                raise FileNotFoundError("File not found in static folder")
+            with open(static_file, 'r', encoding='utf-8') as f:
+                md_content = f.read()
+        else:
+            # Handle GitHub file
+            if len(segments) < 4:
+                raise ValueError("Invalid GitHub path: Must provide owner/repo/branch/path")
+            owner, repo, branch, *path_segments = segments
+            path = '/'.join(path_segments)
+            if not path.endswith('.md'):
+                raise ValueError("Only .md files are supported")
+            url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
+            response = requests.get(url)
+            if response.status_code != 200:
+                raise FileNotFoundError("File not found on GitHub")
+            md_content = response.text
+
+        # Convert Markdown to HTML with table support
         html_content = markdown.markdown(md_content, extensions=['tables'])
-        return render_template_string('''
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Rendered Markdown</title>
-                <style>
-                    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    th { background-color: #f2f2f2; }
-                </style>
-            </head>
-            <body>
-                {{ content | safe }}
-            </body>
-            </html>
-        ''', content=html_content)
+        status_code = 200
+
+    except ValueError as e:
+        # Invalid paths or file types result in 404
+        status_code = 404
+        error_message = str(e)
+    except FileNotFoundError as e:
+        # File not found results in 404
+        status_code = 404
+        error_message = str(e)
+    except requests.RequestException as e:
+        # Network issues with GitHub result in 500
+        status_code = 500
+        error_message = "Failed to fetch from GitHub"
+    except Exception as e:
+        # Unexpected errors result in 500
+        status_code = 500
+        error_message = "An unexpected error occurred"
+        logger.error(f"Error: {e}", exc_info=True)
+
+    # Load the corresponding template
+    template_path = os.path.join(app.static_folder, 'error', f'{status_code}.md')
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template = f.read()
+
+    # Replace the appropriate placeholder
+    if status_code == 200:
+        final_html = template.replace('{content}', html_content)
     else:
-        abort(404, "File not found")
+        final_html = template.replace('{error_message}', error_message)
+
+    # Create and return the response
+    response = make_response(final_html, status_code)
+    response.headers['Content-Type'] = 'text/html'
+    return response
+
+@app.route('/check-domain', methods=['GET'])
+@require_permissions(["allauth"], require_all=False)  # Custom decorator applied
+def check_domain():
+    # Get domain from query parameter
+    domain = request.args.get('domain')
+    
+    # Basic validation (matches client-side regex: /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/)
+    if not domain:
+        return jsonify({"error": "Please provide a domain name"}), 400
+    
+    if not all(c.isalnum() or c in '-.' for c in domain) or \
+       not '.' in domain or \
+       len(domain.split('.')[-1]) < 2:
+        return jsonify({"error": "Invalid domain name (e.g., mystore.uk)"}), 400
+    
+    # Query WHOIS data using python-whois
+    try:
+        w = whois.whois(domain)
+        # If no registration data exists (e.g., creation_date is None), domain is available
+        is_available = w.creation_date is None
+        return jsonify({
+            "domain": domain,
+            "available": is_available
+        }), 200
+    except Exception as e:
+        # Handle WHOIS query failures (e.g., timeouts, invalid TLDs)
+        return jsonify({"error": f"Failed to check domain availability: {str(e)}"}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+    
 # endregion Logged in Endpoints
 
 # region Public Endpoints

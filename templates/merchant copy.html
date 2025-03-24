@@ -6,22 +6,23 @@
     <title>clubmadeira.io | Merchant</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
     <style>
         body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
             padding: 0; 
             display: flex; 
-            flex-direction: column; 
-            min-height: 100vh; 
+            flex-direction: column; /* Stack children vertically */
+            min-height: 100vh; /* Ensure body takes full height */
         }
         .header { 
             height: 150px; 
-            width: 100%; 
+            width: 100%; /* Full width */
             background-color: #f4f4f4; 
             margin-bottom: 25px; 
             overflow: hidden; 
-            flex-shrink: 0; 
+            flex-shrink: 0; /* Prevent header from shrinking */
         }
         .header-content { 
             max-width: 1200px; 
@@ -32,10 +33,10 @@
             max-width: 1200px; 
             margin: 0 auto; 
             display: flex; 
-            flex-direction: row; 
+            flex-direction: row; /* Menu and content side by side */
             gap: 20px; 
             padding: 20px; 
-            flex-grow: 1; 
+            flex-grow: 1; /* Allow main content to take remaining space */
         }
         .menu-container { 
             flex: 1; 
@@ -323,7 +324,6 @@
         let userPermissions = [];
         let pageCount = 2; // Start with Home and Returns Policy
         let emailCount = 1; // Start with one email
-        let tinyMCELoaded = false; // Track if TinyMCE is loaded
 
         function decodeJWT(token) {
             if (!token || typeof token !== 'string') {
@@ -372,11 +372,8 @@
             loadBranding();
             showSection('info');
             attachEventListeners();
+            waitForTinyMCE(initializeTinyMCE);
         }
-
-        window.initPage = function() {
-            initializeMerchant();
-        };
 
         toastr.options = { closeButton: true, progressBar: true, positionClass: 'toast-top-right', timeOut: 5000, showMethod: 'slideDown', hideMethod: 'slideUp' };
 
@@ -435,47 +432,35 @@
                 });
 
                 attachEventListeners();
+                waitForTinyMCE(initializeTinyMCE);
             } catch (error) {
                 toastr.error(error.message || 'Failed to load protected page');
                 window.location.href = '/';
             }
         }
 
-        function loadTinyMCE() {
-            return new Promise((resolve, reject) => {
-                if (tinyMCELoaded) {
-                    console.log('TinyMCE already loaded');
-                    initializeTinyMCE();
-                    resolve();
-                    return;
+        function waitForTinyMCE(callback) {
+            if (typeof tinymce !== 'undefined' && tinymce.init) {
+                console.log('TinyMCE is loaded, executing callback');
+                callback();
+            } else {
+                console.log('Waiting for TinyMCE to load...');
+                const script = document.querySelector('script[src*="tinymce.min.js"]');
+                if (script) {
+                    script.onload = () => {
+                        console.log('TinyMCE script loaded');
+                        callback();
+                    };
+                    script.onerror = () => console.error('TinyMCE failed to load');
+                } else {
+                    setTimeout(() => waitForTinyMCE(callback), 100);
                 }
-
-                console.log('Loading TinyMCE...');
-                const script = document.createElement('script');
-                script.src = 'https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js';
-                script.referrerpolicy = 'origin';
-                document.head.appendChild(script);
-
-                script.onload = () => {
-                    console.log('TinyMCE script loaded');
-                    tinyMCELoaded = true;
-                    initializeTinyMCE();
-                    resolve();
-                };
-                script.onerror = () => {
-                    console.error('Failed to load TinyMCE');
-                    toastr.error('Failed to load rich text editor');
-                    reject(new Error('TinyMCE load failed'));
-                };
-            });
+            }
         }
 
         function initializeTinyMCE() {
-            if (!window.tinymce) {
-                console.error('TinyMCE not available');
-                return;
-            }
             console.log('Initializing TinyMCE');
+            tinymce.remove();
             tinymce.init({
                 selector: '#aboutStore, textarea[name$="Content"]',
                 height: 200,
@@ -577,7 +562,7 @@
             return response;
         }
 
-        async function showSection(section) {
+        function showSection(section) {
             console.log(`Showing section: ${section}`);
             document.querySelectorAll('.section').forEach(s => {
                 s.classList.remove('active');
@@ -591,10 +576,7 @@
             if (section === 'my-account') loadSettings();
             else if (section === 'my-products') loadProducts();
             else if (section === 'wix-keys') loadWixClientId();
-            else if (section === 'my-store') {
-                await loadTinyMCE();
-                loadStoreRequest();
-            }
+            else if (section === 'my-store') loadStoreRequest();
             else if (section === 'info') return;
         }
 
@@ -759,8 +741,7 @@
                 const storeRequest = data.site_request || {};
 
                 document.getElementById('storeName').value = storeRequest.storeName || '';
-                if (tinyMCELoaded) tinymce.get('aboutStore')?.setContent(storeRequest.aboutStore || '');
-                else document.getElementById('aboutStore').value = storeRequest.aboutStore || '';
+                tinymce.get('aboutStore')?.setContent(storeRequest.aboutStore || '');
                 document.getElementById('colorPrefs').value = storeRequest.colorPrefs || '';
                 document.getElementById('stylingDetails').value = storeRequest.stylingDetails || '';
                 document.getElementById('preferredDomain').value = storeRequest.preferredDomain || 'mystore.uk';
@@ -806,18 +787,6 @@
                         ${pageCount > 2 ? `<button type="button" class="remove-page-btn" onclick="removePage(${pageCount})">Remove Page</button>` : ''}
                     `;
                     pagesContainer.appendChild(pageDiv);
-                    if (tinyMCELoaded) {
-                        tinymce.init({
-                            selector: `#page${pageCount}Content`,
-                            height: 200,
-                            menubar: false,
-                            plugins: 'lists',
-                            toolbar: 'bold italic | bullist numlist',
-                            setup: editor => {
-                                editor.on('init', () => console.log(`TinyMCE editor initialized for page${pageCount}`));
-                            }
-                        });
-                    }
                 });
 
                 const widgets = storeRequest.widgets || [];
@@ -825,6 +794,8 @@
                     checkbox.checked = widgets.includes(checkbox.value);
                 });
 
+                tinymce.remove();
+                waitForTinyMCE(initializeTinyMCE);
                 updateDomainPreview();
             } catch (error) {
                 toastr.error(`Error loading store request: ${error.message}`);
@@ -839,7 +810,7 @@
                 userId: userId,
                 type: "merchant",
                 storeName: document.getElementById('storeName').value.trim(),
-                aboutStore: tinyMCELoaded ? tinymce.get('aboutStore')?.getContent() || '' : document.getElementById('aboutStore').value,
+                aboutStore: tinymce.get('aboutStore')?.getContent() || '',
                 storeLogos: [],
                 colorPrefs: document.getElementById('colorPrefs').value.trim(),
                 stylingDetails: document.getElementById('stylingDetails').value.trim(),
@@ -885,12 +856,12 @@
 
             for (let i = 1; i <= pageCount; i++) {
                 const nameInput = document.getElementById(`page${i}Name`);
-                const contentEditor = tinyMCELoaded ? tinymce.get(`page${i}Content`) : null;
+                const contentEditor = tinymce.get(`page${i}Content`);
                 const imagesInput = document.getElementById(`page${i}Images`);
                 if (nameInput && nameInput.value.trim()) {
                     const page = {
                         name: nameInput.value.trim(),
-                        content: contentEditor ? contentEditor.getContent() : document.getElementById(`page${i}Content`).value,
+                        content: contentEditor ? contentEditor.getContent() : '',
                         images: []
                     };
                     if (imagesInput && imagesInput.files.length > 0) {
@@ -926,7 +897,7 @@
             }
         }
 
-        async function addPage() {
+        function addPage() {
             if (pageCount >= 5) {
                 toastr.error('Maximum of 5 pages allowed');
                 return;
@@ -947,20 +918,8 @@
                 <button type="button" class="remove-page-btn" onclick="removePage(${pageCount})">Remove Page</button>
             `;
             container.appendChild(newPage);
-            if (tinyMCELoaded) {
-                tinymce.init({
-                    selector: `#page${pageCount}Content`,
-                    height: 200,
-                    menubar: false,
-                    plugins: 'lists',
-                    toolbar: 'bold italic | bullist numlist',
-                    setup: editor => {
-                        editor.on('init', () => console.log(`TinyMCE editor initialized for page${pageCount}`));
-                    }
-                });
-            } else {
-                await loadTinyMCE();
-            }
+            tinymce.remove();
+            waitForTinyMCE(initializeTinyMCE);
         }
 
         function removePage(pageNum) {
@@ -970,13 +929,10 @@
             }
             const pageSection = document.querySelector(`.page-section[data-page="${pageNum}"]`);
             if (pageSection) {
-                if (tinyMCELoaded) {
-                    const editorId = `page${pageNum}Content`;
-                    const editor = tinymce.get(editorId);
-                    if (editor) editor.remove();
-                }
                 pageSection.remove();
                 pageCount--;
+                tinymce.remove();
+                waitForTinyMCE(initializeTinyMCE);
             }
         }
 
@@ -1026,7 +982,6 @@
         function checkDomainAvailability() {
             const domain = document.getElementById('preferredDomain').value;
             const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
-
             if (!domain) {
                 toastr.error('Please enter a preferred domain name');
                 return;
@@ -1035,38 +990,11 @@
                 toastr.error('Invalid domain name (e.g., mystore.uk)');
                 return;
             }
-
             toastr.info(`Checking availability for ${domain}...`);
-
-            fetch(`https://clubmadeira.io/check-domain?domain=${encodeURIComponent(domain)}`, {
-                method: 'GET',
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 403) {
-                        throw new Error('Permission denied - please log in');
-                    }
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Unknown error');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.available) {
-                    toastr.success(`${data.domain} is available!`);
-                } else {
-                    toastr.error(`${data.domain} is not available`);
-                    document.getElementById('preferredDomain').value = '';
-                }
-            })
-            .catch(error => {
-                toastr.error(error.message);
-            });
+            setTimeout(() => toastr.success('This is a placeholder - domain check not implemented'), 1000);
         }
 
-        window.initPage();
+        initializeMerchant();
     </script>
 </body>
 </html>

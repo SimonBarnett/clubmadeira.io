@@ -554,11 +554,6 @@
             console.log('Community page initialized successfully');
         }
 
-        // Define window.initPage for dynamic initialization
-        window.initPage = function() {
-            initializeCommunity();
-        };
-
         // Toastr configuration
         toastr.options = { 
             closeButton: true, 
@@ -1234,7 +1229,7 @@
                 const data = await response.json();
                 const siteRequest = data.site_request || {};
 
-                document.getElementById('community quidName').value = siteRequest.communityName || '';
+                document.getElementById('communityName').value = siteRequest.communityName || '';
                 tinymce.get('aboutCommunity')?.setContent(siteRequest.aboutCommunity || '');
                 document.getElementById('colorPrefs').value = siteRequest.colorPrefs || '';
                 document.getElementById('stylingDetails').value = siteRequest.stylingDetails || '';
@@ -1492,50 +1487,24 @@
 
         // Check domain availability (placeholder)
         function checkDomainAvailability() {
+            console.log('Checking domain availability');
             const domain = document.getElementById('preferredDomain').value;
             const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
-
             if (!domain) {
                 toastr.error('Please enter a preferred domain name');
                 return;
             }
             if (!domainRegex.test(domain)) {
-                toastr.error('Invalid domain name (e.g., mystore.uk)');
+                toastr.error('Invalid domain name (e.g., mycommunity.org)');
                 return;
             }
-
             toastr.info(`Checking availability for ${domain}...`);
-
-            fetch(`https://clubmadeira.io/check-domain?domain=${encodeURIComponent(domain)}`, {
-                method: 'GET',
-                credentials: 'same-origin' // For external auth (cookies/session)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 403) {
-                        throw new Error('Permission denied - please log in');
-                    }
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Unknown error');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.available) {
-                    toastr.success(`${data.domain} is available!`);
-                } else {
-                    toastr.error(`${data.domain} is not available`);
-                    document.getElementById('preferredDomain').value = ''; // Clear only this field
-                }
-            })
-            .catch(error => {
-                toastr.error(error.message);
-            });
+            setTimeout(() => toastr.success('This is a placeholder - domain check not implemented'), 1000);
+            console.log('Checked domain availability for:', domain);
         }
 
         // Start the initialization
-        window.initPage();
+        initializeCommunity();
     </script>
 </body>
 </html>
