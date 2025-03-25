@@ -251,42 +251,76 @@ function updateUserTable(tableId, users, section) {
     const tbody = document.getElementById(tableId);
     tbody.innerHTML = '';
     if (users.length === 0) {
-        const colspan = section === 'communities' ? 3 : 4;
+        const colspan = 4; // All tables have 4 columns (USERid, Contact Name, Email, Actions)
         tbody.innerHTML = `<tr><td colspan="${colspan}">No users found</td></tr>`;
         console.log('updateUserTable - No users found - Table ID:', tableId);
         return;
     }
+
     users.forEach(user => {
         const row = document.createElement('tr');
         let actionsHtml = '';
-        if (section !== 'communities') {
-            const hasValidated = user.permissions.includes('validated');
-            actionsHtml = `
-                <input type="checkbox" ${hasValidated ? 'checked' : ''} 
-                    onchange="togglePermission('${user.USERid}', 'validated', '${section}', this.checked)">
-                Validated
+
+        // Admin permission (only for Partners, tickable)
+        if (section === 'partners') {
+            const hasAdmin = user.permissions.includes('admin');
+            actionsHtml += `
+                <i class="${hasAdmin ? 'fas' : 'far'} fa-user-shield" 
+                   title="Grants administrative access to the platform" 
+                   style="${hasAdmin ? '' : 'color: #ccc;'} cursor: pointer;" 
+                   onclick="togglePermission('${user.USERid}', 'admin', '${section}', ${!hasAdmin})"></i>
             `;
-            if (section === 'partners') {
-                const hasAdmin = user.permissions.includes('admin');
-                const hasMerchant = user.permissions.includes('merchant');
-                actionsHtml = `
-                    <input type="checkbox" ${hasAdmin ? 'checked' : ''} 
-                        onchange="togglePermission('${user.USERid}', 'admin', '${section}', this.checked)">
-                    Admin
-                    <input type="checkbox" ${hasMerchant ? 'checked' : ''} 
-                        onchange="togglePermission('${user.USERid}', 'merchant', '${section}', this.checked)">
-                    Merchant
-                ` + actionsHtml;
-            }
         }
+
+        // Merchant permission (only for Partners, tickable)
+        if (section === 'partners') {
+            const hasMerchant = user.permissions.includes('merchant');
+            actionsHtml += `
+                <i class="${hasMerchant ? 'fas' : 'far'} fa-store" 
+                   title="Allows managing merchant-specific features" 
+                   style="${hasMerchant ? '' : 'color: #ccc;'} cursor: pointer;" 
+                   onclick="togglePermission('${user.USERid}', 'merchant', '${section}', ${!hasMerchant})"></i>
+            `;
+        }
+
+        // Validated permission (read-only for Communities, tickable for others)
+        const hasValidated = user.permissions.includes('validated');
+        if (section === 'communities') {
+            // Read-only for Communities
+            actionsHtml += `
+                <i class="${hasValidated ? 'fas' : 'far'} fa-check-circle" 
+                   title="Confirms user validation status" 
+                   style="${hasValidated ? '' : 'color: #ccc;'}"></i>
+            `;
+        } else {
+            // Tickable for Partners and Merchants
+            actionsHtml += `
+                <i class="${hasValidated ? 'fas' : 'far'} fa-check-circle" 
+                   title="Confirms user validation status" 
+                   style="${hasValidated ? '' : 'color: #ccc;'} cursor: pointer;" 
+                   onclick="togglePermission('${user.USERid}', 'validated', '${section}', ${!hasValidated})"></i>
+            `;
+        }
+
+        // Debug permission (tickable for all user types)
+        const hasDebug = user.permissions.includes('debug');
+        actionsHtml += `
+            <i class="${hasDebug ? 'fas' : 'far'} fa-bug" 
+               title="Allows access to debugging tools" 
+               style="${hasDebug ? '' : 'color: #ccc;'} cursor: pointer;" 
+               onclick="togglePermission('${user.USERid}', 'debug', '${section}', ${!hasDebug})"></i>
+        `;
+
+        // Construct the row
         row.innerHTML = `
             <td>${user.USERid}</td>
             <td>${user.contact_name}</td>
             <td>${user.email_address}</td>
-            ${section !== 'communities' ? `<td class="action-cell">${actionsHtml}</td>` : ''}
+            <td class="action-cell">${actionsHtml}</td>
         `;
         tbody.appendChild(row);
     });
+
     console.log('updateUserTable - Table updated - Table ID:', tableId);
 }
 

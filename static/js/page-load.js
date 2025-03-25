@@ -24,7 +24,7 @@ function attachEventListeners() {
         if (button.dataset.section || button.dataset.submenu) {
             button.addEventListener('click', handleSectionClick);
             console.log('attachEventListeners - Added click listener to button with data-section/submenu:', button.dataset.section || button.dataset.submenu);
- spool   }
+        }
         if (button.dataset.href) {
             button.addEventListener('click', handleHrefClick);
             console.log('attachEventListeners - Added click listener to button with data-href:', button.dataset.href);
@@ -39,8 +39,8 @@ function attachEventListeners() {
 }
 
 // Base initialization function ensuring permission checks before page setup.
-function initializePage(permissionRequired, callback) {
-    console.log('initializePage - Starting initialization - Permission required:', permissionRequired);
+function initializePage(requiredPermissions, callback) {
+    console.log('initializePage - Starting initialization - Permissions required:', requiredPermissions);
     const token = localStorage.getItem('authToken');
     console.log('initializePage - Retrieved token from localStorage:', token || 'None');
     if (!token) {
@@ -57,24 +57,33 @@ function initializePage(permissionRequired, callback) {
     }
     window.userPermissions = decoded.permissions || [];
     console.log('initializePage - User permissions set:', JSON.stringify(window.userPermissions));
-    if (!window.userPermissions.includes(permissionRequired)) {
-        console.warn('initializePage - Required permission not found - Required:', permissionRequired, 'Permissions:', window.userPermissions);
-        toastr.error(`Permission denied: ${permissionRequired} permission required`);
+    if (!requiredPermissions.some(perm => window.userPermissions.includes(perm))) {
+        console.warn('initializePage - Required permissions not found - Required:', requiredPermissions, 'Permissions:', window.userPermissions);
+        toastr.error(`Permission denied: one of ${requiredPermissions.join(', ')} required`);
         window.location.href = '/';
         return;
     }
     console.log('initializePage - Permission check passed - Executing callback');
     callback();
-    console.log('initializePage - Initialization completed for permission:', permissionRequired);
+    console.log('initializePage - Initialization completed for permissions:', requiredPermissions);
 }
 
 // Common initialize function handling page-specific setup based on page type.
 function initialize(pageType) {
     console.log('initialize - Starting page initialization - Page type:', pageType);
     
+    // Ensure overlay is visible at the start of initialization
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'flex';
+        console.log('initialize - Loading overlay set to visible');
+    } else {
+        console.warn('initialize - Loading overlay not found');
+    }
+
     const pageConfigs = {
         'partner': {
-            permission: 'admin',
+            permissions: ["wixpro", "admin"],
             brandingType: 'partner',
             initialSection: null,
             requiresUserId: false,
@@ -85,7 +94,7 @@ function initialize(pageType) {
             }
         },
         'merchant': {
-            permission: 'merchant',
+            permissions: ["merchant", "admin"],
             brandingType: 'merchant',
             initialSection: 'info',
             requiresUserId: true,
@@ -98,14 +107,13 @@ function initialize(pageType) {
                     document.getElementById('userId').value = userId;
                 } else {
                     console.warn('initialize - No userId found for merchant - Proceeding without setting');
-                }
-                checkAdminPermission(); // From merchant.js stub
+                }                
                 attachEventListeners();
                 console.log('initialize - Merchant-specific steps completed');
             }
         },
         'community': {
-            permission: 'community',
+            permissions: ["community", "admin"],
             brandingType: 'community',
             initialSection: 'welcome',
             requiresUserId: true,
@@ -115,7 +123,7 @@ function initialize(pageType) {
                 console.log('initialize - Retrieved userId from localStorage:', userId || 'None');
                 if (!userId) {
                     console.warn('initialize - User ID not found for community - Redirecting to /');
-                    toastr.error('User ID ángelesnot found in session');
+                    toastr.error('User ID not found in session');
                     window.location.href = '/';
                     return;
                 }
@@ -128,7 +136,7 @@ function initialize(pageType) {
             }
         },
         'admin': {
-            permission: 'admin',
+            permissions: ["admin"],
             brandingType: 'admin',
             initialSection: 'welcome',
             requiresUserId: false,
@@ -139,24 +147,22 @@ function initialize(pageType) {
             }
         },
         'login': {
-            permission: null,
+            permissions: [],
             brandingType: 'login',
             initialSection: null,
             requiresUserId: false,
             extraSteps: () => {
                 console.log('initialize - Executing login-specific steps');
-                // Minimal setup for login page
                 console.log('initialize - Login-specific steps completed');
             }
         },
         'signup': {
-            permission: null,
+            permissions: [],
             brandingType: 'signup',
             initialSection: null,
             requiresUserId: false,
             extraSteps: () => {
                 console.log('initialize - Executing signup-specific steps');
-                // Minimal setup for signup page
                 console.log('initialize - Signup-specific steps completed');
             }
         }
@@ -166,21 +172,28 @@ function initialize(pageType) {
     if (!config) {
         console.error('initialize - Invalid page type provided - Type:', pageType);
         toastr.error('Invalid page type');
+        hideLoadingOverlay(); // Ensure overlay is hidden on failure
         return;
     }
     console.log('initialize - Configuration loaded for page type:', pageType, 'Config:', JSON.stringify(config));
 
-    if (config.permission) {
-        console.log('initialize - Performing permission check for:', pageType);
-        initializePage(config.permission, () => {
-            console.log('initialize - Permission validated for:', pageType);
+    if (config.permissions && config.permissions.length > 0) {
+        console.log('initialize - Performing permission check for:', config.permissions);
+        initializePage(config.permissions, () => {
+            console.log('initialize - Permission validated for:', config.permissions);
             performPageSetup(pageType, config);
-            hideLoadingOverlay(); // Hide loader after successful setup
+            // Delay hiding the overlay slightly to ensure visibility
+            setTimeout(() => {
+                hideLoadingOverlay();
+            }, 500); // 500ms delay, adjustable
         });
     } else {
-        console.log('initialize - No permission required for:', pageType);
+        console.log('initialize - No permissions required for:', pageType);
         performPageSetup(pageType, config);
-        hideLoadingOverlay(); // Hide loader for pages without permission checks
+        // Delay hiding the overlay slightly to ensure visibility
+        setTimeout(() => {
+            hideLoadingOverlay();
+        }, 500); // 500ms delay, adjustable
     }
     console.log('initialize - Initialization process completed for:', pageType);
 }
@@ -348,37 +361,4 @@ async function handleHrefClick(event, options = {}) {
     console.log('handleHrefClick - Event handling completed');
 }
 
-// Wait for full page load (including images and scripts) to hide the loader
-window.addEventListener('load', function() {
-    console.log('window.load - Page fully loaded, checking initialization');
-    if (typeof window.initialize === 'function') {
-        console.log('window.load - Initialize function found, calling initialize');
-        window.initialize('admin'); // Adjust page type as needed based on context
-    } else {
-        console.warn('window.load - Initialize function not found, hiding loader anyway');
-        hideLoadingOverlay();
-    }
-});
-
-// Fallback: Hide loader after DOM is ready and initialize is called
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded - DOM ready, starting initialization check');
-    let attempts = 50;
-    const delay = 100;
-    
-    function checkInitialize() {
-        if (typeof window.initialize === 'function') {
-            console.log('checkInitialize - Initialize function found, calling initialize');
-            window.initialize('admin'); // Adjust page type as needed based on context
-        } else if (attempts > 0) {
-            attempts--;
-            console.log('checkInitialize - Initialize not found, retrying - Attempts left:', attempts);
-            setTimeout(checkInitialize, delay);
-        } else {
-            console.error('checkInitialize - Initialize function not found after maximum retries, hiding loader');
-            hideLoadingOverlay();
-        }
-    }
-    
-    checkInitialize();
-});
+// Remove redundant window.load and DOMContentLoaded listeners since waitForInitialize in admin.html handles initialization

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>clubmadeira.io | Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -80,6 +81,16 @@
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none;">
+        <div class="multicircle-loader">
+            <div class="circle circle1"></div>
+            <div class="circle circle2"></div>
+            <div class="circle circle3"></div>
+            <div class="circle circle4"></div>
+        </div>
+    </div>
+
     <div class="container" id="loginContainer">
         <h2>Login</h2>
         <form id="loginForm">
@@ -142,7 +153,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        const apiUrl = window.location.origin; // 'https://clubmadeira.io'
+        const apiUrl = window.location.origin;
 
         toastr.options = {
             closeButton: true,
@@ -153,16 +164,46 @@
             hideMethod: 'slideUp'
         };
 
+        function showLoadingOverlay() {
+            let overlay = document.getElementById('loadingOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'loadingOverlay';
+                overlay.innerHTML = `
+                    <div class="multicircle-loader">
+                        <div class="circle circle1"></div>
+                        <div class="circle circle2"></div>
+                        <div class="circle circle3"></div>
+                        <div class="circle circle4"></div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            }
+            overlay.style.display = 'flex';
+            console.log('showLoadingOverlay - Overlay displayed');
+            return overlay; // Return for preservation
+        }
+
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                console.log('hideLoadingOverlay - Overlay hidden');
+            }
+        }
+
         function showLogin() {
             document.getElementById('loginContainer').style.display = 'block';
             document.getElementById('forgotPasswordContainer').style.display = 'none';
             document.getElementById('verifyOtpContainer').style.display = 'none';
+            hideLoadingOverlay();
         }
 
         function showForgotPassword() {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('forgotPasswordContainer').style.display = 'block';
             document.getElementById('verifyOtpContainer').style.display = 'none';
+            hideLoadingOverlay();
         }
 
         function showVerifyOtp(email) {
@@ -170,6 +211,7 @@
             document.getElementById('forgotPasswordContainer').style.display = 'none';
             document.getElementById('verifyOtpContainer').style.display = 'block';
             document.getElementById('verifyEmail').value = email;
+            hideLoadingOverlay();
         }
 
         async function fetchProtectedPage(url) {
@@ -184,6 +226,7 @@
                 return;
             }
 
+            const overlay = showLoadingOverlay(); // Preserve overlay reference
             try {
                 const response = await fetch(`${apiUrl}${url}`, {
                     method: 'GET',
@@ -204,7 +247,12 @@
                 console.log('Received HTML:', html.substring(0, 200));
                 document.body.innerHTML = html;
 
-                // Re-attach external scripts and execute inline script
+                // Reattach overlay immediately after DOM replacement
+                document.body.prepend(overlay);
+                overlay.style.display = 'flex';
+                console.log('fetchProtectedPage - Overlay reattached and displayed');
+
+                // Reload scripts
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 const scripts = doc.querySelectorAll('script');
@@ -229,20 +277,23 @@
                 toastr.error(error.message || 'Failed to load protected page');
                 console.error('Protected Fetch Error:', error);
                 showLogin();
+                hideLoadingOverlay();
             }
+            // Overlay stays until page-load.js hides it
         }
+
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
-            const loginUrl = `${apiUrl}/login`;
             console.log('Origin:', window.location.origin);
-            console.log('Login URL:', loginUrl);
+            console.log('Login URL:', `${apiUrl}/login`);
             console.log('Request Payload:', { email, password });
 
+            showLoadingOverlay();
             try {
-                const response = await fetch(loginUrl, {
+                const response = await fetch(`${apiUrl}/login`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -284,8 +335,7 @@
             } catch (error) {
                 toastr.error(error.message || 'Unable to connect to server.');
                 console.error('Login Fetch Error:', error);
-                console.log('Error Name:', error.name);
-                console.log('Error Message:', error.message);
+                hideLoadingOverlay();
             }
         });
 
@@ -293,6 +343,7 @@
             e.preventDefault();
             const email = document.getElementById('forgotEmail').value.trim();
 
+            showLoadingOverlay();
             try {
                 const response = await fetch(`${apiUrl}/reset-password`, {
                     method: 'POST',
@@ -319,7 +370,8 @@
                 showVerifyOtp(email);
             } catch (error) {
                 toastr.error(error.message || 'Error sending OTP');
-                console.error('Reset Error:', error, 'Email Entered:', email);
+                console.error('Reset Error:', error);
+                hideLoadingOverlay();
             }
         });
 
@@ -340,6 +392,7 @@
                 return;
             }
 
+            showLoadingOverlay();
             try {
                 const response = await fetch(`${apiUrl}/verify-reset-code`, {
                     method: 'POST',
@@ -367,7 +420,8 @@
                 showLogin();
             } catch (error) {
                 toastr.error(error.message || 'Error verifying OTP');
-                console.error('Verification Error:', error, 'Email:', email, 'Code:', code);
+                console.error('Verification Error:', error);
+                hideLoadingOverlay();
             }
         });
 

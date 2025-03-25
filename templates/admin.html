@@ -12,11 +12,11 @@
         window.apiUrl = 'https://clubmadeira.io';
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 </head>
 <body>
     <!-- Loading Overlay -->
-    <div id="loadingOverlay">
+    <div id="loadingOverlay" style="display: flex;">
         <div class="multicircle-loader">
             <div class="circle circle1"></div>
             <div class="circle circle2"></div>
@@ -318,7 +318,7 @@
                     <p>Select a user type from the menu to view their details or modify their permissions:</p>
                     <ul>
                         <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
-                        <li><strong>Communities:</strong> View community users.</li>
+                        <li><strong>Communities:</strong> Manage community users.</li>
                         <li><strong>Merchants:</strong> Manage merchant users.</li>
                     </ul>
                 </div>
@@ -329,7 +329,9 @@
                         <thead>
                             <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
                         </thead>
-                        <tbody id="merchantsList"></tbody>
+                        <tbody id="merchantsList">
+                            <!-- Dynamically populated by updateUserTable -->
+                        </tbody>
                     </table>
                 </div>
 
@@ -337,9 +339,11 @@
                     <h2>Communities Management</h2>
                     <table>
                         <thead>
-                            <tr><th>USERid</th><th>Contact Name</th><th>Email</th></tr>
+                            <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
                         </thead>
-                        <tbody id="communitiesList"></tbody>
+                        <tbody id="communitiesList">
+                            <!-- Dynamically populated by updateUserTable -->
+                        </tbody>
                     </table>
                 </div>
 
@@ -349,7 +353,9 @@
                         <thead>
                             <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
                         </thead>
-                        <tbody id="partnersList"></tbody>
+                        <tbody id="partnersList">
+                            <!-- Dynamically populated by updateUserTable -->
+                        </tbody>
                     </table>
                 </div>
 
@@ -405,16 +411,25 @@
     <script src="/static/js/page-load.js"></script>
     <script src="/static/js/admin-page.js"></script>
     <script>
+        // Ensure overlay is visible at start
+        document.getElementById('loadingOverlay').style.display = 'flex';
+
         // Wait for the initialize function to become available
         function waitForInitialize(attempts = 50, delay = 100) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("admin")');
                 window.initialize('admin');
+                // Hide overlay after initialization with a slight delay for visibility
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }, 500); // 500ms delay to ensure the loader is briefly visible
             } else if (attempts > 0) {
                 console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
                 setTimeout(() => waitForInitialize(attempts - 1, delay), delay);
             } else {
                 console.error('Initialize function not found after maximum retries');
+                // Hide overlay even on failure to avoid blocking the UI
+                document.getElementById('loadingOverlay').style.display = 'none';
             }
         }
         waitForInitialize();

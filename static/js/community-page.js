@@ -18,7 +18,7 @@ function initializeCommunity() {
         return;
     }
     window.userPermissions = decoded.permissions || [];
-    if (!window.userPermissions.includes('admin') && !window.userPermissions.includes('community')) {
+    if (!window.userPermissions.includes('admin') || window.userPermissions.includes('community')) {
         toastr.error('Permission denied: Community permission required');
         console.error('initializeCommunity - No community permission, redirecting to /');
         window.location.href = '/';
