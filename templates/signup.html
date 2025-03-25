@@ -131,17 +131,17 @@
             <div class="options">
                 <label class="option">
                     <input type="radio" name="signup_type" value="community">
-                    <img src="{{ url_for('static/', filename='community.jpg') }}" alt="Scout leader in uniform, neck down">
+                    <img src="{{ url_for('static', filename='img/community.jpg') }}" alt="Scout leader in uniform, neck down">
                     <span>Community Group</span>
                 </label>
                 <label class="option">
                     <input type="radio" name="signup_type" value="seller">
-                    <img src="{{ url_for('static/', filename='merchant.jpg') }}" alt="White man in business suit, neck down">
+                    <img src="{{ url_for('static', filename='img/merchant.jpg') }}" alt="White man in business suit, neck down">
                     <span>Merchant</span>
                 </label>
                 <label class="option">
                     <input type="radio" name="signup_type" value="wixpro">
-                    <img src="{{ url_for('static/', filename='wixpro.jpg') }}" alt="Female ethnic web designer in casual dress, neck down">
+                    <img src="{{ url_for('static', filename='img/wixpro.jpg') }}" alt="Female ethnic web designer in casual dress, neck down">
                     <span>Partner</span>
                 </label>
             </div>
@@ -155,7 +155,7 @@
                 <div class="form-group">
                     <label for="signup-phone">Phone Number:</label>
                     <div class="input-container">
-                        <input type="tel" id="signup-phone" name="signup_phone" required autocomplete="off" pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
+                        <input type="tel" id="signup-phone" name="signup_phone" autocomplete="off" pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
                     </div>
                 </div>
                 <div class="form-group">
@@ -239,6 +239,18 @@
             });
         });
 
+        // Dynamically set 'required' attribute for phone number based on signup type
+        document.querySelectorAll('input[name="signup_type"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                const phoneInput = document.getElementById('signup-phone');
+                if (this.value === 'wixpro') {
+                    phoneInput.removeAttribute('required');
+                } else {
+                    phoneInput.setAttribute('required', '');
+                }
+            });
+        });
+
         // Toggle password visibility
         document.querySelectorAll('.toggle-password').forEach(function(icon) {
             icon.addEventListener('click', function() {
@@ -272,8 +284,13 @@
             const password = $('#signup-password').val().trim();
             const confirmPassword = $('#signup-confirm-password').val().trim();
 
-            if (!contactName || !phone || !email || !password || !confirmPassword) {
-                toastr.error('All fields must be filled.');
+            // Check required fields (phone is optional for wixpro)
+            if (!contactName || !email || !password || !confirmPassword) {
+                toastr.error('Contact name, email, password, and confirm password must be filled.');
+                return;
+            }
+            if (signupType !== 'wixpro' && !phone) {
+                toastr.error('Phone number is required for Community Group and Merchant signups.');
                 return;
             }
 
@@ -290,17 +307,19 @@
                 return;
             }
 
-            // Phone number validation
-            const phoneRegex = /^\d{10}$/;
-            if (!phoneRegex.test(phone)) {
-                toastr.error('Please enter a valid 10-digit phone number with no spaces or special characters.');
-                return;
+            // Phone number validation (if provided)
+            if (phone) {
+                const phoneRegex = /^\d{10}$/;
+                if (!phoneRegex.test(phone)) {
+                    toastr.error('Please enter a valid 10-digit phone number with no spaces or special characters.');
+                    return;
+                }
             }
 
             const signupData = {
                 signup_type: signupType,
                 contact_name: contactName,
-                signup_phone: phone,
+                signup_phone: phone || null,
                 signup_email: email,
                 signup_password: password
             };

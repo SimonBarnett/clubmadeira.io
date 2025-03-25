@@ -1,12 +1,35 @@
 // /static/js/page-load.js
 // Purpose: Manages page initialization, event listener attachment for navigation and section handling, and loading overlay behavior.
 
-// Function to hide the loading overlay and show the main content
-function hideLoadingOverlay() {
+// Function to show the loading overlay
+function showLoadingOverlay() {
+    let loadingOverlay = document.getElementById('loadingOverlay');
+    if (!loadingOverlay) {
+        loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'loadingOverlay';
+        loadingOverlay.innerHTML = `
+            <div class="multicircle-loader">
+                <div class="circle circle1"></div>
+                <div class="circle circle2"></div>
+                <div class="circle circle3"></div>
+                <div class="circle circle4"></div>
+            </div>
+        `;
+        document.body.prepend(loadingOverlay);
+        console.log('showLoadingOverlay - Created and prepended loading overlay');
+    }
+    loadingOverlay.style.display = 'flex';
+    console.log('showLoadingOverlay - Loading overlay set to visible');
+    return loadingOverlay;
+}
+
+// Function to hide the loading overlay and show the main content with a minimum visibility delay
+async function hideLoadingOverlay(minDelay = 1000) {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const layoutWrapper = document.querySelector('.layout-wrapper');
     
     if (loadingOverlay && layoutWrapper) {
+        await new Promise(resolve => setTimeout(resolve, minDelay));
         loadingOverlay.style.display = 'none';
         layoutWrapper.style.display = 'block';
         console.log('hideLoadingOverlay - Loading overlay hidden, main content displayed');
@@ -19,7 +42,7 @@ function hideLoadingOverlay() {
 function attachEventListeners() {
     console.log('attachEventListeners - Attaching event listeners');
     const buttons = document.querySelectorAll('button[data-section], button[data-submenu], button[data-href]');
-    console.log('attachEventListeners - Found buttons:', buttons.length);
+    console.log('attachEventListeners - Found buttons with data attributes:', buttons.length);
     buttons.forEach(button => {
         if (button.dataset.section || button.dataset.submenu) {
             button.addEventListener('click', handleSectionClick);
@@ -30,11 +53,17 @@ function attachEventListeners() {
             console.log('attachEventListeners - Added click listener to button with data-href:', button.dataset.href);
         }
     });
-    const logOffBtn = document.getElementById('logOffBtn');
-    if (logOffBtn) {
-        logOffBtn.addEventListener('click', logOff);
-        console.log('attachEventListeners - Added click listener to logOffBtn');
-    }
+
+    // Add delegated listener for logOffBtn
+    document.addEventListener('click', (e) => {
+        if (e.target.matches('#logOffBtn')) {
+            e.preventDefault();
+            console.log('Document click - Log Off button clicked');
+            logOff();
+        }
+    });
+    console.log('attachEventListeners - Added delegated click listener for logOffBtn');
+
     console.log('attachEventListeners - Event listeners attached');
 }
 
@@ -48,7 +77,7 @@ function initializePage(requiredPermissions, callback) {
         window.location.href = '/';
         return;
     }
-    const decoded = decodeJWT(token); // Assumes decodeJWT is available from site-auth.js
+    const decoded = decodeJWT(token);
     console.log('initializePage - Decoded token:', decoded ? JSON.stringify(decoded) : 'null');
     if (!decoded) {
         console.warn('initializePage - Failed to decode token - Redirecting to /');
@@ -69,17 +98,10 @@ function initializePage(requiredPermissions, callback) {
 }
 
 // Common initialize function handling page-specific setup based on page type.
-function initialize(pageType) {
+async function initialize(pageType) {
     console.log('initialize - Starting page initialization - Page type:', pageType);
     
-    // Ensure overlay is visible at the start of initialization
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    if (loadingOverlay) {
-        loadingOverlay.style.display = 'flex';
-        console.log('initialize - Loading overlay set to visible');
-    } else {
-        console.warn('initialize - Loading overlay not found');
-    }
+    showLoadingOverlay();
 
     const pageConfigs = {
         'partner': {
@@ -129,8 +151,8 @@ function initialize(pageType) {
                 }
                 console.log('initialize - Setting userId in DOM - ID:', userId);
                 document.getElementById('userId').value = userId;
-                updateMenu(); // From community.js stub
-                waitForTinyMCE(initializeTinyMCE); // From site-request.js
+                updateMenu();
+                waitForTinyMCE(initializeTinyMCE);
                 attachEventListeners();
                 console.log('initialize - Community-specific steps completed');
             }
@@ -172,28 +194,22 @@ function initialize(pageType) {
     if (!config) {
         console.error('initialize - Invalid page type provided - Type:', pageType);
         toastr.error('Invalid page type');
-        hideLoadingOverlay(); // Ensure overlay is hidden on failure
+        await hideLoadingOverlay();
         return;
     }
     console.log('initialize - Configuration loaded for page type:', pageType, 'Config:', JSON.stringify(config));
 
     if (config.permissions && config.permissions.length > 0) {
         console.log('initialize - Performing permission check for:', config.permissions);
-        initializePage(config.permissions, () => {
+        initializePage(config.permissions, async () => {
             console.log('initialize - Permission validated for:', config.permissions);
-            performPageSetup(pageType, config);
-            // Delay hiding the overlay slightly to ensure visibility
-            setTimeout(() => {
-                hideLoadingOverlay();
-            }, 500); // 500ms delay, adjustable
+            await performPageSetup(pageType, config);
+            await hideLoadingOverlay();
         });
     } else {
         console.log('initialize - No permissions required for:', pageType);
-        performPageSetup(pageType, config);
-        // Delay hiding the overlay slightly to ensure visibility
-        setTimeout(() => {
-            hideLoadingOverlay();
-        }, 500); // 500ms delay, adjustable
+        await performPageSetup(pageType, config);
+        await hideLoadingOverlay();
     }
     console.log('initialize - Initialization process completed for:', pageType);
 }
@@ -202,15 +218,15 @@ function initialize(pageType) {
 window.initialize = initialize;
 
 // Helper function to perform page setup after permission checks.
-function performPageSetup(pageType, config) {
+async function performPageSetup(pageType, config) {
     console.log('performPageSetup - Starting setup - Page type:', pageType);
     
     console.log('performPageSetup - Loading branding - Type:', config.brandingType);
-    loadBranding(config.brandingType); // From site-navigation.js
+    await loadBranding(config.brandingType);
 
     if (config.initialSection) {
         console.log('performPageSetup - Showing initial section - ID:', config.initialSection);
-        showSection(config.initialSection); // From site-navigation.js
+        showSection(config.initialSection);
     } else {
         console.log('performPageSetup - No initial section specified for:', pageType);
     }
@@ -235,11 +251,11 @@ function handleSectionClick(event) {
     console.log('handleSectionClick - Extracted attributes - Section:', section, 'Submenu:', submenu);
     if (submenu) {
         console.log('handleSectionClick - Toggling submenu - ID:', submenu);
-        toggleSubmenu(submenu); // From site-navigation.js
+        toggleSubmenu(submenu);
     }
     if (section) {
         console.log('handleSectionClick - Showing section - ID:', section);
-        showSection(section); // From site-navigation.js
+        showSection(section);
     }
     if (!section && !submenu) {
         console.warn('handleSectionClick - No section or submenu attribute found - Target:', target);
@@ -260,10 +276,11 @@ async function handleHrefClick(event, options = {}) {
         return;
     }
 
+    showLoadingOverlay();
     try {
         console.log('handleHrefClick - Initiating fetch for protected page - Href:', href);
         const startTime = Date.now();
-        const html = await fetchProtectedPage(href); // From site-navigation.js
+        const html = await fetchProtectedPage(href);
         const duration = Date.now() - startTime;
         if (!html) {
             console.error('handleHrefClick - No HTML returned - Href:', href);
@@ -291,63 +308,25 @@ async function handleHrefClick(event, options = {}) {
                 console.log('handleHrefClick - Found inline scripts:', scripts.length);
                 scripts.forEach((script, index) => {
                     if (script.innerHTML.trim()) {
-                        console.log('handleHrefClick - Executing inline script', index + 1, 'Content:', script.innerHTML.substring(0, 100) + '...');
+                        console.log('handleHrefClick - Executing inline script', index + 1);
                         try {
                             new Function(script.innerHTML)();
                             console.log('handleHrefClick - Inline script', index + 1, 'executed successfully');
                         } catch (e) {
-                            console.error('handleHrefClick - Error executing inline script', index + 1, 'Error:', e.message, 'Stack:', e.stack);
+                            console.error('handleHrefClick - Error executing inline script', index + 1, 'Error:', e.message);
                         }
                     }
                 });
             } else {
-                console.error('handleHrefClick - Content container not found - Selector:', containerSelector, 'Falling back to full reload');
+                console.error('handleHrefClick - Content container not found - Selector:', containerSelector);
                 toastr.error('Failed to update page content: container missing');
                 document.body.innerHTML = html;
                 console.log('handleHrefClick - Body updated with full HTML - Href:', href);
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const scripts = doc.querySelectorAll('script:not([src])');
-                console.log('handleHrefClick - Found inline scripts for full reload:', scripts.length);
-                scripts.forEach((script, index) => {
-                    if (script.innerHTML.trim()) {
-                        console.log('handleHrefClick - Executing inline script (full reload)', index + 1);
-                        try {
-                            new Function(script.innerHTML)();
-                            console.log('handleHrefClick - Inline script (full reload)', index + 1, 'executed successfully');
-                        } catch (e) {
-                            console.error('handleHrefClick - Error executing inline script (full reload)', index + 1, 'Error:', e.message, 'Stack:', e.stack);
-                        }
-                    }
-                });
-                if (typeof window.initPage === 'function') {
-                    console.log('handleHrefClick - Calling window.initPage after full reload');
-                    window.initPage();
-                }
             }
         } else {
             console.log('handleHrefClick - Performing full page load - Href:', href);
             document.body.innerHTML = html;
             console.log('handleHrefClick - Body updated with new HTML - Href:', href);
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const scripts = doc.querySelectorAll('script:not([src])');
-            console.log('handleHrefClick - Found inline scripts for full reload:', scripts.length);
-            scripts.forEach((script, index) => {
-                if (script.innerHTML.trim()) {
-                    console.log('handleHrefClick - Executing inline script (full reload)', index + 1);
-                    try {
-                        new Function(script.innerHTML)();
-                        console.log('handleHrefClick - Inline script (full reload)', index + 1, 'executed successfully');
-                    } catch (e) {
-                        console.error('handleHrefClick - Error executing inline script (full reload)', index + 1, 'Error:', e.message, 'Stack:', e.stack);
-                    }
-                }
-            });
-            if (typeof window.initPage === 'function') {
-                console.log('handleHrefClick - Calling window.initPage after full reload');
-                window.initPage();
-            }
         }
 
         if (typeof onLoad === 'function') {
@@ -355,10 +334,18 @@ async function handleHrefClick(event, options = {}) {
             onLoad(href, html);
         }
     } catch (error) {
-        console.error('handleHrefClick - Error handling href click - Href:', href, 'Error:', error.message, 'Stack:', error.stack);
+        console.error('handleHrefClick - Error handling href click - Href:', href, 'Error:', error.message);
         toastr.error('Navigation failed: ' + error.message);
+    } finally {
+        await hideLoadingOverlay();
     }
     console.log('handleHrefClick - Event handling completed');
 }
 
-// Remove redundant window.load and DOMContentLoaded listeners since waitForInitialize in admin.html handles initialization
+// Initialize on DOM load (fallback, though fetchProtectedPage should handle it)
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded - Starting initialization');
+    const pageType = window.location.pathname.split('/')[1] || 'login';
+    console.log('DOMContentLoaded - Determined page type:', pageType);
+    initialize(pageType);
+});

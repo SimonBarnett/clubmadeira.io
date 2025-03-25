@@ -23,9 +23,8 @@ function initializeAdmin() {
         window.location.href = '/';
         return;
     }
-    loadBranding();
-    restoreState();
-    attachEventListeners();
+    loadBranding(); // From site-navigation.js
+    restoreState(); // From page-load.js (defined below)
     console.log('initializeAdmin - Admin page initialized successfully');
 }
 
@@ -172,7 +171,13 @@ async function loadMerchants() {
             const userData = await userResponse.json();
             const permissions = userData.user.permissions || [];
             if (permissions.includes('merchant') && !permissions.includes('admin')) {
-                merchants.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
+                merchants.push({
+                    USERid: user.USERid,
+                    contact_name: user.contact_name,
+                    email_address: user.email_address,
+                    phone_number: user.phone_number, // Add phone_number
+                    permissions
+                });
             }
         }
         console.log('loadMerchants - Merchants filtered - Count:', merchants.length);
@@ -202,7 +207,13 @@ async function loadCommunities() {
             const userData = await userResponse.json();
             const permissions = userData.user.permissions || [];
             if (permissions.includes('community') && !permissions.includes('admin')) {
-                communities.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
+                communities.push({
+                    USERid: user.USERid,
+                    contact_name: user.contact_name,
+                    email_address: user.email_address,
+                    phone_number: user.phone_number, // Add phone_number
+                    permissions
+                });
             }
         }
         console.log('loadCommunities - Communities filtered - Count:', communities.length);
@@ -232,7 +243,13 @@ async function loadPartners() {
             const userData = await userResponse.json();
             const permissions = userData.user.permissions || [];
             if (permissions.includes('wixpro')) {
-                partners.push({ USERid: user.USERid, contact_name: user.contact_name, email_address: user.email_address, permissions });
+                partners.push({
+                    USERid: user.USERid,
+                    contact_name: user.contact_name,
+                    email_address: user.email_address,
+                    phone_number: user.phone_number, // Add phone_number
+                    permissions
+                });
             }
         }
         console.log('loadPartners - Partners filtered - Count:', partners.length);
@@ -251,7 +268,7 @@ function updateUserTable(tableId, users, section) {
     const tbody = document.getElementById(tableId);
     tbody.innerHTML = '';
     if (users.length === 0) {
-        const colspan = 4; // All tables have 4 columns (USERid, Contact Name, Email, Actions)
+        const colspan = 5; // Updated to 5 columns (USERid, Contact Name, Email, Phone Number, Actions)
         tbody.innerHTML = `<tr><td colspan="${colspan}">No users found</td></tr>`;
         console.log('updateUserTable - No users found - Table ID:', tableId);
         return;
@@ -311,11 +328,15 @@ function updateUserTable(tableId, users, section) {
                onclick="togglePermission('${user.USERid}', 'debug', '${section}', ${!hasDebug})"></i>
         `;
 
-        // Construct the row
+        // Handle null phone_number
+        const phoneNumber = user.phone_number || 'N/A';
+
+        // Construct the row with phone_number
         row.innerHTML = `
             <td>${user.USERid}</td>
             <td>${user.contact_name}</td>
             <td>${user.email_address}</td>
+            <td>${phoneNumber}</td> <!-- Add phone_number -->
             <td class="action-cell">${actionsHtml}</td>
         `;
         tbody.appendChild(row);
@@ -365,4 +386,25 @@ function createDealRow(product) {
     `;
     console.log('createDealRow - Deal row created - Product ID:', product.id || 'N/A');
     return tr;
+}
+
+// Restores the state of the page (stubbed for now)
+function restoreState() {
+    console.log('restoreState - Restoring page state (stub)');
+    // Placeholder for state restoration logic
+}
+
+// Auto-initialize the admin page when the script loads (optional, since page-load.js handles it)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded - Initializing admin page');
+        if (window.location.pathname === '/admin') {
+            initializeAdmin();
+        }
+    });
+} else {
+    console.log('Document already loaded - Initializing admin page immediately');
+    if (window.location.pathname === '/admin') {
+        initializeAdmin();
+    }
 }

@@ -1,24 +1,24 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 0 !important; /* Reset default browser margin */
-    padding: 0 !important; /* Remove all padding to ensure header is at the top */
+    margin: 0 !important;
+    padding: 0 !important;
     background-color: #f4f4f4;
     min-height: 100vh;
-    display: block !important; /* Override any flexbox that might be causing vertical centering */
-    align-items: initial !important; /* Remove any vertical centering */
-    justify-content: initial !important; /* Remove any horizontal flex centering (we use margin: 0 auto instead) */
-    text-align: initial !important; /* Prevent text-align from affecting layout */
+    display: block !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+    text-align: initial !important;
 }
 
 .layout-wrapper {
-    max-width: 1200px; /* Constrain the layout to 1200px */
+    max-width: 1200px;
     width: 100%;
-    margin: 0 auto !important; /* Center the layout-wrapper horizontally in the viewport */
-    box-sizing: border-box; /* Ensure padding/margins are included in width */
-    display: block !important; /* Ensure no flexbox properties cause vertical centering */
-    align-items: initial !important; /* Remove any vertical centering */
-    padding: 0 !important; /* Ensure no padding pushes content down */
-    margin-top: 0 !important; /* Ensure no margin pushes content down */
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    display: block !important;
+    align-items: initial !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
 }
 
 .container {
@@ -42,33 +42,33 @@ body {
 
 .header {
     width: 100%;
-    max-width: 1200px; /* Constrain the header to 1200px */
-    margin: 0 auto !important; /* Center the header horizontally within the layout-wrapper */
+    max-width: 1200px;
+    margin: 0 auto !important;
     background-color: #f4f4f4;
     overflow: hidden;
     position: relative;
-    box-sizing: border-box; /* Ensure padding/margins are included in width */
-    padding: 0 !important; /* Ensure no padding pushes content down */
-    margin-top: 0 !important; /* Ensure no margin pushes content down */
+    box-sizing: border-box;
+    padding: 0 !important;
+    margin-top: 0 !important;
 }
 
 .layout-wrapper .header .header-content {
     width: 100%;
-    max-width: 1200px; /* Ensure the blue bar is 1200px wide */
-    margin: 0 auto !important; /* Center the blue bar horizontally within the header */
+    max-width: 1200px;
+    margin: 0 auto !important;
     padding: 20px;
     background-color: #007BFF;
     color: white;
     border-radius: 8px;
-    display: flex !important; /* Override the inline style */
+    display: flex !important;
     align-items: center;
-    justify-content: flex-start; /* Align content to the left within the centered header-content */
-    box-sizing: border-box; /* Ensure padding is included in width */
+    justify-content: flex-start;
+    box-sizing: border-box;
 }
 
 .main-container {
     max-width: 1200px;
-    margin: 0 auto !important; /* Center the main-container horizontally to match the header */
+    margin: 0 auto !important;
     display: flex;
     gap: 20px;
     padding: 0 20px 20px 20px;
@@ -76,12 +76,12 @@ body {
 }
 
 .menu-container {
-    flex: 0 0 300px; /* Fixed width for menu */
+    flex: 0 0 300px;
     max-width: 300px;
 }
 
 .content-wrapper {
-    flex: 0 0 900px; /* Fixed width for content */
+    flex: 0 0 900px;
     max-width: 900px;
 }
 
@@ -98,13 +98,13 @@ body {
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    width: 100%; /* Ensure buttons take the full width of the menu-container */
-    max-width: 300px; /* Match the menu-container width */
+    width: 100%;
+    max-width: 300px;
     margin-bottom: 5px;
-    display: flex; /* Use flexbox to align content and caret */
+    display: flex;
     align-items: center;
-    justify-content: flex-start; /* Align content to the left */
-    position: relative; /* Allow absolute positioning of the caret */
+    justify-content: flex-start;
+    position: relative;
 }
 
 .menu button:hover {
@@ -119,23 +119,23 @@ body {
 }
 
 .menu button i::before {
-    font-family: "Font Awesome 6 Free"; /* For solid icons */
+    font-family: "Font Awesome 6 Free";
 }
 
 .menu button i.fas::before {
-    font-weight: 900; /* Apply font-weight: 900 only to solid icons */
+    font-weight: 900;
 }
 
 .menu button .svg-icon {
     display: inline-block;
-    height: 16px; /* Slightly larger to match visual size of Font Awesome icons */
-    width: auto; /* Let the width scale proportionally */
+    height: 16px;
+    width: auto;
 }
 
 .menu button .svg-icon svg {
     height: 100%;
     width: auto;
-    fill: white; /* Explicitly set to white to match Font Awesome icons */
+    fill: white;
 }
 
 .menu button .icon-group {
@@ -145,23 +145,23 @@ body {
 }
 
 .menu button .icon-group .small-icon {
-    font-size: 10px; /* Smaller size for the test tube icon */
+    font-size: 10px;
     position: absolute;
     bottom: 0;
-    right: -8px; /* Position it as a superscript-like element */
+    right: -8px;
     color: white;
 }
 
 .menu button .button-content {
     display: inline-flex;
     align-items: center;
-    text-align: left; /* Ensure text is left-aligned */
-    flex-grow: 1; /* Allow content to take up remaining space */
+    text-align: left;
+    flex-grow: 1;
 }
 
 .menu button .caret {
     position: absolute;
-    right: 10px; /* Position the caret on the right */
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
 }
@@ -374,7 +374,7 @@ h2 {
 
 .form-group .input-container {
     position: relative;
-    width: 192px; /* 160px + 20% = 192px */
+    width: 200px;
 }
 
 .form-group input {
@@ -396,6 +396,12 @@ h2 {
     color: #666;
 }
 
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
 button {
     width: 100%;
     padding: 10px;
@@ -404,7 +410,6 @@ button {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: 10px;
     max-width: 200px;
 }
 
@@ -573,8 +578,8 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 1); /* Fully opaque white */
-    display: flex; /* Ensure visibility by default */
+    background: rgba(255, 255, 255, 1);
+    display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
@@ -599,7 +604,7 @@ h1 {
 .circle1 {
     width: 60px;
     height: 60px;
-    border-top-color: #ff6f61; /* Coral */
+    border-top-color: #ff6f61;
     top: 20px;
     left: 20px;
     animation-delay: 0s;
@@ -608,7 +613,7 @@ h1 {
 .circle2 {
     width: 45px;
     height: 45px;
-    border-top-color: #6bff61; /* Lime Green */
+    border-top-color: #6bff61;
     top: 27.5px;
     left: 27.5px;
     animation-delay: 0.3s;
@@ -617,7 +622,7 @@ h1 {
 .circle3 {
     width: 30px;
     height: 30px;
-    border-top-color: #61cfff; /* Sky Blue */
+    border-top-color: #61cfff;
     top: 35px;
     left: 35px;
     animation-delay: 0.6s;
@@ -626,7 +631,7 @@ h1 {
 .circle4 {
     width: 15px;
     height: 15px;
-    border-top-color: #ff61ff; /* Magenta */
+    border-top-color: #ff61ff;
     top: 42.5px;
     left: 42.5px;
     animation-delay: 0.9s;
@@ -636,4 +641,108 @@ h1 {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Login page specific styles */
+.login-page {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 20px;
+}
+
+.login-page .container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-page h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.login-page .form-group {
+    margin-bottom: 15px;
+    transform: translateX(-40px);
+}
+
+.login-page .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0;
+    max-width: 70px; /* Reduced width to shift labels left */
+}
+
+.login-page input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.login-page button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.login-page button:hover {
+    background-color: #0056b3;
+}
+
+.login-page .toggle-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.login-page .toggle-link a {
+    color: #007BFF;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.login-page .toggle-link a:hover {
+    text-decoration: underline;
+}
+
+.login-page #toast-container > .toast-success {
+    background-color: #28a745;
+    border-color: #218838;
+}
+
+.login-page #toast-container > .toast-error {
+    background-color: #dc3545;
+    border-color: #c82333;
+}
+
+.login-page .custom-login-notice {
+    background-color: #f0e68c;
+    border: 2px dashed #4682b4;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+    font-family: 'Courier New', Courier, monospace;
+    color: #2f4f4f;
+    transition: transform 0.3s ease-in-out;
+    margin-bottom: 30px; /* Increased gap between notice and email field */
+}
+
+.login-page .custom-login-notice .highlight {
+    color: #007BFF; /* Match the blue of the toggle links */
+    font-weight: bold;
+}
+
+.login-page .custom-login-notice:hover {
+    transform: scale(1.02);
 }

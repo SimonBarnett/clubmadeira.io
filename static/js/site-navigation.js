@@ -75,43 +75,110 @@ async function authenticatedFetch(url, options = {}) {
 }
 
 // Fetches protected page content for navigation, ensuring cache-busting with timestamps.
-async function fetchProtectedPage(url, options = {}) {
-    console.log('fetchProtectedPage - Starting fetch - URL:', url);
+async function fetchProtectedPage(url) {
     const token = localStorage.getItem('authToken');
-    console.log('fetchProtectedPage - Token:', token || 'None');
-    console.log('fetchProtectedPage - Options:', JSON.stringify(options));
     if (!token) {
-        console.warn('fetchProtectedPage - No token found - Redirecting to /');
         toastr.error('No authentication token found. Please log in.');
-        window.location.href = '/';
-        return null;
+        showLogin();
+        return;
     }
+
+    const overlay = showLoadingOverlay();
     try {
-        const timestamp = Date.now();
-        const fetchUrl = `${window.apiUrl}${url}?t=${timestamp}`;
-        console.log('fetchProtectedPage - Constructed fetch URL with timestamp:', fetchUrl);
-        const startTime = Date.now();
-        const response = await fetch(fetchUrl, {
+        const response = await fetch(`${window.apiUrl}${url}`, {  // Changed apiUrl to window.apiUrl for consistency
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'text/html'
             }
         });
-        const duration = Date.now() - startTime;
-        console.log('fetchProtectedPage - Response received - Status:', response.status, 'Duration:', `${duration}ms`);
+
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('fetchProtectedPage - Fetch failed - Status:', response.status, 'Error text:', errorText);
             throw new Error(`Server returned ${response.status}: ${errorText}`);
         }
+
         const html = await response.text();
-        console.log('fetchProtectedPage - Fetched HTML (first 100 chars):', html.substring(0, 100) + '...', 'Total length:', html.length);
-        return html;
+
+        // Parse the HTML and remove script tags
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const scripts = doc.querySelectorAll('script');
+        scripts.forEach(script => script.remove()); // Remove scripts to avoid double execution
+
+        // Update the document without scripts
+        document.documentElement.innerHTML = doc.documentElement.innerHTML;
+
+        // Ensure critical stylesheets are present
+        const head = document.head;
+        const requiredStyles = [
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
+            'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css',
+            '/static/styles.css'
+        ];
+        requiredStyles.forEach(href => {
+            if (!head.querySelector(`link[href="${href}"]`)) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = href;
+                head.appendChild(link);
+            }
+        });
+
+        // Load and execute scripts manually, once
+        const scriptPromises = [];
+        scripts.forEach(script => {
+            if (script.src) {
+                // External script
+                const newScript = document.createElement('script');
+                newScript.src = script.src;
+                newScript.async = false; // Load in order
+                scriptPromises.push(
+                    new Promise(resolve => {
+                        newScript.onload = resolve;
+                        newScript.onerror = () => console.error(`Failed to load script: ${script.src}`);
+                        document.head.appendChild(newScript);
+                    })
+                );
+            } else if (script.innerHTML.trim()) {
+                // Inline script
+                try {
+                    const scriptFn = new Function(script.innerHTML);
+                    scriptFn();
+                } catch (e) {
+                    console.error('Error executing inline script:', e);
+                }
+            }
+        });
+
+        // Wait for all external scripts to load
+        await Promise.all(scriptPromises);
+
+        // Trigger page initialization after scripts are loaded
+        if (typeof window.initialize === 'function') {
+            const pageType = url.split('/')[1] || 'login';
+            console.log('fetchProtectedPage - Triggering window.initialize for page type:', pageType);
+            window.initialize(pageType);
+        } else {
+            console.warn('fetchProtectedPage - window.initialize not found');
+        }
+
+        // Show the page after a short delay
+        setTimeout(() => {
+            const layoutWrapper = document.querySelector('.layout-wrapper');
+            if (layoutWrapper) {
+                layoutWrapper.style.display = 'block';
+            } else {
+                toastr.error('Failed to load page content');
+            }
+            hideLoadingOverlay();
+        }, 1000);
+
+        return html; // Return the HTML for potential use
     } catch (error) {
-        console.error('fetchProtectedPage - Error fetching page - URL:', url, 'Error:', error.message, 'Stack:', error.stack);
         toastr.error(error.message || 'Failed to load protected page');
-        return null;
+        showLogin();
+        hideLoadingOverlay();
     }
 }
 
@@ -461,6 +528,7 @@ function toggleSubmenu(submenuId) {
 }
 
 // Initialize navigation event listeners
+// Define the function to set up navigation event listeners
 function initializeNavigation() {
     console.log('initializeNavigation - Starting navigation setup');
 
@@ -504,8 +572,15 @@ function initializeNavigation() {
     console.log('initializeNavigation - Navigation setup completed');
 }
 
-// Initialize navigation when the document is ready
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded - Initializing navigation');
+// Initialize navigation based on document readiness
+if (document.readyState === 'loading') {
+    // Wait for the DOM to fully load if it’s still loading
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded - Initializing navigation');
+        initializeNavigation();
+    });
+} else {
+    // Run immediately if the DOM is already loaded
+    console.log('Document already loaded - Initializing navigation immediately');
     initializeNavigation();
-});
+}

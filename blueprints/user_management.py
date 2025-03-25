@@ -17,7 +17,8 @@ def get_users():
             {
                 "USERid": user_id,
                 "email_address": user.get("email_address", ""),
-                "contact_name": user.get("contact_name", "")
+                "contact_name": user.get("contact_name", ""),
+                "phone_number": user.get("phone_number", None)  # Add phone_number
             }
             for user_id, user in users_settings.items()
         ]
@@ -40,6 +41,7 @@ def get_user(user_id):
             "USERid": user_id,
             "email_address": user.get("email_address", ""),
             "contact_name": user.get("contact_name", ""),
+            "phone_number": user.get("phone_number", None),  # Add phone_number
             "permissions": user.get("permissions", []),
             "website_url": user.get("website_url", ""),
             "wixClientId": user.get("wixClientId", ""),
@@ -84,26 +86,4 @@ def add_permission(user_id):
         save_users_settings(users_settings)
         return jsonify({"status": "success", "message": "Permission added"}), 200
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@user_management_bp.route('/permissions/<user_id>', methods=['DELETE'])
-@login_required(["admin"], require_all=True)
-def remove_permission(user_id):
-    """
-    Remove a permission from a specific user.
-    """
-    data = request.get_json()
-    if 'permission' not in data:
-        return jsonify({"status": "error", "message": "Permission field is required"}), 400
-    permission = data['permission']
-    try:
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        if permission not in users_settings[user_id].get('permissions', []):
-            return jsonify({"status": "error", "message": "Permission not found"}), 400
-        users_settings[user_id]['permissions'].remove(permission)
-        save_users_settings(users_settings)
-        return jsonify({"status": "success", "message": "Permission removed"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return

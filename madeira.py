@@ -12,7 +12,7 @@ from utils.auth import login_required
 import json
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')  # Explicitly set template folder
 CORS(app)
 
 CONFIG_FILE = "config.json"
@@ -42,7 +42,7 @@ def home():
 @app.route('/admin')
 @login_required(["admin"], require_all=True)
 def admin():
-    return render_template('admin.html')
+    return render_template('admin.html', user_type='admin')  # Pass user_type to template
 
 @app.route('/merchant')
 @login_required(["merchant"], require_all=True)

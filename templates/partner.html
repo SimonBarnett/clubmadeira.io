@@ -55,37 +55,7 @@
                     <h2>Welcome to Your Partner Dashboard</h2>
                     <p>This dashboard is designed for partners to manage merchant integrations with clubmadeira.io. Use the "My Account" section to update your contact details or change your password. If you have admin privileges, you can return to the admin panel using the "Back to Admin" button.</p>
                 </div>
-                <div id="my-account" class="section">
-                    <h2>My Account</h2>
-                    <div class="settings-form">
-                        <label for="contactName">Contact Name:</label>
-                        <input type="text" id="contactName" placeholder="Enter contact name">
-                        <label for="websiteUrl">Website URL:</label>
-                        <input type="url" id="websiteUrl" placeholder="Enter website URL">
-                        <label for="emailAddress">Email Address:</label>
-                        <input type="email" id="emailAddress" placeholder="Enter email address">
-                        <label for="phoneNumber">Phone Number:</label>
-                        <input type="tel" id="phoneNumber" placeholder="Enter phone number">
-                        <button data-action="saveSettings"><i class="fas fa-save"></i> Save Settings</button>
-                        <h3><i class="fas fa-lock"></i> Change Password</h3>
-                        <div class="password-container">
-                            <label for="currentPassword">Current Password:</label>
-                            <input type="password" id="currentPassword" placeholder="Enter current password">
-                            <i class="fas fa-eye password-toggle" data-field="currentPassword"></i>
-                        </div>
-                        <div class="password-container">
-                            <label for="newPassword">New Password:</label>
-                            <input type="password" id="newPassword" placeholder="Enter new password">
-                            <i class="fas fa-eye password-toggle" data-field="newPassword"></i>
-                        </div>
-                        <div class="password-container">
-                            <label for="confirmPassword">Confirm New Password:</label>
-                            <input type="password" id="confirmPassword" placeholder="Confirm new password">
-                            <i class="fas fa-eye password-toggle" data-field="confirmPassword"></i>
-                        </div>
-                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
-                    </div>
-                </div>
+                {% include 'my_account.html' with user_type='partner' %}
                 <div id="my-products" class="section">
                     <h2>My Products</h2>
                     <p>These are the products from your parts feed.</p>

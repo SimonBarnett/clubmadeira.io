@@ -5,83 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>clubmadeira.io | Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/static/styles.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .toggle-link {
-            text-align: center;
-            margin-top: 15px;
-        }
-        .toggle-link a {
-            color: #007BFF;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .toggle-link a:hover {
-            text-decoration: underline;
-        }
-        #toast-container > .toast-success {
-            background-color: #28a745;
-            border-color: #218838;
-        }
-        #toast-container > .toast-error {
-            background-color: #dc3545;
-            border-color: #c82333;
-        }
-    </style>
 </head>
-<body>
-    <!-- Loading Overlay -->
+<body class="login-page">
     <div id="loadingOverlay" style="display: none;">
         <div class="multicircle-loader">
             <div class="circle circle1"></div>
@@ -93,16 +20,26 @@
 
     <div class="container" id="loginContainer">
         <h2>Login</h2>
+        <div class="custom-login-notice">
+            <span class="highlight">Please log in</span> to access your account. If you don’t have an account, click "Sign Up" below.
+        </div>
         <form id="loginForm">
             <div class="form-group">
                 <label for="loginEmail">Email:</label>
-                <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
+                <div class="input-container">
+                    <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
+                </div>
             </div>
             <div class="form-group">
                 <label for="loginPassword">Password:</label>
-                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+                <div class="input-container">
+                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+                    <span class="toggle-password"><i class="fas fa-eye"></i></span>
+                </div>
             </div>
-            <button type="submit">Login</button>
+            <div class="button-container">
+                <button type="submit">Login</button>
+            </div>
         </form>
         <div class="toggle-link">
             <a href="/signup">Need an account? Sign Up</a><br>
@@ -152,6 +89,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="/static/js/site-auth.js"></script>
     <script>
         const apiUrl = window.location.origin;
 
@@ -181,7 +119,7 @@
             }
             overlay.style.display = 'flex';
             console.log('showLoadingOverlay - Overlay displayed');
-            return overlay; // Return for preservation
+            return overlay;
         }
 
         function hideLoadingOverlay() {
@@ -193,10 +131,15 @@
         }
 
         function showLogin() {
-            document.getElementById('loginContainer').style.display = 'block';
-            document.getElementById('forgotPasswordContainer').style.display = 'none';
-            document.getElementById('verifyOtpContainer').style.display = 'none';
-            hideLoadingOverlay();
+            const loginContainer = document.getElementById('loginContainer');
+            if (loginContainer) {
+                loginContainer.style.display = 'block';
+                document.getElementById('forgotPasswordContainer').style.display = 'none';
+                document.getElementById('verifyOtpContainer').style.display = 'none';
+                hideLoadingOverlay();
+            } else {
+                console.error('showLogin - loginContainer not found');
+            }
         }
 
         function showForgotPassword() {
@@ -214,19 +157,35 @@
             hideLoadingOverlay();
         }
 
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+
         async function fetchProtectedPage(url) {
             const token = localStorage.getItem('authToken');
-            console.log('Fetching Protected URL:', `${apiUrl}${url}`);
-            console.log('Token:', token || 'None');
+            console.log('fetchProtectedPage - Fetching URL:', `${apiUrl}${url}`);
+            console.log('fetchProtectedPage - Token:', token || 'None');
 
             if (!token) {
                 toastr.error('No authentication token found. Please log in.');
-                console.error('No token in localStorage');
+                console.error('fetchProtectedPage - No token in localStorage');
                 showLogin();
                 return;
             }
 
-            const overlay = showLoadingOverlay(); // Preserve overlay reference
+            const overlay = showLoadingOverlay();
             try {
                 const response = await fetch(`${apiUrl}${url}`, {
                     method: 'GET',
@@ -236,50 +195,136 @@
                     }
                 });
 
-                console.log('Protected Response Status:', response.status);
+                console.log('fetchProtectedPage - Response Status:', response.status);
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('Protected Response Error:', errorText);
+                    console.error('fetchProtectedPage - Response Error:', errorText);
                     throw new Error(`Server returned ${response.status}: ${errorText}`);
                 }
 
                 const html = await response.text();
-                console.log('Received HTML:', html.substring(0, 200));
-                document.body.innerHTML = html;
+                console.log('fetchProtectedPage - Received HTML:', html.substring(0, 200));
 
-                // Reattach overlay immediately after DOM replacement
-                document.body.prepend(overlay);
-                overlay.style.display = 'flex';
-                console.log('fetchProtectedPage - Overlay reattached and displayed');
+                document.documentElement.innerHTML = html;
 
-                // Reload scripts
+                if (!document.getElementById('loadingOverlay')) {
+                    const newOverlay = document.createElement('div');
+                    newOverlay.id = 'loadingOverlay';
+                    newOverlay.innerHTML = overlay.innerHTML;
+                    newOverlay.style.display = 'flex';
+                    document.body.prepend(newOverlay);
+                    console.log('fetchProtectedPage - Overlay reattached and displayed');
+                }
+
+                const head = document.head;
+                const requiredStyles = [
+                    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
+                    'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css',
+                    '/static/styles.css'
+                ];
+                requiredStyles.forEach(href => {
+                    if (!head.querySelector(`link[href="${href}"]`)) {
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = href;
+                        head.appendChild(link);
+                        console.log(`fetchProtectedPage - Re-added stylesheet: ${href}`);
+                    }
+                });
+
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 const scripts = doc.querySelectorAll('script');
+                const scriptPromises = [];
                 scripts.forEach(script => {
                     if (script.src) {
                         const newScript = document.createElement('script');
                         newScript.src = script.src;
                         newScript.async = false;
-                        document.head.appendChild(newScript);
-                        console.log('Loaded external script:', script.src);
+                        scriptPromises.push(
+                            new Promise(resolve => {
+                                newScript.onload = resolve;
+                                newScript.onerror = () => console.error(`fetchProtectedPage - Failed to load script: ${script.src}`);
+                                document.head.appendChild(newScript);
+                            })
+                        );
+                        console.log('fetchProtectedPage - Loaded external script:', script.src);
                     } else if (script.innerHTML.trim()) {
                         try {
                             const scriptFn = new Function(script.innerHTML);
                             scriptFn();
-                            console.log('Executed inline script');
+                            console.log('fetchProtectedPage - Executed inline script');
                         } catch (e) {
-                            console.error('Error executing inline script:', e);
+                            console.error('fetchProtectedPage - Error executing inline script:', e);
                         }
                     }
                 });
+
+                await Promise.all(scriptPromises);
+                setTimeout(() => {
+                    const layoutWrapper = document.querySelector('.layout-wrapper');
+                    if (layoutWrapper) {
+                        layoutWrapper.style.display = 'block';
+                        console.log('fetchProtectedPage - Forced .layout-wrapper to display: block');
+                    } else {
+                        console.error('fetchProtectedPage - .layout-wrapper not found post-fetch');
+                        toastr.error('Failed to load page content');
+                    }
+                    hideLoadingOverlay();
+                }, 1000);
             } catch (error) {
                 toastr.error(error.message || 'Failed to load protected page');
-                console.error('Protected Fetch Error:', error);
+                console.error('fetchProtectedPage - Fetch Error:', error);
                 showLogin();
                 hideLoadingOverlay();
             }
-            // Overlay stays until page-load.js hides it
+        }
+
+        function redirectBasedOnPermissions() {
+            const token = localStorage.getItem('authToken');
+            console.log('redirectBasedOnPermissions - Checking token:', token || 'None');
+            if (!token) return false;
+
+            let decoded;
+            try {
+                decoded = decodeJWT(token);
+            } catch (e) {
+                console.error('redirectBasedOnPermissions - Error decoding token:', e);
+                toastr.error('Invalid token format. Please log in again.');
+                localStorage.removeItem('authToken');
+                return false;
+            }
+
+            console.log('redirectBasedOnPermissions - Decoded token:', decoded ? JSON.stringify(decoded) : 'null');
+            if (!decoded || !decoded.permissions) {
+                console.warn('redirectBasedOnPermissions - Invalid or expired token');
+                localStorage.removeItem('authToken');
+                return false;
+            }
+
+            const permissions = decoded.permissions;
+            console.log('redirectBasedOnPermissions - Permissions:', permissions);
+            let redirectPath;
+
+            if (permissions.includes('admin')) {
+                redirectPath = '/admin';
+            } else if (permissions.includes('wixpro')) {
+                redirectPath = '/partner';
+            } else if (permissions.includes('merchant')) {
+                redirectPath = '/merchant';
+            } else if (permissions.includes('community')) {
+                redirectPath = '/community';
+            } else {
+                console.warn('redirectBasedOnPermissions - No recognized permissions, defaulting to /');
+                redirectPath = '/';
+            }
+
+            console.log('redirectBasedOnPermissions - Determined redirect path:', redirectPath);
+            if (window.location.pathname !== redirectPath) {
+                fetchProtectedPage(redirectPath);
+                return true;
+            }
+            return false;
         }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -287,27 +332,25 @@
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
-            console.log('Origin:', window.location.origin);
-            console.log('Login URL:', `${apiUrl}/login`);
-            console.log('Request Payload:', { email, password });
+            console.log('loginForm - Origin:', window.location.origin);
+            console.log('loginForm - Login URL:', `${apiUrl}/login`);
+            console.log('loginForm - Request Payload:', { email, password });
 
             showLoadingOverlay();
             try {
                 const response = await fetch(`${apiUrl}/login`, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({ email, password })
                 });
 
-                console.log('Login Response Status:', response.status);
-                console.log('Response Headers:', [...response.headers.entries()]);
-
+                console.log('loginForm - Response Status:', response.status);
                 if (!response.ok) {
                     const errText = await response.text();
-                    console.error('Login Error Response:', errText);
+                    console.error('loginForm - Error Response:', errText);
                     let errData;
                     try {
                         errData = JSON.parse(errText);
@@ -318,7 +361,7 @@
                 }
 
                 const data = await response.json();
-                console.log('Login Response Data:', data);
+                console.log('loginForm - Response Data:', data);
 
                 if (data.status === 'success') {
                     localStorage.setItem('authToken', data.token);
@@ -326,15 +369,13 @@
 
                     const contactName = data.contact_name || 'User';
                     toastr.success(`Welcome back, ${contactName}!`);
-
-                    const redirectPath = data.redirect_url || '/';
-                    await fetchProtectedPage(redirectPath);
+                    redirectBasedOnPermissions();
                 } else {
                     throw new Error(data.message || 'Login failed');
                 }
             } catch (error) {
                 toastr.error(error.message || 'Unable to connect to server.');
-                console.error('Login Fetch Error:', error);
+                console.error('loginForm - Fetch Error:', error);
                 hideLoadingOverlay();
             }
         });
@@ -352,16 +393,10 @@
                 });
 
                 const rawText = await response.text();
-                console.log('Reset Raw Response:', rawText);
-                let data;
-                try {
-                    data = JSON.parse(rawText);
-                } catch (jsonError) {
-                    console.error('Reset JSON Parse Error:', jsonError);
-                    throw new Error('Invalid response from server');
-                }
+                console.log('forgotPasswordForm - Raw Response:', rawText);
+                const data = JSON.parse(rawText);
 
-                console.log('Reset Parsed Response:', data);
+                console.log('forgotPasswordForm - Parsed Response:', data);
                 if (!response.ok) {
                     throw new Error(data.message || 'Reset request failed');
                 }
@@ -370,7 +405,7 @@
                 showVerifyOtp(email);
             } catch (error) {
                 toastr.error(error.message || 'Error sending OTP');
-                console.error('Reset Error:', error);
+                console.error('forgotPasswordForm - Error:', error);
                 hideLoadingOverlay();
             }
         });
@@ -401,17 +436,10 @@
                 });
 
                 const rawText = await response.text();
-                console.log('Verify Raw Response:', rawText);
+                console.log('verifyOtpForm - Raw Response:', rawText);
+                const data = JSON.parse(rawText);
 
-                let data;
-                try {
-                    data = JSON.parse(rawText);
-                } catch (jsonError) {
-                    console.error('Verify JSON Parse Error:', jsonError);
-                    throw new Error('Invalid response from server');
-                }
-
-                console.log('Verify Parsed Response:', data);
+                console.log('verifyOtpForm - Parsed Response:', data);
                 if (!response.ok) {
                     throw new Error(data.message || 'Verification failed');
                 }
@@ -420,17 +448,8 @@
                 showLogin();
             } catch (error) {
                 toastr.error(error.message || 'Error verifying OTP');
-                console.error('Verification Error:', error);
+                console.error('verifyOtpForm - Error:', error);
                 hideLoadingOverlay();
-            }
-        });
-
-        window.addEventListener('load', () => {
-            const token = localStorage.getItem('authToken');
-            const path = window.location.pathname;
-            console.log('Page Load - Path:', path, 'Token Exists:', !!token);
-            if (token && path !== '/' && path !== '/signup') {
-                fetchProtectedPage(path);
             }
         });
     </script>

@@ -156,6 +156,9 @@
                             </button>
                         </div>
                     </div>
+                    <button data-section="settings">
+                        <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                    </button>
                     <button id="logOffBtn" style="background-color: #dc3545;">
                         <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
                     </button>
@@ -171,6 +174,7 @@
                         <li>Manage affiliate credentials under "Affiliate Programs"</li>
                         <li>Manage users under "User Management"</li>
                         <li>Test referral tracking with "Test Scripts"</li>
+                        <li>Update your account details in "My Account"</li>
                     </ul>
                 </div>
 
@@ -327,7 +331,13 @@
                     <h2>Merchant Management</h2>
                     <table>
                         <thead>
-                            <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                            <tr>
+                                <th>USERid</th>
+                                <th>Contact Name</th>
+                                <th>Email</th>
+                                <th>Phone Number</th> <!-- Added Phone Number column -->
+                                <th>Actions</th>
+                            </tr>
                         </thead>
                         <tbody id="merchantsList">
                             <!-- Dynamically populated by updateUserTable -->
@@ -339,7 +349,13 @@
                     <h2>Communities Management</h2>
                     <table>
                         <thead>
-                            <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                            <tr>
+                                <th>USERid</th>
+                                <th>Contact Name</th>
+                                <th>Email</th>
+                                <th>Phone Number</th> <!-- Added Phone Number column -->
+                                <th>Actions</th>
+                            </tr>
                         </thead>
                         <tbody id="communitiesList">
                             <!-- Dynamically populated by updateUserTable -->
@@ -351,7 +367,13 @@
                     <h2>Partner Management</h2>
                     <table>
                         <thead>
-                            <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                            <tr>
+                                <th>USERid</th>
+                                <th>Contact Name</th>
+                                <th>Email</th>
+                                <th>Phone Number</th> <!-- Added Phone Number column -->
+                                <th>Actions</th>
+                            </tr>
                         </thead>
                         <tbody id="partnersList">
                             <!-- Dynamically populated by updateUserTable -->
@@ -400,6 +422,8 @@
                         </form>
                     </div>
                 </div>
+
+                {% include 'my_account.html' with user_type='admin' %}
             </div>
         </div>
     </div>
@@ -411,25 +435,16 @@
     <script src="/static/js/page-load.js"></script>
     <script src="/static/js/admin-page.js"></script>
     <script>
-        // Ensure overlay is visible at start
-        document.getElementById('loadingOverlay').style.display = 'flex';
-
         // Wait for the initialize function to become available
         function waitForInitialize(attempts = 50, delay = 100) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("admin")');
                 window.initialize('admin');
-                // Hide overlay after initialization with a slight delay for visibility
-                setTimeout(() => {
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                }, 500); // 500ms delay to ensure the loader is briefly visible
             } else if (attempts > 0) {
                 console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
                 setTimeout(() => waitForInitialize(attempts - 1, delay), delay);
             } else {
                 console.error('Initialize function not found after maximum retries');
-                // Hide overlay even on failure to avoid blocking the UI
-                document.getElementById('loadingOverlay').style.display = 'none';
             }
         }
         waitForInitialize();
