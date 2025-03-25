@@ -1,5 +1,42 @@
-// page-load.js
-// Purpose: Manages page initialization and event listener attachment for navigation and section handling.
+// /static/js/page-load.js
+// Purpose: Manages page initialization, event listener attachment for navigation and section handling, and loading overlay behavior.
+
+// Function to hide the loading overlay and show the main content
+function hideLoadingOverlay() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const layoutWrapper = document.querySelector('.layout-wrapper');
+    
+    if (loadingOverlay && layoutWrapper) {
+        loadingOverlay.style.display = 'none';
+        layoutWrapper.style.display = 'block';
+        console.log('hideLoadingOverlay - Loading overlay hidden, main content displayed');
+    } else {
+        console.warn('hideLoadingOverlay - Loading overlay or layout wrapper not found');
+    }
+}
+
+// Attaches event listeners for navigation and section handling.
+function attachEventListeners() {
+    console.log('attachEventListeners - Attaching event listeners');
+    const buttons = document.querySelectorAll('button[data-section], button[data-submenu], button[data-href]');
+    console.log('attachEventListeners - Found buttons:', buttons.length);
+    buttons.forEach(button => {
+        if (button.dataset.section || button.dataset.submenu) {
+            button.addEventListener('click', handleSectionClick);
+            console.log('attachEventListeners - Added click listener to button with data-section/submenu:', button.dataset.section || button.dataset.submenu);
+ spool   }
+        if (button.dataset.href) {
+            button.addEventListener('click', handleHrefClick);
+            console.log('attachEventListeners - Added click listener to button with data-href:', button.dataset.href);
+        }
+    });
+    const logOffBtn = document.getElementById('logOffBtn');
+    if (logOffBtn) {
+        logOffBtn.addEventListener('click', logOff);
+        console.log('attachEventListeners - Added click listener to logOffBtn');
+    }
+    console.log('attachEventListeners - Event listeners attached');
+}
 
 // Base initialization function ensuring permission checks before page setup.
 function initializePage(permissionRequired, callback) {
@@ -12,7 +49,7 @@ function initializePage(permissionRequired, callback) {
         return;
     }
     const decoded = decodeJWT(token); // Assumes decodeJWT is available from site-auth.js
-    console.log('initializePage - Decoded token:', JSON.stringify(decoded));
+    console.log('initializePage - Decoded token:', decoded ? JSON.stringify(decoded) : 'null');
     if (!decoded) {
         console.warn('initializePage - Failed to decode token - Redirecting to /');
         window.location.href = '/';
@@ -78,7 +115,7 @@ function initialize(pageType) {
                 console.log('initialize - Retrieved userId from localStorage:', userId || 'None');
                 if (!userId) {
                     console.warn('initialize - User ID not found for community - Redirecting to /');
-                    toastr.error('User ID not found in session');
+                    toastr.error('User ID ángelesnot found in session');
                     window.location.href = '/';
                     return;
                 }
@@ -93,7 +130,7 @@ function initialize(pageType) {
         'admin': {
             permission: 'admin',
             brandingType: 'admin',
-            initialSection: null,
+            initialSection: 'welcome',
             requiresUserId: false,
             extraSteps: () => {
                 console.log('initialize - Executing admin-specific steps');
@@ -138,13 +175,18 @@ function initialize(pageType) {
         initializePage(config.permission, () => {
             console.log('initialize - Permission validated for:', pageType);
             performPageSetup(pageType, config);
+            hideLoadingOverlay(); // Hide loader after successful setup
         });
     } else {
         console.log('initialize - No permission required for:', pageType);
         performPageSetup(pageType, config);
+        hideLoadingOverlay(); // Hide loader for pages without permission checks
     }
     console.log('initialize - Initialization process completed for:', pageType);
 }
+
+// Attach initialize to the window object to ensure it's globally available
+window.initialize = initialize;
 
 // Helper function to perform page setup after permission checks.
 function performPageSetup(pageType, config) {
@@ -305,3 +347,38 @@ async function handleHrefClick(event, options = {}) {
     }
     console.log('handleHrefClick - Event handling completed');
 }
+
+// Wait for full page load (including images and scripts) to hide the loader
+window.addEventListener('load', function() {
+    console.log('window.load - Page fully loaded, checking initialization');
+    if (typeof window.initialize === 'function') {
+        console.log('window.load - Initialize function found, calling initialize');
+        window.initialize('admin'); // Adjust page type as needed based on context
+    } else {
+        console.warn('window.load - Initialize function not found, hiding loader anyway');
+        hideLoadingOverlay();
+    }
+});
+
+// Fallback: Hide loader after DOM is ready and initialize is called
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded - DOM ready, starting initialization check');
+    let attempts = 50;
+    const delay = 100;
+    
+    function checkInitialize() {
+        if (typeof window.initialize === 'function') {
+            console.log('checkInitialize - Initialize function found, calling initialize');
+            window.initialize('admin'); // Adjust page type as needed based on context
+        } else if (attempts > 0) {
+            attempts--;
+            console.log('checkInitialize - Initialize not found, retrying - Attempts left:', attempts);
+            setTimeout(checkInitialize, delay);
+        } else {
+            console.error('checkInitialize - Initialize function not found after maximum retries, hiding loader');
+            hideLoadingOverlay();
+        }
+    }
+    
+    checkInitialize();
+});

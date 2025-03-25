@@ -1,21 +1,15 @@
 from flask import Blueprint, jsonify, request
-from utils.auth import require_permissions
-from utils.data import load_users_settings, save_users_settings
+from utils.auth import login_required
+from utils.users import load_users_settings, save_users_settings  # Changed from utils.data to utils.users
 
 # Define the user_settings blueprint
 user_settings_bp = Blueprint('user_settings', __name__)
 
 @user_settings_bp.route('/<USERid>/user', methods=['GET'])
-@require_permissions(["self", "admin"], require_all=False)
+@login_required(["self", "admin"], require_all=False)
 def get_user_settings(USERid):
     """
     Retrieve the settings for a specific user.
-
-    Args:
-        USERid (str): The ID of the user whose settings are being retrieved.
-
-    Returns:
-        JSON response with the user's settings or an error message.
     """
     try:
         users_settings = load_users_settings()
@@ -34,16 +28,10 @@ def get_user_settings(USERid):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @user_settings_bp.route('/<USERid>/user', methods=['PUT'])
-@require_permissions(["self", "admin"], require_all=False)
+@login_required(["self", "admin"], require_all=False)
 def put_user_settings(USERid):
     """
     Replace the entire settings for a specific user.
-
-    Args:
-        USERid (str): The ID of the user whose settings are being replaced.
-
-    Returns:
-        JSON response confirming the replacement or an error message.
     """
     if not request.json:
         return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
@@ -64,16 +52,10 @@ def put_user_settings(USERid):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @user_settings_bp.route('/<USERid>/user', methods=['PATCH'])
-@require_permissions(["self", "admin", "wixpro"], require_all=False)
+@login_required(["self", "admin", "wixpro"], require_all=False)
 def patch_user_settings(USERid):
     """
     Partially update the settings for a specific user.
-
-    Args:
-        USERid (str): The ID of the user whose settings are being updated.
-
-    Returns:
-        JSON response confirming the update or an error message.
     """
     if not request.json:
         return jsonify({"status": "error", "message": "Request body must contain settings"}), 400

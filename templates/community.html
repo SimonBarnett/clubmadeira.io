@@ -4,268 +4,372 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>clubmadeira.io | Community</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-</head>
-<body>
-    <div class="header">
-        <div class="header-content" id="brandingContent">
-            <!-- Branding content will be loaded here -->
-        </div>
-    </div>
-    <div class="main-container">
-        <div class="menu-container">
-            <div class="menu" id="menu">
-                <input type="text" id="userId" style="display: none;">
-                <!-- Menu items will be dynamically generated -->
-            </div>
-        </div>
-        <div class="content-container">
-            <div id="welcome" class="section active">
-                <h2>Welcome to Your Community Dashboard</h2>
-                <p>Welcome! This dashboard is your hub for managing your community account and tracking referrals.</p>
-                <p>Use the menu on the left to:</p>
-                <ul>
-                    <li>Learn how to add discounts to your website or request a site under "My Web Site"</li>
-                    <li>Select product categories for your site in "My Categories"</li>
-                    <li>View referral statistics under "My Referrals"</li>
-                    <li>Update your account details in "My Account"</li>
-                </ul>
-            </div>
-            <div id="settings" class="section">
-                <h2>My Account</h2>
-                <div class="settings-form">
-                    <label><strong>Referrer ID: <span id="referrerId"></span></strong></label>
-                    <label for="contactName">Contact Name:</label>
-                    <input type="text" id="contactName" placeholder="Enter contact name">
-                    <label for="websiteUrl">Website URL:</label>
-                    <input type="url" id="websiteUrl" placeholder="Enter website URL">
-                    <label for="emailAddress">Email Address:</label>
-                    <input type="email" id="emailAddress" placeholder="Enter email address">
-                    <label for="phoneNumber">Phone Number:</label>
-                    <input type="tel" id="phoneNumber" placeholder="Enter phone number">
-                    <button data-action="saveSettings">Save Settings</button>
-
-                    <h3>Change Password</h3>
-                    <div class="password-container">
-                        <label for="currentPassword">Current Password:</label>
-                        <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
-                        <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
-                    </div>
-                    <div class="password-container">
-                        <label for="newPassword">New Password:</label>
-                        <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
-                        <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
-                    </div>
-                    <div class="password-container">
-                        <label for="confirmPassword">Confirm New Password:</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
-                        <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
-                    </div>
-                    <button data-action="savePassword">Change Password</button>
-                </div>
-            </div>
-            <div id="categories" class="section">
-                <h2>My Categories</h2>
-                <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
-                <div class="treeview" id="categoryTree"></div>
-            </div>
-            <div id="referrals_intro" class="section">
-                <h2>My Referrals</h2>
-                <p>This section allows you to track your referral activity.</p>
-                <p>Select from the submenu options:</p>
-                <ul>
-                    <li><strong>Visits:</strong> View pages visited through your referral links.</li>
-                    <li><strong>Orders:</strong> See orders placed via your referrals.</li>
-                </ul>
-            </div>
-            <div id="visits" class="section">
-                <h2>Visits</h2>
-                <div class="toggle-section" data-toggle="visits_this_month">This Month</div>
-                <div id="visits_this_month" class="toggle-content open">
-                    <table id="visitsTableThisMonth">
-                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                        <tbody id="visitsListThisMonth"></tbody>
-                    </table>
-                </div>
-                <div class="toggle-section" data-toggle="visits_last_month">Last Month</div>
-                <div id="visits_last_month" class="toggle-content">
-                    <table id="visitsTableLastMonth">
-                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                        <tbody id="visitsListLastMonth"></tbody>
-                    </table>
-                </div>
-                <div class="toggle-section" data-toggle="visits_earlier">Earlier</div>
-                <div id="visits_earlier" class="toggle-content">
-                    <table id="visitsTableEarlier">
-                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                        <tbody id="visitsListEarlier"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="orders" class="section">
-                <h2>Orders</h2>
-                <div class="toggle-section" data-toggle="orders_this_month">This Month</div>
-                <div id="orders_this_month" class="toggle-content open">
-                    <table id="ordersTableThisMonth">
-                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                        <tbody id="ordersListThisMonth"></tbody>
-                    </table>
-                </div>
-                <div class="toggle-section" data-toggle="orders_last_month">Last Month</div>
-                <div id="orders_last_month" class="toggle-content">
-                    <table id="ordersTableLastMonth">
-                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                        <tbody id="ordersListLastMonth"></tbody>
-                    </table>
-                </div>
-                <div class="toggle-section" data-toggle="orders_earlier">Earlier</div>
-                <div id="orders_earlier" class="toggle-content">
-                    <table id="ordersTableEarlier">
-                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                        <tbody id="ordersListEarlier"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="my_website_intro" class="section">
-                <h2>My Web Site</h2>
-                <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
-                <ul>
-                    <li><strong>Wix:</strong> Easy drag-and-drop builder.</li>
-                    <li><strong>WordPress:</strong> Flexible CMS.</li>
-                    <li><strong>Squarespace:</strong> Stylish solution.</li>
-                    <li><strong>Weebly:</strong> Simple builder.</li>
-                    <li><strong>Joomla:</strong> Robust CMS.</li>
-                    <li><strong>I Don’t Have a Website Yet:</strong> Request a site setup.</li>
-                </ul>
-            </div>
-            <div id="wix" class="section">
-                <h2>Wix Integration</h2>
-                <p>Add discounts to your Wix site:</p>
-                <ol>
-                    <li>Log in to Wix and open the Editor.</li>
-                    <li>Click "+" > "Embed" > "Embed a Widget".</li>
-                    <li>Paste: <code id="wixCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Publish.</li>
-                </ol>
-            </div>
-            <div id="wordpress" class="section">
-                <h2>WordPress Integration</h2>
-                <p>Add discounts to WordPress:</p>
-                <ol>
-                    <li>Log in to WordPress admin.</li>
-                    <li>Go to "Pages" > "Add New".</li>
-                    <li>Add "Custom HTML" block: <code id="wordpressCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Publish.</li>
-                </ol>
-            </div>
-            <div id="squarespace" class="section">
-                <h2>Squarespace Integration</h2>
-                <p>Integrate discounts into Squarespace:</p>
-                <ol>
-                    <li>Log in to Squarespace editor.</li>
-                    <li>Add a new page.</li>
-                    <li>Add "Code" block: <code id="squarespaceCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Update site.</li>
-                </ol>
-            </div>
-            <div id="weebly" class="section">
-                <h2>Weebly Integration</h2>
-                <p>Add discounts to Weebly:</p>
-                <ol>
-                    <li>Log in to Weebly editor.</li>
-                    <li>Drag "Embed Code" onto page.</li>
-                    <li>Paste: <code id="weeblyCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Publish.</li>
-                </ol>
-            </div>
-            <div id="joomla" class="section">
-                <h2>Joomla Integration</h2>
-                <p>Integrate discounts into Joomla:</p>
-                <ol>
-                    <li>Log in to Joomla admin.</li>
-                    <li>Go to "Content" > "Articles" > "Add New".</li>
-                    <li>Paste in "Code" view: <code id="joomlaCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Save.</li>
-                </ol>
-            </div>
-            <div id="no_website" class="section">
-                <h2>I Don’t Have a Website Yet</h2>
-                <p>Request a custom Wix website for your community from our Wix Professionals. Fill out the form below to specify your needs:</p>
-                <form id="siteRequestForm" class="settings-form">
-                    <label for="communityName">Community Name:</label>
-                    <input type="text" id="communityName" name="communityName" placeholder="Enter your community name" required>
-
-                    <label for="aboutCommunity">About Our Community:</label>
-                    <textarea id="aboutCommunity" name="aboutCommunity" placeholder="Tell us about your community"></textarea>
-
-                    <label for="communityLogos">Community Logos:</label>
-                    <input type="file" id="communityLogos" name="communityLogos" accept="image/*" multiple>
-                    <small>Upload up to 5 logos (e.g., main logo, secondary logos).</small>
-
-                    <label for="colorPrefs">Color Preferences:</label>
-                    <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
-
-                    <label for="stylingDetails">Styling Details:</label>
-                    <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., modern layout, bold fonts"></textarea>
-
-                    <label for="preferredDomain">Preferred Domain Name:</label>
-                    <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mycommunity.org" oninput="updateEmailDomains()">
-                    <button type="button" data-action="checkDomainAvailability">Check Availability</button>
-
-                    <label>Email Addresses to Set Up (up to 5):</label>
-                    <div id="emailsContainer">
-                        <div class="email-section" data-email="1">
-                            <label for="email1Name">Email Name:</label>
-                            <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
-                            <span id="email1Domain">@mycommunity.org</span>
-                        </div>
-                    </div>
-                    <button type="button" data-action="addEmail">Add Another Email</button>
-
-                    <label>Requested Pages (up to 5):</label>
-                    <div id="pagesContainer">
-                        <div class="page-section" data-page="1">
-                            <label for="page1Name">Page Name:</label>
-                            <input type="text" id="page1Name" name="page1Name" value="Home">
-                            <br><br>
-                            <label for="page1Content">Page Content:</label>
-                            <textarea id="page1Content" name="page1Content" placeholder="Describe this page"></textarea>
-                            <label for="page1Images">Additional Images:</label>
-                            <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
-                        </div>
-                    </div>
-                    <button type="button" data-action="addPage">Add Another Page</button>
-
-                    <label>Wix Widgets:</label>
-                    <div class="widget-checkboxes">
-                        <div><label><input type="checkbox" name="widgets" value="events"> Events</label> - Add an events calendar.</div>
-                        <div><label><input type="checkbox" name="widgets" value="socialMediaFeeds"> Social Media Feeds</label> - Display live social media feeds.</div>
-                        <div><label><input type="checkbox" name="widgets" value="gallery"> Gallery</label> - Showcase photos.</div>
-                        <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Simple contact form.</div>
-                        <div><label><input type="checkbox" name="widgets" value="blog"> Blog</label> - Share updates and stories.</div>
-                        <div><label><input type="checkbox" name="widgets" value="weather"> Weather</label> - Show real-time weather.</div>
-                        <div><label><input type="checkbox" name="widgets" value="socialMediaLinks"> Social Media Links</label> - Quick links to profiles.</div>
-                    </div>
-
-                    <button type="button" data-action="saveSiteRequest">Submit Request</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
+    <!-- Define window.apiUrl before loading scripts -->
+    <script>
+        window.apiUrl = 'https://clubmadeira.io';
+    </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="/js/site-auth.js"></script>
-    <script src="/js/site-navigation.js"></script>
-    <script src="/js/category-management.js"></script>
-    <script src="/js/page-load.js"></script>
-    <script src="/js/community-page.js"></script>
+</head>
+<body>
+    <div class="layout-wrapper">
+        <div class="header">
+            <div class="header-content" id="brandingContent">
+                <!-- Branding content will be loaded here -->
+            </div>
+        </div>
+        <div class="main-container">
+            <div class="menu-container">
+                <div class="menu">
+                    <button data-section="welcome">
+                        <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
+                    </button>
+                    <button data-submenu="my_website_intro" data-section="my_website_intro">
+                        <span class="button-content"><i class="fas fa-globe"></i> My Web Site</span>
+                        <i class="fas fa-caret-right caret"></i>
+                    </button>
+                    <div id="my_website_intro" class="submenu">
+                        <button data-section="wix">
+                            <span class="button-content"><i class="fab fa-wix-simple"></i> Wix</span>
+                        </button>
+                        <button data-section="wordpress">
+                            <span class="button-content"><i class="fab fa-wordpress"></i> WordPress</span>
+                        </button>
+                        <button data-section="squarespace">
+                            <span class="button-content"><i class="fab fa-squarespace"></i> Squarespace</span>
+                        </button>
+                        <button data-section="weebly">
+                            <span class="button-content"><i class="fab fa-weebly"></i> Weebly</span>
+                        </button>
+                        <button data-section="joomla">
+                            <span class="button-content"><i class="fab fa-joomla"></i> Joomla</span>
+                        </button>
+                        <button data-section="no_website">
+                            <span class="button-content"><i class="fas fa-question-circle"></i> I Don’t Have a Website Yet</span>
+                        </button>
+                    </div>
+                    <button data-section="categories">
+                        <span class="button-content"><i class="fas fa-list"></i> My Categories</span>
+                    </button>
+                    <button data-submenu="referrals_intro" data-section="referrals_intro">
+                        <span class="button-content">
+                            <span class="svg-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" preserveAspectRatio="xMidYMid meet">
+                                    <path d="M72 88a56 56 0 1 1 112 0A56 56 0 1 1 72 88zM64 245.7C54 256.9 48 271.8 48 288s6 31.1 16 42.3l0-84.7zm144.4-49.3C178.7 222.7 160 261.2 160 304c0 34.3 12 65.8 32 90.5l0 21.5c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-26.8C26.2 371.2 0 332.7 0 288c0-61.9 50.1-112 112-112l32 0c24 0 46.2 7.5 64.4 20.3zM448 416l0-21.5c20-24.7 32-56.2 32-90.5c0-42.8-18.7-81.3-48.4-107.7C449.8 183.5 472 176 496 176l32 0c61.9 0 112 50.1 112 112c0 44.7-26.2 83.2-64 101.2l0 26.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32zm8-328a56 56 0 1 1 112 0A56 56 0 1 1 456 88zM576 245.7l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM320 32a64 64 0 1 1 0 128 64 64 0 1 1 0-128zM240 304c0 16.2 6 31 16 42.3l0-84.7c-10 11.3-16 26.1-16 42.3zm144-42.3l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM448 304c0 44.7-26.2 83.2-64 101.2l0 42.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-42.8c-37.8-18-64-56.5-64-101.2c0-61.9 50.1-112 112-112l32 0c61.9 0 112 50.1 112 112z"/>
+                                </svg>
+                            </span> My Referrals
+                        </span>
+                        <i class="fas fa-caret-right caret"></i>
+                    </button>
+                    <div id="referrals_intro" class="submenu">
+                        <button data-section="visits">
+                            <span class="button-content"><i class="fas fa-eye"></i> Visits</span>
+                        </button>
+                        <button data-section="orders">
+                            <span class="button-content"><i class="fas fa-shopping-cart"></i> Orders</span>
+                        </button>
+                    </div>
+                    <button data-section="settings">
+                        <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                    </button>
+                    <button id="logOffBtn" style="background-color: #dc3545;">
+                        <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
+                    </button>
+                </div>
+            </div>
+            <div class="content-wrapper">
+                <div id="welcome" class="section active">
+                    <h2>Welcome to Your Community Dashboard</h2>
+                    <p>Welcome! This dashboard is your hub for managing your community account and tracking referrals.</p>
+                    <p>Use the menu on the left to:</p>
+                    <ul>
+                        <li>Learn how to add discounts to your website or request a site under "My Web Site"</li>
+                        <li>Select product categories for your site in "My Categories"</li>
+                        <li>View referral statistics under "My Referrals"</li>
+                        <li>Update your account details in "My Account"</li>
+                    </ul>
+                </div>
+                <div id="settings" class="section">
+                    <h2>My Account</h2>
+                    <div class="settings-form">
+                        <label><strong>Referrer ID: <span id="referrerId"></span></strong></label>
+                        <label for="contactName">Contact Name:</label>
+                        <input type="text" id="contactName" placeholder="Enter contact name">
+                        <label for="websiteUrl">Website URL:</label>
+                        <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                        <label for="emailAddress">Email Address:</label>
+                        <input type="email" id="emailAddress" placeholder="Enter email address">
+                        <label for="phoneNumber">Phone Number:</label>
+                        <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                        <button data-action="saveSettings"><i class="fas fa-save"></i> Save Settings</button>
+
+                        <h3><i class="fas fa-lock"></i> Change Password</h3>
+                        <div class="password-container">
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                            <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="newPassword">New Password:</label>
+                            <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                            <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                            <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
+                        </div>
+                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+                    </div>
+                </div>
+                <div id="categories" class="section">
+                    <h2>My Categories</h2>
+                    <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
+                    <div class="treeview" id="categoryTree"></div>
+                </div>
+                <div id="referrals_intro" class="section">
+                    <h2>My Referrals</h2>
+                    <p>This section allows you to track your referral activity.</p>
+                    <p>Select from the submenu options:</p>
+                    <ul>
+                        <li><strong>Visits:</strong> View pages visited through your referral links.</li>
+                        <li><strong>Orders:</strong> See orders placed via your referrals.</li>
+                    </ul>
+                </div>
+                <div id="visits" class="section">
+                    <h2>Visits</h2>
+                    <div class="toggle-section" data-toggle="visits_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
+                    <div id="visits_this_month" class="toggle-content open">
+                        <table id="visitsTableThisMonth">
+                            <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                            <tbody id="visitsListThisMonth"></tbody>
+                        </table>
+                    </div>
+                    <div class="toggle-section" data-toggle="visits_last_month"><i class="fas fa-calendar-alt"></i> Last Month</div>
+                    <div id="visits_last_month" class="toggle-content">
+                        <table id="visitsTableLastMonth">
+                            <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                            <tbody id="visitsListLastMonth"></tbody>
+                        </table>
+                    </div>
+                    <div class="toggle-section" data-toggle="visits_earlier"><i class="fas fa-history"></i> Earlier</div>
+                    <div id="visits_earlier" class="toggle-content">
+                        <table id="visitsTableEarlier">
+                            <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                            <tbody id="visitsListEarlier"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="orders" class="section">
+                    <h2>Orders</h2>
+                    <div class="toggle-section" data-toggle="orders_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
+                    <div id="orders_this_month" class="toggle-content open">
+                        <table id="ordersTableThisMonth">
+                            <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                            <tbody id="ordersListThisMonth"></tbody>
+                        </table>
+                    </div>
+                    <div class="toggle-section" data-toggle="orders_last_month"><i class="fas fa-calendar-alt"></i> Last Month</div>
+                    <div id="orders_last_month" class="toggle-content">
+                        <table id="ordersTableLastMonth">
+                            <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                            <tbody id="ordersListLastMonth"></tbody>
+                        </table>
+                    </div>
+                    <div class="toggle-section" data-toggle="orders_earlier"><i class="fas fa-history"></i> Earlier</div>
+                    <div id="orders_earlier" class="toggle-content">
+                        <table id="ordersTableEarlier">
+                            <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                            <tbody id="ordersListEarlier"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="my_website_intro" class="section">
+                    <h2>My Web Site</h2>
+                    <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
+                    <ul>
+                        <li><strong>Wix:</strong> Easy drag-and-drop builder.</li>
+                        <li><strong>WordPress:</strong> Flexible CMS.</li>
+                        <li><strong>Squarespace:</strong> Stylish solution.</li>
+                        <li><strong>Weebly:</strong> Simple builder.</li>
+                        <li><strong>Joomla:</strong> Robust CMS.</li>
+                        <li><strong>I Don’t Have a Website Yet:</strong> Request a site setup.</li>
+                    </ul>
+                </div>
+                <div id="wix" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fab fa-wix-simple" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>Wix Integration</h2>
+                    </div>
+                    <p>Add discounts to your Wix site:</p>
+                    <ol>
+                        <li>Log in to Wix and open the Editor.</li>
+                        <li>Click "+" > "Embed" > "Embed a Widget".</li>
+                        <li>Paste: <code id="wixCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                        <li>Publish.</li>
+                    </ol>
+                </div>
+                <div id="wordpress" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fab fa-wordpress" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>WordPress Integration</h2>
+                    </div>
+                    <p>Add discounts to WordPress:</p>
+                    <ol>
+                        <li>Log in to WordPress admin.</li>
+                        <li>Go to "Pages" > "Add New".</li>
+                        <li>Add "Custom HTML" block: <code id="wordpressCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                        <li>Publish.</li>
+                    </ol>
+                </div>
+                <div id="squarespace" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fab fa-squarespace" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>Squarespace Integration</h2>
+                    </div>
+                    <p>Integrate discounts into Squarespace:</p>
+                    <ol>
+                        <li>Log in to Squarespace editor.</li>
+                        <li>Add a new page.</li>
+                        <li>Add "Code" block: <code id="squarespaceCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                        <li>Update site.</li>
+                    </ol>
+                </div>
+                <div id="weebly" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fab fa-weebly" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>Weebly Integration</h2>
+                    </div>
+                    <p>Add discounts to Weebly:</p>
+                    <ol>
+                        <li>Log in to Weebly editor.</li>
+                        <li>Drag "Embed Code" onto page.</li>
+                        <li>Paste: <code id="weeblyCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                        <li>Publish.</li>
+                    </ol>
+                </div>
+                <div id="joomla" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fab fa-joomla" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>Joomla Integration</h2>
+                    </div>
+                    <p>Integrate discounts into Joomla:</p>
+                    <ol>
+                        <li>Log in to Joomla admin.</li>
+                        <li>Go to "Content" > "Articles" > "Add New".</li>
+                        <li>Paste in "Code" view: <code id="joomlaCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                        <li>Save.</li>
+                    </ol>
+                </div>
+                <div id="no_website" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-question-circle" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>I Don’t Have a Website Yet</h2>
+                    </div>
+                    <p>Request a custom Wix website for your community from our Wix Professionals. Fill out the form below to specify your needs:</p>
+                    <form id="siteRequestForm" class="settings-form">
+                        <label for="communityName">Community Name:</label>
+                        <input type="text" id="communityName" name="communityName" placeholder="Enter your community name" required>
+
+                        <label for="aboutCommunity">About Our Community:</label>
+                        <textarea id="aboutCommunity" name="aboutCommunity" placeholder="Tell us about your community"></textarea>
+
+                        <label for="communityLogos">Community Logos:</label>
+                        <input type="file" id="communityLogos" name="communityLogos" accept="image/*" multiple>
+                        <small>Upload up to 5 logos (e.g., main logo, secondary logos).</small>
+
+                        <label for="colorPrefs">Color Preferences:</label>
+                        <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
+
+                        <label for="stylingDetails">Styling Details:</label>
+                        <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., modern layout, bold fonts"></textarea>
+
+                        <label for="preferredDomain">Preferred Domain Name:</label>
+                        <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mycommunity.org" oninput="updateEmailDomains()">
+                        <button type="button" data-action="checkDomainAvailability"><i class="fas fa-search"></i> Check Availability</button>
+
+                        <label>Email Addresses to Set Up (up to 5):</label>
+                        <div id="emailsContainer">
+                            <div class="email-section" data-email="1">
+                                <label for="email1Name">Email Name:</label>
+                                <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
+                                <span id="email1Domain">@mycommunity.org</span>
+                            </div>
+                        </div>
+                        <button type="button" data-action="addEmail"><i class="fas fa-plus"></i> Add Another Email</button>
+
+                        <label>Requested Pages (up to 5):</label>
+                        <div id="pagesContainer">
+                            <div class="page-section" data-page="1">
+                                <label for="page1Name">Page Name:</label>
+                                <input type="text" id="page1Name" name="page1Name" value="Home">
+                                <br><br>
+                                <label for="page1Content">Page Content:</label>
+                                <textarea id="page1Content" name="page1Content" placeholder="Describe this page"></textarea>
+                                <label for="page1Images">Additional Images:</label>
+                                <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+                            </div>
+                        </div>
+                        <button type="button" data-action="addPage"><i class="fas fa-plus"></i> Add Another Page</button>
+
+                        <label>Wix Widgets:</label>
+                        <div class="widget-checkboxes">
+                            <div><label><input type="checkbox" name="widgets" value="events"> Events</label> - Add an events calendar.</div>
+                            <div><label><input type="checkbox" name="widgets" value="socialMediaFeeds"> Social Media Feeds</label> - Display live social media feeds.</div>
+                            <div><label><input type="checkbox" name="widgets" value="gallery"> Gallery</label> - Showcase photos.</div>
+                            <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Simple contact form.</div>
+                            <div><label><input type="checkbox" name="widgets" value="blog"> Blog</label> - Share updates and stories.</div>
+                            <div><label><input type="checkbox" name="widgets" value="weather"> Weather</label> - Show real-time weather.</div>
+                            <div><label><input type="checkbox" name="widgets" value="socialMediaLinks"> Social Media Links</label> - Quick links to profiles.</div>
+                        </div>
+
+                        <button type="button" data-action="saveSiteRequest"><i class="fas fa-paper-plane"></i> Submit Request</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/site-auth.js"></script>
+    <script src="/static/js/site-navigation.js"></script>
+    <script src="/static/js/category-management.js"></script>
+    <script src="/static/js/site-request.js"></script>
+    <script src="/static/js/page-load.js"></script>
+    <script src="/static/js/community-page.js"></script>
     <script>
-        // Initialize the community page using page-load.js
-        initialize('community');
+        // Initialize TinyMCE with minimal configuration for specific textareas
+        document.addEventListener('DOMContentLoaded', () => {
+            tinymce.init({
+                selector: '#aboutCommunity, #stylingDetails, #page1Content',
+                inline: true, // Use inline mode to reduce resource usage
+                menubar: false, // Disable menubar for simplicity
+                toolbar: 'bold italic | bullist numlist | link', // Minimal toolbar
+                plugins: 'lists link', // Only load necessary plugins
+                setup: (editor) => {
+                    editor.on('init', () => {
+                        console.log('TinyMCE initialized for:', editor.id);
+                    });
+                }
+            });
+        });
+
+        // Wait for the initialize function to become available
+        function waitForInitialize(attempts = 50, delay = 100) {
+            if (typeof window.initialize === 'function') {
+                console.log('Initialize function found, calling initialize("community")');
+                window.initialize('community');
+            } else if (attempts > 0) {
+                console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
+                setTimeout(() => waitForInitialize(attempts - 1, delay), delay);
+            } else {
+                console.error('Initialize function not found after maximum retries');
+            }
+        }
+        waitForInitialize();
     </script>
 </body>
 </html>

@@ -4,167 +4,218 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>clubmadeira.io | Merchant</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-</head>
-<body>
-    <div class="header">
-        <div class="header-content" id="brandingContent">
-            <!-- Branding content will be loaded here -->
-        </div>
-    </div>
-    <div class="main-container">
-        <div class="menu-container">
-            <div class="menu" id="menu">
-                <input type="text" id="userId" style="display: none;">
-                <button data-section="my-products">My Products</button>
-                <button data-section="my-store">My Store</button>
-                <button data-section="wix-keys">Wix Keys</button>
-                <button data-section="my-account">My Account</button>
-                <button data-href="/admin" class="btn-logoff">Back to Admin</button>
-                <button id="logOffBtn" class="btn-logoff">Log Off</button>
-            </div>
-        </div>
-        <div class="content-container">
-            <div id="info" class="section">
-                <h2>Welcome to Your Merchant Dashboard</h2>
-                <p>This dashboard allows you to link the parts on your Wix site to a network of community groups, who show relevant discounted products on their websites from clubmadeira.io.</p>
-            </div>
-            <div id="my-account" class="section">
-                <h2>My Account</h2>
-                <div class="settings-form">
-                    <label for="contactName">Contact Name:</label>
-                    <input type="text" id="contactName" placeholder="Enter contact name">
-                    <label for="websiteUrl">Website URL:</label>
-                    <input type="url" id="websiteUrl" placeholder="Enter website URL">
-                    <label for="emailAddress">Email Address:</label>
-                    <input type="email" id="emailAddress" placeholder="Enter email address">
-                    <label for="phoneNumber">Phone Number:</label>
-                    <input type="tel" id="phoneNumber" placeholder="Enter phone number">
-                    <button data-action="saveSettings">Save Settings</button>
-                    <h3>Change Password</h3>
-                    <div class="password-container">
-                        <label for="currentPassword">Current Password:</label>
-                        <input type="password" id="currentPassword" placeholder="Enter current password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
-                    </div>
-                    <div class="password-container">
-                        <label for="newPassword">New Password:</label>
-                        <input type="password" id="newPassword" placeholder="Enter new password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
-                    </div>
-                    <div class="password-container">
-                        <label for="confirmPassword">Confirm New Password:</label>
-                        <input type="password" id="confirmPassword" placeholder="Confirm new password">
-                        <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
-                    </div>
-                    <button data-action="savePassword">Change Password</button>
-                </div>
-            </div>
-            <div id="my-products" class="section">
-                <h2>My Products</h2>
-                <p>These are the products from your parts feed.</p>
-                <table id="productTable">
-                    <thead>
-                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
-                    </thead>
-                    <tbody id="productList"></tbody>
-                </table>
-            </div>
-            <div id="wix-keys" class="section">
-                <h2>Wix Keys</h2>
-                <p>Your Wix Client ID is used to integrate your merchant account with Wix services. Ensure it matches the key provided in your Wix developer dashboard.</p>
-                <div class="settings-form">
-                    <label for="wixClientId">Wix Client ID:</label>
-                    <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
-                    <button data-action="saveWixClientId">Save Wix Client ID</button>
-                </div>
-            </div>
-            <div id="my-store" class="section">
-                <h2>My Store</h2>
-                <p>Request a custom Wix store to sell your products online. Provide details below to set up your store (minimum: Home and Returns Policy pages).</p>
-                <form id="storeRequestForm" class="settings-form">
-                    <label for="storeName">Store Name:</label>
-                    <input type="text" id="storeName" name="storeName" placeholder="Enter your store name" required>
-
-                    <label for="aboutStore">About Your Store:</label>
-                    <textarea id="aboutStore" name="aboutStore" placeholder="Describe your store (e.g., product focus, target audience)"></textarea>
-
-                    <label for="storeLogos">Store Logos:</label>
-                    <input type="file" id="storeLogos" name="storeLogos" accept="image/*" multiple>
-                    <small>Upload up to 5 logos (e.g., main logo, favicon).</small>
-
-                    <label for="colorPrefs">Color Preferences:</label>
-                    <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
-
-                    <label for="stylingDetails">Styling Details:</label>
-                    <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., sleek design, minimalistic"></textarea>
-
-                    <label for="preferredDomain">Preferred Domain Name:</label>
-                    <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mystore.uk" oninput="updateDomainPreview()">
-                    <button type="button" data-action="checkDomainAvailability">Check Availability</button>
-                    <span id="domainPreview">@mystore.uk</span>
-
-                    <label>Email Addresses to Set Up (up to 5):</label>
-                    <div id="emailsContainer">
-                        <div class="email-section" data-email="1">
-                            <label for="email1Name">Email Name:</label>
-                            <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
-                            <span id="email1Domain">@mystore.uk</span>
-                        </div>
-                    </div>
-                    <button type="button" data-action="addEmail">Add Another Email</button>
-
-                    <label>Required Pages:</label>
-                    <div id="pagesContainer">
-                        <div class="page-section" data-page="1">
-                            <label for="page1Name">Page Name:</label>
-                            <input type="text" id="page1Name" name="page1Name" value="Home" readonly>
-                            <br><br>
-                            <label for="page1Content">Home Page Content:</label>
-                            <textarea id="page1Content" name="page1Content" placeholder="Describe your home page (e.g., welcome message, featured products)"></textarea>
-                            <label for="page1Images">Additional Images:</label>
-                            <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
-                        </div>
-                        <div class="page-section" data-page="2">
-                            <label for="page2Name">Page Name:</label>
-                            <input type="text" id="page2Name" name="page2Name" value="Returns Policy" readonly>
-                            <br><br>
-                            <label for="page2Content">Returns Policy Content:</label>
-                            <textarea id="page2Content" name="page2Content" placeholder="Outline your returns policy"></textarea>
-                            <label for="page2Images">Additional Images:</label>
-                            <input type="file" id="page2Images" name="page2Images" accept="image/*" multiple>
-                        </div>
-                    </div>
-                    <button type="button" data-action="addPage">Add Another Page</button>
-
-                    <label>Wix Store Widgets:</label>
-                    <div class="widget-checkboxes">
-                        <div><label><input type="checkbox" name="widgets" value="productCatalog"> Product Catalog</label> - Display your products.</div>
-                        <div><label><input type="checkbox" name="widgets" value="checkout"> Checkout</label> - Enable direct purchases.</div>
-                        <div><label><input type="checkbox" name="widgets" value="cart"> Shopping Cart</label> - Add a cart for customers.</div>
-                        <div><label><input type="checkbox" name="widgets" value="promotions"> Promotions</label> - Highlight sales and discounts.</div>
-                        <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Customer inquiries.</div>
-                    </div>
-
-                    <button type="button" data-action="saveStoreRequest">Submit Request</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
+    <!-- Define window.apiUrl before loading scripts -->
+    <script>
+        window.apiUrl = 'https://clubmadeira.io';
+    </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="/js/site-auth.js"></script>
-    <script src="/js/site-navigation.js"></script>
-    <script src="/js/page-load.js"></script>
-    <script src="/js/user-management.js"></script>
-    <script src="/js/merchant-page.js"></script>
+</head>
+<body>
+    <div class="layout-wrapper">
+        <div class="header">
+            <div class="header-content" id="brandingContent">
+                <!-- Branding content will be loaded here -->
+            </div>
+        </div>
+        <div class="main-container">
+            <div class="menu-container">
+                <div class="menu">
+                    <button data-section="my-products">
+                        <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
+                    </button>
+                    <button data-section="my-store">
+                        <span class="button-content"><i class="fas fa-store"></i> My Store</span>
+                    </button>
+                    <button data-section="wix-keys">
+                        <span class="button-content"><i class="fab fa-wix-simple"></i> Wix Keys</span>
+                    </button>
+                    <button data-section="my-account">
+                        <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                    </button>
+                    <button data-href="/admin">
+                        <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
+                    </button>
+                    <button id="logOffBtn" style="background-color: #dc3545;">
+                        <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
+                    </button>
+                </div>
+            </div>
+            <div class="content-wrapper">
+                <div id="welcome" class="section">
+                    <h2>Welcome to Your Merchant Dashboard</h2>
+                    <p>This dashboard allows you to link the parts on your Wix site to a network of community groups, who show relevant discounted products on their websites from clubmadeira.io.</p>
+                </div>
+                <div id="my-account" class="section">
+                    <h2>My Account</h2>
+                    <div class="settings-form">
+                        <label for="contactName">Contact Name:</label>
+                        <input type="text" id="contactName" placeholder="Enter contact name">
+                        <label for="websiteUrl">Website URL:</label>
+                        <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                        <label for="emailAddress">Email Address:</label>
+                        <input type="email" id="emailAddress" placeholder="Enter email address">
+                        <label for="phoneNumber">Phone Number:</label>
+                        <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                        <button data-action="saveSettings"><i class="fas fa-save"></i> Save Settings</button>
+                        <h3><i class="fas fa-lock"></i> Change Password</h3>
+                        <div class="password-container">
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" placeholder="Enter current password">
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="newPassword">New Password:</label>
+                            <input type="password" id="newPassword" placeholder="Enter new password">
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
+                        </div>
+                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+                    </div>
+                </div>
+                <div id="my-products" class="section">
+                    <h2>My Products</h2>
+                    <p>These are the products from your parts feed.</p>
+                    <table id="productTable">
+                        <thead>
+                            <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
+                        </thead>
+                        <tbody id="productList"></tbody>
+                    </table>
+                </div>
+                <div id="wix-keys" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fab fa-wix-simple" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>Wix Keys</h2>
+                    </div>
+                    <p>Your Wix Client ID is used to integrate your merchant account with Wix services. Ensure it matches the key provided in your Wix developer dashboard.</p>
+                    <div class="settings-form">
+                        <label for="wixClientId">Wix Client ID:</label>
+                        <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
+                        <button data-action="saveWixClientId"><i class="fas fa-save"></i> Save Wix Client ID</button>
+                    </div>
+                </div>
+                <div id="my-store" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>My Store</h2>
+                    </div>
+                    <p>Request a custom Wix store to sell your products online. Provide details below to set up your store (minimum: Home and Returns Policy pages).</p>
+                    <form id="storeRequestForm" class="settings-form">
+                        <label for="storeName">Store Name:</label>
+                        <input type="text" id="storeName" name="storeName" placeholder="Enter your store name" required>
+
+                        <label for="aboutStore">About Your Store:</label>
+                        <textarea id="aboutStore" name="aboutStore" placeholder="Describe your store (e.g., product focus, target audience)"></textarea>
+
+                        <label for="storeLogos">Store Logos:</label>
+                        <input type="file" id="storeLogos" name="storeLogos" accept="image/*" multiple>
+                        <small>Upload up to 5 logos (e.g., main logo, favicon).</small>
+
+                        <label for="colorPrefs">Color Preferences:</label>
+                        <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
+
+                        <label for="stylingDetails">Styling Details:</label>
+                        <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., sleek design, minimalistic"></textarea>
+
+                        <label for="preferredDomain">Preferred Domain Name:</label>
+                        <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mystore.uk" oninput="updateDomainPreview()">
+                        <button type="button" data-action="checkDomainAvailability"><i class="fas fa-search"></i> Check Availability</button>
+                        <span id="domainPreview">@mystore.uk</span>
+
+                        <label>Email Addresses to Set Up (up to 5):</label>
+                        <div id="emailsContainer">
+                            <div class="email-section" data-email="1">
+                                <label for="email1Name">Email Name:</label>
+                                <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
+                                <span id="email1Domain">@mystore.uk</span>
+                            </div>
+                        </div>
+                        <button type="button" data-action="addEmail"><i class="fas fa-plus"></i> Add Another Email</button>
+
+                        <label>Required Pages:</label>
+                        <div id="pagesContainer">
+                            <div class="page-section" data-page="1">
+                                <label for="page1Name">Page Name:</label>
+                                <input type="text" id="page1Name" name="page1Name" value="Home" readonly>
+                                <br><br>
+                                <label for="page1Content">Home Page Content:</label>
+                                <textarea id="page1Content" name="page1Content" placeholder="Describe your home page (e.g., welcome message, featured products)"></textarea>
+                                <label for="page1Images">Additional Images:</label>
+                                <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+                            </div>
+                            <div class="page-section" data-page="2">
+                                <label for="page2Name">Page Name:</label>
+                                <input type="text" id="page2Name" name="page2Name" value="Returns Policy" readonly>
+                                <br><br>
+                                <label for="page2Content">Returns Policy Content:</label>
+                                <textarea id="page2Content" name="page2Content" placeholder="Outline your returns policy"></textarea>
+                                <label for="page2Images">Additional Images:</label>
+                                <input type="file" id="page2Images" name="page2Images" accept="image/*" multiple>
+                            </div>
+                        </div>
+                        <button type="button" data-action="addPage"><i class="fas fa-plus"></i> Add Another Page</button>
+
+                        <label>Wix Store Widgets:</label>
+                        <div class="widget-checkboxes">
+                            <div><label><input type="checkbox" name="widgets" value="productCatalog"> Product Catalog</label> - Display your products.</div>
+                            <div><label><input type="checkbox" name="widgets" value="checkout"> Checkout</label> - Enable direct purchases.</div>
+                            <div><label><input type="checkbox" name="widgets" value="cart"> Shopping Cart</label> - Add a cart for customers.</div>
+                            <div><label><input type="checkbox" name="widgets" value="promotions"> Promotions</label> - Highlight sales and discounts.</div>
+                            <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Customer inquiries.</div>
+                        </div>
+
+                        <button type="button" data-action="saveStoreRequest"><i class="fas fa-paper-plane"></i> Submit Request</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/site-auth.js"></script>
+    <script src="/static/js/site-navigation.js"></script>
+    <script src="/static/js/site-request.js"></script>
+    <script src="/static/js/page-load.js"></script>
+    <script src="/static/js/user-management.js"></script>
+    <script src="/static/js/merchant-page.js"></script>
     <script>
-        // Initialize the merchant page using page-load.js
-        initialize('merchant');
+        // Initialize TinyMCE with minimal configuration for specific textareas
+        document.addEventListener('DOMContentLoaded', () => {
+            tinymce.init({
+                selector: '#aboutStore, #stylingDetails, #page1Content, #page2Content',
+                inline: true, // Use inline mode to reduce resource usage
+                menubar: false, // Disable menubar for simplicity
+                toolbar: 'bold italic | bullist numlist | link', // Minimal toolbar
+                plugins: 'lists link', // Only load necessary plugins
+                setup: (editor) => {
+                    editor.on('init', () => {
+                        console.log('TinyMCE initialized for:', editor.id);
+                    });
+                }
+            });
+        });
+
+        // Wait for the initialize function to become available
+        function waitForInitialize(attempts = 50, delay = 100) {
+            if (typeof window.initialize === 'function') {
+                console.log('Initialize function found, calling initialize("merchant")');
+                window.initialize('merchant');
+            } else if (attempts > 0) {
+                console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
+                setTimeout(() => waitForInitialize(attempts - 1, delay), delay);
+            } else {
+                console.error('Initialize function not found after maximum retries');
+            }
+        }
+        waitForInitialize();
     </script>
 </body>
 </html>

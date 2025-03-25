@@ -1,18 +1,15 @@
 from flask import Blueprint, jsonify, request
-from utils.auth import require_permissions
-from utils.data import load_users_settings, save_users_settings
+from utils.auth import login_required
+from utils.users import load_users_settings, save_users_settings  # Changed from utils.data to utils.users
 
 # Define the user_management blueprint
 user_management_bp = Blueprint('user_management', __name__)
 
 @user_management_bp.route('/users', methods=['GET'])
-@require_permissions(["admin"], require_all=True)
+@login_required(["admin"], require_all=True)
 def get_users():
     """
     Retrieve a list of all users.
-
-    Returns:
-        JSON response with a list of users or an error message.
     """
     try:
         users_settings = load_users_settings()
@@ -29,16 +26,10 @@ def get_users():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @user_management_bp.route('/users/<user_id>', methods=['GET'])
-@require_permissions(["admin"], require_all=True)
+@login_required(["admin"], require_all=True)
 def get_user(user_id):
     """
     Retrieve details of a specific user.
-
-    Args:
-        user_id (str): The ID of the user to retrieve.
-
-    Returns:
-        JSON response with the user's details or an error message.
     """
     try:
         users_settings = load_users_settings()
@@ -59,16 +50,10 @@ def get_user(user_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @user_management_bp.route('/permissions/<user_id>', methods=['GET'])
-@require_permissions(["admin"], require_all=True)
+@login_required(["admin"], require_all=True)
 def get_permissions(user_id):
     """
     Retrieve the permissions of a specific user.
-
-    Args:
-        user_id (str): The ID of the user whose permissions are being retrieved.
-
-    Returns:
-        JSON response with the user's permissions or an error message.
     """
     try:
         users_settings = load_users_settings()
@@ -80,16 +65,10 @@ def get_permissions(user_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @user_management_bp.route('/permissions/<user_id>', methods=['POST'])
-@require_permissions(["admin"], require_all=True)
+@login_required(["admin"], require_all=True)
 def add_permission(user_id):
     """
     Add a permission to a specific user.
-
-    Args:
-        user_id (str): The ID of the user to whom the permission is being added.
-
-    Returns:
-        JSON response confirming the addition or an error message.
     """
     data = request.get_json()
     if 'permission' not in data:
@@ -108,16 +87,10 @@ def add_permission(user_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @user_management_bp.route('/permissions/<user_id>', methods=['DELETE'])
-@require_permissions(["admin"], require_all=True)
+@login_required(["admin"], require_all=True)
 def remove_permission(user_id):
     """
     Remove a permission from a specific user.
-
-    Args:
-        user_id (str): The ID of the user from whom the permission is being removed.
-
-    Returns:
-        JSON response confirming the removal or an error message.
     """
     data = request.get_json()
     if 'permission' not in data:

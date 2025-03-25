@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, render_template 
-from utils.auth import login_user, signup_user 
+from utils.auth import login_user, signup_user , login_required  
 from utils.users import load_users_settings, save_users_settings 
 import jwt 
 import datetime 

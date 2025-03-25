@@ -4,274 +4,420 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>clubmadeira.io | Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
+    <!-- Define window.apiUrl before loading scripts -->
+    <script>
+        window.apiUrl = 'https://clubmadeira.io';
+    </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"></script>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content" id="brandingContent">
-            <!-- Branding content will be loaded here -->
-        </div>
-    </div>
-    <div class="main-container">
-        <div class="menu-container">
-            <div class="menu">
-                <button data-section="deal_listings">Deal Listings</button>
-                <button data-submenu="affiliatePrograms" data-section="affiliateProgramsIntro">Affiliate Programs <i class="fas fa-caret-down"></i></button>
-                <div id="affiliatePrograms" class="submenu">
-                    <button data-section="amazon_uk">Amazon UK</button>
-                    <button data-section="ebay_uk">eBay UK</button>
-                    <button data-section="awin">Awin</button>
-                    <button data-section="cj">CJ</button>
-                    <button data-section="textmagic">TextMagic</button>
-                    <button data-section="tiny">tiny</button>
-                </div>
-                <button data-submenu="userManagement" data-section="userManagementIntro">User Management <i class="fas fa-caret-down"></i></button>
-                <div id="userManagement" class="submenu">
-                    <button data-section="partners">Partners</button>
-                    <button data-section="communities">Communities</button>
-                    <button data-section="merchants">Merchants</button>
-                </div>
-                <button data-submenu="testScripts" data-section="testScriptsIntro">Test Scripts <i class="fas fa-caret-down"></i></button>
-                <div id="testScripts" class="submenu">
-                    <button data-href="/partner">Partner</button>
-                    <button data-href="/community">Community</button>
-                    <button data-href="/merchant">Merchant</button>
-                    <button data-submenu="referralTests" data-section="referralTestsIntro">Referral Tests <i class="fas fa-caret-down"></i></button>
-                    <div id="referralTests" class="submenu">
-                        <button data-section="page_visit_test">Page Visit Referral Test</button>
-                        <button data-section="order_test">Order Referral Test</button>
-                    </div>
-                </div>
-                <button id="logOffBtn" style="background-color: #dc3545;">Log Off</button>
-            </div>
-        </div>
-        <div class="content-container">
-            <div id="welcome" class="section">
-                <h2>Welcome to Admin Dashboard</h2>
-                <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
-                <p>Use the menu on the left to:</p>
-                <ul>
-                    <li>View and filter discounted deals in "Deal Listings"</li>
-                    <li>Manage affiliate credentials under "Affiliate Programs"</li>
-                    <li>Manage users under "User Management"</li>
-                    <li>Test referral tracking with "Test Scripts"</li>
-                </ul>
-            </div>
-
-            <div id="deal_listings" class="section">
-                <h2>Discounted Deal Listings</h2>
-                <p>This section displays all currently active deal listings available across your affiliate programs.</p>
-                <div style="display: flex; gap: 20px;">
-                    <div style="flex: 1; max-width: 300px;">
-                        <h3>Categories</h3>
-                        <div class="treeview" id="categoryTree"></div>
-                    </div>
-                    <div style="flex: 2;">
-                        <table class="deals-table">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Title</th>
-                                    <th>URL</th>
-                                    <th>Price</th>
-                                    <th>Original</th>
-                                    <th>Discount %</th>
-                                    <th>Image</th>
-                                    <th>QTY</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dealList"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="affiliateProgramsIntro" class="section">
-                <h2>Affiliate Programs</h2>
-                <p>Use this section to manage your affiliate program credentials.</p>
-                <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
-            </div>
-
-            <div id="amazon_uk" class="section">
-                <h2>Amazon UK Credentials</h2>
-                <div class="form">
-                    <label for="amazonAccessKey">Access Key:</label>
-                    <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
-                    <label for="amazonSecretKey">Secret Key:</label>
-                    <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
-                    <label for="amazonAssociateTag">Associate Tag:</label>
-                    <input type="text" id="amazonAssociateTag" placeholder="Enter Associate Tag">
-                    <label for="amazonCountry">Country:</label>
-                    <input type="text" id="amazonCountry" placeholder="Enter Country (e.g., UK)">
-                    <button data-affiliate="amazon_uk">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
-                </div>
-            </div>
-
-            <div id="ebay_uk" class="section">
-                <h2>eBay UK Credentials</h2>
-                <div class="form">
-                    <label for="ebayAppId">App ID:</label>
-                    <input type="text" id="ebayAppId" placeholder="Enter App ID">
-                    <button data-affiliate="ebay_uk">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
-                </div>
-            </div>
-
-            <div id="awin" class="section">
-                <h2>Awin Credentials</h2>
-                <div class="form">
-                    <label for="awinApiToken">API Token:</label>
-                    <input type="text" id="awinApiToken" placeholder="Enter API Token">
-                    <button data-affiliate="awin">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
-                </div>
-            </div>
-
-            <div id="cj" class="section">
-                <h2>CJ Credentials</h2>
-                <div class="form">
-                    <label for="cjApiKey">API Key:</label>
-                    <input type="text" id="cjApiKey" placeholder="Enter API Key">
-                    <label for="cjWebsiteId">Website ID:</label>
-                    <input type="text" id="cjWebsiteId" placeholder="Enter Website ID">
-                    <button data-affiliate="cj">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
-                </div>
-            </div>
-
-            <div id="textmagic" class="section">
-                <h2>TextMagic Credentials</h2>
-                <div class="form">
-                    <label for="textmagicUsername">Username:</label>
-                    <input type="text" id="textmagicUsername" placeholder="Enter Username">
-                    <label for="textmagicApiKey">API Key:</label>
-                    <input type="text" id="textmagicApiKey" placeholder="Enter API Key">
-                    <button data-affiliate="textmagic">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
-                </div>
-            </div>
-
-            <div id="tiny" class="section">
-                <h2>tiny Credentials</h2>
-                <div class="form">
-                    <label for="tinyApiKey">API Key:</label>
-                    <input type="text" id="tinyApiKey" placeholder="Enter API Key">
-                    <button data-affiliate="tiny">Update Credentials</button>
-                </div>
-                <div class="signup-instructions">
-                    <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
-                </div>
-            </div>
-
-            <div id="userManagementIntro" class="section">
-                <h2>User Management</h2>
-                <p>This section allows you to manage different types of users in your system.</p>
-                <p>Select a user type from the menu to view their details or modify their permissions:</p>
-                <ul>
-                    <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
-                    <li><strong>Communities:</strong> View community users.</li>
-                    <li><strong>Merchants:</strong> Manage merchant users.</li>
-                </ul>
-            </div>
-
-            <div id="merchants" class="section">
-                <h2>Merchant Management</h2>
-                <table>
-                    <thead>
-                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="merchantsList"></tbody>
-                </table>
-            </div>
-
-            <div id="communities" class="section">
-                <h2>Communities Management</h2>
-                <table>
-                    <thead>
-                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th></tr>
-                    </thead>
-                    <tbody id="communitiesList"></tbody>
-                </table>
-            </div>
-
-            <div id="partners" class="section">
-                <h2>Partner Management</h2>
-                <table>
-                    <thead>
-                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="partnersList"></tbody>
-                </table>
-            </div>
-
-            <div id="testScriptsIntro" class="section">
-                <h2>Test Scripts</h2>
-                <p>Use this section to test referral tracking and other scripts.</p>
-                <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
-            </div>
-
-            <div id="referralTestsIntro" class="section">
-                <h2>Referral Tests</h2>
-                <p>This section contains tools to test referral tracking functionality.</p>
-                <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
-            </div>
-
-            <div id="page_visit_test" class="section">
-                <h2>Page Visit Referral Test</h2>
-                <div class="form">
-                    <form id="pageVisitForm">
-                        <table>
-                            <tr><td><label for="pageReferer">Referer:</label></td><td><select id="pageReferer" name="referer"></select></td></tr>
-                            <tr><td><label for="page">Page:</label></td><td><input type="text" id="page" name="page" value="/home"></td></tr>
-                            <tr><td><label for="pageTimestamp">Timestamp:</label></td><td><input type="text" id="pageTimestamp" name="timestamp"></td></tr>
-                            <tr><td colspan="2"><button type="submit">Submit Page Visit</button></td></tr>
-                        </table>
-                    </form>
-                </div>
-            </div>
-
-            <div id="order_test" class="section">
-                <h2>Order Referral Test</h2>
-                <div class="form">
-                    <form id="orderForm">
-                        <table>
-                            <tr><td><label for="orderReferer">Referer:</label></td><td><select id="orderReferer" name="referer"></select></td></tr>
-                            <tr><td><label for="orderId">Order ID:</label></td><td><input type="text" id="orderId" name="orderId" value="ORD12345"></td></tr>
-                            <tr><td><label for="buyer">Buyer Name:</label></td><td><input type="text" id="buyer" name="buyer" value="John Doe"></td></tr>
-                            <tr><td><label for="total">Total Amount (£):</label></td><td><input type="number" id="total" name="total" value="99.99" step="0.01"></td></tr>
-                            <tr><td><label for="orderTimestamp">Timestamp:</label></td><td><input type="text" id="orderTimestamp" name="timestamp"></td></tr>
-                            <tr><td colspan="2"><button type="submit">Submit Order</button></td></tr>
-                        </table>
-                    </form>
-                </div>
-            </div>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="multicircle-loader">
+            <div class="circle circle1"></div>
+            <div class="circle circle2"></div>
+            <div class="circle circle3"></div>
+            <div class="circle circle4"></div>
         </div>
     </div>
 
-    <script src="/js/site-auth.js"></script>
-    <script src="/js/site-navigation.js"></script>
-    <script src="/js/category-management.js"></script>
-    <script src="/js/site-request.js"></script>
-    <script src="/js/page-load.js"></script>
-    <script src="/js/admin-page.js"></script>
+    <div class="layout-wrapper" style="display: none;">
+        <div class="header">
+            <div class="header-content" id="brandingContent" style="display: block;">
+                <!-- Branding content will be loaded here -->
+            </div>
+        </div>
+        <div class="main-container">
+            <div class="menu-container">
+                <div class="menu">
+                    <button data-section="deal_listings">
+                        <span class="button-content"><i class="fas fa-tags"></i> Deal Listings</span>
+                    </button>
+                    <button data-submenu="affiliatePrograms" data-section="affiliateProgramsIntro">
+                        <span class="button-content"><i class="fas fa-handshake"></i> Affiliate Programs</span>
+                        <i class="fas fa-caret-right caret"></i>
+                    </button>
+                    <div id="affiliatePrograms" class="submenu">
+                        <button data-section="amazon_uk">
+                            <span class="button-content">
+                                <span class="svg-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M257.2 162.7c-48.7 1.8-169.5 15.5-169.5 117.5 0 109.5 138.3 114 183.5 43.2 6.5 10.2 35.4 37.5 45.3 46.8l56.8-56S341 288.9 341 261.4V114.3C341 89 316.5 32 228.7 32 140.7 32 94 87 94 136.3l73.5 6.8c16.3-49.5 54.2-49.5 54.2-49.5 40.7-.1 35.5 29.8 35.5 69.1zm0 86.8c0 80-84.2 68-84.2 17.2 0-47.2 50.5-56.7 84.2-57.8v40.6zm136 163.5c-7.7 10-70 67-174.5 67S34.2 408.5 9.7 379c-6.8-7.7 1-11.3 5.5-8.3C88.5 415.2 203 488.5 387.7 401c7.5-3.7 13.3 2 5.5 12zm39.8 2.2c-6.5 15.8-16 26.8-21.2 31-5.5 4.5-9.5 2.7-6.5-3.8s19.3-46.5 12.7-55c-6.5-8.3-37-4.3-48-3.2-10.8 1-13 2-14-.3-2.3-5.7 21.7-15.5 37.5-17.5 15.7-1.8 41-.8 46 5.7 3.7 5.1 0 27.1-6.5 43.1z"/></svg>
+                                </span> Amazon UK
+                            </span>
+                        </button>
+                        <button data-section="ebay_uk">
+                            <span class="button-content">
+                                <span class="svg-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M606 189.5l-54.8 109.9-54.9-109.9h-37.5l10.9 20.6c-11.5-19-35.9-26-63.3-26-31.8 0-67.9 8.7-71.5 43.1h33.7c1.4-13.8 15.7-21.8 35-21.8 26 0 41 9.6 41 33v3.4c-12.7 0-28 .1-41.7 .4-42.4 .9-69.6 10-76.7 34.4 1-5.2 1.5-10.6 1.5-16.2 0-52.1-39.7-76.2-75.4-76.2-21.3 0-43 5.5-58.7 24.2v-80.6h-32.1v169.5c0 10.3-.6 22.9-1.1 33.1h31.5c.7-6.3 1.1-12.9 1.1-19.5 13.6 16.6 35.4 24.9 58.7 24.9 36.9 0 64.9-21.9 73.3-54.2-.5 2.8-.7 5.8-.7 9 0 24.1 21.1 45 60.6 45 26.6 0 45.8-5.7 61.9-25.5 0 6.6 .3 13.3 1.1 20.2h29.8c-.7-8.2-1-17.5-1-26.8v-65.6c0-9.3-1.7-17.2-4.8-23.8l61.5 116.1-28.5 54.1h35.9L640 189.5zM243.7 313.8c-29.6 0-50.2-21.5-50.2-53.8 0-32.4 20.6-53.8 50.2-53.8 29.8 0 50.2 21.4 50.2 53.8 0 32.3-20.4 53.8-50.2 53.8zm200.9-47.3c0 30-17.9 48.4-51.6 48.4-25.1 0-35-13.4-35-25.8 0-19.1 18.1-24.4 47.2-25.3 13.1-.5 27.6-.6 39.4-.6zm-411.9 1.6h128.8v-8.5c0-51.7-33.1-75.4-78.4-75.4-56.8 0-83 30.8-83 77.6 0 42.5 25.3 74 82.5 74 31.4 0 68-11.7 74.4-46.1h-33.1c-12 35.8-87.7 36.7-91.2-21.6zm95-21.4H33.3c6.9-56.6 92.1-54.7 94.4 0z"/></svg>
+                                </span> eBay UK
+                            </span>
+                        </button>
+                        <button data-section="awin">
+                            <span class="button-content"><i class="fas fa-network-wired"></i> Awin</span>
+                        </button>
+                        <button data-section="cj">
+                            <span class="button-content"><i class="fas fa-link"></i> CJ</span>
+                        </button>
+                        <button data-section="textmagic">
+                            <span class="button-content"><i class="fas fa-sms"></i> TextMagic</span>
+                        </button>
+                        <button data-section="tiny">
+                            <span class="button-content"><i class="fas fa-pen"></i> tiny</span>
+                        </button>
+                    </div>
+                    <button data-submenu="userManagement" data-section="userManagementIntro">
+                        <span class="button-content"><i class="fas fa-users"></i> User Management</span>
+                        <i class="fas fa-caret-right caret"></i>
+                    </button>
+                    <div id="userManagement" class="submenu">
+                        <button data-section="partners">
+                            <span class="button-content">
+                                <span class="svg-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
+                                        <path d="M512 256c0 .9 0 1.8 0 2.7c-.4 36.5-33.6 61.3-70.1 61.3L344 320c-26.5 0-48 21.5-48 48c0 3.4 .4 6.7 1 9.9c2.1 10.2 6.5 20 10.8 29.9c6.1 13.8 12.1 27.5 12.1 42c0 31.8-21.6 60.7-53.4 62c-3.5 .1-7 .2-10.6 .2C114.6 512 0 397.4 0 256S114.6 0 256 0S512 114.6 512 256zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm0-96a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM288 96a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm96 96a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/>
+                                    </svg>
+                                </span> Partners
+                            </span>
+                        </button>
+                        <button data-section="communities">
+                            <span class="button-content">
+                                <span class="svg-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" preserveAspectRatio="xMidYMid meet">
+                                        <path d="M72 88a56 56 0 1 1 112 0A56 56 0 1 1 72 88zM64 245.7C54 256.9 48 271.8 48 288s6 31.1 16 42.3l0-84.7zm144.4-49.3C178.7 222.7 160 261.2 160 304c0 34.3 12 65.8 32 90.5l0 21.5c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-26.8C26.2 371.2 0 332.7 0 288c0-61.9 50.1-112 112-112l32 0c24 0 46.2 7.5 64.4 20.3zM448 416l0-21.5c20-24.7 32-56.2 32-90.5c0-42.8-18.7-81.3-48.4-107.7C449.8 183.5 472 176 496 176l32 0c61.9 0 112 50.1 112 112c0 44.7-26.2 83.2-64 101.2l0 26.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32zm8-328a56 56 0 1 1 112 0A56 56 0 1 1 456 88zM576 245.7l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM320 32a64 64 0 1 1 0 128 64 64 0 1 1 0-128zM240 304c0 16.2 6 31 16 42.3l0-84.7c-10 11.3-16 26.1-16 42.3zm144-42.3l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM448 304c0 44.7-26.2 83.2-64 101.2l0 42.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-42.8c-37.8-18-64-56.5-64-101.2c0-61.9 50.1-112 112-112l32 0c61.9 0 112 50.1 112 112z"/>
+                                    </svg>
+                                </span> Communities
+                            </span>
+                        </button>
+                        <button data-section="merchants">
+                            <span class="button-content">
+                                <span class="svg-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" preserveAspectRatio="xMidYMid meet">
+                                        <path d="M96 128a128 128 0 1 0 256 0A128 128 0 1 0 96 128zm94.5 200.2l18.6 31L175.8 483.1l-36-146.9c-2-8.1-9.8-13.4-17.9-11.3C51.9 342.4 0 405.8 0 481.3c0 17 13.8 30.7 30.7 30.7l131.7 0c0 0 0 0 .1 0l5.5 0 112 0 5.5 0c0 0 0 0 .1 0l131.7 0c17 0 30.7-13.8 30.7-30.7c0-75.5-51.9-138.9-121.9-156.4c-8.1-2-15.9 3.3-17.9 11.3l-36 146.9L238.9 359.2l18.6-31c6.4-10.7-1.3-24.2-13.7-24.2L224 304l-19.7 0c-12.4 0-20.1 13.6-13.7 24.2z"/>
+                                    </svg>
+                                </span> Merchants
+                            </span>
+                        </button>
+                    </div>
+                    <button data-submenu="testScripts" data-section="testScriptsIntro">
+                        <span class="button-content"><i class="fas fa-flask"></i> Test Scripts</span>
+                        <i class="fas fa-caret-right caret"></i>
+                    </button>
+                    <div id="testScripts" class="submenu">
+                        <button data-href="/partner">
+                            <span class="button-content">
+                                <span class="icon-group">
+                                    <span class="svg-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
+                                            <path d="M512 256c0 .9 0 1.8 0 2.7c-.4 36.5-33.6 61.3-70.1 61.3L344 320c-26.5 0-48 21.5-48 48c0 3.4 .4 6.7 1 9.9c2.1 10.2 6.5 20 10.8 29.9c6.1 13.8 12.1 27.5 12.1 42c0 31.8-21.6 60.7-53.4 62c-3.5 .1-7 .2-10.6 .2C114.6 512 0 397.4 0 256S114.6 0 256 0S512 114.6 512 256zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm0-96a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM288 96a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm96 96a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/>
+                                        </svg>
+                                    </span>
+                                    <i class="fas fa-flask small-icon"></i>
+                                </span> Partner
+                            </span>
+                        </button>
+                        <button data-href="/community">
+                            <span class="button-content">
+                                <span class="icon-group">
+                                    <span class="svg-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" preserveAspectRatio="xMidYMid meet">
+                                            <path d="M72 88a56 56 0 1 1 112 0A56 56 0 1 1 72 88zM64 245.7C54 256.9 48 271.8 48 288s6 31.1 16 42.3l0-84.7zm144.4-49.3C178.7 222.7 160 261.2 160 304c0 34.3 12 65.8 32 90.5l0 21.5c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-26.8C26.2 371.2 0 332.7 0 288c0-61.9 50.1-112 112-112l32 0c24 0 46.2 7.5 64.4 20.3zM448 416l0-21.5c20-24.7 32-56.2 32-90.5c0-42.8-18.7-81.3-48.4-107.7C449.8 183.5 472 176 496 176l32 0c61.9 0 112 50.1 112 112c0 44.7-26.2 83.2-64 101.2l0 26.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32zm8-328a56 56 0 1 1 112 0A56 56 0 1 1 456 88zM576 245.7l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM320 32a64 64 0 1 1 0 128 64 64 0 1 1 0-128zM240 304c0 16.2 6 31 16 42.3l0-84.7c-10 11.3-16 26.1-16 42.3zm144-42.3l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM448 304c0 44.7-26.2 83.2-64 101.2l0 42.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-42.8c-37.8-18-64-56.5-64-101.2c0-61.9 50.1-112 112-112l32 0c61.9 0 112 50.1 112 112z"/>
+                                        </svg>
+                                    </span>
+                                    <i class="fas fa-flask small-icon"></i>
+                                </span> Community
+                            </span>
+                        </button>
+                        <button data-href="/merchant">
+                            <span class="button-content">
+                                <span class="icon-group">
+                                    <span class="svg-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" preserveAspectRatio="xMidYMid meet">
+                                            <path d="M96 128a128 128 0 1 0 256 0A128 128 0 1 0 96 128zm94.5 200.2l18.6 31L175.8 483.1l-36-146.9c-2-8.1-9.8-13.4-17.9-11.3C51.9 342.4 0 405.8 0 481.3c0 17 13.8 30.7 30.7 30.7l131.7 0c0 0 0 0 .1 0l5.5 0 112 0 5.5 0c0 0 0 0 .1 0l131.7 0c17 0 30.7-13.8 30.7-30.7c0-75.5-51.9-138.9-121.9-156.4c-8.1-2-15.9 3.3-17.9 11.3l-36 146.9L238.9 359.2l18.6-31c6.4-10.7-1.3-24.2-13.7-24.2L224 304l-19.7 0c-12.4 0-20.1 13.6-13.7 24.2z"/>
+                                        </svg>
+                                    </span>
+                                    <i class="fas fa-flask small-icon"></i>
+                                </span> Merchant
+                            </span>
+                        </button>
+                        <button data-submenu="referralTests" data-section="referralTestsIntro">
+                            <span class="button-content"><i class="fas fa-link"></i> Referral Tests</span>
+                            <i class="fas fa-caret-right caret"></i>
+                        </button>
+                        <div id="referralTests" class="submenu">
+                            <button data-section="page_visit_test">
+                                <span class="button-content"><i class="fas fa-eye"></i> Page Visit Referral Test</span>
+                            </button>
+                            <button data-section="order_test">
+                                <span class="button-content"><i class="fas fa-shopping-cart"></i> Order Referral Test</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="logOffBtn" style="background-color: #dc3545;">
+                        <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
+                    </button>
+                </div>
+            </div>
+            <div class="content-wrapper">
+                <div id="welcome" class="section">
+                    <h2>Welcome to Admin Dashboard</h2>
+                    <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
+                    <p>Use the menu on the left to:</p>
+                    <ul>
+                        <li>View and filter discounted deals in "Deal Listings"</li>
+                        <li>Manage affiliate credentials under "Affiliate Programs"</li>
+                        <li>Manage users under "User Management"</li>
+                        <li>Test referral tracking with "Test Scripts"</li>
+                    </ul>
+                </div>
+
+                <div id="deal_listings" class="section">
+                    <h2>Discounted Deal Listings</h2>
+                    <p>This section displays all currently active deal listings available across your affiliate programs.</p>
+                    <div style="display: flex; gap: 20px;">
+                        <div style="flex: 1; max-width: 300px;">
+                            <h3>Categories</h3>
+                            <div class="treeview" id="categoryTree"></div>
+                        </div>
+                        <div style="flex: 2;">
+                            <table class="deals-table">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Title</th>
+                                        <th>URL</th>
+                                        <th>Price</th>
+                                        <th>Original</th>
+                                        <th>Discount %</th>
+                                        <th>Image</th>
+                                        <th>QTY</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dealList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="affiliateProgramsIntro" class="section">
+                    <h2>Affiliate Programs</h2>
+                    <p>Use this section to manage your affiliate program credentials.</p>
+                    <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
+                </div>
+
+                <div id="amazon_uk" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="32" height="32" style="fill: currentColor; margin-right: 10px;">
+                            <path d="M257.2 162.7c-48.7 1.8-169.5 15.5-169.5 117.5 0 109.5 138.3 114 183.5 43.2 6.5 10.2 35.4 37.5 45.3 46.8l56.8-56S341 288.9 341 261.4V114.3C341 89 316.5 32 228.7 32 140.7 32 94 87 94 136.3l73.5 6.8c16.3-49.5 54.2-49.5 54.2-49.5 40.7-.1 35.5 29.8 35.5 69.1zm0 86.8c0 80-84.2 68-84.2 17.2 0-47.2 50.5-56.7 84.2-57.8v40.6zm136 163.5c-7.7 10-70 67-174.5 67S34.2 408.5 9.7 379c-6.8-7.7 1-11.3 5.5-8.3C88.5 415.2 203 488.5 387.7 401c7.5-3.7 13.3 2 5.5 12zm39.8 2.2c-6.5 15.8-16 26.8-21.2 31-5.5 4.5-9.5 2.7-6.5-3.8s19.3-46.5 12.7-55c-6.5-8.3-37-4.3-48-3.2-10.8 1-13 2-14-.3-2.3-5.7 21.7-15.5 37.5-17.5 15.7-1.8 41-.8 46 5.7 3.7 5.1 0 27.1-6.5 43.1z"/>
+                        </svg>
+                        <h2>Amazon UK Credentials</h2>
+                    </div>
+                    <div class="form" style="margin: 0; max-width: 400px;">
+                        <label for="amazonAccessKey">Access Key:</label>
+                        <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
+                        <label for="amazonSecretKey">Secret Key:</label>
+                        <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
+                        <label for="amazonAssociateTag">Associate Tag:</label>
+                        <input type="text" id="amazonAssociateTag" placeholder="Enter Associate Tag">
+                        <label for="amazonCountry">Country:</label>
+                        <input type="text" id="amazonCountry" placeholder="Enter Country (e.g., UK)">
+                        <button data-affiliate="amazon_uk">Update Credentials</button>
+                    </div>
+                    <div class="signup-instructions">
+                        <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
+                    </div>
+                </div>
+
+                <div id="ebay_uk" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width="32" height="32" style="fill: currentColor; margin-right: 10px;">
+                            <path d="M606 189.5l-54.8 109.9-54.9-109.9h-37.5l10.9 20.6c-11.5-19-35.9-26-63.3-26-31.8 0-67.9 8.7-71.5 43.1h33.7c1.4-13.8 15.7-21.8 35-21.8 26 0 41 9.6 41 33v3.4c-12.7 0-28 .1-41.7 .4-42.4 .9-69.6 10-76.7 34.4 1-5.2 1.5-10.6 1.5-16.2 0-52.1-39.7-76.2-75.4-76.2-21.3 0-43 5.5-58.7 24.2v-80.6h-32.1v169.5c0 10.3-.6 22.9-1.1 33.1h31.5c.7-6.3 1.1-12.9 1.1-19.5 13.6 16.6 35.4 24.9 58.7 24.9 36.9 0 64.9-21.9 73.3-54.2-.5 2.8-.7 5.8-.7 9 0 24.1 21.1 45 60.6 45 26.6 0 45.8-5.7 61.9-25.5 0 6.6 .3 13.3 1.1 20.2h29.8c-.7-8.2-1-17.5-1-26.8v-65.6c0-9.3-1.7-17.2-4.8-23.8l61.5 116.1-28.5 54.1h35.9L640 189.5zM243.7 313.8c-29.6 0-50.2-21.5-50.2-53.8 0-32.4 20.6-53.8 50.2-53.8 29.8 0 50.2 21.4 50.2 53.8 0 32.3-20.4 53.8-50.2 53.8zm200.9-47.3c0 30-17.9 48.4-51.6 48.4-25.1 0-35-13.4-35-25.8 0-19.1 18.1-24.4 47.2-25.3 13.1-.5 27.6-.6 39.4-.6zm-411.9 1.6h128.8v-8.5c0-51.7-33.1-75.4-78.4-75.4-56.8 0-83 30.8-83 77.6 0 42.5 25.3 74 82.5 74 31.4 0 68-11.7 74.4-46.1h-33.1c-12 35.8-87.7 36.7-91.2-21.6zm95-21.4H33.3c6.9-56.6 92.1-54.7 94.4 0z"/>
+                        </svg>
+                        <h2>eBay UK Credentials</h2>
+                    </div>
+                    <div class="form" style="margin: 0; max-width: 400px;">
+                        <label for="ebayAppId">App ID:</label>
+                        <input type="text" id="ebayAppId" placeholder="Enter App ID">
+                        <button data-affiliate="ebay_uk">Update Credentials</button>
+                    </div>
+                    <div class="signup-instructions">
+                        <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
+                    </div>
+                </div>
+
+                <div id="awin" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-network-wired" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>Awin Credentials</h2>
+                    </div>
+                    <div class="form" style="margin: 0; max-width: 400px;">
+                        <label for="awinApiToken">API Token:</label>
+                        <input type="text" id="awinApiToken" placeholder="Enter API Token">
+                        <button data-affiliate="awin">Update Credentials</button>
+                    </div>
+                    <div class="signup-instructions">
+                        <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
+                    </div>
+                </div>
+
+                <div id="cj" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-link" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>CJ Credentials</h2>
+                    </div>
+                    <div class="form" style="margin: 0; max-width: 400px;">
+                        <label for="cjApiKey">API Key:</label>
+                        <input type="text" id="cjApiKey" placeholder="Enter API Key">
+                        <label for="cjWebsiteId">Website ID:</label>
+                        <input type="text" id="cjWebsiteId" placeholder="Enter Website ID">
+                        <button data-affiliate="cj">Update Credentials</button>
+                    </div>
+                    <div class="signup-instructions">
+                        <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
+                    </div>
+                </div>
+
+                <div id="textmagic" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-sms" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>TextMagic Credentials</h2>
+                    </div>
+                    <div class="form" style="margin: 0; max-width: 400px;">
+                        <label for="textmagicUsername">Username:</label>
+                        <input type="text" id="textmagicUsername" placeholder="Enter Username">
+                        <label for="textmagicApiKey">API Key:</label>
+                        <input type="text" id="textmagicApiKey" placeholder="Enter API Key">
+                        <button data-affiliate="textmagic">Update Credentials</button>
+                    </div>
+                    <div class="signup-instructions">
+                        <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
+                    </div>
+                </div>
+
+                <div id="tiny" class="section" style="padding-left: 200px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-pen" style="font-size: 32px; margin-right: 10px;"></i>
+                        <h2>tiny Credentials</h2>
+                    </div>
+                    <div class="form" style="margin: 0; max-width: 400px;">
+                        <label for="tinyApiKey">API Key:</label>
+                        <input type="text" id="tinyApiKey" placeholder="Enter API Key">
+                        <button data-affiliate="tiny">Update Credentials</button>
+                    </div>
+                    <div class="signup-instructions">
+                        <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
+                    </div>
+                </div>
+
+                <div id="userManagementIntro" class="section">
+                    <h2>User Management</h2>
+                    <p>This section allows you to manage different types of users in your system.</p>
+                    <p>Select a user type from the menu to view their details or modify their permissions:</p>
+                    <ul>
+                        <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
+                        <li><strong>Communities:</strong> View community users.</li>
+                        <li><strong>Merchants:</strong> Manage merchant users.</li>
+                    </ul>
+                </div>
+
+                <div id="merchants" class="section">
+                    <h2>Merchant Management</h2>
+                    <table>
+                        <thead>
+                            <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="merchantsList"></tbody>
+                    </table>
+                </div>
+
+                <div id="communities" class="section">
+                    <h2>Communities Management</h2>
+                    <table>
+                        <thead>
+                            <tr><th>USERid</th><th>Contact Name</th><th>Email</th></tr>
+                        </thead>
+                        <tbody id="communitiesList"></tbody>
+                    </table>
+                </div>
+
+                <div id="partners" class="section">
+                    <h2>Partner Management</h2>
+                    <table>
+                        <thead>
+                            <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="partnersList"></tbody>
+                    </table>
+                </div>
+
+                <div id="testScriptsIntro" class="section">
+                    <h2>Test Scripts</h2>
+                    <p>Use this section to test referral tracking and other scripts.</p>
+                    <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
+                </div>
+
+                <div id="referralTestsIntro" class="section">
+                    <h2>Referral Tests</h2>
+                    <p>This section contains tools to test referral tracking functionality.</p>
+                    <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
+                </div>
+
+                <div id="page_visit_test" class="section">
+                    <h2>Page Visit Referral Test</h2>
+                    <div class="form">
+                        <form id="pageVisitForm">
+                            <table>
+                                <tr><td><label for="pageReferer">Referer:</label></td><td><select id="pageReferer" name="referer"></select></td></tr>
+                                <tr><td><label for="page">Page:</label></td><td><input type="text" id="page" name="page" value="/home"></td></tr>
+                                <tr><td><label for="pageTimestamp">Timestamp:</label></td><td><input type="text" id="pageTimestamp" name="timestamp"></td></tr>
+                                <tr><td colspan="2"><button type="submit">Submit Page Visit</button></td></tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="order_test" class="section">
+                    <h2>Order Referral Test</h2>
+                    <div class="form">
+                        <form id="orderForm">
+                            <table>
+                                <tr><td><label for="orderReferer">Referer:</label></td><td><select id="orderReferer" name="referer"></select></td></tr>
+                                <tr><td><label for="orderId">Order ID:</label></td><td><input type="text" id="orderId" name="orderId" value="ORD12345"></td></tr>
+                                <tr><td><label for="buyer">Buyer Name:</label></td><td><input type="text" id="buyer" name="buyer" value="John Doe"></td></tr>
+                                <tr><td><label for="total">Total Amount (£):</label></td><td><input type="number" id="total" name="total" value="99.99" step="0.01"></td></tr>
+                                <tr><td><label for="orderTimestamp">Timestamp:</label></td><td><input type="text" id="orderTimestamp" name="timestamp"></td></tr>
+                                <tr><td colspan="2"><button type="submit">Submit Order</button></td></tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/site-auth.js"></script>
+    <script src="/static/js/site-navigation.js"></script>
+    <script src="/static/js/category-management.js"></script>
+    <script src="/static/js/site-request.js"></script>
+    <script src="/static/js/page-load.js"></script>
+    <script src="/static/js/admin-page.js"></script>
     <script>
-        // Initialize the admin page using page-load.js
-        initialize('admin');
+        // Wait for the initialize function to become available
+        function waitForInitialize(attempts = 50, delay = 100) {
+            if (typeof window.initialize === 'function') {
+                console.log('Initialize function found, calling initialize("admin")');
+                window.initialize('admin');
+            } else if (attempts > 0) {
+                console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
+                setTimeout(() => waitForInitialize(attempts - 1, delay), delay);
+            } else {
+                console.error('Initialize function not found after maximum retries');
+            }
+        }
+        waitForInitialize();
     </script>
 </body>
 </html>

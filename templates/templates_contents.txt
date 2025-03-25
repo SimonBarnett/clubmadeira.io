@@ -1,0 +1,1586 @@
++ [templates]
++----admin.html
++----community.html
++----login.html
++----merchant.html
++----partner.html
++----signup.html
+
+admin.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clubmadeira.io | Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" id="brandingContent">
+            <!-- Branding content will be loaded here -->
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="menu-container">
+            <div class="menu">
+                <button data-section="deal_listings">Deal Listings</button>
+                <button data-submenu="affiliatePrograms" data-section="affiliateProgramsIntro">Affiliate Programs <i class="fas fa-caret-down"></i></button>
+                <div id="affiliatePrograms" class="submenu">
+                    <button data-section="amazon_uk">Amazon UK</button>
+                    <button data-section="ebay_uk">eBay UK</button>
+                    <button data-section="awin">Awin</button>
+                    <button data-section="cj">CJ</button>
+                    <button data-section="textmagic">TextMagic</button>
+                    <button data-section="tiny">tiny</button>
+                </div>
+                <button data-submenu="userManagement" data-section="userManagementIntro">User Management <i class="fas fa-caret-down"></i></button>
+                <div id="userManagement" class="submenu">
+                    <button data-section="partners">Partners</button>
+                    <button data-section="communities">Communities</button>
+                    <button data-section="merchants">Merchants</button>
+                </div>
+                <button data-submenu="testScripts" data-section="testScriptsIntro">Test Scripts <i class="fas fa-caret-down"></i></button>
+                <div id="testScripts" class="submenu">
+                    <button data-href="/partner">Partner</button>
+                    <button data-href="/community">Community</button>
+                    <button data-href="/merchant">Merchant</button>
+                    <button data-submenu="referralTests" data-section="referralTestsIntro">Referral Tests <i class="fas fa-caret-down"></i></button>
+                    <div id="referralTests" class="submenu">
+                        <button data-section="page_visit_test">Page Visit Referral Test</button>
+                        <button data-section="order_test">Order Referral Test</button>
+                    </div>
+                </div>
+                <button id="logOffBtn" style="background-color: #dc3545;">Log Off</button>
+            </div>
+        </div>
+        <div class="content-container">
+            <div id="welcome" class="section">
+                <h2>Welcome to Admin Dashboard</h2>
+                <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
+                <p>Use the menu on the left to:</p>
+                <ul>
+                    <li>View and filter discounted deals in "Deal Listings"</li>
+                    <li>Manage affiliate credentials under "Affiliate Programs"</li>
+                    <li>Manage users under "User Management"</li>
+                    <li>Test referral tracking with "Test Scripts"</li>
+                </ul>
+            </div>
+
+            <div id="deal_listings" class="section">
+                <h2>Discounted Deal Listings</h2>
+                <p>This section displays all currently active deal listings available across your affiliate programs.</p>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1; max-width: 300px;">
+                        <h3>Categories</h3>
+                        <div class="treeview" id="categoryTree"></div>
+                    </div>
+                    <div style="flex: 2;">
+                        <table class="deals-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Title</th>
+                                    <th>URL</th>
+                                    <th>Price</th>
+                                    <th>Original</th>
+                                    <th>Discount %</th>
+                                    <th>Image</th>
+                                    <th>QTY</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dealList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="affiliateProgramsIntro" class="section">
+                <h2>Affiliate Programs</h2>
+                <p>Use this section to manage your affiliate program credentials.</p>
+                <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
+            </div>
+
+            <div id="amazon_uk" class="section">
+                <h2>Amazon UK Credentials</h2>
+                <div class="form">
+                    <label for="amazonAccessKey">Access Key:</label>
+                    <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
+                    <label for="amazonSecretKey">Secret Key:</label>
+                    <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
+                    <label for="amazonAssociateTag">Associate Tag:</label>
+                    <input type="text" id="amazonAssociateTag" placeholder="Enter Associate Tag">
+                    <label for="amazonCountry">Country:</label>
+                    <input type="text" id="amazonCountry" placeholder="Enter Country (e.g., UK)">
+                    <button data-affiliate="amazon_uk">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
+                </div>
+            </div>
+
+            <div id="ebay_uk" class="section">
+                <h2>eBay UK Credentials</h2>
+                <div class="form">
+                    <label for="ebayAppId">App ID:</label>
+                    <input type="text" id="ebayAppId" placeholder="Enter App ID">
+                    <button data-affiliate="ebay_uk">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
+                </div>
+            </div>
+
+            <div id="awin" class="section">
+                <h2>Awin Credentials</h2>
+                <div class="form">
+                    <label for="awinApiToken">API Token:</label>
+                    <input type="text" id="awinApiToken" placeholder="Enter API Token">
+                    <button data-affiliate="awin">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
+                </div>
+            </div>
+
+            <div id="cj" class="section">
+                <h2>CJ Credentials</h2>
+                <div class="form">
+                    <label for="cjApiKey">API Key:</label>
+                    <input type="text" id="cjApiKey" placeholder="Enter API Key">
+                    <label for="cjWebsiteId">Website ID:</label>
+                    <input type="text" id="cjWebsiteId" placeholder="Enter Website ID">
+                    <button data-affiliate="cj">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
+                </div>
+            </div>
+
+            <div id="textmagic" class="section">
+                <h2>TextMagic Credentials</h2>
+                <div class="form">
+                    <label for="textmagicUsername">Username:</label>
+                    <input type="text" id="textmagicUsername" placeholder="Enter Username">
+                    <label for="textmagicApiKey">API Key:</label>
+                    <input type="text" id="textmagicApiKey" placeholder="Enter API Key">
+                    <button data-affiliate="textmagic">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
+                </div>
+            </div>
+
+            <div id="tiny" class="section">
+                <h2>tiny Credentials</h2>
+                <div class="form">
+                    <label for="tinyApiKey">API Key:</label>
+                    <input type="text" id="tinyApiKey" placeholder="Enter API Key">
+                    <button data-affiliate="tiny">Update Credentials</button>
+                </div>
+                <div class="signup-instructions">
+                    <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
+                </div>
+            </div>
+
+            <div id="userManagementIntro" class="section">
+                <h2>User Management</h2>
+                <p>This section allows you to manage different types of users in your system.</p>
+                <p>Select a user type from the menu to view their details or modify their permissions:</p>
+                <ul>
+                    <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
+                    <li><strong>Communities:</strong> View community users.</li>
+                    <li><strong>Merchants:</strong> Manage merchant users.</li>
+                </ul>
+            </div>
+
+            <div id="merchants" class="section">
+                <h2>Merchant Management</h2>
+                <table>
+                    <thead>
+                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="merchantsList"></tbody>
+                </table>
+            </div>
+
+            <div id="communities" class="section">
+                <h2>Communities Management</h2>
+                <table>
+                    <thead>
+                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th></tr>
+                    </thead>
+                    <tbody id="communitiesList"></tbody>
+                </table>
+            </div>
+
+            <div id="partners" class="section">
+                <h2>Partner Management</h2>
+                <table>
+                    <thead>
+                        <tr><th>USERid</th><th>Contact Name</th><th>Email</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="partnersList"></tbody>
+                </table>
+            </div>
+
+            <div id="testScriptsIntro" class="section">
+                <h2>Test Scripts</h2>
+                <p>Use this section to test referral tracking and other scripts.</p>
+                <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
+            </div>
+
+            <div id="referralTestsIntro" class="section">
+                <h2>Referral Tests</h2>
+                <p>This section contains tools to test referral tracking functionality.</p>
+                <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
+            </div>
+
+            <div id="page_visit_test" class="section">
+                <h2>Page Visit Referral Test</h2>
+                <div class="form">
+                    <form id="pageVisitForm">
+                        <table>
+                            <tr><td><label for="pageReferer">Referer:</label></td><td><select id="pageReferer" name="referer"></select></td></tr>
+                            <tr><td><label for="page">Page:</label></td><td><input type="text" id="page" name="page" value="/home"></td></tr>
+                            <tr><td><label for="pageTimestamp">Timestamp:</label></td><td><input type="text" id="pageTimestamp" name="timestamp"></td></tr>
+                            <tr><td colspan="2"><button type="submit">Submit Page Visit</button></td></tr>
+                        </table>
+                    </form>
+                </div>
+            </div>
+
+            <div id="order_test" class="section">
+                <h2>Order Referral Test</h2>
+                <div class="form">
+                    <form id="orderForm">
+                        <table>
+                            <tr><td><label for="orderReferer">Referer:</label></td><td><select id="orderReferer" name="referer"></select></td></tr>
+                            <tr><td><label for="orderId">Order ID:</label></td><td><input type="text" id="orderId" name="orderId" value="ORD12345"></td></tr>
+                            <tr><td><label for="buyer">Buyer Name:</label></td><td><input type="text" id="buyer" name="buyer" value="John Doe"></td></tr>
+                            <tr><td><label for="total">Total Amount (£):</label></td><td><input type="number" id="total" name="total" value="99.99" step="0.01"></td></tr>
+                            <tr><td><label for="orderTimestamp">Timestamp:</label></td><td><input type="text" id="orderTimestamp" name="timestamp"></td></tr>
+                            <tr><td colspan="2"><button type="submit">Submit Order</button></td></tr>
+                        </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/site-auth.js"></script>
+    <script src="/js/site-navigation.js"></script>
+    <script src="/js/category-management.js"></script>
+    <script src="/js/site-request.js"></script>
+    <script src="/js/page-load.js"></script>
+    <script src="/js/admin-page.js"></script>
+    <script>
+        // Initialize the admin page using page-load.js
+        initialize('admin');
+    </script>
+</body>
+</html>
+community.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clubmadeira.io | Community</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" id="brandingContent">
+            <!-- Branding content will be loaded here -->
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="menu-container">
+            <div class="menu" id="menu">
+                <input type="text" id="userId" style="display: none;">
+                <!-- Menu items will be dynamically generated -->
+            </div>
+        </div>
+        <div class="content-container">
+            <div id="welcome" class="section active">
+                <h2>Welcome to Your Community Dashboard</h2>
+                <p>Welcome! This dashboard is your hub for managing your community account and tracking referrals.</p>
+                <p>Use the menu on the left to:</p>
+                <ul>
+                    <li>Learn how to add discounts to your website or request a site under "My Web Site"</li>
+                    <li>Select product categories for your site in "My Categories"</li>
+                    <li>View referral statistics under "My Referrals"</li>
+                    <li>Update your account details in "My Account"</li>
+                </ul>
+            </div>
+            <div id="settings" class="section">
+                <h2>My Account</h2>
+                <div class="settings-form">
+                    <label><strong>Referrer ID: <span id="referrerId"></span></strong></label>
+                    <label for="contactName">Contact Name:</label>
+                    <input type="text" id="contactName" placeholder="Enter contact name">
+                    <label for="websiteUrl">Website URL:</label>
+                    <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                    <label for="emailAddress">Email Address:</label>
+                    <input type="email" id="emailAddress" placeholder="Enter email address">
+                    <label for="phoneNumber">Phone Number:</label>
+                    <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                    <button data-action="saveSettings">Save Settings</button>
+
+                    <h3>Change Password</h3>
+                    <div class="password-container">
+                        <label for="currentPassword">Current Password:</label>
+                        <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                        <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                        <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="confirmPassword">Confirm New Password:</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                        <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
+                    </div>
+                    <button data-action="savePassword">Change Password</button>
+                </div>
+            </div>
+            <div id="categories" class="section">
+                <h2>My Categories</h2>
+                <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
+                <div class="treeview" id="categoryTree"></div>
+            </div>
+            <div id="referrals_intro" class="section">
+                <h2>My Referrals</h2>
+                <p>This section allows you to track your referral activity.</p>
+                <p>Select from the submenu options:</p>
+                <ul>
+                    <li><strong>Visits:</strong> View pages visited through your referral links.</li>
+                    <li><strong>Orders:</strong> See orders placed via your referrals.</li>
+                </ul>
+            </div>
+            <div id="visits" class="section">
+                <h2>Visits</h2>
+                <div class="toggle-section" data-toggle="visits_this_month">This Month</div>
+                <div id="visits_this_month" class="toggle-content open">
+                    <table id="visitsTableThisMonth">
+                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                        <tbody id="visitsListThisMonth"></tbody>
+                    </table>
+                </div>
+                <div class="toggle-section" data-toggle="visits_last_month">Last Month</div>
+                <div id="visits_last_month" class="toggle-content">
+                    <table id="visitsTableLastMonth">
+                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                        <tbody id="visitsListLastMonth"></tbody>
+                    </table>
+                </div>
+                <div class="toggle-section" data-toggle="visits_earlier">Earlier</div>
+                <div id="visits_earlier" class="toggle-content">
+                    <table id="visitsTableEarlier">
+                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
+                        <tbody id="visitsListEarlier"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="orders" class="section">
+                <h2>Orders</h2>
+                <div class="toggle-section" data-toggle="orders_this_month">This Month</div>
+                <div id="orders_this_month" class="toggle-content open">
+                    <table id="ordersTableThisMonth">
+                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                        <tbody id="ordersListThisMonth"></tbody>
+                    </table>
+                </div>
+                <div class="toggle-section" data-toggle="orders_last_month">Last Month</div>
+                <div id="orders_last_month" class="toggle-content">
+                    <table id="ordersTableLastMonth">
+                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                        <tbody id="ordersListLastMonth"></tbody>
+                    </table>
+                </div>
+                <div class="toggle-section" data-toggle="orders_earlier">Earlier</div>
+                <div id="orders_earlier" class="toggle-content">
+                    <table id="ordersTableEarlier">
+                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
+                        <tbody id="ordersListEarlier"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="my_website_intro" class="section">
+                <h2>My Web Site</h2>
+                <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
+                <ul>
+                    <li><strong>Wix:</strong> Easy drag-and-drop builder.</li>
+                    <li><strong>WordPress:</strong> Flexible CMS.</li>
+                    <li><strong>Squarespace:</strong> Stylish solution.</li>
+                    <li><strong>Weebly:</strong> Simple builder.</li>
+                    <li><strong>Joomla:</strong> Robust CMS.</li>
+                    <li><strong>I Don’t Have a Website Yet:</strong> Request a site setup.</li>
+                </ul>
+            </div>
+            <div id="wix" class="section">
+                <h2>Wix Integration</h2>
+                <p>Add discounts to your Wix site:</p>
+                <ol>
+                    <li>Log in to Wix and open the Editor.</li>
+                    <li>Click "+" > "Embed" > "Embed a Widget".</li>
+                    <li>Paste: <code id="wixCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Publish.</li>
+                </ol>
+            </div>
+            <div id="wordpress" class="section">
+                <h2>WordPress Integration</h2>
+                <p>Add discounts to WordPress:</p>
+                <ol>
+                    <li>Log in to WordPress admin.</li>
+                    <li>Go to "Pages" > "Add New".</li>
+                    <li>Add "Custom HTML" block: <code id="wordpressCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Publish.</li>
+                </ol>
+            </div>
+            <div id="squarespace" class="section">
+                <h2>Squarespace Integration</h2>
+                <p>Integrate discounts into Squarespace:</p>
+                <ol>
+                    <li>Log in to Squarespace editor.</li>
+                    <li>Add a new page.</li>
+                    <li>Add "Code" block: <code id="squarespaceCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Update site.</li>
+                </ol>
+            </div>
+            <div id="weebly" class="section">
+                <h2>Weebly Integration</h2>
+                <p>Add discounts to Weebly:</p>
+                <ol>
+                    <li>Log in to Weebly editor.</li>
+                    <li>Drag "Embed Code" onto page.</li>
+                    <li>Paste: <code id="weeblyCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Publish.</li>
+                </ol>
+            </div>
+            <div id="joomla" class="section">
+                <h2>Joomla Integration</h2>
+                <p>Integrate discounts into Joomla:</p>
+                <ol>
+                    <li>Log in to Joomla admin.</li>
+                    <li>Go to "Content" > "Articles" > "Add New".</li>
+                    <li>Paste in "Code" view: <code id="joomlaCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
+                    <li>Save.</li>
+                </ol>
+            </div>
+            <div id="no_website" class="section">
+                <h2>I Don’t Have a Website Yet</h2>
+                <p>Request a custom Wix website for your community from our Wix Professionals. Fill out the form below to specify your needs:</p>
+                <form id="siteRequestForm" class="settings-form">
+                    <label for="communityName">Community Name:</label>
+                    <input type="text" id="communityName" name="communityName" placeholder="Enter your community name" required>
+
+                    <label for="aboutCommunity">About Our Community:</label>
+                    <textarea id="aboutCommunity" name="aboutCommunity" placeholder="Tell us about your community"></textarea>
+
+                    <label for="communityLogos">Community Logos:</label>
+                    <input type="file" id="communityLogos" name="communityLogos" accept="image/*" multiple>
+                    <small>Upload up to 5 logos (e.g., main logo, secondary logos).</small>
+
+                    <label for="colorPrefs">Color Preferences:</label>
+                    <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
+
+                    <label for="stylingDetails">Styling Details:</label>
+                    <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., modern layout, bold fonts"></textarea>
+
+                    <label for="preferredDomain">Preferred Domain Name:</label>
+                    <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mycommunity.org" oninput="updateEmailDomains()">
+                    <button type="button" data-action="checkDomainAvailability">Check Availability</button>
+
+                    <label>Email Addresses to Set Up (up to 5):</label>
+                    <div id="emailsContainer">
+                        <div class="email-section" data-email="1">
+                            <label for="email1Name">Email Name:</label>
+                            <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
+                            <span id="email1Domain">@mycommunity.org</span>
+                        </div>
+                    </div>
+                    <button type="button" data-action="addEmail">Add Another Email</button>
+
+                    <label>Requested Pages (up to 5):</label>
+                    <div id="pagesContainer">
+                        <div class="page-section" data-page="1">
+                            <label for="page1Name">Page Name:</label>
+                            <input type="text" id="page1Name" name="page1Name" value="Home">
+                            <br><br>
+                            <label for="page1Content">Page Content:</label>
+                            <textarea id="page1Content" name="page1Content" placeholder="Describe this page"></textarea>
+                            <label for="page1Images">Additional Images:</label>
+                            <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+                        </div>
+                    </div>
+                    <button type="button" data-action="addPage">Add Another Page</button>
+
+                    <label>Wix Widgets:</label>
+                    <div class="widget-checkboxes">
+                        <div><label><input type="checkbox" name="widgets" value="events"> Events</label> - Add an events calendar.</div>
+                        <div><label><input type="checkbox" name="widgets" value="socialMediaFeeds"> Social Media Feeds</label> - Display live social media feeds.</div>
+                        <div><label><input type="checkbox" name="widgets" value="gallery"> Gallery</label> - Showcase photos.</div>
+                        <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Simple contact form.</div>
+                        <div><label><input type="checkbox" name="widgets" value="blog"> Blog</label> - Share updates and stories.</div>
+                        <div><label><input type="checkbox" name="widgets" value="weather"> Weather</label> - Show real-time weather.</div>
+                        <div><label><input type="checkbox" name="widgets" value="socialMediaLinks"> Social Media Links</label> - Quick links to profiles.</div>
+                    </div>
+
+                    <button type="button" data-action="saveSiteRequest">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="/js/site-auth.js"></script>
+    <script src="/js/site-navigation.js"></script>
+    <script src="/js/category-management.js"></script>
+    <script src="/js/page-load.js"></script>
+    <script src="/js/community-page.js"></script>
+    <script>
+        // Initialize the community page using page-load.js
+        initialize('community');
+    </script>
+</body>
+</html>
+login.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clubmadeira.io | Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .toggle-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .toggle-link a {
+            color: #007BFF;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .toggle-link a:hover {
+            text-decoration: underline;
+        }
+        #toast-container > .toast-success {
+            background-color: #28a745;
+            border-color: #218838;
+        }
+        #toast-container > .toast-error {
+            background-color: #dc3545;
+            border-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginContainer">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div class="toggle-link">
+            <a href="/signup">Need an account? Sign Up</a><br>
+            <a onclick="showForgotPassword()">Forgot Password?</a>
+        </div>
+    </div>
+
+    <div class="container" id="forgotPasswordContainer" style="display: none;">
+        <h2>Forgot Password</h2>
+        <form id="forgotPasswordForm">
+            <div class="form-group">
+                <label for="forgotEmail">Email:</label>
+                <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
+            </div>
+            <button type="submit">Send OTP via SMS</button>
+        </form>
+        <div class="toggle-link">
+            <a onclick="showLogin()">Back to Login</a>
+        </div>
+    </div>
+
+    <div class="container" id="verifyOtpContainer" style="display: none;">
+        <h2>Verify OTP</h2>
+        <form id="verifyOtpForm">
+            <div class="form-group">
+                <label for="verifyEmail">Email:</label>
+                <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="otpCode">One-Time Password:</label>
+                <input type="text" id="otpCode" name="code" placeholder="Enter the OTP from SMS" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password:</label>
+                <input type="password" id="newPassword" name="new_password" placeholder="Enter new password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmNewPassword">Confirm New Password:</label>
+                <input type="password" id="confirmNewPassword" name="confirm_new_password" placeholder="Confirm new password" required>
+            </div>
+            <button type="submit">Update Password</button>
+        </form>
+        <div class="toggle-link">
+            <a onclick="showLogin()">Back to Login</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        const apiUrl = window.location.origin; // 'https://clubmadeira.io'
+
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
+        };
+
+        function showLogin() {
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('forgotPasswordContainer').style.display = 'none';
+            document.getElementById('verifyOtpContainer').style.display = 'none';
+        }
+
+        function showForgotPassword() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('forgotPasswordContainer').style.display = 'block';
+            document.getElementById('verifyOtpContainer').style.display = 'none';
+        }
+
+        function showVerifyOtp(email) {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('forgotPasswordContainer').style.display = 'none';
+            document.getElementById('verifyOtpContainer').style.display = 'block';
+            document.getElementById('verifyEmail').value = email;
+        }
+
+        async function fetchProtectedPage(url) {
+            const token = localStorage.getItem('authToken');
+            console.log('Fetching Protected URL:', `${apiUrl}${url}`);
+            console.log('Token:', token || 'None');
+
+            if (!token) {
+                toastr.error('No authentication token found. Please log in.');
+                console.error('No token in localStorage');
+                showLogin();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}${url}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'text/html'
+                    }
+                });
+
+                console.log('Protected Response Status:', response.status);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Protected Response Error:', errorText);
+                    throw new Error(`Server returned ${response.status}: ${errorText}`);
+                }
+
+                const html = await response.text();
+                console.log('Received HTML:', html.substring(0, 200));
+                document.body.innerHTML = html;
+
+                // Re-attach external scripts and execute inline script
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const scripts = doc.querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.src) {
+                        const newScript = document.createElement('script');
+                        newScript.src = script.src;
+                        newScript.async = false;
+                        document.head.appendChild(newScript);
+                        console.log('Loaded external script:', script.src);
+                    } else if (script.innerHTML.trim()) {
+                        try {
+                            const scriptFn = new Function(script.innerHTML);
+                            scriptFn();
+                            console.log('Executed inline script');
+                        } catch (e) {
+                            console.error('Error executing inline script:', e);
+                        }
+                    }
+                });
+            } catch (error) {
+                toastr.error(error.message || 'Failed to load protected page');
+                console.error('Protected Fetch Error:', error);
+                showLogin();
+            }
+        }
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            const loginUrl = `${apiUrl}/login`;
+            console.log('Origin:', window.location.origin);
+            console.log('Login URL:', loginUrl);
+            console.log('Request Payload:', { email, password });
+
+            try {
+                const response = await fetch(loginUrl, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                console.log('Login Response Status:', response.status);
+                console.log('Response Headers:', [...response.headers.entries()]);
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    console.error('Login Error Response:', errText);
+                    let errData;
+                    try {
+                        errData = JSON.parse(errText);
+                    } catch (e) {
+                        throw new Error(`Login failed with status ${response.status}: ${errText}`);
+                    }
+                    throw new Error(errData.message || `Login failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Login Response Data:', data);
+
+                if (data.status === 'success') {
+                    localStorage.setItem('authToken', data.token);
+                    if (data.userId) localStorage.setItem('userId', data.userId);
+
+                    const contactName = data.contact_name || 'User';
+                    toastr.success(`Welcome back, ${contactName}!`);
+
+                    const redirectPath = data.redirect_url || '/';
+                    await fetchProtectedPage(redirectPath);
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            } catch (error) {
+                toastr.error(error.message || 'Unable to connect to server.');
+                console.error('Login Fetch Error:', error);
+                console.log('Error Name:', error.name);
+                console.log('Error Message:', error.message);
+            }
+        });
+
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            try {
+                const response = await fetch(`${apiUrl}/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const rawText = await response.text();
+                console.log('Reset Raw Response:', rawText);
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (jsonError) {
+                    console.error('Reset JSON Parse Error:', jsonError);
+                    throw new Error('Invalid response from server');
+                }
+
+                console.log('Reset Parsed Response:', data);
+                if (!response.ok) {
+                    throw new Error(data.message || 'Reset request failed');
+                }
+
+                toastr.success('A one-time password has been sent to your phone.');
+                showVerifyOtp(email);
+            } catch (error) {
+                toastr.error(error.message || 'Error sending OTP');
+                console.error('Reset Error:', error, 'Email Entered:', email);
+            }
+        });
+
+        document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('verifyEmail').value.trim();
+            const code = document.getElementById('otpCode').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            const passwordRegex = /^(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                toastr.error('New password must be at least 8 characters long and include numbers');
+                return;
+            }
+            if (newPassword !== confirmNewPassword) {
+                toastr.error('New password and confirmation do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}/verify-reset-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code, new_password: newPassword })
+                });
+
+                const rawText = await response.text();
+                console.log('Verify Raw Response:', rawText);
+
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (jsonError) {
+                    console.error('Verify JSON Parse Error:', jsonError);
+                    throw new Error('Invalid response from server');
+                }
+
+                console.log('Verify Parsed Response:', data);
+                if (!response.ok) {
+                    throw new Error(data.message || 'Verification failed');
+                }
+
+                toastr.success('Password updated successfully!');
+                showLogin();
+            } catch (error) {
+                toastr.error(error.message || 'Error verifying OTP');
+                console.error('Verification Error:', error, 'Email:', email, 'Code:', code);
+            }
+        });
+
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('authToken');
+            const path = window.location.pathname;
+            console.log('Page Load - Path:', path, 'Token Exists:', !!token);
+            if (token && path !== '/' && path !== '/signup') {
+                fetchProtectedPage(path);
+            }
+        });
+    </script>
+</body>
+</html>
+merchant.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clubmadeira.io | Merchant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" id="brandingContent">
+            <!-- Branding content will be loaded here -->
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="menu-container">
+            <div class="menu" id="menu">
+                <input type="text" id="userId" style="display: none;">
+                <button data-section="my-products">My Products</button>
+                <button data-section="my-store">My Store</button>
+                <button data-section="wix-keys">Wix Keys</button>
+                <button data-section="my-account">My Account</button>
+                <button data-href="/admin" class="btn-logoff">Back to Admin</button>
+                <button id="logOffBtn" class="btn-logoff">Log Off</button>
+            </div>
+        </div>
+        <div class="content-container">
+            <div id="info" class="section">
+                <h2>Welcome to Your Merchant Dashboard</h2>
+                <p>This dashboard allows you to link the parts on your Wix site to a network of community groups, who show relevant discounted products on their websites from clubmadeira.io.</p>
+            </div>
+            <div id="my-account" class="section">
+                <h2>My Account</h2>
+                <div class="settings-form">
+                    <label for="contactName">Contact Name:</label>
+                    <input type="text" id="contactName" placeholder="Enter contact name">
+                    <label for="websiteUrl">Website URL:</label>
+                    <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                    <label for="emailAddress">Email Address:</label>
+                    <input type="email" id="emailAddress" placeholder="Enter email address">
+                    <label for="phoneNumber">Phone Number:</label>
+                    <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                    <button data-action="saveSettings">Save Settings</button>
+                    <h3>Change Password</h3>
+                    <div class="password-container">
+                        <label for="currentPassword">Current Password:</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="confirmPassword">Confirm New Password:</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
+                    </div>
+                    <button data-action="savePassword">Change Password</button>
+                </div>
+            </div>
+            <div id="my-products" class="section">
+                <h2>My Products</h2>
+                <p>These are the products from your parts feed.</p>
+                <table id="productTable">
+                    <thead>
+                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
+                    </thead>
+                    <tbody id="productList"></tbody>
+                </table>
+            </div>
+            <div id="wix-keys" class="section">
+                <h2>Wix Keys</h2>
+                <p>Your Wix Client ID is used to integrate your merchant account with Wix services. Ensure it matches the key provided in your Wix developer dashboard.</p>
+                <div class="settings-form">
+                    <label for="wixClientId">Wix Client ID:</label>
+                    <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
+                    <button data-action="saveWixClientId">Save Wix Client ID</button>
+                </div>
+            </div>
+            <div id="my-store" class="section">
+                <h2>My Store</h2>
+                <p>Request a custom Wix store to sell your products online. Provide details below to set up your store (minimum: Home and Returns Policy pages).</p>
+                <form id="storeRequestForm" class="settings-form">
+                    <label for="storeName">Store Name:</label>
+                    <input type="text" id="storeName" name="storeName" placeholder="Enter your store name" required>
+
+                    <label for="aboutStore">About Your Store:</label>
+                    <textarea id="aboutStore" name="aboutStore" placeholder="Describe your store (e.g., product focus, target audience)"></textarea>
+
+                    <label for="storeLogos">Store Logos:</label>
+                    <input type="file" id="storeLogos" name="storeLogos" accept="image/*" multiple>
+                    <small>Upload up to 5 logos (e.g., main logo, favicon).</small>
+
+                    <label for="colorPrefs">Color Preferences:</label>
+                    <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
+
+                    <label for="stylingDetails">Styling Details:</label>
+                    <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., sleek design, minimalistic"></textarea>
+
+                    <label for="preferredDomain">Preferred Domain Name:</label>
+                    <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mystore.uk" oninput="updateDomainPreview()">
+                    <button type="button" data-action="checkDomainAvailability">Check Availability</button>
+                    <span id="domainPreview">@mystore.uk</span>
+
+                    <label>Email Addresses to Set Up (up to 5):</label>
+                    <div id="emailsContainer">
+                        <div class="email-section" data-email="1">
+                            <label for="email1Name">Email Name:</label>
+                            <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
+                            <span id="email1Domain">@mystore.uk</span>
+                        </div>
+                    </div>
+                    <button type="button" data-action="addEmail">Add Another Email</button>
+
+                    <label>Required Pages:</label>
+                    <div id="pagesContainer">
+                        <div class="page-section" data-page="1">
+                            <label for="page1Name">Page Name:</label>
+                            <input type="text" id="page1Name" name="page1Name" value="Home" readonly>
+                            <br><br>
+                            <label for="page1Content">Home Page Content:</label>
+                            <textarea id="page1Content" name="page1Content" placeholder="Describe your home page (e.g., welcome message, featured products)"></textarea>
+                            <label for="page1Images">Additional Images:</label>
+                            <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+                        </div>
+                        <div class="page-section" data-page="2">
+                            <label for="page2Name">Page Name:</label>
+                            <input type="text" id="page2Name" name="page2Name" value="Returns Policy" readonly>
+                            <br><br>
+                            <label for="page2Content">Returns Policy Content:</label>
+                            <textarea id="page2Content" name="page2Content" placeholder="Outline your returns policy"></textarea>
+                            <label for="page2Images">Additional Images:</label>
+                            <input type="file" id="page2Images" name="page2Images" accept="image/*" multiple>
+                        </div>
+                    </div>
+                    <button type="button" data-action="addPage">Add Another Page</button>
+
+                    <label>Wix Store Widgets:</label>
+                    <div class="widget-checkboxes">
+                        <div><label><input type="checkbox" name="widgets" value="productCatalog"> Product Catalog</label> - Display your products.</div>
+                        <div><label><input type="checkbox" name="widgets" value="checkout"> Checkout</label> - Enable direct purchases.</div>
+                        <div><label><input type="checkbox" name="widgets" value="cart"> Shopping Cart</label> - Add a cart for customers.</div>
+                        <div><label><input type="checkbox" name="widgets" value="promotions"> Promotions</label> - Highlight sales and discounts.</div>
+                        <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Customer inquiries.</div>
+                    </div>
+
+                    <button type="button" data-action="saveStoreRequest">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="/js/site-auth.js"></script>
+    <script src="/js/site-navigation.js"></script>
+    <script src="/js/page-load.js"></script>
+    <script src="/js/user-management.js"></script>
+    <script src="/js/merchant-page.js"></script>
+    <script>
+        // Initialize the merchant page using page-load.js
+        initialize('merchant');
+    </script>
+</body>
+</html>
+partner.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clubmadeira.io | Partner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" id="brandingContent">
+            <!-- Branding content will be loaded here -->
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="menu-container">
+            <div class="menu" id="menu">
+                <input type="text" id="userId" style="display: none;">
+                <!-- Menu items will be dynamically generated -->
+            </div>
+        </div>
+        <div class="content-container">
+            <div id="welcome" class="section active">
+                <h2>Welcome to Your Partner Dashboard</h2>
+                <p>This dashboard is designed for partners to manage merchant integrations with clubmadeira.io. Use the "My Account" section to update your contact details or change your password. If you have admin privileges, you can return to the admin panel using the "Back to Admin" button.</p>
+            </div>
+            <div id="my-account" class="section">
+                <h2>My Account</h2>
+                <div class="settings-form">
+                    <label for="contactName">Contact Name:</label>
+                    <input type="text" id="contactName" placeholder="Enter contact name">
+                    <label for="websiteUrl">Website URL:</label>
+                    <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                    <label for="emailAddress">Email Address:</label>
+                    <input type="email" id="emailAddress" placeholder="Enter email address">
+                    <label for="phoneNumber">Phone Number:</label>
+                    <input type="tel" id="phoneNumber" placeholder="Enter phone number">
+                    <button data-action="saveSettings">Save Settings</button>
+                    <h3>Change Password</h3>
+                    <div class="password-container">
+                        <label for="currentPassword">Current Password:</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password">
+                        <i class="fas fa-eye password-toggle" data-field="currentPassword"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password">
+                        <i class="fas fa-eye password-toggle" data-field="newPassword"></i>
+                    </div>
+                    <div class="password-container">
+                        <label for="confirmPassword">Confirm New Password:</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                        <i class="fas fa-eye password-toggle" data-field="confirmPassword"></i>
+                    </div>
+                    <button data-action="savePassword">Change Password</button>
+                </div>
+            </div>
+            <div id="my-products" class="section">
+                <h2>My Products</h2>
+                <p>These are the products from your parts feed.</p>
+                <table id="productTable">
+                    <thead>
+                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
+                    </thead>
+                    <tbody id="productList"></tbody>
+                </table>
+            </div>
+            <div id="wix-keys" class="section">
+                <h2>Wix Keys</h2>
+                <p>Your Wix Client ID is used to integrate your merchant account with Wix services. Ensure it matches the key provided in your Wix developer dashboard.</p>
+                <div class="settings-form">
+                    <label for="wixClientId">Wix Client ID:</label>
+                    <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
+                    <button data-action="saveWixClientId">Save Wix Client ID</button>
+                </div>
+            </div>
+            <div id="site-requests" class="section">
+                <h2>Site Requests</h2>
+                <p>View and manage site requests from merchants and communities. Click a row to see details.</p>
+                <table id="siteRequestsTable">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Received At</th>
+                            <th>Contact Name</th>
+                            <th>Email</th>
+                            <th>Organisation</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="siteRequestsList"></tbody>
+                </table>
+            </div>
+            <div id="site-request-detail" class="section">
+                <h2>Site Request Details</h2>
+                <div class="settings-form">
+                    <button data-section="site-requests">Back to Site Requests</button>
+                    <div id="siteRequestContent"></div>
+                </div>
+            </div>
+            <div id="documentation" class="section">
+                <h2>Documentation</h2>
+                <div id="documentation-content">
+                    <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
+                </div>
+            </div>
+            <div id="apiKeyModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" data-action="closeApiKeyModal">×</span>
+                    <h3>Enter API Key</h3>
+                    <label for="merchantWixClientId">Wix Client ID:</label>
+                    <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
+                    <button data-action="saveMerchantWixClientId">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
+    <script src="/js/site-auth.js"></script>
+    <script src="/js/site-navigation.js"></script>
+    <script src="/js/page-load.js"></script>
+    <script src="/js/user-management.js"></script>
+    <script src="/js/partner-page.js"></script>
+    <script>
+        // Initialize the partner page using page-load.js
+        initialize('partner');
+    </script>
+</body>
+</html>
+signup.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .signup-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .options {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .option {
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            transition: border 0.3s ease;
+        }
+        .option.selected {
+            border: 3px solid #007BFF;
+            border-radius: 5px;
+        }
+        .option img {
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .option span {
+            display: block;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+        .option input[type="radio"] {
+            display: none;
+        }
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-right: 100px; /* Shifts form 100px left */
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            max-width: 200px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .form-group label {
+            font-weight: bold;
+            flex: 1;
+            text-align: right;
+            margin-bottom: 0;
+        }
+        .form-group .input-container {
+            position: relative;
+            width: 192px; /* 160px + 20% = 192px */
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            padding-right: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .form-group .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h1>Sign Up - I am a...</h1>
+        <form id="signupForm" autocomplete="off">
+            <!-- Dummy fields to trick autofill -->
+            <input type="text" class="hidden" autocomplete="off">
+            <input type="text" class="hidden" autocomplete="off">
+            <div class="options">
+                <label class="option">
+                    <input type="radio" name="signup_type" value="community">
+                    <img src="{{ url_for('static/img', filename='community.jpg') }}" alt="Scout leader in uniform, neck down">
+                    <span>Community Group</span>
+                </label>
+                <label class="option">
+                    <input type="radio" name="signup_type" value="seller">
+                    <img src="{{ url_for('static/img', filename='merchant.jpg') }}" alt="White man in business suit, neck down">
+                    <span>Merchant</span>
+                </label>
+                <label class="option">
+                    <input type="radio" name="signup_type" value="wixpro">
+                    <img src="{{ url_for('static/img', filename='wixpro.jpg') }}" alt="Female ethnic web designer in casual dress, neck down">
+                    <span>Partner</span>
+                </label>
+            </div>
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="contact_name">Contact Name:</label>
+                    <div class="input-container">
+                        <input type="text" id="contact_name" name="contact_name" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-phone">Phone Number:</label>
+                    <div class="input-container">
+                        <input type="tel" id="signup-phone" name="signup_phone" required autocomplete="off" pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email:</label>
+                    <div class="input-container">
+                        <input type="text" id="signup-email" name="signup_email" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password:</label>
+                    <div class="input-container">
+                        <input type="text" id="signup-password" name="signup_password" required autocomplete="new-password">
+                        <i class="fas fa-eye toggle-password" data-target="signup-password"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm-password">Confirm Password:</label>
+                    <div class="input-container">
+                        <input type="password" id="signup-confirm-password" name="signup_confirm_password" required autocomplete="new-password">
+                        <i class="fas fa-eye toggle-password" data-target="signup-confirm-password"></i>
+                    </div>
+                </div>
+                <button type="submit">Sign Me Up</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Set correct input types and clear fields after load
+        window.onload = function() {
+            const emailInput = document.getElementById('signup-email');
+            const passwordInput = document.getElementById('signup-password');
+            const confirmPasswordInput = document.getElementById('signup-confirm-password');
+            const phoneInput = document.getElementById('signup-phone');
+
+            // Set proper types
+            emailInput.type = 'email';
+            passwordInput.type = 'password';
+
+            // Double-clear strategy
+            setTimeout(function() {
+                emailInput.value = '';
+                passwordInput.value = '';
+                confirmPasswordInput.value = '';
+                phoneInput.value = '';
+            }, 100);
+
+            setTimeout(function() {
+                emailInput.value = '';
+                passwordInput.value = '';
+                confirmPasswordInput.value = '';
+                phoneInput.value = '';
+            }, 500); // Extra delay for Chrome
+        };
+
+        // Clear fields on focus
+        document.getElementById('signup-email').addEventListener('focus', function() {
+            this.value = '';
+        });
+        document.getElementById('signup-password').addEventListener('focus', function() {
+            this.value = '';
+        });
+        document.getElementById('signup-confirm-password').addEventListener('focus', function() {
+            this.value = '';
+        });
+        document.getElementById('signup-phone').addEventListener('focus', function() {
+            this.value = '';
+        });
+
+        // Highlight selected option
+        document.querySelectorAll('input[name="signup_type"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.option').forEach(function(option) {
+                    option.classList.remove('selected');
+                });
+                if (this.checked) {
+                    this.closest('.option').classList.add('selected');
+                }
+            });
+        });
+
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(function(icon) {
+            icon.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.classList.remove('fa-eye');
+                    this.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    this.classList.remove('fa-eye-slash');
+                    this.classList.add('fa-eye');
+                }
+            });
+        });
+
+        // Form submission
+        $('#signupForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const signupType = $('input[name="signup_type"]:checked').val();
+            if (!signupType) {
+                toastr.error('Please select a signup type (Merchant, Community Group, or Wix Professional).');
+                return;
+            }
+
+            const contactName = $('#contact_name').val().trim();
+            const phone = $('#signup-phone').val().trim();
+            const email = $('#signup-email').val().trim();
+            const password = $('#signup-password').val().trim();
+            const confirmPassword = $('#signup-confirm-password').val().trim();
+
+            if (!contactName || !phone || !email || !password || !confirmPassword) {
+                toastr.error('All fields must be filled.');
+                return;
+            }
+
+            // Password complexity check
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                toastr.error('Password must be at least 8 characters long and contain both letters and numbers.');
+                return;
+            }
+
+            // Confirm password match
+            if (password !== confirmPassword) {
+                toastr.error('Passwords do not match.');
+                return;
+            }
+
+            // Phone number validation
+            const phoneRegex = /^\d{10}$/;
+            if (!phoneRegex.test(phone)) {
+                toastr.error('Please enter a valid 10-digit phone number with no spaces or special characters.');
+                return;
+            }
+
+            const signupData = {
+                signup_type: signupType,
+                contact_name: contactName,
+                signup_phone: phone,
+                signup_email: email,
+                signup_password: password
+            };
+
+            $.ajax({
+                url: '/signup',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(signupData),
+                success: function(response) {
+                    if (response.status === 'success') {
+                        toastr.success('Signup successful! Redirecting...');
+                        setTimeout(() => window.location.href = '/login', 2000);
+                    } else {
+                        toastr.error(response.message || 'Signup failed.');
+                    }
+                },
+                error: function(xhr) {
+                    toastr.error('Error connecting to server: ' + (xhr.responseJSON?.message || xhr.statusText));
+                }
+            });
+        });
+
+        // Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000
+        };
+    </script>
+</body>
+</html>

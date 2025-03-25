@@ -2,7 +2,12 @@
 // Purpose: Handles navigation and content loading across the site, including authenticated fetch requests, 
 // protected page loading, branding, and section/submenu management.
 
-const apiUrl = 'https://clubmadeira.io'; // Default API URL, override if needed
+// Check if window.apiUrl is defined, throw an error if not
+if (!window.apiUrl) {
+    console.error('site-navigation.js - window.apiUrl is not defined. Please set window.apiUrl before loading this script.');
+    throw new Error('window.apiUrl is not defined');
+}
+console.log('site-navigation.js - Using apiUrl:', window.apiUrl);
 
 // Performs authenticated fetch requests for protected resources, ensuring proper authorization headers.
 async function authenticatedFetch(url, options = {}) {
@@ -31,10 +36,15 @@ async function authenticatedFetch(url, options = {}) {
     };
     console.log('authenticatedFetch - Final fetch options:', JSON.stringify(finalOptions));
 
+    // Add timestamp to the URL to prevent caching
+    const timestamp = Date.now();
+    const separator = url.includes('?') ? '&' : '?';
+    const fetchUrl = `${url}${separator}t=${timestamp}`;
+    console.log('authenticatedFetch - Sending fetch request to:', fetchUrl);
+
     try {
-        console.log('authenticatedFetch - Sending fetch request to:', url);
         const startTime = Date.now();
-        const response = await fetch(url, finalOptions);
+        const response = await fetch(fetchUrl, finalOptions);
         const duration = Date.now() - startTime;
         console.log('authenticatedFetch - Fetch response received - Status:', response.status, 'Duration:', `${duration}ms`);
         console.log('authenticatedFetch - Response headers:', JSON.stringify([...response.headers.entries()]));
@@ -78,7 +88,7 @@ async function fetchProtectedPage(url, options = {}) {
     }
     try {
         const timestamp = Date.now();
-        const fetchUrl = `${apiUrl}${url}?t=${timestamp}`;
+        const fetchUrl = `${window.apiUrl}${url}?t=${timestamp}`;
         console.log('fetchProtectedPage - Constructed fetch URL with timestamp:', fetchUrl);
         const startTime = Date.now();
         const response = await fetch(fetchUrl, {
@@ -127,27 +137,35 @@ async function loadBranding(brandingType, containerId = 'brandingContent') {
     }
 
     try {
-        console.log('loadBranding - Fetching branding from:', `${apiUrl}/branding`);
+        const fetchUrl = `${window.apiUrl}/branding?type=${encodeURIComponent(brandingType)}`;
+        console.log('loadBranding - Fetching branding from:', fetchUrl);
         const startTime = Date.now();
-        const response = await authenticatedFetch(`${apiUrl}/branding`);
+        const response = await authenticatedFetch(fetchUrl);
         const duration = Date.now() - startTime;
         if (!response) {
             console.warn('loadBranding - No response from fetch - Using default content - Type:', brandingType);
             container.innerHTML = defaultContent;
+            console.log('loadBranding - Set container innerHTML to default content:', container.innerHTML);
             return;
         }
         console.log('loadBranding - Fetch completed - Duration:', `${duration}ms`);
         const data = await response.json();
         console.log('loadBranding - Branding data received:', JSON.stringify(data));
-        const brandingContent = data.content || defaultContent;
-        console.log('loadBranding - Setting branding content:', brandingContent);
-        container.innerHTML = brandingContent;
-        console.log('loadBranding - Branding content updated in container:', containerId);
+        if (data.status === 'success' && data.branding) {
+            const brandingContent = data.branding;
+            console.log('loadBranding - Setting branding content:', brandingContent);
+            container.innerHTML = brandingContent;
+            console.log('loadBranding - Branding content updated in container:', containerId, 'New innerHTML:', container.innerHTML);
+        } else {
+            console.warn('loadBranding - Invalid branding data - Using default content - Type:', brandingType);
+            container.innerHTML = defaultContent;
+            console.log('loadBranding - Set container innerHTML to default content:', container.innerHTML);
+        }
     } catch (error) {
         console.error('loadBranding - Error loading branding - Type:', brandingType, 'Error:', error.message, 'Stack:', error.stack);
         toastr.error(`Error loading ${brandingType} branding: ${error.message}`);
         container.innerHTML = defaultContent;
-        console.log('loadBranding - Fallback to default content applied - Container ID:', containerId);
+        console.log('loadBranding - Fallback to default content applied - Container ID:', containerId, 'New innerHTML:', container.innerHTML);
     }
 }
 
@@ -240,7 +258,7 @@ async function loadSection(sectionId) {
     // Handle configuration sections
     console.log('loadSection - Attempting to load config for section:', sectionId);
     try {
-        const fetchUrl = `${window.apiUrl || apiUrl}/config`;
+        const fetchUrl = `${window.apiUrl}/config`;
         console.log('loadSection - Fetching config from:', fetchUrl);
         const startTime = Date.now();
         const response = await authenticatedFetch(fetchUrl);
@@ -348,7 +366,7 @@ async function loadSection(sectionId) {
     console.log('loadSection - Section load completed - Section ID:', sectionId);
 }
 
-// Toggles submenu visibility for navigation menus.
+// Toggles submenu visibility for navigation menus and updates caret icons.
 function toggleSubmenu(submenuId) {
     console.log('toggleSubmenu - Starting toggle - Submenu ID:', submenuId);
     const submenu = document.getElementById(submenuId);
@@ -357,9 +375,137 @@ function toggleSubmenu(submenuId) {
         console.warn('toggleSubmenu - Submenu element not found - ID:', submenuId);
         return;
     }
+
+    // Determine if the submenu is top-level (direct child of .menu) or nested
+    const isTopLevel = submenu.parentElement.classList.contains('menu');
+    console.log('toggleSubmenu - Submenu is top-level:', isTopLevel);
+
+    // If this is a top-level submenu, close all other top-level submenus and their children
+    if (isTopLevel) {
+        const allTopLevelSubmenus = document.querySelectorAll('.menu > .submenu');
+        allTopLevelSubmenus.forEach(s => {
+            if (s.id !== submenuId) {
+                console.log('toggleSubmenu - Closing other top-level submenu - ID:', s.id);
+                s.classList.remove('open');
+                const parentButton = document.querySelector(`button[data-submenu="${s.id}"]`);
+                if (parentButton) {
+                    const caret = parentButton.querySelector('.caret');
+                    if (caret) {
+                        caret.classList.remove('fa-caret-down');
+                        caret.classList.add('fa-caret-right');
+                        console.log('toggleSubmenu - Reset caret to fa-caret-right for top-level submenu:', s.id);
+                    }
+                }
+                // Also close any nested submenus within this top-level submenu
+                const nestedSubmenus = s.querySelectorAll('.submenu');
+                nestedSubmenus.forEach(nested => {
+                    console.log('toggleSubmenu - Closing nested submenu - ID:', nested.id);
+                    nested.classList.remove('open');
+                    const nestedButton = document.querySelector(`button[data-submenu="${nested.id}"]`);
+                    if (nestedButton) {
+                        const nestedCaret = nestedButton.querySelector('.caret');
+                        if (nestedCaret) {
+                            nestedCaret.classList.remove('fa-caret-down');
+                            nestedCaret.classList.add('fa-caret-right');
+                            console.log('toggleSubmenu - Reset caret to fa-caret-right for nested submenu:', nested.id);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Toggle the current submenu
     const wasOpen = submenu.classList.contains('open');
     submenu.classList.toggle('open');
     const isOpen = submenu.classList.contains('open');
     console.log('toggleSubmenu - Toggled state - ID:', submenuId, 'Was open:', wasOpen, 'Now open:', isOpen);
+
+    // Update the caret icon for the current submenu
+    const parentButton = document.querySelector(`button[data-submenu="${submenuId}"]`);
+    if (parentButton) {
+        const caret = parentButton.querySelector('.caret');
+        if (caret) {
+            if (isOpen) {
+                caret.classList.remove('fa-caret-right');
+                caret.classList.add('fa-caret-down');
+                console.log('toggleSubmenu - Set caret to fa-caret-down for submenu:', submenuId);
+            } else {
+                caret.classList.remove('fa-caret-down');
+                caret.classList.add('fa-caret-right');
+                console.log('toggleSubmenu - Set caret to fa-caret-right for submenu:', submenuId);
+                // If closing a nested submenu, also close its children
+                const nestedSubmenus = submenu.querySelectorAll('.submenu');
+                nestedSubmenus.forEach(nested => {
+                    console.log('toggleSubmenu - Closing nested submenu - ID:', nested.id);
+                    nested.classList.remove('open');
+                    const nestedButton = document.querySelector(`button[data-submenu="${nested.id}"]`);
+                    if (nestedButton) {
+                        const nestedCaret = nestedButton.querySelector('.caret');
+                        if (nestedCaret) {
+                            nestedCaret.classList.remove('fa-caret-down');
+                            nestedCaret.classList.add('fa-caret-right');
+                            console.log('toggleSubmenu - Reset caret to fa-caret-right for nested submenu:', nested.id);
+                        }
+                    }
+                });
+            }
+        } else {
+            console.warn('toggleSubmenu - Caret element not found for submenu:', submenuId);
+        }
+    } else {
+        console.warn('toggleSubmenu - Parent button not found for submenu:', submenuId);
+    }
+
     console.log('toggleSubmenu - Toggle completed');
 }
+
+// Initialize navigation event listeners
+function initializeNavigation() {
+    console.log('initializeNavigation - Starting navigation setup');
+
+    // Handle submenu toggling
+    document.querySelectorAll('button[data-submenu]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const submenuId = button.getAttribute('data-submenu');
+            console.log('initializeNavigation - Submenu button clicked - Submenu ID:', submenuId);
+            toggleSubmenu(submenuId);
+
+            // If a section is specified, show it
+            const sectionId = button.getAttribute('data-section');
+            if (sectionId) {
+                console.log('initializeNavigation - Showing section for submenu - Section ID:', sectionId);
+                showSection(sectionId);
+            }
+        });
+    });
+
+    // Handle section navigation
+    document.querySelectorAll('button[data-section]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sectionId = button.getAttribute('data-section');
+            console.log('initializeNavigation - Section button clicked - Section ID:', sectionId);
+            showSection(sectionId);
+        });
+    });
+
+    // Handle external links
+    document.querySelectorAll('button[data-href]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = button.getAttribute('data-href');
+            console.log('initializeNavigation - External link button clicked - HREF:', href);
+            window.location.href = href;
+        });
+    });
+
+    console.log('initializeNavigation - Navigation setup completed');
+}
+
+// Initialize navigation when the document is ready
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded - Initializing navigation');
+    initializeNavigation();
+});

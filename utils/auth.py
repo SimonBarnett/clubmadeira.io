@@ -1,6 +1,6 @@
 import jwt 
 import datetime 
-from flask import current_app, request, jsonify 
+from flask import current_app, request, jsonify, url_for  # Add url_for
 from functools import wraps 
 import bcrypt 
 from .users import load_users_settings, save_users_settings, generate_code 
@@ -32,13 +32,15 @@ def login_required(required_permissions, require_all=True):
                         effective_perms.append(perm) 
                 if require_all: 
                     if not all(p in request.permissions for p in effective_perms if p and p != "self"): 
-                        return jsonify({"status": "error", "message": "Insufficient permissions"}), 403 
+                        return jsonify({"status": "error", "message": f"Insufficient permissions: {effective_perms}"}), 403 
                 else: 
                     if not any(p in request.permissions for p in effective_perms if p and p != "self"): 
-                        return jsonify({"status": "error", "message": "Insufficient permissions"}), 403 
+                        return jsonify({"status": "error", "message": f"Insufficient permissions: {effective_perms}"}), 403 
                 return f(*args, **kwargs) 
             except jwt.InvalidTokenError: 
                 return jsonify({"status": "error", "message": "Invalid token"}), 401 
+            except Exception as e: 
+                return jsonify({"status": "error", "message": f"Token error: {str(e)}"}), 500 
         return decorated_function 
     return decorator 
  
@@ -57,9 +59,33 @@ def login_user():
     if not user_id: 
         return jsonify({"status": "error", "message": "Invalid credentials"}), 401 
     permissions = users_settings[user_id].get("permissions", []) 
-    token = jwt.encode({"userId": user_id, "permissions": permissions, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)}, current_app.config['JWT_SECRET_KEY'], algorithm="HS256") 
-    return jsonify({"status": "success", "token": token, "userId": user_id}), 200 
- 
+    token = jwt.encode(
+        {"userId": user_id, "permissions": permissions, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
+        current_app.config['JWT_SECRET_KEY'],
+        algorithm="HS256"
+    )
+    
+    # Determine redirect URL based on permissions
+    redirect_url = None
+    if "admin" in permissions:
+        redirect_url = url_for('admin')  # Assuming an admin route exists
+    elif "merchant" in permissions:
+        redirect_url = url_for('merchant')  # Assuming a merchant route exists
+    elif "community" in permissions:
+        redirect_url = url_for('community')  # Assuming a community route exists
+    elif "wixpro" in permissions:
+        redirect_url = url_for('wixpro')  # Assuming a wixpro route exists
+    else:
+        redirect_url = url_for('home')  # Default fallback
+
+    response_data = {
+        "status": "success",
+        "token": token,
+        "userId": user_id,
+        "redirect_url": redirect_url  # Add redirect URL to response
+    }
+    return jsonify(response_data), 200 
+
 def signup_user(): 
     data = request.get_json() 
     if not all(k in data for k in ['signup_type', 'contact_name', 'signup_email', 'signup_password']): 
@@ -76,4 +102,4 @@ def signup_user():
         "permissions": [data['signup_type']] 
     } 
     save_users_settings(users_settings) 
-    return jsonify({"status": "success", "message": "Signup successful"}), 201 
+    return jsonify({"status": "success", "message": "Signup successful"}), 201
