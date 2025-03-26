@@ -156,9 +156,18 @@
                             </button>
                         </div>
                     </div>
-                    <button data-section="settings">
-                        <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                    <button data-submenu="myAccountSubmenu" data-section="myAccountIntro">
+                        <span class="button-content"><i class="fas fa-user"></i> My Account</span>
+                        <i class="fas fa-caret-right caret"></i>
                     </button>
+                    <div id="myAccountSubmenu" class="submenu">
+                        <button data-section="contactDetails">
+                            <span class="button-content"><i class="fas fa-address-book"></i> Contact Details</span>
+                        </button>
+                        <button data-section="changePassword">
+                            <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
+                        </button>
+                    </div>
                     <button id="logOffBtn" style="background-color: #dc3545;">
                         <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
                     </button>
@@ -335,7 +344,7 @@
                                 <th>USERid</th>
                                 <th>Contact Name</th>
                                 <th>Email</th>
-                                <th>Phone Number</th> <!-- Added Phone Number column -->
+                                <th>Phone Number</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -353,7 +362,7 @@
                                 <th>USERid</th>
                                 <th>Contact Name</th>
                                 <th>Email</th>
-                                <th>Phone Number</th> <!-- Added Phone Number column -->
+                                <th>Phone Number</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -371,7 +380,7 @@
                                 <th>USERid</th>
                                 <th>Contact Name</th>
                                 <th>Email</th>
-                                <th>Phone Number</th> <!-- Added Phone Number column -->
+                                <th>Phone Number</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -423,7 +432,50 @@
                     </div>
                 </div>
 
-                {% include 'my_account.html' with user_type='admin' %}
+                <div id="myAccountIntro" class="section">
+                    <h2>My Account</h2>
+                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security.</p>
+                    <p>Use the options below to navigate to the desired section:</p>
+                </div>
+
+                <div id="contactDetails" class="section">
+                    <h2>Contact Details</h2>
+                    <div class="settings-form">
+                        <label><strong>User ID:</strong></label>
+                        <input type="text" id="userId" readonly>
+                        <label for="contactName">Contact Name:</label>
+                        <input type="text" id="contactName" placeholder="Enter contact name">
+                        <label for="websiteUrl">Website URL:</label>
+                        <input type="url" id="websiteUrl" placeholder="Enter website URL">
+                        <label for="emailAddress">Email Address:</label>
+                        <input type="email" id="emailAddress" placeholder="Enter email address">
+                        <label><strong>Phone Number:</strong></label>
+                        <span>{{ user.phone_number | default('N/A') }}</span>
+                        <button data-action="saveSettings"><i class="fas fa-save"></i> Save Settings</button>
+                    </div>
+                </div>
+
+                <div id="changePassword" class="section">
+                    <h2>Change Password</h2>
+                    <div class="settings-form">
+                        <div class="password-container">
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                            <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="newPassword">New Password:</label>
+                            <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                            <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                            <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
+                        </div>
+                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

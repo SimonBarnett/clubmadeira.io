@@ -1,5 +1,16 @@
+
 // admin-page.js
 // Purpose: Manages page-specific functionality for the /admin page.
+
+// Define the global initialize function expected by waitForInitialize
+window.initialize = function(pageType) {
+    console.log('window.initialize - Initializing page - Page Type:', pageType);
+    if (pageType === 'admin') {
+        initializeAdmin();
+    } else {
+        console.warn('window.initialize - Unsupported page type:', pageType);
+    }
+};
 
 // Initializes the admin page with permission checks.
 function initializeAdmin() {
@@ -24,7 +35,8 @@ function initializeAdmin() {
         return;
     }
     loadBranding(); // From site-navigation.js
-    restoreState(); // From page-load.js (defined below)
+    restoreState(); // From page-load.js
+    initializeNavigation(); // Add this to set up navigation event listeners
     console.log('initializeAdmin - Admin page initialized successfully');
 }
 
@@ -175,7 +187,7 @@ async function loadMerchants() {
                     USERid: user.USERid,
                     contact_name: user.contact_name,
                     email_address: user.email_address,
-                    phone_number: user.phone_number, // Add phone_number
+                    phone_number: user.phone_number,
                     permissions
                 });
             }
@@ -211,7 +223,7 @@ async function loadCommunities() {
                     USERid: user.USERid,
                     contact_name: user.contact_name,
                     email_address: user.email_address,
-                    phone_number: user.phone_number, // Add phone_number
+                    phone_number: user.phone_number,
                     permissions
                 });
             }
@@ -247,7 +259,7 @@ async function loadPartners() {
                     USERid: user.USERid,
                     contact_name: user.contact_name,
                     email_address: user.email_address,
-                    phone_number: user.phone_number, // Add phone_number
+                    phone_number: user.phone_number,
                     permissions
                 });
             }
@@ -268,7 +280,7 @@ function updateUserTable(tableId, users, section) {
     const tbody = document.getElementById(tableId);
     tbody.innerHTML = '';
     if (users.length === 0) {
-        const colspan = 5; // Updated to 5 columns (USERid, Contact Name, Email, Phone Number, Actions)
+        const colspan = 5;
         tbody.innerHTML = `<tr><td colspan="${colspan}">No users found</td></tr>`;
         console.log('updateUserTable - No users found - Table ID:', tableId);
         return;
@@ -278,7 +290,6 @@ function updateUserTable(tableId, users, section) {
         const row = document.createElement('tr');
         let actionsHtml = '';
 
-        // Admin permission (only for Partners, tickable)
         if (section === 'partners') {
             const hasAdmin = user.permissions.includes('admin');
             actionsHtml += `
@@ -289,7 +300,6 @@ function updateUserTable(tableId, users, section) {
             `;
         }
 
-        // Merchant permission (only for Partners, tickable)
         if (section === 'partners') {
             const hasMerchant = user.permissions.includes('merchant');
             actionsHtml += `
@@ -300,17 +310,14 @@ function updateUserTable(tableId, users, section) {
             `;
         }
 
-        // Validated permission (read-only for Communities, tickable for others)
         const hasValidated = user.permissions.includes('validated');
         if (section === 'communities') {
-            // Read-only for Communities
             actionsHtml += `
                 <i class="${hasValidated ? 'fas' : 'far'} fa-check-circle" 
                    title="Confirms user validation status" 
                    style="${hasValidated ? '' : 'color: #ccc;'}"></i>
             `;
         } else {
-            // Tickable for Partners and Merchants
             actionsHtml += `
                 <i class="${hasValidated ? 'fas' : 'far'} fa-check-circle" 
                    title="Confirms user validation status" 
@@ -319,7 +326,6 @@ function updateUserTable(tableId, users, section) {
             `;
         }
 
-        // Debug permission (tickable for all user types)
         const hasDebug = user.permissions.includes('debug');
         actionsHtml += `
             <i class="${hasDebug ? 'fas' : 'far'} fa-bug" 
@@ -328,15 +334,13 @@ function updateUserTable(tableId, users, section) {
                onclick="togglePermission('${user.USERid}', 'debug', '${section}', ${!hasDebug})"></i>
         `;
 
-        // Handle null phone_number
         const phoneNumber = user.phone_number || 'N/A';
 
-        // Construct the row with phone_number
         row.innerHTML = `
             <td>${user.USERid}</td>
             <td>${user.contact_name}</td>
             <td>${user.email_address}</td>
-            <td>${phoneNumber}</td> <!-- Add phone_number -->
+            <td>${phoneNumber}</td>
             <td class="action-cell">${actionsHtml}</td>
         `;
         tbody.appendChild(row);
@@ -358,11 +362,11 @@ async function togglePermission(userId, permission, section, isChecked) {
         const data = await response.json();
         console.log('togglePermission - Permission toggled - Response:', JSON.stringify(data));
         toastr.success(data.message || `${isChecked ? 'Added' : 'Removed'} ${permission} permission for user ${userId}`);
-        loadSection(section); // Refresh section
+        loadSection(section);
     } catch (error) {
         console.error('togglePermission - Error toggling permission - Error:', error.message, 'Stack:', error.stack);
         toastr.error(`Error: ${error.message}`);
-        loadSection(section); // Refresh on error
+        loadSection(section);
     }
 }
 
@@ -391,20 +395,4 @@ function createDealRow(product) {
 // Restores the state of the page (stubbed for now)
 function restoreState() {
     console.log('restoreState - Restoring page state (stub)');
-    // Placeholder for state restoration logic
-}
-
-// Auto-initialize the admin page when the script loads (optional, since page-load.js handles it)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOMContentLoaded - Initializing admin page');
-        if (window.location.pathname === '/admin') {
-            initializeAdmin();
-        }
-    });
-} else {
-    console.log('Document already loaded - Initializing admin page immediately');
-    if (window.location.pathname === '/admin') {
-        initializeAdmin();
-    }
 }

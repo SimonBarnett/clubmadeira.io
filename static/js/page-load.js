@@ -244,21 +244,26 @@ async function performPageSetup(pageType, config) {
 // Attaches click event listeners for section navigation.
 function handleSectionClick(event) {
     console.log('handleSectionClick - Section click event triggered');
-    const target = event.currentTarget;
+    const target = event.target.closest('button[data-section], button[data-submenu]');
     console.log('handleSectionClick - Event target:', target);
-    const section = target.getAttribute('data-section');
-    const submenu = target.getAttribute('data-submenu');
-    console.log('handleSectionClick - Extracted attributes - Section:', section, 'Submenu:', submenu);
-    if (submenu) {
-        console.log('handleSectionClick - Toggling submenu - ID:', submenu);
-        toggleSubmenu(submenu);
+    if (!target) return;
+
+    event.stopPropagation(); // Stop bubbling to parent elements
+
+    const sectionId = target.getAttribute('data-section');
+    const submenuId = target.getAttribute('data-submenu');
+    console.log(`handleSectionClick - Extracted attributes - Section: ${sectionId} Submenu: ${submenuId}`);
+
+    // Toggle submenu if the button has a data-submenu attribute
+    if (submenuId) {
+        console.log(`handleSectionClick - Toggling submenu - ID: ${submenuId}`);
+        toggleSubmenu(submenuId);
     }
-    if (section) {
-        console.log('handleSectionClick - Showing section - ID:', section);
-        showSection(section);
-    }
-    if (!section && !submenu) {
-        console.warn('handleSectionClick - No section or submenu attribute found - Target:', target);
+
+    // Show section if the button has a data-section attribute
+    if (sectionId) {
+        console.log(`handleSectionClick - Showing section - ID: ${sectionId}`);
+        showSection(sectionId);
     }
     console.log('handleSectionClick - Event handling completed');
 }

@@ -3,7 +3,7 @@ from utils.users import load_users_settings, save_users_settings
  
 referral_bp = Blueprint('referral', __name__) 
  
-@referral_bp.route('/referal', methods=['POST']) 
+@referral_bp.route('/referral', methods=['POST']) 
 def handle_referral(): 
     data = request.get_json() 
     if not data or 'timestamp' not in data: 

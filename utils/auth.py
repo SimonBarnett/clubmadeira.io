@@ -120,3 +120,12 @@ def signup_user():
     }
     save_users_settings(users_settings)
     return jsonify({"status": "success", "message": "Signup successful"}), 201
+
+def generate_token(user_id, permissions):
+    """Generate a JWT token with user_id and permissions."""
+    payload = {
+        "userId": user_id,  # Match login_user key
+        "permissions": permissions,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)  # 24-hour expiry
+    }
+    return jwt.encode(payload, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')

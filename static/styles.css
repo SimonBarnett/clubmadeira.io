@@ -56,14 +56,28 @@ body {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto !important;
-    padding: 20px;
+    padding: 12px 20px; /* Updated as per previous request */
     background-color: #007BFF;
     color: white;
     border-radius: 8px;
     display: flex !important;
-    align-items: center;
-    justify-content: flex-start;
+    flex-direction: column; /* Stack content vertically */
+    align-items: flex-start; /* Align content to the left */
+    justify-content: center;
     box-sizing: border-box;
+    max-height: 80px; /* Limit the height of the header */
+    overflow: hidden; /* Prevent content from overflowing */
+}
+
+/* Adjust margins for branding content inside header-content */
+.layout-wrapper .header .header-content h1 {
+    margin: 0 0 5px 0; /* Reduce margin to minimize vertical space */
+    font-size: 20px; /* Slightly smaller font size */
+}
+
+.layout-wrapper .header .header-content p {
+    margin: 0; /* Remove default margin */
+    font-size: 14px; /* Smaller font size for tagline */
 }
 
 .main-container {
@@ -78,6 +92,7 @@ body {
 .menu-container {
     flex: 0 0 300px;
     max-width: 300px;
+    margin-top: 10px; /* Ensure a small gap below the header */
 }
 
 .content-wrapper {
@@ -88,10 +103,11 @@ body {
 .menu {
     margin-bottom: 20px;
     text-align: left;
+    margin-top: 0; /* Ensure no extra top margin */
 }
 
 .menu button {
-    padding: 10px;
+    padding: 10px 10px 10px 10px; /* Adjusted to ensure space for caret */
     background-color: #007BFF;
     color: white;
     border: none;
@@ -105,10 +121,17 @@ body {
     align-items: center;
     justify-content: flex-start;
     position: relative;
+    padding-right: 30px; /* Ensure space for the caret */
 }
 
 .menu button:hover {
     background-color: #0056b3;
+}
+
+/* Visual feedback for open submenus */
+.menu button[data-submenu][aria-expanded="true"] {
+    background-color: #0056b3; /* Darker shade to indicate open state */
+    border-left: 4px solid #fff; /* White border on the left for emphasis */
 }
 
 .menu button i,
@@ -164,6 +187,8 @@ body {
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
+    color: white; /* Ensure caret is visible */
+    font-size: 14px; /* Match button font size */
 }
 
 .menu .btn-admin {
@@ -185,10 +210,42 @@ body {
 .submenu {
     display: none;
     padding-left: 20px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out; /* Reintroduce smooth transition */
+    max-height: 0; /* Start collapsed */
 }
 
 .submenu.open {
     display: block;
+    max-height: 500px; /* Adjust based on content height */
+}
+
+/* Styling for submenu buttons */
+.submenu button {
+    padding: 8px 10px; /* Slightly smaller padding than top-level buttons */
+    background-color: #6c757d; /* Gray to differentiate from top-level buttons */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px; /* Slightly smaller font size */
+    width: 100%;
+    max-width: 280px; /* Slightly narrower to indicate hierarchy */
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+}
+
+.submenu button:hover {
+    background-color: #5a6268; /* Darker gray on hover */
+}
+
+/* Highlight active submenu item */
+.submenu button.active {
+    background-color: #28a745; /* Green to indicate active section */
+    color: white;
 }
 
 .section {
@@ -745,4 +802,69 @@ h1 {
 
 .login-page .custom-login-notice:hover {
     transform: scale(1.02);
+}
+
+/* New styles for "My Account" section */
+.settings-form {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.settings-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.settings-form input[type="text"],
+.settings-form input[type="url"],
+.settings-form input[type="email"],
+.settings-form input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.settings-form button {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.settings-form button:hover {
+    background-color: #0056b3;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 16px;
+}
+
+.password-toggle:hover {
+    color: #007BFF;
+}
+
+.settings-form button i {
+    margin-right: 5px;
 }

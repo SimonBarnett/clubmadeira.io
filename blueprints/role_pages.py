@@ -1,6 +1,6 @@
-# blueprints/role_pages.py
 from flask import Blueprint, render_template, jsonify, request
 from utils.auth import login_required
+from utils.users import load_users_settings  # Import the function to load user data
 import json
 import os
 
@@ -26,22 +26,43 @@ def load_branding_data():
 @role_pages_bp.route('/admin', methods=['GET'])
 @login_required(["admin"], require_all=True)
 def admin():
-    return render_template('admin.html')
+    # Get the userId from the request (set by the @login_required decorator)
+    user_id = request.user_id
+    if not user_id:
+        return jsonify({"status": "error", "message": "User ID not found in token"}), 401
+
+    # Load user data
+    users_settings = load_users_settings()
+    user = users_settings.get(user_id)
+    if not user:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+
+    # Pass the user object to the template
+    return render_template('admin.html', user=user)
 
 @role_pages_bp.route('/community', methods=['GET'])
 @login_required(["community", "admin"], require_all=False)
 def community():
-    return render_template('community.html')
+    user_id = request.user_id
+    users_settings = load_users_settings()
+    user = users_settings.get(user_id) if user_id else None
+    return render_template('community.html', user=user)
 
 @role_pages_bp.route('/merchant', methods=['GET'])
 @login_required(["merchant", "admin"], require_all=False)
 def merchant():
-    return render_template('merchant.html')
+    user_id = request.user_id
+    users_settings = load_users_settings()
+    user = users_settings.get(user_id) if user_id else None
+    return render_template('merchant.html', user=user)
 
 @role_pages_bp.route('/partner', methods=['GET'])
 @login_required(["wixpro", "admin"], require_all=False)
 def wixpro():
-    return render_template('partner.html')
+    user_id = request.user_id
+    users_settings = load_users_settings()
+    user = users_settings.get(user_id) if user_id else None
+    return render_template('partner.html', user=user)
 
 @role_pages_bp.route('/branding', methods=['GET'])
 @login_required(["allauth"], require_all=False)

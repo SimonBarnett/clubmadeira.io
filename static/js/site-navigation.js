@@ -74,8 +74,8 @@ async function authenticatedFetch(url, options = {}) {
     }
 }
 
-// Fetches protected page content for navigation, ensuring cache-busting with timestamps.
-async function fetchProtectedPage(url) {
+// Fetches protected page content for navigation, with an option to load into a specific container
+async function fetchProtectedPage(url, targetContainer = null) {
     const token = localStorage.getItem('authToken');
     if (!token) {
         toastr.error('No authentication token found. Please log in.');
@@ -85,7 +85,7 @@ async function fetchProtectedPage(url) {
 
     const overlay = showLoadingOverlay();
     try {
-        const response = await fetch(`${window.apiUrl}${url}`, {  // Changed apiUrl to window.apiUrl for consistency
+        const response = await fetch(`${window.apiUrl}${url}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -100,82 +100,142 @@ async function fetchProtectedPage(url) {
 
         const html = await response.text();
 
-        // Parse the HTML and remove script tags
+        // Parse the HTML
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const scripts = doc.querySelectorAll('script');
         scripts.forEach(script => script.remove()); // Remove scripts to avoid double execution
 
-        // Update the document without scripts
-        document.documentElement.innerHTML = doc.documentElement.innerHTML;
-
-        // Ensure critical stylesheets are present
-        const head = document.head;
-        const requiredStyles = [
-            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
-            'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css',
-            '/static/styles.css'
-        ];
-        requiredStyles.forEach(href => {
-            if (!head.querySelector(`link[href="${href}"]`)) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = href;
-                head.appendChild(link);
+        if (targetContainer) {
+            // Load content into the specified container (e.g., .content-wrapper)
+            const container = document.querySelector(targetContainer);
+            if (!container) {
+                console.error(`fetchProtectedPage - Target container not found: ${targetContainer}`);
+                toastr.error('Failed to load page content: Container not found');
+                hideLoadingOverlay();
+                return;
             }
-        });
 
-        // Load and execute scripts manually, once
-        const scriptPromises = [];
-        scripts.forEach(script => {
-            if (script.src) {
-                // External script
-                const newScript = document.createElement('script');
-                newScript.src = script.src;
-                newScript.async = false; // Load in order
-                scriptPromises.push(
-                    new Promise(resolve => {
-                        newScript.onload = resolve;
-                        newScript.onerror = () => console.error(`Failed to load script: ${script.src}`);
-                        document.head.appendChild(newScript);
-                    })
-                );
-            } else if (script.innerHTML.trim()) {
-                // Inline script
-                try {
-                    const scriptFn = new Function(script.innerHTML);
-                    scriptFn();
-                } catch (e) {
-                    console.error('Error executing inline script:', e);
+            // Extract the main content (assuming the target page has a .content-wrapper or similar structure)
+            const newContent = doc.querySelector('.content-wrapper') || doc.body;
+            container.innerHTML = newContent.innerHTML;
+
+            // Load and execute scripts manually
+            const scriptPromises = [];
+            scripts.forEach(script => {
+                if (script.src) {
+                    const newScript = document.createElement('script');
+                    newScript.src = script.src;
+                    newScript.async = false;
+                    scriptPromises.push(
+                        new Promise(resolve => {
+                            newScript.onload = resolve;
+                            newScript.onerror = () => console.error(`Failed to load script: ${script.src}`);
+                            document.head.appendChild(newScript);
+                        })
+                    );
+                } else if (script.innerHTML.trim()) {
+                    try {
+                        const scriptFn = new Function(script.innerHTML);
+                        scriptFn();
+                    } catch (e) {
+                        console.error('Error executing inline script:', e);
+                    }
                 }
-            }
-        });
+            });
 
-        // Wait for all external scripts to load
-        await Promise.all(scriptPromises);
+            // Wait for scripts to load
+            await Promise.all(scriptPromises);
 
-        // Trigger page initialization after scripts are loaded
-        if (typeof window.initialize === 'function') {
-            const pageType = url.split('/')[1] || 'login';
-            console.log('fetchProtectedPage - Triggering window.initialize for page type:', pageType);
-            window.initialize(pageType);
-        } else {
-            console.warn('fetchProtectedPage - window.initialize not found');
-        }
-
-        // Show the page after a short delay
-        setTimeout(() => {
-            const layoutWrapper = document.querySelector('.layout-wrapper');
-            if (layoutWrapper) {
-                layoutWrapper.style.display = 'block';
+            // Reinitialize navigation and other scripts
+            if (typeof window.initialize === 'function') {
+                const pageType = url.split('/')[1] || 'admin';
+                console.log('fetchProtectedPage - Triggering window.initialize for page type:', pageType);
+                window.initialize(pageType);
             } else {
-                toastr.error('Failed to load page content');
+                console.warn('fetchProtectedPage - window.initialize not found');
             }
-            hideLoadingOverlay();
-        }, 1000);
 
-        return html; // Return the HTML for potential use
+            // Reinitialize navigation to ensure menu functionality
+            initializeNavigation();
+
+            // Hide the loading overlay
+            setTimeout(() => {
+                hideLoadingOverlay();
+            }, 500);
+
+            return html;
+        } else {
+            // Original behavior: Replace the entire document
+            document.documentElement.innerHTML = doc.documentElement.innerHTML;
+
+            // Ensure critical stylesheets are present
+            const head = document.head;
+            const requiredStyles = [
+                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
+                'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css',
+                '/static/styles.css'
+            ];
+            requiredStyles.forEach(href => {
+                if (!head.querySelector(`link[href="${href}"]`)) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = href;
+                    head.appendChild(link);
+                }
+            });
+
+            // Load and execute scripts manually
+            const scriptPromises = [];
+            scripts.forEach(script => {
+                if (script.src) {
+                    const newScript = document.createElement('script');
+                    newScript.src = script.src;
+                    newScript.async = false;
+                    scriptPromises.push(
+                        new Promise(resolve => {
+                            newScript.onload = resolve;
+                            newScript.onerror = () => console.error(`Failed to load script: ${script.src}`);
+                            document.head.appendChild(newScript);
+                        })
+                    );
+                } else if (script.innerHTML.trim()) {
+                    try {
+                        const scriptFn = new Function(script.innerHTML);
+                        scriptFn();
+                    } catch (e) {
+                        console.error('Error executing inline script:', e);
+                    }
+                }
+            });
+
+            // Wait for scripts to load
+            await Promise.all(scriptPromises);
+
+            // Trigger page initialization
+            if (typeof window.initialize === 'function') {
+                const pageType = url.split('/')[1] || 'login';
+                console.log('fetchProtectedPage - Triggering window.initialize for page type:', pageType);
+                window.initialize(pageType);
+            } else {
+                console.warn('fetchProtectedPage - window.initialize not found');
+            }
+
+            // Show the page
+            setTimeout(() => {
+                const layoutWrapper = document.querySelector('.layout-wrapper');
+                if (layoutWrapper) {
+                    layoutWrapper.style.display = 'block';
+                } else {
+                    toastr.error('Failed to load page content');
+                }
+                hideLoadingOverlay();
+            }, 1000);
+
+            return html;
+        }
     } catch (error) {
+        console.error('fetchProtectedPage - Error:', error);
         toastr.error(error.message || 'Failed to load protected page');
         showLogin();
         hideLoadingOverlay();
@@ -256,6 +316,15 @@ function showSection(sectionId, onSectionLoad = null) {
     activeSection.classList.add('active');
     activeSection.style.display = 'block';
     console.log('showSection - Section activated - ID:', sectionId);
+
+    // Highlight the corresponding submenu button
+    document.querySelectorAll('.submenu button').forEach(button => {
+        button.classList.remove('active');
+        if (button.getAttribute('data-section') === sectionId) {
+            button.classList.add('active');
+        }
+    });
+
     if (typeof onSectionLoad === 'function') {
         console.log('showSection - Executing onSectionLoad callback for:', sectionId);
         onSectionLoad(sectionId);
@@ -433,139 +502,148 @@ async function loadSection(sectionId) {
     console.log('loadSection - Section load completed - Section ID:', sectionId);
 }
 
-// Toggles submenu visibility for navigation menus and updates caret icons.
+// Updated toggleSubmenu function with improved caret detection
 function toggleSubmenu(submenuId) {
-    console.log('toggleSubmenu - Starting toggle - Submenu ID:', submenuId);
-    const submenu = document.getElementById(submenuId);
-    console.log('toggleSubmenu - Submenu element retrieved:', submenu);
-    if (!submenu) {
-        console.warn('toggleSubmenu - Submenu element not found - ID:', submenuId);
+    console.log(`toggleSubmenu - Starting toggle - Submenu ID: ${submenuId}`);
+    const submenuElement = document.getElementById(submenuId);
+    if (!submenuElement) {
+        console.error(`toggleSubmenu - Submenu element not found: ${submenuId}`);
+        toastr.error(`Navigation error: Submenu "${submenuId}" not found.`);
+        return;
+    }
+    console.log(`toggleSubmenu - Submenu element retrieved:`, submenuElement);
+
+    const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
+    if (!button) {
+        console.error(`toggleSubmenu - Button for submenu not found: ${submenuId}`);
+        toastr.error(`Navigation error: Button for submenu "${submenuId}" not found.`);
         return;
     }
 
-    // Determine if the submenu is top-level (direct child of .menu) or nested
-    const isTopLevel = submenu.parentElement.classList.contains('menu');
-    console.log('toggleSubmenu - Submenu is top-level:', isTopLevel);
+    const isTopLevel = submenuElement.parentElement.classList.contains('menu') || !submenuElement.parentElement.closest('.submenu');
+    console.log(`toggleSubmenu - Submenu is top-level: ${isTopLevel}`);
 
-    // If this is a top-level submenu, close all other top-level submenus and their children
-    if (isTopLevel) {
-        const allTopLevelSubmenus = document.querySelectorAll('.menu > .submenu');
-        allTopLevelSubmenus.forEach(s => {
-            if (s.id !== submenuId) {
-                console.log('toggleSubmenu - Closing other top-level submenu - ID:', s.id);
-                s.classList.remove('open');
-                const parentButton = document.querySelector(`button[data-submenu="${s.id}"]`);
-                if (parentButton) {
-                    const caret = parentButton.querySelector('.caret');
-                    if (caret) {
-                        caret.classList.remove('fa-caret-down');
-                        caret.classList.add('fa-caret-right');
-                        console.log('toggleSubmenu - Reset caret to fa-caret-right for top-level submenu:', s.id);
-                    }
-                }
-                // Also close any nested submenus within this top-level submenu
-                const nestedSubmenus = s.querySelectorAll('.submenu');
-                nestedSubmenus.forEach(nested => {
-                    console.log('toggleSubmenu - Closing nested submenu - ID:', nested.id);
-                    nested.classList.remove('open');
-                    const nestedButton = document.querySelector(`button[data-submenu="${nested.id}"]`);
-                    if (nestedButton) {
-                        const nestedCaret = nestedButton.querySelector('.caret');
-                        if (nestedCaret) {
-                            nestedCaret.classList.remove('fa-caret-down');
-                            nestedCaret.classList.add('fa-caret-right');
-                            console.log('toggleSubmenu - Reset caret to fa-caret-right for nested submenu:', nested.id);
-                        }
-                    }
-                });
+    // Close sibling submenus at the same level
+    const parentMenu = isTopLevel ? document.querySelector('.menu') : submenuElement.parentElement.closest('.submenu');
+    if (!parentMenu) {
+        console.warn(`toggleSubmenu - Parent menu not found for submenu: ${submenuId}. Skipping sibling submenu closure.`);
+        toastr.warning(`Navigation warning: Parent menu for "${submenuId}" not found.`);
+    } else {
+        const siblingSubmenus = parentMenu.querySelectorAll(`.submenu:not(#${submenuId})`);
+        siblingSubmenus.forEach(sibling => {
+            console.log(`toggleSubmenu - Closing sibling submenu - ID: ${sibling.id}`);
+            sibling.style.display = 'none';
+            sibling.classList.remove('open');
+            const siblingButton = document.querySelector(`button[data-submenu="${sibling.id}"]`);
+            if (siblingButton) {
+                siblingButton.setAttribute('aria-expanded', 'false');
+            }
+            const siblingCaret = siblingButton ? siblingButton.querySelector('.caret') : null;
+            if (siblingCaret) {
+                siblingCaret.classList.replace('fa-caret-down', 'fa-caret-right');
+                console.log(`toggleSubmenu - Reset caret for sibling submenu: ${sibling.id} to fa-caret-right`);
             }
         });
     }
 
-    // Toggle the current submenu
-    const wasOpen = submenu.classList.contains('open');
-    submenu.classList.toggle('open');
-    const isOpen = submenu.classList.contains('open');
-    console.log('toggleSubmenu - Toggled state - ID:', submenuId, 'Was open:', wasOpen, 'Now open:', isOpen);
+    // Use getComputedStyle to accurately determine the current display state
+    const computedStyle = window.getComputedStyle(submenuElement);
+    const isOpen = computedStyle.display === 'block';
+    console.log(`toggleSubmenu - Toggled state - ID: ${submenuId} Was open: ${isOpen} Now open: ${!isOpen}`);
 
-    // Update the caret icon for the current submenu
-    const parentButton = document.querySelector(`button[data-submenu="${submenuId}"]`);
-    if (parentButton) {
-        const caret = parentButton.querySelector('.caret');
-        if (caret) {
-            if (isOpen) {
-                caret.classList.remove('fa-caret-right');
-                caret.classList.add('fa-caret-down');
-                console.log('toggleSubmenu - Set caret to fa-caret-down for submenu:', submenuId);
-            } else {
-                caret.classList.remove('fa-caret-down');
-                caret.classList.add('fa-caret-right');
-                console.log('toggleSubmenu - Set caret to fa-caret-right for submenu:', submenuId);
-                // If closing a nested submenu, also close its children
-                const nestedSubmenus = submenu.querySelectorAll('.submenu');
-                nestedSubmenus.forEach(nested => {
-                    console.log('toggleSubmenu - Closing nested submenu - ID:', nested.id);
-                    nested.classList.remove('open');
-                    const nestedButton = document.querySelector(`button[data-submenu="${nested.id}"]`);
-                    if (nestedButton) {
-                        const nestedCaret = nestedButton.querySelector('.caret');
-                        if (nestedCaret) {
-                            nestedCaret.classList.remove('fa-caret-down');
-                            nestedCaret.classList.add('fa-caret-right');
-                            console.log('toggleSubmenu - Reset caret to fa-caret-right for nested submenu:', nested.id);
-                        }
-                    }
-                });
-            }
-        } else {
-            console.warn('toggleSubmenu - Caret element not found for submenu:', submenuId);
-        }
+    // Toggle the target submenu
+    submenuElement.style.display = isOpen ? 'none' : 'block';
+    if (isOpen) {
+        submenuElement.classList.remove('open');
     } else {
-        console.warn('toggleSubmenu - Parent button not found for submenu:', submenuId);
+        submenuElement.classList.add('open');
     }
 
-    console.log('toggleSubmenu - Toggle completed');
+    // Update ARIA attribute for accessibility
+    button.setAttribute('aria-expanded', !isOpen);
+
+    // Find the caret using the .caret class
+    let caret = button.querySelector('.caret');
+    if (!caret) {
+        console.warn(`toggleSubmenu - Caret not found for submenu: ${submenuId}. Adding caret programmatically.`);
+        caret = document.createElement('i');
+        caret.className = 'fas fa-caret-right caret';
+        button.appendChild(caret);
+    }
+
+    if (caret) {
+        console.log(`toggleSubmenu - Caret found for submenu: ${submenuId}, current classes: ${caret.className}`);
+        if (!isOpen) {
+            caret.classList.replace('fa-caret-right', 'fa-caret-down');
+            console.log(`toggleSubmenu - Set caret to fa-caret-down for submenu: ${submenuId}`);
+        } else {
+            caret.classList.replace('fa-caret-down', 'fa-caret-right');
+            console.log(`toggleSubmenu - Set caret to fa-caret-right for submenu: ${submenuId}`);
+        }
+    } else {
+        console.error(`toggleSubmenu - Failed to find or create caret for submenu: ${submenuId}`);
+    }
+
+    console.log(`toggleSubmenu - Toggle completed`);
 }
 
-// Initialize navigation event listeners
-// Define the function to set up navigation event listeners
+// Updated initializeNavigation with SPA navigation for data-href buttons without URL change
 function initializeNavigation() {
     console.log('initializeNavigation - Starting navigation setup');
 
-    // Handle submenu toggling
-    document.querySelectorAll('button[data-submenu]').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const submenuId = button.getAttribute('data-submenu');
-            console.log('initializeNavigation - Submenu button clicked - Submenu ID:', submenuId);
-            toggleSubmenu(submenuId);
-
-            // If a section is specified, show it
-            const sectionId = button.getAttribute('data-section');
-            if (sectionId) {
-                console.log('initializeNavigation - Showing section for submenu - Section ID:', sectionId);
-                showSection(sectionId);
+    // Initialize submenu states (all closed by default)
+    document.querySelectorAll('.submenu').forEach(submenu => {
+        submenu.style.display = 'none';
+        submenu.classList.remove('open');
+        const submenuId = submenu.id;
+        const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
+        if (button) {
+            button.setAttribute('aria-expanded', 'false');
+            let caret = button.querySelector('.caret');
+            if (!caret) {
+                console.warn(`initializeNavigation - Caret not found for submenu: ${submenuId}. Adding caret programmatically.`);
+                caret = document.createElement('i');
+                caret.className = 'fas fa-caret-right caret';
+                button.appendChild(caret);
+            } else {
+                caret.classList.remove('fa-caret-down');
+                caret.classList.add('fa-caret-right');
             }
-        });
+        }
     });
 
-    // Handle section navigation
-    document.querySelectorAll('button[data-section]').forEach(button => {
+    // Optionally, open a default submenu (e.g., "affiliatePrograms" on /admin)
+    const defaultSubmenuId = 'affiliatePrograms';
+    if (window.location.pathname === '/admin' && document.getElementById(defaultSubmenuId)) {
+        console.log(`initializeNavigation - Opening default submenu: ${defaultSubmenuId}`);
+        toggleSubmenu(defaultSubmenuId);
+    }
+
+    // Handle section navigation for buttons with only data-section (no submenu)
+    document.querySelectorAll('button[data-section]:not([data-submenu])').forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             const sectionId = button.getAttribute('data-section');
-            console.log('initializeNavigation - Section button clicked - Section ID:', sectionId);
+            console.log(`initializeNavigation - Section button clicked - Section ID: ${sectionId}`);
             showSection(sectionId);
         });
     });
 
-    // Handle external links
+    // Handle SPA navigation for buttons with data-href without changing the URL
     document.querySelectorAll('button[data-href]').forEach(button => {
-        button.addEventListener('click', (e) => {
+        button.addEventListener('click', async (e) => {
             e.preventDefault();
+            e.stopPropagation();
             const href = button.getAttribute('data-href');
-            console.log('initializeNavigation - External link button clicked - HREF:', href);
-            window.location.href = href;
+            console.log('initializeNavigation - SPA navigation button clicked - HREF:', href);
+
+            // Load the content into the .content-wrapper without changing the URL
+            await fetchProtectedPage(href, '.content-wrapper');
+
+            // Update the branding based on the page type
+            const pageType = href.split('/')[1] || 'admin';
+            await loadBranding(pageType);
         });
     });
 
@@ -574,13 +652,11 @@ function initializeNavigation() {
 
 // Initialize navigation based on document readiness
 if (document.readyState === 'loading') {
-    // Wait for the DOM to fully load if it’s still loading
     document.addEventListener('DOMContentLoaded', () => {
         console.log('DOMContentLoaded - Initializing navigation');
         initializeNavigation();
     });
 } else {
-    // Run immediately if the DOM is already loaded
     console.log('Document already loaded - Initializing navigation immediately');
     initializeNavigation();
 }

@@ -268,13 +268,13 @@
             });
         });
 
-        // Form submission
-        $('#signupForm').on('submit', function(e) {
+        // Form submission with OTP workflow
+        $('#signupForm').on('submit', async function(e) {
             e.preventDefault();
 
             const signupType = $('input[name="signup_type"]:checked').val();
             if (!signupType) {
-                toastr.error('Please select a signup type (Merchant, Community Group, or Wix Professional).');
+                toastr.error('Please select a signup type.');
                 return;
             }
 
@@ -284,63 +284,104 @@
             const password = $('#signup-password').val().trim();
             const confirmPassword = $('#signup-confirm-password').val().trim();
 
-            // Check required fields (phone is optional for wixpro)
+            // Validation: Check all required fields, password match, and phone validity
             if (!contactName || !email || !password || !confirmPassword) {
-                toastr.error('Contact name, email, password, and confirm password must be filled.');
-                return;
-            }
-            if (signupType !== 'wixpro' && !phone) {
-                toastr.error('Phone number is required for Community Group and Merchant signups.');
+                toastr.error('All fields except phone (for Partner) must be filled.');
                 return;
             }
 
-            // Password complexity check
-            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
-            if (!passwordRegex.test(password)) {
-                toastr.error('Password must be at least 8 characters long and contain both letters and numbers.');
-                return;
-            }
-
-            // Confirm password match
             if (password !== confirmPassword) {
                 toastr.error('Passwords do not match.');
                 return;
             }
 
-            // Phone number validation (if provided)
-            if (phone) {
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                toastr.error('Password must be 8+ characters with letters and numbers.');
+                return;
+            }
+
+            if (signupType !== 'wixpro') {
+                if (!phone) {
+                    toastr.error('Phone number is required for Community Group and Merchant.');
+                    return;
+                }
                 const phoneRegex = /^\d{10}$/;
                 if (!phoneRegex.test(phone)) {
-                    toastr.error('Please enter a valid 10-digit phone number with no spaces or special characters.');
+                    toastr.error('Enter a valid 10-digit phone number (e.g., 1234567890).');
                     return;
                 }
             }
 
-            const signupData = {
-                signup_type: signupType,
-                contact_name: contactName,
-                signup_phone: phone || null,
-                signup_email: email,
-                signup_password: password
+            const signupData = { 
+                signup_type: signupType, 
+                contact_name: contactName, 
+                signup_phone: phone || null, 
+                signup_email: email, 
+                signup_password: password 
             };
 
-            $.ajax({
-                url: '/signup',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(signupData),
-                success: function(response) {
-                    if (response.status === 'success') {
-                        toastr.success('Signup successful! Redirecting...');
-                        setTimeout(() => window.location.href = '/login', 2000);
-                    } else {
-                        toastr.error(response.message || 'Signup failed.');
-                    }
-                },
-                error: function(xhr) {
-                    toastr.error('Error connecting to server: ' + (xhr.responseJSON?.message || xhr.statusText));
+            try {
+                // Step 1: Create user with /signup
+                const signupResponse = await fetch('/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(signupData)
+                });
+                const signupDataResp = await signupResponse.json();
+                if (!signupResponse.ok) throw new Error(signupDataResp.message || 'Signup failed');
+
+                if (signupType === 'wixpro') {
+                    // Partner: Direct to login
+                    toastr.success('Signup successful! Redirecting to login...');
+                    setTimeout(() => window.location.href = '/login', 2000);
+                } else {
+                    // Merchant/Community: Send OTP with /reset-password
+                    const otpResponse = await fetch('/reset-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+                    const otpData = await otpResponse.json();
+                    if (!otpResponse.ok) throw new Error(otpData.message || 'Failed to send OTP');
+
+                    toastr.success('OTP sent to your phone. Please enter it below.');
+                    const otpContainer = document.createElement('div');
+                    otpContainer.innerHTML = `
+                        <div class="form-group">
+                            <label for="signupOtp">Enter OTP:</label>
+                            <input type="text" id="signupOtp" name="otp" placeholder="Enter OTP" required>
+                        </div>
+                        <button id="verifyOtpBtn">Verify OTP</button>
+                    `;
+                    this.appendChild(otpContainer);
+                    this.querySelector('.form-section').style.display = 'none';
+
+                    document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+                        const otp = document.getElementById('signupOtp').value.trim();
+                        if (!otp) {
+                            toastr.error('Please enter the OTP.');
+                            return;
+                        }
+
+                        // Step 2: Verify OTP with /verify-reset-code
+                        const verifyResponse = await fetch('/verify-reset-code', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, code: otp, new_password: password })
+                        });
+                        const verifyData = await verifyResponse.json();
+                        if (!verifyResponse.ok) throw new Error(verifyData.message || 'OTP verification failed');
+
+                        // Step 3: Redirect to group page based on signup_type
+                        toastr.success('Signup verified! Redirecting to your page...');
+                        const redirectPath = signupType === 'seller' ? '/merchant' : '/community';
+                        setTimeout(() => window.location.href = redirectPath, 2000);
+                    });
                 }
-            });
+            } catch (error) {
+                toastr.error(error.message || 'Error during signup/OTP process');
+            }
         });
 
         // Toastr options
