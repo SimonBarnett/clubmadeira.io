@@ -13,7 +13,6 @@ The main entry point of the app is /, which uses the /login template
 from there, depending on user permssion, we redirect to one of the templates above.
 
 # Transfer Request (XREQ) - Navigation and Initialization Fixes in Flask Application
-
 ## Current Requirement
 The objective is to address two primary issues in the Flask application's navigation and initialization behavior:
 - **Navigation Issue**: When navigating from `/admin` to a role-based page (e.g., `/partner`), the URL updates as expected. However, when returning to `/admin`, the URL does not update and remains stuck on the previous page (e.g., `/partner`).
