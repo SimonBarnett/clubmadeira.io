@@ -13,11 +13,16 @@
 +-admin-page.js
 function initializeAdmin(pageType) {
     console.log('initializeAdmin - Initializing admin page with type: ' + pageType);
-    loadBranding(pageType, 'brandingContent'); // Load header from /branding
-    setupNavigation(); // Set up menu and submenu toggling
-    showSection('welcome'); // Use existing showSection to display default section
-    loadInitialData(); // Fetch initial data like deals
-    setupEventListeners(); // Attach button listeners
+    loadBranding(pageType, 'brandingContent');
+
+    // Set up navigation and section management
+    setupNavigation();
+    setupSections();
+    loadInitialData();
+
+    // Add event listeners for buttons
+    setupEventListeners();
+
     console.log('Admin page initialized');
 }
 function setupNavigation(None) {
@@ -35,6 +40,10 @@ function setupNavigation(None) {
                     submenu.style.display = 'none';
                     caret.classList.remove('fa-caret-down');
                     caret.classList.add('fa-caret-right');
+}
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
 }
 function loadInitialData(None) {
     // Load deal listings

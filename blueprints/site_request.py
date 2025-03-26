@@ -1,26 +1,30 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request, jsonify
 from utils.auth import login_required
-from utils.data import load_site_request, save_site_request  # Keep these from utils.data
-from utils.users import load_users_settings  # Import load_users_settings from utils.users
-import os
+from utils.data import load_site_request, save_site_request
+from utils.users import load_users_settings
 import datetime
+import os
 import re
+import logging
+import json
 
 site_request_bp = Blueprint('site_request', __name__)
 
-@site_request_bp.route('/<user_id>/siterequest', methods=['POST'])
-@login_required(["admin", "merchant", "community"], require_all=False)
+@site_request_bp.route('/siterequest/<user_id>', methods=['POST'])  # Added explicit route
 def save_site_request_endpoint(user_id):
     try:
         data = request.get_json()
         if not data:
+            logging.warning("UX Issue - Site request save attempt with no data")
             return jsonify({"status": "error", "message": "No data provided"}), 400
 
         body_user_id = data.get("userId")
         if body_user_id and body_user_id != user_id:
+            logging.warning(f"Security Issue - User ID mismatch: URL={user_id}, Body={body_user_id}")
             return jsonify({"status": "error", "message": "User ID in body does not match URL"}), 400
 
         if "admin" not in request.permissions and request.user_id != user_id:
+            logging.warning(f"Security Issue - Unauthorized site request save by {request.user_id} for {user_id}")
             return jsonify({"status": "error", "message": "Unauthorized: Must be admin or match user_id"}), 403
 
         request_type = data.get("type", "community")
@@ -40,10 +44,12 @@ def save_site_request_endpoint(user_id):
         }
 
         if not site_request["communityName"]:
+            logging.warning(f"UX Issue - Site request missing community/store name for user {user_id}")
             return jsonify({"status": "error", "message": "Community name or store name is required"}), 400
 
         domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
         if not re.match(domain_regex, site_request["preferredDomain"]):
+            logging.warning(f"UX Issue - Invalid domain name for user {user_id}: {site_request['preferredDomain']}")
             return jsonify({"status": "error", "message": "Invalid domain name"}), 400
 
         for page in site_request["pages"]:
@@ -51,9 +57,10 @@ def save_site_request_endpoint(user_id):
                 page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
 
         save_site_request(user_id, site_request)
+        logging.debug(f"Site request saved for user {user_id}: {json.dumps(site_request)}")
         return jsonify({"status": "success", "message": "Site request saved successfully"}), 200
-
     except Exception as e:
+        logging.error(f"UX Issue - Failed to save site request for user {user_id}: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 @site_request_bp.route('/siterequests', methods=['GET'])
@@ -62,6 +69,7 @@ def list_site_requests():
     try:
         siterequest_dir = 'siterequest'
         if not os.path.exists(siterequest_dir):
+            logging.warning("UX Issue - No site requests directory found")
             return jsonify({"status": "success", "siterequests": []}), 200
 
         users_settings = load_users_settings()
@@ -89,8 +97,10 @@ def list_site_requests():
                         'organisation': organisation
                     })
 
-        siterequests.sort(key=lambda x: x['received_at'] or '', reverse=True)
+        if not siterequests:
+            logging.warning("UX Issue - No site requests found in directory")
+        logging.debug(f"Listed site requests: {json.dumps(siterequests)}")
         return jsonify({"status": "success", "siterequests": siterequests}), 200
-
     except Exception as e:
+        logging.error(f"UX Issue - Failed to list site requests: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500

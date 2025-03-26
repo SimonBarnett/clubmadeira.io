@@ -56,28 +56,27 @@ body {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto !important;
-    padding: 12px 20px; /* Updated as per previous request */
+    padding: 12px 20px;
     background-color: #007BFF;
     color: white;
     border-radius: 8px;
     display: flex !important;
-    flex-direction: column; /* Stack content vertically */
-    align-items: flex-start; /* Align content to the left */
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: center;
     box-sizing: border-box;
-    max-height: 80px; /* Limit the height of the header */
-    overflow: hidden; /* Prevent content from overflowing */
+    max-height: 80px;
+    overflow: hidden;
 }
 
-/* Adjust margins for branding content inside header-content */
 .layout-wrapper .header .header-content h1 {
-    margin: 0 0 5px 0; /* Reduce margin to minimize vertical space */
-    font-size: 20px; /* Slightly smaller font size */
+    margin: 0 0 5px 0;
+    font-size: 20px;
 }
 
 .layout-wrapper .header .header-content p {
-    margin: 0; /* Remove default margin */
-    font-size: 14px; /* Smaller font size for tagline */
+    margin: 0;
+    font-size: 14px;
 }
 
 .main-container {
@@ -85,14 +84,14 @@ body {
     margin: 0 auto !important;
     display: flex;
     gap: 20px;
-    padding: 0 20px 20px 20px;
+    padding: 0 20px 20px 0; /* Remove left padding */
     flex-direction: row;
 }
 
 .menu-container {
-    flex: 0 0 300px;
-    max-width: 300px;
-    margin-top: 10px; /* Ensure a small gap below the header */
+    flex: 0 0 160px; /* Updated from 200px to 160px */
+    max-width: 160px; /* Updated from 200px to 160px */
+    margin-top: 10px;
 }
 
 .content-wrapper {
@@ -103,11 +102,11 @@ body {
 .menu {
     margin-bottom: 20px;
     text-align: left;
-    margin-top: 0; /* Ensure no extra top margin */
+    margin-top: 0;
 }
 
 .menu button {
-    padding: 10px 10px 10px 10px; /* Adjusted to ensure space for caret */
+    padding: 10px 10px 10px 10px;
     background-color: #007BFF;
     color: white;
     border: none;
@@ -115,23 +114,22 @@ body {
     cursor: pointer;
     font-size: 14px;
     width: 100%;
-    max-width: 300px;
+    max-width: 160px; /* Updated from 200px to 160px */
     margin-bottom: 5px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     position: relative;
-    padding-right: 30px; /* Ensure space for the caret */
+    padding-right: 30px;
 }
 
 .menu button:hover {
     background-color: #0056b3;
 }
 
-/* Visual feedback for open submenus */
 .menu button[data-submenu][aria-expanded="true"] {
-    background-color: #0056b3; /* Darker shade to indicate open state */
-    border-left: 4px solid #fff; /* White border on the left for emphasis */
+    background-color: #0056b3;
+    border-left: 4px solid #fff;
 }
 
 .menu button i,
@@ -187,8 +185,8 @@ body {
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
-    color: white; /* Ensure caret is visible */
-    font-size: 14px; /* Match button font size */
+    color: white;
+    font-size: 14px;
 }
 
 .menu .btn-admin {
@@ -207,30 +205,37 @@ body {
     background-color: #c82333;
 }
 
+.menu button[data-href="/admin"] {
+    background-color: #dc3545; /* Match Log Off button color */
+}
+
+.menu button[data-href="/admin"]:hover {
+    background-color: #c82333; /* Match Log Off hover color */
+}
+
 .submenu {
     display: none;
     padding-left: 20px;
     overflow: hidden;
-    transition: max-height 0.3s ease-in-out; /* Reintroduce smooth transition */
-    max-height: 0; /* Start collapsed */
+    transition: max-height 0.3s ease-in-out;
+    max-height: 0;
 }
 
 .submenu.open {
     display: block;
-    max-height: 500px; /* Adjust based on content height */
+    max-height: 500px;
 }
 
-/* Styling for submenu buttons */
 .submenu button {
-    padding: 8px 10px; /* Slightly smaller padding than top-level buttons */
-    background-color: #6c757d; /* Gray to differentiate from top-level buttons */
+    padding: 8px 10px;
+    background-color: #6c757d;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px; /* Slightly smaller font size */
+    font-size: 13px;
     width: 100%;
-    max-width: 280px; /* Slightly narrower to indicate hierarchy */
+    max-width: 140px; /* Updated from 180px to 140px (160px - 20px indent) */
     margin-bottom: 5px;
     display: flex;
     align-items: center;
@@ -239,12 +244,11 @@ body {
 }
 
 .submenu button:hover {
-    background-color: #5a6268; /* Darker gray on hover */
+    background-color: #5a6268;
 }
 
-/* Highlight active submenu item */
 .submenu button.active {
-    background-color: #28a745; /* Green to indicate active section */
+    background-color: #28a745;
     color: white;
 }
 
@@ -562,9 +566,11 @@ button:hover {
 .password-toggle {
     position: absolute;
     right: 10px;
-    top: 65%;
+    top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
+    color: #666;
+    font-size: 16px;
 }
 
 #my-store .settings-form {
@@ -732,7 +738,7 @@ h1 {
     display: block;
     font-weight: bold;
     margin-bottom: 0;
-    max-width: 70px; /* Reduced width to shift labels left */
+    max-width: 70px;
 }
 
 .login-page input {
@@ -792,11 +798,11 @@ h1 {
     font-family: 'Courier New', Courier, monospace;
     color: #2f4f4f;
     transition: transform 0.3s ease-in-out;
-    margin-bottom: 30px; /* Increased gap between notice and email field */
+    margin-bottom: 30px;
 }
 
 .login-page .custom-login-notice .highlight {
-    color: #007BFF; /* Match the blue of the toggle links */
+    color: #007BFF;
     font-weight: bold;
 }
 

@@ -1,32 +1,14 @@
-// admin-page.js
-
-// Define window.initialize
-window.initialize = function(pageType) {
-    console.log('window.initialize - Initializing page - Page Type: ' + pageType);
-    if (pageType === 'admin') {
-        initializeAdmin(pageType);
-    } else {
-        console.error('Unknown page type: ' + pageType);
-    }
-}
-
-// Define initializeAdmin
+// /static/js/admin-page.js
 function initializeAdmin(pageType) {
     console.log('initializeAdmin - Initializing admin page with type: ' + pageType);
-    loadBranding(pageType, 'brandingContent');
-
-    // Set up navigation and section management
-    setupNavigation();
-    setupSections();
-    loadInitialData();
-
-    // Add event listeners for buttons
-    setupEventListeners();
-
+    loadBranding(pageType, 'brandingContent'); // Load header from /branding
+    setupNavigation(); // Set up menu and submenu toggling
+    showSection('welcome'); // Use existing showSection to display default section
+    loadInitialData(); // Fetch initial data like deals
+    setupEventListeners(); // Attach button listeners
     console.log('Admin page initialized');
 }
 
-// Set up navigation (menu buttons, submenus)
 function setupNavigation() {
     // Handle main menu button clicks
     document.querySelectorAll('.menu button[data-section]').forEach(button => {
@@ -43,116 +25,42 @@ function setupNavigation() {
                     caret.classList.remove('fa-caret-down');
                     caret.classList.add('fa-caret-right');
                 } else {
-                    // Close other submenus
-                    document.querySelectorAll('.submenu').forEach(sm => sm.style.display = 'none');
-                    document.querySelectorAll('.caret').forEach(c => {
-                        c.classList.remove('fa-caret-down');
-                        c.classList.add('fa-caret-right');
-                    });
                     submenu.style.display = 'block';
                     caret.classList.remove('fa-caret-right');
                     caret.classList.add('fa-caret-down');
                 }
             }
-
-            // Show the selected section
-            if (sectionId) {
-                showSection(sectionId);
-            }
+            if (sectionId) showSection(sectionId); // Show the selected section
         });
-    });
-
-    // Handle submenu button clicks
-    document.querySelectorAll('.submenu button[data-section]').forEach(button => {
-        button.addEventListener('click', function() {
-            const sectionId = this.getAttribute('data-section');
-            if (sectionId) {
-                showSection(sectionId);
-            }
-        });
-    });
-
-    // Handle buttons with href (e.g., "Back to Admin")
-    document.querySelectorAll('.menu button[data-href]').forEach(button => {
-        button.addEventListener('click', function() {
-            const href = this.getAttribute('data-href');
-            window.location.href = href;
-        });
-    });
-
-    // Handle "Log Off" button
-    document.getElementById('logOffBtn').addEventListener('click', function() {
-        localStorage.removeItem('jwtToken');
-        window.location.href = '/logout';
     });
 }
 
-// Show the specified section, hide others
-function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(section => {
-        section.classList.remove('active');
-    });
-    const section = document.getElementById(sectionId);
-    if (section) {
-        section.classList.add('active');
-    }
-}
-
-// Load initial data for sections (e.g., deal listings, user management)
 function loadInitialData() {
     // Load deal listings
-    authenticatedFetch(`${window.apiUrl}/api/deals`)
-        .then(response => response.json())
+    authenticatedFetch(`${window.apiUrl}/discounted-products?category_id=all`)
         .then(data => {
-            const dealList = document.getElementById('dealList');
-            dealList.innerHTML = '';
-            data.forEach(deal => {
+            const tbody = document.getElementById('dealList');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            data.products.forEach(product => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${deal.category}</td>
-                    <td>${deal.title}</td>
-                    <td><a href="${deal.url}" target="_blank">Link</a></td>
-                    <td>${deal.price}</td>
-                    <td>${deal.original}</td>
-                    <td>${deal.discount}</td>
-                    <td><img src="${deal.image}" alt="${deal.title}" style="max-width: 50px;"></td>
-                    <td>${deal.quantity}</td>
+                    <td>${product.category || 'N/A'}</td>
+                    <td>${product.title || 'N/A'}</td>
+                    <td><a href="${product.url || '#'}">Link</a></td>
+                    <td>${product.price || 'N/A'}</td>
+                    <td>${product.original || 'N/A'}</td>
+                    <td>${product.discount || 'N/A'}</td>
+                    <td><img src="${product.image || ''}" alt="Product Image" style="max-width: 50px;"></td>
+                    <td>${product.quantity || 'N/A'}</td>
                 `;
-                dealList.appendChild(row);
+                tbody.appendChild(row);
             });
+            console.log('Deals loaded:', data);
         })
-        .catch(error => {
-            console.error('Error loading deals:', error);
-            toastr.error('Failed to load deal listings.');
-        });
-
-    // Load user management data (partners, communities, merchants)
-    ['partners', 'communities', 'merchants'].forEach(type => {
-        authenticatedFetch(`${window.apiUrl}/api/users?type=${type}`)
-            .then(response => response.json())
-            .then(data => {
-                const userList = document.getElementById(`${type}List`);
-                userList.innerHTML = '';
-                data.forEach(user => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${user.userId}</td>
-                        <td>${user.contactName}</td>
-                        <td>${user.email}</td>
-                        <td>${user.phoneNumber || 'N/A'}</td>
-                        <td><button data-user-id="${user.userId}" data-action="editUser">Edit</button></td>
-                    `;
-                    userList.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error(`Error loading ${type}:`, error);
-                toastr.error(`Failed to load ${type} list.`);
-            });
-    });
+        .catch(err => console.error('Failed to load deals:', err));
 }
 
-// Set up event listeners for buttons (e.g., save settings, update credentials)
 function setupEventListeners() {
     // Save settings (contact details)
     document.querySelector('button[data-action="saveSettings"]').addEventListener('click', function() {
@@ -161,79 +69,23 @@ function setupEventListeners() {
         const websiteUrl = document.getElementById('websiteUrl').value;
         const emailAddress = document.getElementById('emailAddress').value;
 
-        authenticatedFetch(`${window.apiUrl}/api/user/${userId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ contactName, websiteUrl, emailAddress })
+        authenticatedFetch(`${window.apiUrl}/users/${userId}/user`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                contact_name: contactName,
+                website_url: websiteUrl,
+                email_address: emailAddress
+            })
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    toastr.success('Settings updated successfully.');
-                } else {
-                    toastr.error('Failed to update settings.');
-                }
-            })
-            .catch(error => {
-                console.error('Error saving settings:', error);
-                toastr.error('Error saving settings.');
-            });
+        .then(() => toastr.success('Settings saved'))
+        .catch(err => toastr.error('Failed to save settings: ' + err.message));
     });
 
-    // Change password
-    document.querySelector('button[data-action="savePassword"]').addEventListener('click', function() {
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (newPassword !== confirmPassword) {
-            toastr.error('New passwords do not match.');
-            return;
-        }
-
-        authenticatedFetch(`${window.apiUrl}/api/change-password`, {
-            method: 'POST',
-            body: JSON.stringify({ currentPassword, newPassword })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    toastr.success('Password changed successfully.');
-                } else {
-                    toastr.error('Failed to change password.');
-                }
-            })
-            .catch(error => {
-                console.error('Error changing password:', error);
-                toastr.error('Error changing password.');
-            });
-    });
-
-    // Update affiliate credentials
-    document.querySelectorAll('button[data-affiliate]').forEach(button => {
-        button.addEventListener('click', function() {
-            const affiliate = this.getAttribute('data-affiliate');
-            const inputs = document.querySelectorAll(`#${affiliate} input`);
-            const credentials = {};
-            inputs.forEach(input => {
-                credentials[input.id] = input.value;
-            });
-
-            authenticatedFetch(`${window.apiUrl}/api/affiliate/${affiliate}`, {
-                method: 'PUT',
-                body: JSON.stringify(credentials)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        toastr.success(`${affiliate} credentials updated successfully.`);
-                    } else {
-                        toastr.error(`Failed to update ${affiliate} credentials.`);
-                    }
-                })
-                .catch(error => {
-                    console.error(`Error updating ${affiliate} credentials:`, error);
-                    toastr.error(`Error updating ${affiliate} credentials.`);
-                });
-        });
-    });
+    // Add more listeners as needed (e.g., affiliate credential updates)
 }
+
+// Define window.initialize for page-load.js to call
+window.initialize = function(pageType) {
+    console.log('window.initialize - Initializing page - Page Type: ' + pageType);
+    initializeAdmin(pageType);
+};

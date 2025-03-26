@@ -1,87 +1,115 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request, jsonify, make_response, current_app
 from utils.auth import login_required
-from utils.users import load_users_settings, save_users_settings  # Changed from utils.data to utils.users
+import os
+import requests
+import markdown
+import whois
+import logging
+import json
 
-# Define the user_settings blueprint
-user_settings_bp = Blueprint('user_settings', __name__)
+utility_bp = Blueprint('utility', __name__)
 
-@user_settings_bp.route('/<USERid>/user', methods=['GET'])
-@login_required(["self", "admin"], require_all=False)
-def get_user_settings(USERid):
+def render_md(full_path):
     """
-    Retrieve the settings for a specific user.
+    Render Markdown files from the static folder or GitHub based on the URL path.
+    Returns an HTML response using templates from static/error/<status_code>.md.
     """
     try:
-        users_settings = load_users_settings()
-        if USERid not in users_settings:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        settings = users_settings[USERid]
-        return jsonify({
-            "status": "success",
-            "contact_name": settings.get("contact_name", ""),
-            "website_url": settings.get("website_url", ""),
-            "email_address": settings.get("email_address", ""),
-            "phone_number": settings.get("phone_number", ""),
-            "wixClientId": settings.get("wixClientId", "")
-        }), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        # Parse the full_path, removing trailing slashes
+        segments = full_path.rstrip('/').split('/')
+        if not segments or segments == ['']:
+            logging.warning("UX Issue - Invalid path provided for markdown rendering")
+            raise ValueError("Invalid path provided")
 
-@user_settings_bp.route('/<USERid>/user', methods=['PUT'])
-@login_required(["self", "admin"], require_all=False)
-def put_user_settings(USERid):
+        # Determine source: static folder or GitHub
+        if segments[0] == 'static':
+            if len(segments) < 2:
+                logging.warning("UX Issue - No file path provided after 'static'")
+                raise ValueError("No file path provided after 'static'")
+            file_path = '/'.join(segments[1:])
+            if not file_path.endswith('.md'):
+                logging.warning(f"UX Issue - Unsupported file type for {file_path}")
+                raise ValueError("Only .md files are supported")
+            static_file = os.path.join(current_app.static_folder, file_path)
+            if not os.path.isfile(static_file):
+                logging.warning(f"UX Issue - File not found in static folder: {static_file}")
+                raise FileNotFoundError("File not found in static folder")
+            with open(static_file, 'r', encoding='utf-8') as f:
+                md_content = f.read()
+        else:
+            if len(segments) < 4:
+                logging.warning(f"UX Issue - Invalid GitHub path: {full_path}")
+                raise ValueError("Invalid GitHub path: Must provide owner/repo/branch/path")
+            owner, repo, branch = segments[:3]
+            path_segments = segments[3:]
+            path = '/'.join(path_segments)
+            if not path.endswith('.md'):
+                logging.warning(f"UX Issue - Unsupported GitHub file type: {path}")
+                raise ValueError("Only .md files are supported")
+            url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
+            response = requests.get(url)
+            if response.status_code != 200:
+                logging.warning(f"UX Issue - GitHub file not found: {url}, Status: {response.status_code}")
+                raise FileNotFoundError(f"File not found on GitHub: {response.status_code}")
+            md_content = response.text
+
+        # Convert Markdown to HTML with table support
+        html_content = markdown.markdown(md_content, extensions=['tables'])
+        status_code = 200
+    except (ValueError, FileNotFoundError) as e:
+        status_code = 404
+        error_message = str(e)
+    except requests.RequestException as e:
+        status_code = 500
+        logging.error(f"UX Issue - Failed to fetch GitHub markdown: {str(e)}", exc_info=True)
+        error_message = "Failed to fetch from GitHub"
+    except Exception as e:
+        status_code = 500
+        logging.error(f"UX Issue - Unexpected error rendering markdown: {str(e)}", exc_info=True)
+        error_message = "An unexpected error occurred"
+
+    # Load the corresponding template
+    template_path = os.path.join(current_app.static_folder, 'error', f'{status_code}.md')
+    if not os.path.exists(template_path):
+        logging.error(f"UX Issue - Template not found for status {status_code}: {template_path}")
+        return jsonify({"status": "error", "message": f"Template for status {status_code} not found"}), 500
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template = f.read()
+
+    # Replace the appropriate placeholder
+    if status_code == 200:
+        final_html = template.replace('{content}', html_content)
+        logging.debug(f"Rendered markdown for path {full_path}")
+    else:
+        final_html = template.replace('{error_message}', error_message)
+
+    response = make_response(final_html, status_code)
+    response.headers['Content-Type'] = 'text/html'
+    return response
+
+@utility_bp.route('/check-domain', methods=['GET'])
+@login_required(["allauth"], require_all=False)
+def check_domain():
     """
-    Replace the entire settings for a specific user.
+    Check the availability of a domain name using WHOIS.
     """
-    if not request.json:
-        return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
-    settings = request.json
-    required_fields = ["contact_name", "website_url", "email_address", "phone_number", "wixClientId"]
-    if not all(field in settings for field in required_fields):
-        return jsonify({"status": "error", "message": "Settings must include all required fields"}), 400
     try:
-        users_settings = load_users_settings()
-        users_settings[USERid] = settings
-        save_users_settings(users_settings)
-        return jsonify({
-            "status": "success",
-            "message": f"Settings for user {USERid} replaced",
-            "settings": settings
-        }), 200
+        domain = request.args.get('domain')
+        if not domain:
+            logging.warning("UX Issue - No domain provided for check")
+            return jsonify({"error": "Please provide a domain name"}), 400
+        
+        # Basic validation (matches client-side regex: /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/)
+        if not all(c.isalnum() or c in '-.' for c in domain) or '.' not in domain or len(domain.split('.')[-1]) < 2:
+            logging.warning(f"UX Issue - Invalid domain name: {domain}")
+            return jsonify({"error": "Invalid domain name (e.g., mystore.uk)"}), 400
+        
+        # Query WHOIS data
+        w = whois.whois(domain)
+        is_available = w.creation_date is None
+        response_data = {"domain": domain, "available": is_available}
+        logging.debug(f"Checked domain {domain}: {json.dumps(response_data)}")
+        return jsonify(response_data), 200
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@user_settings_bp.route('/<USERid>/user', methods=['PATCH'])
-@login_required(["self", "admin", "wixpro"], require_all=False)
-def patch_user_settings(USERid):
-    """
-    Partially update the settings for a specific user.
-    """
-    if not request.json:
-        return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
-    new_settings = request.json
-    try:
-        users_settings = load_users_settings()
-        if USERid not in users_settings:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        current_settings = users_settings[USERid]
-        valid_fields = ["contact_name", "website_url", "email_address", "phone_number", "wixClientId"]
-
-        # Restrict "wixpro" users to only updating wixClientId unless they have admin or self permissions
-        if "wixpro" in request.permissions and not ("admin" in request.permissions or request.user_id == USERid):
-            if any(key not in ["wixClientId"] for key in new_settings.keys()):
-                return jsonify({"status": "error", "message": "Wixpro can only update wixClientId"}), 403
-
-        # Update only the provided fields
-        for key in new_settings:
-            if key in valid_fields:
-                current_settings[key] = new_settings[key]
-        users_settings[USERid] = current_settings
-        save_users_settings(users_settings)
-        return jsonify({
-            "status": "success",
-            "message": f"Settings for user {USERid} updated",
-            "settings": current_settings
-        }), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logging.error(f"UX Issue - Failed to check domain availability: {str(e)}", exc_info=True)
+        return jsonify({"error": f"Failed to check domain availability: {str(e)}"}), 500

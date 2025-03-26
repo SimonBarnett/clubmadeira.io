@@ -4,5 +4,11 @@
         "content_type": "TEXT",
         "output_directory": "C:\\inetpub\\clubmadeira.io\\utils",
         "save_as": "utils_contents_all.txt"
+    },
+    {
+        "mode": "functions",
+        "content_type": "python",
+        "output_directory": "C:\\inetpub\\clubmadeira.io\\grok",
+        "save_as": "utils_functions_all.txt"
     }
 ]
