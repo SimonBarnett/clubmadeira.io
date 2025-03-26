@@ -254,6 +254,43 @@ Here’s a deep dive into what each endpoint does, including its purpose, expect
   - **Permissions**: `["allauth"]`.  
   - **Details**: Fetches from static folder or GitHub.
 
+# SMS Functionality in Utilities Blueprint
+
+## Overview
+Yes, I remember the `send-sms` endpoint we discussed! We moved the SMS API functionality from being scattered across the application into a centralized, reusable endpoint within the `utility_bp` blueprint. This change was made to streamline SMS sending and allow it to be reused in workflows like lost password recovery and signup OTP verification, avoiding code duplication and improving maintainability.
+
+## Endpoint Details
+Here’s everything I recall about the new `send-sms` endpoint:
+
+- **Endpoint**: `/send-sms`
+- **Blueprint**: `utility_bp`
+- **Method**: POST
+- **Permissions**: `["allauth"]` (accessible to any authenticated user)
+- **Input**: A JSON payload containing:
+  - `phone_number`: The recipient’s phone number (e.g., `"+1234567890"`)
+  - `message`: The text message to send (e.g., `"Your OTP is 123456"`)
+- **Output**: A JSON response indicating success or failure
+
+### Purpose
+The `/send-sms` endpoint was created to centralize SMS sending logic using the TextMagic API. By moving this functionality to a dedicated utility endpoint, we made it reusable across the application, particularly for the lost password and signup OTP workflows, while keeping the code DRY (Don’t Repeat Yourself).
+
+### Implementation
+The endpoint is part of the `utility_bp` blueprint and requires authentication via the `["allauth"]` permission. It takes a JSON payload, validates the input, and uses the TextMagic API to send the SMS. Here’s how it works:
+
+- It checks for required fields (`phone_number` and `message`).
+- It retrieves TextMagic credentials (username and API key) from the app’s configuration.
+- It sends the SMS via a POST request to the TextMagic API.
+- It returns a success or error response based on the outcome.
+
+#### Example Usage
+To use the endpoint, you’d send a POST request like this:
+
+```json
+{
+  "phone_number": "+1234567890",
+  "message": "Your OTP is 123456"
+}
+
 ## Summary
 
 This XREQ captures our endpoint organization, the reasoning behind the blueprint structure, and detailed documentation for each endpoint. It’s designed to be a self-contained resource for understanding and extending the Flask application.
