@@ -157,21 +157,22 @@
         </div>
     </div>
 
+    <!-- Load scripts in the correct order -->
     <script src="/static/js/site-auth.js"></script>
     <script src="/static/js/site-navigation.js"></script>
     <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/page-load.js"></script>
     <script src="/static/js/user-management.js"></script>
     <script src="/static/js/merchant-page.js"></script>
+    <script src="/static/js/page-load.js"></script>
     <script>
         // Initialize TinyMCE with minimal configuration for specific textareas
         document.addEventListener('DOMContentLoaded', () => {
             tinymce.init({
                 selector: '#aboutStore, #stylingDetails, #page1Content, #page2Content',
-                inline: true, // Use inline mode to reduce resource usage
-                menubar: false, // Disable menubar for simplicity
-                toolbar: 'bold italic | bullist numlist | link', // Minimal toolbar
-                plugins: 'lists link', // Only load necessary plugins
+                inline: true,
+                menubar: false,
+                toolbar: 'bold italic | bullist numlist | link',
+                plugins: 'lists link',
                 setup: (editor) => {
                     editor.on('init', () => {
                         console.log('TinyMCE initialized for:', editor.id);
@@ -192,6 +193,7 @@
                 console.error('Initialize function not found after maximum retries');
             }
         }
+        // Call waitForInitialize after all scripts are loaded
         waitForInitialize();
     </script>
 </body>

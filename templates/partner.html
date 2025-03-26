@@ -130,15 +130,14 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!-- Load scripts in the correct order -->
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
     <script src="/static/js/site-auth.js"></script>
     <script src="/static/js/site-navigation.js"></script>
     <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/page-load.js"></script>
     <script src="/static/js/user-management.js"></script>
     <script src="/static/js/partner-page.js"></script>
+    <script src="/static/js/page-load.js"></script>
     <script>
         // Wait for the initialize function to become available
         function waitForInitialize(attempts = 50, delay = 100) {
@@ -152,6 +151,7 @@
                 console.error('Initialize function not found after maximum retries');
             }
         }
+        // Call waitForInitialize after all scripts are loaded
         waitForInitialize();
     </script>
 </body>

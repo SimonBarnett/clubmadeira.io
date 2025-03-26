@@ -77,6 +77,10 @@ def get_branding():
     
     print('GET /branding - Requested branding type:', branding_type)
 
+    # Map 'partner' to 'wixpro' as specified
+    if branding_type == 'partner':
+        branding_type = 'wixpro'
+
     # Load branding data
     branding_data = load_branding_data()
     

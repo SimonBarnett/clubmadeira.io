@@ -480,12 +480,13 @@
         </div>
     </div>
 
+    <!-- Load scripts in the correct order -->
     <script src="/static/js/site-auth.js"></script>
     <script src="/static/js/site-navigation.js"></script>
     <script src="/static/js/category-management.js"></script>
     <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/page-load.js"></script>
     <script src="/static/js/admin-page.js"></script>
+    <script src="/static/js/page-load.js"></script>
     <script>
         // Wait for the initialize function to become available
         function waitForInitialize(attempts = 50, delay = 100) {

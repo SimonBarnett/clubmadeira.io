@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, session
 from flask_cors import CORS
 from blueprints.authentication import authentication_bp
 from blueprints.site_request import site_request_bp
@@ -37,27 +37,17 @@ app.register_blueprint(configuration_bp, url_prefix='')
 
 @app.route('/')
 def home():
+    if 'user' in session:
+        user = session['user']
+        if 'admin' in user['permissions']:
+            return redirect(url_for('role_pages.admin'))
+        elif 'merchant' in user['permissions']:
+            return redirect(url_for('role_pages.merchant'))
+        elif 'community' in user['permissions']:
+            return redirect(url_for('role_pages.community'))
+        elif 'wixpro' in user['permissions']:
+            return redirect(url_for('role_pages.wixpro'))
     return render_template('login.html')
-
-@app.route('/admin')
-@login_required(["admin"], require_all=True)
-def admin():
-    return render_template('admin.html', user_type='admin')  # Pass user_type to template
-
-@app.route('/merchant')
-@login_required(["merchant"], require_all=True)
-def merchant():
-    return render_template('merchant.html')
-
-@app.route('/community')
-@login_required(["community"], require_all=True)
-def community():
-    return render_template('community.html')
-
-@app.route('/wixpro')
-@login_required(["wixpro"], require_all=True)
-def wixpro():
-    return render_template('wixpro.html')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
