@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Define window.apiUrl before loading scripts -->
     <script>
         window.apiUrl = 'https://clubmadeira.io';
@@ -31,9 +33,18 @@
                     <button data-section="my-store">
                         <span class="button-content"><i class="fas fa-store"></i> My Store</span>
                     </button>
-                    <button data-section="my-account">
+                    <button data-submenu="my-account-submenu" data-section="my-account">
                         <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                        <i class="fas fa-caret-right caret"></i>
                     </button>
+                    <div id="my-account-submenu" class="submenu">
+                        <button data-section="my-account">
+                            <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
+                        </button>
+                        <button data-section="change-password">
+                            <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
+                        </button>
+                    </div>
                     <button data-href="/admin">
                         <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
                     </button>
@@ -51,6 +62,31 @@
                     <h2>Merchant Info</h2>
                     <p>Welcome to your merchant dashboard overview. Use the menu to manage products, your store, Wix integration, and account settings.</p>
                 </div>
+                <div id="my-account" class="section">
+                    <h2>My Account</h2>
+                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security. Use the options below to navigate to the desired section:</p>
+                </div>
+                <div id="change-password" class="section">
+                    <h2>Change Password</h2>
+                    <div class="settings-form">
+                        <div class="password-container">
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                            <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="newPassword">New Password:</label>
+                            <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                            <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                            <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
+                        </div>
+                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+                    </div>
+                </div>
                 {% with user_type='merchant' %}
                     {% include 'my_account.html' %}
                 {% endwith %}
@@ -64,7 +100,7 @@
                         <tbody id="productList"></tbody>
                     </table>
                 </div>
-                <div id="my-store" class="section" style="margin-left: 210px; margin-right: 10px; width: calc(100% - 220px);">
+                <div id="my-store" class="section" style="margin-left: 170px; margin-right: 10px; width: calc(100% - 220px);">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>My Store</h2>

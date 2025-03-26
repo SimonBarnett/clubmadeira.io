@@ -84,13 +84,13 @@ body {
     margin: 0 auto !important;
     display: flex;
     gap: 20px;
-    padding: 0 20px 20px 0; /* Remove left padding */
+    padding: 0 20px 20px 0; /* Updated as per CREQ */
     flex-direction: row;
 }
 
 .menu-container {
-    flex: 0 0 160px; /* Updated from 200px to 160px */
-    max-width: 160px; /* Updated from 200px to 160px */
+    flex: 0 0 160px; /* Updated from 200px to 160px per CREQ */
+    max-width: 160px; /* Updated from 200px to 160px per CREQ */
     margin-top: 10px;
 }
 
@@ -114,7 +114,7 @@ body {
     cursor: pointer;
     font-size: 14px;
     width: 100%;
-    max-width: 160px; /* Updated from 200px to 160px */
+    max-width: 160px; /* Updated from 200px to 160px per CREQ */
     margin-bottom: 5px;
     display: flex;
     align-items: center;
@@ -206,11 +206,11 @@ body {
 }
 
 .menu button[data-href="/admin"] {
-    background-color: #dc3545; /* Match Log Off button color */
+    background-color: #dc3545; /* Added per CREQ to match Log Off button color */
 }
 
 .menu button[data-href="/admin"]:hover {
-    background-color: #c82333; /* Match Log Off hover color */
+    background-color: #c82333; /* Added per CREQ to match Log Off hover color */
 }
 
 .submenu {
@@ -235,7 +235,7 @@ body {
     cursor: pointer;
     font-size: 13px;
     width: 100%;
-    max-width: 140px; /* Updated from 180px to 140px (160px - 20px indent) */
+    max-width: 140px; /* Updated from 180px to 140px per CREQ (160px - 20px indent) */
     margin-bottom: 5px;
     display: flex;
     align-items: center;
@@ -254,6 +254,7 @@ body {
 
 .section {
     display: none;
+    margin-left: 170px; /* Added per CREQ to align content with 10px gap after 160px menu */
 }
 
 .section.active {
