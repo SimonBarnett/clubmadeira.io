@@ -1,0 +1,361 @@
++ [js]
++----admin-page.js
++----category-management.js
++----common.js
++----community-page.js
++----merchant-page.js
++----page-load.js
++----partner-page.js
++----site-auth.js
++----site-navigation.js
++----site-request.js
+
++-admin-page.js
+function initializeAdmin(pageType) {
+    console.log('initializeAdmin - Initializing admin page with type: ' + pageType);
+    loadBranding(pageType, 'brandingContent');
+
+    // Set up navigation and section management
+    setupNavigation();
+    setupSections();
+    loadInitialData();
+
+    // Add event listeners for buttons
+    setupEventListeners();
+
+    console.log('Admin page initialized');
+}
+function setupNavigation(None) {
+    // Handle main menu button clicks
+    document.querySelectorAll('.menu button[data-section]').forEach(button => {
+        button.addEventListener('click', function() {
+            const sectionId = this.getAttribute('data-section');
+            const submenuId = this.getAttribute('data-submenu');
+
+            // If there's a submenu, toggle it
+            if (submenuId) {
+                const submenu = document.getElementById(submenuId);
+                const caret = this.querySelector('.caret');
+                if (submenu.style.display === 'block') {
+                    submenu.style.display = 'none';
+                    caret.classList.remove('fa-caret-down');
+                    caret.classList.add('fa-caret-right');
+}
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+}
+function loadInitialData(None) {
+    // Load deal listings
+    authenticatedFetch(`${window.apiUrl
+}
+function setupEventListeners(None) {
+    // Save settings (contact details)
+    document.querySelector('button[data-action="saveSettings"]').addEventListener('click', function() {
+        const userId = document.getElementById('userId').value;
+        const contactName = document.getElementById('contactName').value;
+        const websiteUrl = document.getElementById('websiteUrl').value;
+        const emailAddress = document.getElementById('emailAddress').value;
+
+        authenticatedFetch(`${window.apiUrl
+}
+
++-category-management.js
+function createTreeNode(category, level = 0, isAdmin = false, savedCategories = []) {
+    console.log('createTreeNode - Creating node - Category:', JSON.stringify(category), 'Level:', level, 'IsAdmin:', isAdmin);
+    const li = document.createElement('li');
+    const nodeDiv = document.createElement('div');
+    nodeDiv.className = 'node';
+
+    const toggle = document.createElement('span');
+    toggle.className = 'toggle';
+    toggle.setAttribute('data-id', category.id);
+    toggle.textContent = '+'; // Default to '+' assuming subcategories may exist
+    toggle.addEventListener('click', () => toggleSubcategories(category.id, toggle));
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = category.id;
+    if (isAdmin) {
+        checkbox.addEventListener('change', () => handleCategorySelection(category.id, checkbox));
+}
+function createTreeNode(category, level = 0, isAdmin = false, savedCategories = []) {
+    console.log('createTreeNode - Creating node - Category:', JSON.stringify(category), 'Level:', level, 'IsAdmin:', isAdmin);
+    const li = document.createElement('li');
+    const nodeDiv = document.createElement('div');
+    nodeDiv.className = 'node';
+
+    const toggle = document.createElement('span');
+    toggle.className = 'toggle';
+    toggle.setAttribute('data-id', category.id);
+    toggle.textContent = '+'; // Default to '+' assuming subcategories may exist
+    toggle.addEventListener('click', () => toggleSubcategories(category.id, toggle));
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = category.id;
+    if (isAdmin) {
+        checkbox.addEventListener('change', () => handleCategorySelection(category.id, checkbox));
+}
+
++-common.js
+function setupToastr(None) {
+    console.log('setupToastr - Initiating Toastr configuration');
+    toastr.options = {
+        closeButton: true,
+        progressBar: true,
+        positionClass: 'toast-top-right',
+        timeOut: 5000,
+        showMethod: 'slideDown',
+        hideMethod: 'slideUp'
+}
+
++-community-page.js
+function initializeCommunity(None) {
+    console.log('initializeCommunity - Initializing community page');
+    const token = localStorage.getItem('authToken');
+    const userId = localStorage.getItem('userId');
+    if (!token) {
+        console.error('initializeCommunity - No token found, redirecting to /');
+        window.location.href = '/';
+        return;
+}
+function updateMenu(None) {
+    console.log('updateMenu - Updating menu');
+    const menu = document.getElementById('menu');
+    const userId = document.getElementById('userId').value;
+    menu.innerHTML = `<input type="text" id="userId" style="display: none;" value="${userId || ''
+}
+function updateIntegrationCode(section) {
+    console.log('updateIntegrationCode - Updating integration code - Section:', section);
+    const codeElements = {
+        'wix': 'wixCode',
+        'wordpress': 'wordpressCode',
+        'squarespace': 'squarespaceCode',
+        'weebly': 'weeblyCode',
+        'joomla': 'joomlaCode'
+}
+function updateVisitsTable(tableId, visits) {
+    console.log('updateVisitsTable - Updating table - Table ID:', tableId, 'Visits:', visits.length);
+    const tbody = document.getElementById(tableId);
+    if (tbody) {
+        tbody.innerHTML = visits.length === 0 ? '<tr><td colspan="2">No visits found</td></tr>' : '';
+        visits.forEach(visit => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${visit.page
+}
+function updateOrdersTable(tableId, orders) {
+    console.log('updateOrdersTable - Updating table - Table ID:', tableId, 'Orders:', orders.length);
+    const tbody = document.getElementById(tableId);
+    if (tbody) {
+        tbody.innerHTML = orders.length === 0 ? '<tr><td colspan="4">No orders found</td></tr>' : '';
+        orders.forEach(order => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${order.orderId
+}
+function waitForTinyMCE(callback) {
+    console.log('waitForTinyMCE - Checking if TinyMCE is loaded');
+    if (typeof tinymce !== 'undefined' && tinymce.init) {
+        console.log('waitForTinyMCE - TinyMCE is loaded, executing callback');
+        callback();
+}
+
++-merchant-page.js
+function initializeMerchant(None) {
+    console.log('initializeMerchant - Initializing merchant page');
+    const token = localStorage.getItem('authToken');
+    const userId = localStorage.getItem('userId');
+    if (!token) {
+        console.error('initializeMerchant - No token found, redirecting to /');
+        window.location.href = '/';
+        return;
+}
+function checkAdminPermission(None) {
+    console.log('checkAdminPermission - Checking admin permission');
+    const backButton = document.querySelector('button[data-href="/admin"]');
+    if (backButton) {
+        backButton.style.display = window.userPermissions.includes('admin') ? 'block' : 'none';
+        console.log('checkAdminPermission - Back button visibility:', backButton.style.display);
+}
+function createProductRow(product) {
+    console.log('createProductRow - Creating row - Product:', JSON.stringify(product));
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td class="hidden">${product.id
+}
+
++-page-load.js
+function showLoadingOverlay(None) {
+    let loadingOverlay = document.getElementById('loadingOverlay');
+    if (!loadingOverlay) {
+        loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'loadingOverlay';
+        loadingOverlay.innerHTML = `
+            <div class="multicircle-loader">
+                <div class="circle circle1"></div>
+                <div class="circle circle2"></div>
+                <div class="circle circle3"></div>
+                <div class="circle circle4"></div>
+            </div>
+        `;
+        document.body.prepend(loadingOverlay);
+        console.log('showLoadingOverlay - Created and prepended loading overlay');
+}
+function attachEventListeners(None) {
+    console.log('attachEventListeners - Attaching event listeners');
+    const buttons = document.querySelectorAll('button[data-section], button[data-submenu], button[data-href]');
+    console.log('attachEventListeners - Found buttons with data attributes:', buttons.length);
+    buttons.forEach(button => {
+        if (button.dataset.section || button.dataset.submenu) {
+            button.addEventListener('click', handleSectionClick);
+            console.log('attachEventListeners - Added click listener to button with data-section/submenu:', button.dataset.section || button.dataset.submenu);
+}
+function initializePage(requiredPermissions, callback) {
+    console.log('initializePage - Starting initialization - Permissions required:', requiredPermissions);
+    const token = localStorage.getItem('authToken');
+    console.log('initializePage - Retrieved token from localStorage:', token || 'None');
+    if (!token) {
+        console.warn('initializePage - No auth token found - Redirecting to /');
+        window.location.href = '/';
+        return;
+}
+function handleSectionClick(event) {
+    console.log('handleSectionClick - Section click event triggered');
+    const target = event.target.closest('button[data-section], button[data-submenu]');
+    console.log('handleSectionClick - Event target:', target);
+    if (!target) return;
+
+    event.stopPropagation(); // Stop bubbling to parent elements
+
+    const sectionId = target.getAttribute('data-section');
+    const submenuId = target.getAttribute('data-submenu');
+    console.log(`handleSectionClick - Extracted attributes - Section: ${sectionId
+}
+
++-partner-page.js
+function initializePartner(None) {
+    console.log('initializePartner - Initializing partner page');
+    const token = localStorage.getItem('authToken');
+    const userId = localStorage.getItem('userId');
+    if (!token) {
+        console.error('initializePartner - No token found, redirecting to /');
+        window.location.href = '/';
+        return;
+}
+function checkAdminPermission(None) {
+    console.log('checkAdminPermission - Checking admin permission');
+    const backButton = document.querySelector('button[data-href="/admin"]');
+    if (backButton) {
+        backButton.style.display = window.userPermissions.includes('admin') ? 'block' : 'none';
+        console.log('checkAdminPermission - Back button visibility:', backButton.style.display);
+}
+
++-site-auth.js
+function togglePassword(fieldId) {
+    console.log('togglePassword - Initiating visibility toggle - Field ID:', fieldId);
+    const input = document.getElementById(fieldId);
+    const icon = input ? input.nextElementSibling : null;
+    console.log('togglePassword - Input element retrieved:', input, 'Icon element:', icon);
+
+    if (!input) {
+        console.error('togglePassword - Password input not found - Field ID:', fieldId);
+        return;
+}
+function logOff(None) {
+    console.log('logOff - Initiating logout process');
+    const confirmed = confirm('Are you sure you want to log off?');
+    console.log('logOff - User confirmation received:', confirmed);
+
+    if (confirmed) {
+        console.log('logOff - User confirmed logout - Clearing session data');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
+        console.log('logOff - Auth token and userId removed from localStorage - Current localStorage:', JSON.stringify(localStorage));
+        toastr.success('Logged off successfully');
+        console.log('logOff - Success toast displayed');
+
+        setTimeout(() => {
+            console.log('logOff - Redirecting to / after 1-second delay');
+            window.location.href = '/';
+            console.log('logOff - Redirect executed');
+}
+function decodeJWT(token) {
+    console.log('decodeJWT - Starting JWT decoding - Input token:', token);
+    if (!token || typeof token !== 'string') {
+        console.warn('decodeJWT - Invalid token: null or not a string - Token:', token);
+        return null;
+}
+
++-site-navigation.js
+function showSection(sectionId, onSectionLoad = null) {
+    console.log('showSection - Starting section display - Section ID:', sectionId);
+    console.log('showSection - Callback provided:', typeof onSectionLoad === 'function' ? 'Yes' : 'No');
+    const allSections = document.querySelectorAll('.section');
+    console.log('showSection - Found sections to hide:', allSections.length);
+    allSections.forEach(s => {
+        console.log('showSection - Hiding section - ID:', s.id);
+        s.classList.remove('active');
+        s.style.display = 'none';
+}
+function toggleSubmenu(submenuId) {
+    console.log(`toggleSubmenu - Starting toggle - Submenu ID: ${submenuId
+}
+function initializeNavigation(None) {
+    console.log('initializeNavigation - Starting navigation setup');
+
+    // Initialize submenu states (all closed by default)
+    document.querySelectorAll('.submenu').forEach(submenu => {
+        submenu.style.display = 'none';
+        submenu.classList.remove('open');
+        const submenuId = submenu.id;
+        const button = document.querySelector(`button[data-submenu="${submenuId
+}
+
++-site-request.js
+function addPage(type = 'merchant') {
+    console.log('addPage - Adding page to site request - Type:', type);
+    const maxPages = 5;
+    let pageCount = parseInt(localStorage.getItem(`${type
+}
+function removePage(pageNum, type = 'merchant') {
+    console.log('removePage - Removing page - Page number:', pageNum, 'Type:', type);
+    let pageCount = parseInt(localStorage.getItem(`${type
+}
+function addEmail(type = 'merchant') {
+    console.log('addEmail - Adding email to site request - Type:', type);
+    const maxEmails = 5;
+    let emailCount = parseInt(localStorage.getItem(`${type
+}
+function removeEmail(emailNum, type = 'merchant') {
+    console.log('removeEmail - Removing email - Email number:', emailNum, 'Type:', type);
+    let emailCount = parseInt(localStorage.getItem(`${type
+}
+function updateDomainPreview(type = 'merchant') {
+    console.log('updateDomainPreview - Updating domain preview - Type:', type);
+    const domain = document.getElementById('preferredDomain')?.value || (type === 'merchant' ? 'mystore.uk' : 'mycommunity.org');
+    console.log('updateDomainPreview - Domain value:', domain);
+
+    const previewElement = document.getElementById('domainPreview');
+    if (previewElement) {
+        previewElement.textContent = `@${domain
+}
+function initializeTinyMCE(selector = 'textarea[name$="Content"], #aboutStore, #aboutCommunity') {
+    console.log('initializeTinyMCE - Starting TinyMCE initialization - Selector:', selector);
+    if (!window.tinymce) {
+        console.error('initializeTinyMCE - TinyMCE not available');
+        return;
+}
+function getCurrentTimestamp(None) {
+    console.log('getCurrentTimestamp - Generating current timestamp');
+    const now = new Date();
+    console.log('getCurrentTimestamp - Current date object:', now);
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    console.log('getCurrentTimestamp - Extracted components - Year:', year, 'Month:', month, 'Day:', day, 'Hours:', hours, 'Minutes:', minutes, 'Seconds:', seconds);
+    const timestamp = `${year
+}
+

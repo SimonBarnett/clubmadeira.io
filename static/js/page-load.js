@@ -296,42 +296,45 @@ async function handleHrefClick(event, options = {}) {
         const { spaPaths = ['/partner'], containerSelector = '.content-container', onLoad = null } = options;
         console.log('handleHrefClick - SPA paths:', spaPaths, 'Container selector:', containerSelector);
 
-        if (spaPaths.includes(href)) {
-            console.log('handleHrefClick - Initiating SPA redirect - Href:', href);
-            history.pushState({ page: href.slice(1) }, `${href} Page`, href);
-            console.log('handleHrefClick - URL updated via history.pushState - New URL:', window.location.href);
-            const contentContainer = document.querySelector(containerSelector);
-            console.log('handleHrefClick - Content container:', contentContainer);
-            if (contentContainer) {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const content = doc.querySelector(containerSelector) || doc.body;
-                console.log('handleHrefClick - Extracted content element:', content.tagName);
-                contentContainer.innerHTML = content.innerHTML;
-                console.log('handleHrefClick - Content container updated - Href:', href);
-                const scripts = doc.querySelectorAll('script:not([src])');
-                console.log('handleHrefClick - Found inline scripts:', scripts.length);
-                scripts.forEach((script, index) => {
-                    if (script.innerHTML.trim()) {
-                        console.log('handleHrefClick - Executing inline script', index + 1);
-                        try {
-                            new Function(script.innerHTML)();
-                            console.log('handleHrefClick - Inline script', index + 1, 'executed successfully');
-                        } catch (e) {
-                            console.error('handleHrefClick - Error executing inline script', index + 1, 'Error:', e.message);
-                        }
+        // Update URL for all navigations
+        history.pushState({ page: href.slice(1) }, `${href} Page`, href);
+        console.log('handleHrefClick - URL updated via history.pushState - New URL:', window.location.href);
+
+        const contentContainer = document.querySelector(containerSelector);
+        console.log('handleHrefClick - Content container:', contentContainer);
+        if (contentContainer) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const content = doc.querySelector(containerSelector) || doc.body;
+            console.log('handleHrefClick - Extracted content element:', content.tagName);
+            contentContainer.innerHTML = content.innerHTML;
+            console.log('handleHrefClick - Content container updated - Href:', href);
+            const scripts = doc.querySelectorAll('script:not([src])');
+            console.log('handleHrefClick - Found inline scripts:', scripts.length);
+            scripts.forEach((script, index) => {
+                if (script.innerHTML.trim()) {
+                    console.log('handleHrefClick - Executing inline script', index + 1);
+                    try {
+                        new Function(script.innerHTML)();
+                        console.log('handleHrefClick - Inline script', index + 1, 'executed successfully');
+                    } catch (e) {
+                        console.error('handleHrefClick - Error executing inline script', index + 1, 'Error:', e.message);
                     }
-                });
-            } else {
-                console.error('handleHrefClick - Content container not found - Selector:', containerSelector);
-                toastr.error('Failed to update page content: container missing');
-                document.body.innerHTML = html;
-                console.log('handleHrefClick - Body updated with full HTML - Href:', href);
-            }
+                }
+            });
+            // Re-initialize after content update
+            const pageType = href.split('/')[1] || 'login';
+            console.log('handleHrefClick - Re-initializing page - Page type:', pageType);
+            initialize(pageType);
         } else {
-            console.log('handleHrefClick - Performing full page load - Href:', href);
+            console.error('handleHrefClick - Content container not found - Selector:', containerSelector);
+            toastr.error('Failed to update page content: container missing');
             document.body.innerHTML = html;
-            console.log('handleHrefClick - Body updated with new HTML - Href:', href);
+            console.log('handleHrefClick - Body updated with full HTML - Href:', href);
+            // Re-initialize after full body update
+            const pageType = href.split('/')[1] || 'login';
+            console.log('handleHrefClick - Re-initializing page after full update - Page type:', pageType);
+            initialize(pageType);
         }
 
         if (typeof onLoad === 'function') {

@@ -1,0 +1,659 @@
++ [blueprints]
++----authentication.py
++----configuration.py
++----data_retrieval.py
++----referral.py
++----role_pages.py
++----site_request.py
++----user_management.py
++----user_settings.py
++----utility.py
+
++-authentication.py
+def login():
+    return login_user()
+
+@authentication_bp.route('/signup', methods=['GET'])
+def signup_page():
+    return render_template('signup.html')
+
+@authentication_bp.route('/signup', methods=['POST'])
+def signup():
+    # Override signup_user() to ensure correct behavior; replace with signup_user() if it aligns
+    data = request.get_json()
+    signup_type = data.get('signup_type')
+    contact_name = data.get('contact_name')
+    signup_phone = data.get('signup_phone')
+    signup_email = data.get('signup_email')
+    signup_password = data.get('signup_password')
+
+    if not all([signup_type, contact_name, signup_email, signup_password]):
+        return jsonify({"status": "error", "message": "Missing required fields"}), 400
+    if signup_type in ['seller', 'community'] and not signup_phone:
+        return jsonify({"status": "error", "message": "Phone required for Merchant/Community"}), 400
+
+    users_settings = load_users_settings()
+    # Check if email already exists
+    if any(u['email_address'].lower() == signup_email.lower() for u in users_settings.values()):
+        return jsonify({"status": "error", "message": "Email already registered"}), 409
+
+    user_id = f"{int(datetime.datetime.utcnow().timestamp())}{random.randint(1000, 9999)}"  # Unique ID
+    hashed_password = bcrypt.hashpw(signup_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    # Map signup_type to permission
+    permission_map = {'seller': 'merchant', 'community': 'community', 'wixpro': 'wixpro'}
+    permission = permission_map.get(signup_type, signup_type)
+
+    # Save user without "verified" permission
+    users_settings[user_id] = {
+        "email_address": signup_email.lower(),
+        "contact_name": contact_name,
+        "phone_number": signup_phone,  # Consistent with reset-password
+        "password": hashed_password,
+        "permissions": [permission]  # No "verified" yet
+    }
+    save_users_settings(users_settings)
+    return jsonify({"status": "success", "message": "User created, please verify OTP"}), 201
+
+@authentication_bp.route('/reset-password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+        email = data.get("email")
+        if not email:
+            return jsonify({"status": "error", "message": "Email is required"}), 400
+
+        users_settings = load_users_settings()
+        matching_user_id = next((uid for uid, settings in users_settings.items() if settings.get("email_address", "").lower() == email.lower()), None)
+        if not matching_user_id:
+            return jsonify({"status": "error", "message": "Email not found"}), 404
+
+        user = users_settings[matching_user_id]
+        phone_number = user.get("phone_number", "").strip()
+        if not phone_number:
+            return jsonify({"status": "error", "message": "No phone number associated with this account"}), 400
+
+        otp = ''.join(random.choices(string.digits, k=6))
+        reset_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+        if "reset_codes" not in current_app.config:
+            current_app.config["reset_codes"] = {}
+        current_app.config["reset_codes"][matching_user_id] = {"code": otp, "expires": reset_expiry.isoformat()}
+
+        config = load_config()
+        textmagic_config = config.get("textmagic", {})
+        username = textmagic_config.get("USERNAME")
+        api_key = textmagic_config.get("API_KEY")
+        if not username or not api_key:
+            return jsonify({"status": "error", "message": "TextMagic credentials not configured"}), 500
+
+        url = "https://rest.textmagic.com/api/v2/messages"
+        payload = {"text": f"clubmadeira.io one-time password: {otp}. Expires in 15 mins.", "phones": phone_number}
+        headers = {"X-TM-Username": username, "X-TM-Key": api_key, "Content-Type": "application/x-www-form-urlencoded"}
+        response = requests.post(url, data=payload, headers=headers)
+
+        if response.status_code == 201:
+            return jsonify({"status": "success", "message": "A one-time password has been sent to your phone"}), 200
+        else:
+            return jsonify({"status": "error", "message": f"Failed to send SMS: {response.text}"}), 500
+    except Exception as e:
+        print(f"Error in reset-password endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@authentication_bp.route('/verify-reset-code', methods=['POST'])
+def verify_reset_code():
+    try:
+        data = request.get_json(silent=True)
+        if not data or not isinstance(data, dict):
+            return jsonify({"status": "error", "message": "Invalid or missing JSON data"}), 400
+        email = data.get("email")
+        code = data.get("code")
+        new_password = data.get("new_password")
+        if not all([email, code, new_password]):
+            return jsonify({"status": "error", "message": "Email, code, and new password are required"}), 400
+
+        users_settings = load_users_settings()
+        matching_user_id = next((uid for uid, settings in users_settings.items() if settings.get("email_address", "").lower() == email.lower()), None)
+        if not matching_user_id:
+            return jsonify({"status": "error", "message": "Email not found"}), 404
+
+        stored_reset = current_app.config.get("reset_codes", {}).get(matching_user_id, {})
+        stored_code = stored_reset.get("code")
+        if not stored_code:
+            return jsonify({"status": "error", "message": "No reset code found for this user"}), 400
+
+        try:
+            expiry = datetime.datetime.fromisoformat(stored_reset.get("expires", "2000-01-01T00:00:00"))
+        except (ValueError, TypeError) as e:
+            print(f"Error parsing expiry: {str(e)}")
+            return jsonify({"status": "error", "message": "Invalid reset code expiry format"}), 500
+
+        if stored_code != code or datetime.datetime.utcnow() > expiry:
+            return jsonify({"status": "error", "message": "Invalid or expired reset code"}), 400
+
+        user = users_settings[matching_user_id]
+        if bcrypt.checkpw(new_password.encode('utf-8'), user["password"].encode('utf-8')):
+            # Signup verification: Add "verified" permission
+            permissions = user.get("permissions", [])
+            if "verified" not in permissions:
+                permissions.append("verified")
+                user["permissions"] = permissions
+        else:
+            # Password reset: Update password
+            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            user["password"] = hashed_password
+
+        save_users_settings(users_settings)
+        if matching_user_id in current_app.config.get("reset_codes", {}):
+            del current_app.config["reset_codes"][matching_user_id]
+
+        # Generate token with updated permissions
+        token = generate_token(matching_user_id, user.get("permissions", []))
+        return jsonify({"status": "success", "token": token, "user_id": matching_user_id}), 200
+    except Exception as e:
+        print(f"Unexpected error in verify-reset-code endpoint: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@authentication_bp.route('/update-password', methods=['POST'])
+@login_required(["allauth"], require_all=False)
+def update_password():
+    data = request.get_json()
+    if not data or 'email' not in data or 'password' not in data:
+        return jsonify({"status": "error", "message": "Email and password required"}), 400
+    email = data["email"].strip()
+    new_password = data["password"].strip()
+    users_settings = load_users_settings()
+    user_id = next((uid for uid, u in users_settings.items() if u["email_address"].lower() == email.lower()), None)
+    if not user_id or user_id != request.user_id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    users_settings[user_id]["password"] = hashed_password
+    save_users_settings(users_settings)
+    return jsonify({"status": "success", "message": f"Password updated for {email}", "user_id": user_id}), 200
+
++-configuration.py
+def get_config():
+    config = load_config() 
+    return jsonify({"status": "success", "count": len(config), "config": config}), 200 
+ 
+@configuration_bp.route('/config/<affiliate>', methods=['PATCH']) 
+@login_required(["admin"], require_all=True)
+def replace_config(affiliate):
+    config = load_config() 
+    data = request.get_json() 
+    if not data or not isinstance(data, dict): 
+        return jsonify({"status": "error", "message": "Invalid data"}), 400 
+    config[affiliate] = data 
+    save_config(config) 
+    return jsonify({"status": "success", "message": f"Updated {affiliate} config"}), 200
+
++-data_retrieval.py
+def get_categories():
+    parent_id = request.args.get('parent_id') 
+    categories = get_all_categories(parent_id) 
+    return jsonify({"status": "success", "count": len(categories), "categories": categories}), 200 
+ 
+@data_retrieval_bp.route('/discounted-products', methods=['GET'])
+def get_all_discounted_products():
+    category_id = request.args.get('category_id') 
+    if not category_id: 
+        return jsonify({"status": "error", "message": "category_id required"}), 400 
+    products = search_all_discounted(category_id) 
+    return jsonify({"status": "success", "count": len(products), "products": products}), 200
+
++-referral.py
+def handle_referral():
+    data = request.get_json() 
+    if not data or 'timestamp' not in data: 
+        return jsonify({"status": "error", "message": "Invalid data"}), 400 
+    users_settings = load_users_settings() 
+    referer = data.get("referer", "none") 
+    if referer not in users_settings: 
+        users_settings[referer] = {"referrals": {"visits": [], "orders": []}} 
+    if "page" in data: 
+        users_settings[referer]["referrals"]["visits"].append({"page": data["page"], "timestamp": data["timestamp"]}) 
+    elif "orderId" in data: 
+        users_settings[referer]["referrals"]["orders"].append({"orderId": data["orderId"], "buyer": data["buyer"], "total": data["total"], "timestamp": data["timestamp"]}) 
+    save_users_settings(users_settings) 
+    return jsonify({"status": "success", "message": "Referral recorded", "referer": referer}), 200
+
++-role_pages.py
+def load_branding_data():
+    try:
+        with open(os.path.join(os.path.dirname(__file__), '..', 'branding.json'), 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Fallback branding data if the file doesn't exist
+        print('load_branding_data - branding.json not found, using fallback data')
+        return {
+            "admin": "<h1>Admin Dashboard</h1>",
+            "merchant": "<h1>Merchant Dashboard</h1>",
+            "community": "<h1>Community Dashboard</h1>",
+            "wixpro": "<h1>Partner Dashboard</h1>",
+            "login": "<h1>Login</h1>",
+            "signup": "<h1>Sign Up</h1>"
+        }
+
+@role_pages_bp.route('/admin', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def admin():
+    # Get the userId from the request (set by the @login_required decorator)
+    user_id = request.user_id
+    if not user_id:
+        return jsonify({"status": "error", "message": "User ID not found in token"}), 401
+
+    # Load user data
+    users_settings = load_users_settings()
+    user = users_settings.get(user_id)
+    if not user:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+
+    # Pass the user object to the template
+    return render_template('admin.html', user=user)
+
+@role_pages_bp.route('/community', methods=['GET'])
+@login_required(["community", "admin"], require_all=False)
+def community():
+    user_id = request.user_id
+    users_settings = load_users_settings()
+    user = users_settings.get(user_id) if user_id else None
+    return render_template('community.html', user=user)
+
+@role_pages_bp.route('/merchant', methods=['GET'])
+@login_required(["merchant", "admin"], require_all=False)
+def merchant():
+    user_id = request.user_id
+    users_settings = load_users_settings()
+    user = users_settings.get(user_id) if user_id else None
+    return render_template('merchant.html', user=user)
+
+@role_pages_bp.route('/partner', methods=['GET'])
+@login_required(["wixpro", "admin"], require_all=False)
+def wixpro():
+    user_id = request.user_id
+    users_settings = load_users_settings()
+    user = users_settings.get(user_id) if user_id else None
+    return render_template('partner.html', user=user)
+
+@role_pages_bp.route('/branding', methods=['GET'])
+@login_required(["allauth"], require_all=False)
+def get_branding():
+    print('GET /branding - Request received')
+    
+    # Get the branding type from the query parameter
+    branding_type = request.args.get('type')
+    if not branding_type:
+        print('GET /branding - No type parameter provided')
+        return jsonify({"status": "error", "message": "Branding type not specified"}), 400
+    
+    print('GET /branding - Requested branding type:', branding_type)
+
+    # Map 'partner' to 'wixpro' as specified
+    if branding_type == 'partner':
+        branding_type = 'wixpro'
+
+    # Load branding data
+    branding_data = load_branding_data()
+    
+    # Get the branding content for the specified type
+    branding = branding_data.get(branding_type, '<h1>Dashboard</h1>')
+    
+    print('GET /branding - Sending branding content for type:', branding_type, 'Content:', branding)
+    return jsonify({
+        "status": "success",
+        "branding": branding
+    }), 200
+
++-site_request.py
+def save_site_request_endpoint(user_id):
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        body_user_id = data.get("userId")
+        if body_user_id and body_user_id != user_id:
+            return jsonify({"status": "error", "message": "User ID in body does not match URL"}), 400
+
+        if "admin" not in request.permissions and request.user_id != user_id:
+            return jsonify({"status": "error", "message": "Unauthorized: Must be admin or match user_id"}), 403
+
+        request_type = data.get("type", "community")
+        site_request = {
+            "user_id": user_id,
+            "type": request_type,
+            "communityName": data.get("communityName") or data.get("storeName") or "",
+            "aboutCommunity": data.get("aboutCommunity") or data.get("aboutStore") or "",
+            "communityLogos": data.get("communityLogos") or data.get("storeLogos") or [],
+            "colorPrefs": data.get("colorPrefs", ""),
+            "stylingDetails": data.get("stylingDetails", ""),
+            "preferredDomain": data.get("preferredDomain", "mycommunity.org"),
+            "emails": data.get("emails", []),
+            "pages": data.get("pages", []),
+            "widgets": data.get("widgets", []),
+            "submitted_at": datetime.datetime.utcnow().isoformat()
+        }
+
+        if not site_request["communityName"]:
+            return jsonify({"status": "error", "message": "Community name or store name is required"}), 400
+
+        domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+        if not re.match(domain_regex, site_request["preferredDomain"]):
+            return jsonify({"status": "error", "message": "Invalid domain name"}), 400
+
+        for page in site_request["pages"]:
+            if "images" in page and page["images"]:
+                page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
+
+        save_site_request(user_id, site_request)
+        return jsonify({"status": "success", "message": "Site request saved successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@site_request_bp.route('/siterequests', methods=['GET'])
+@login_required(["admin", "wixpro"], require_all=False)
+def list_site_requests():
+    try:
+        siterequest_dir = 'siterequest'
+        if not os.path.exists(siterequest_dir):
+            return jsonify({"status": "success", "siterequests": []}), 200
+
+        users_settings = load_users_settings()
+        siterequests = []
+
+        for filename in os.listdir(siterequest_dir):
+            if filename.endswith('.json'):
+                user_id = filename.replace('.json', '')
+                site_request = load_site_request(user_id)
+                if site_request:
+                    contact_name = users_settings.get(user_id, {}).get('contact_name', '')
+                    email = users_settings.get(user_id, {}).get('email_address', '')
+                    request_type = site_request.get('type', '')
+                    store_name = site_request.get('storeName')
+                    community_name = site_request.get('communityName')
+                    organisation = store_name if store_name else community_name if community_name else ''
+                    received_at = site_request.get('submitted_at', '')
+
+                    siterequests.append({
+                        'user_id': user_id,
+                        'type': request_type,
+                        'received_at': received_at,
+                        'contact_name': contact_name,
+                        'email': email,
+                        'organisation': organisation
+                    })
+
+        siterequests.sort(key=lambda x: x['received_at'] or '', reverse=True)
+        return jsonify({"status": "success", "siterequests": siterequests}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
++-user_management.py
+def get_users():
+    """
+    Retrieve a list of all users.
+    """
+    try:
+        users_settings = load_users_settings()
+        user_list = [
+            {
+                "USERid": user_id,
+                "email_address": user.get("email_address", ""),
+                "contact_name": user.get("contact_name", ""),
+                "phone_number": user.get("phone_number", None)  # Add phone_number
+            }
+            for user_id, user in users_settings.items()
+        ]
+        return jsonify({"status": "success", "users": user_list}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@user_management_bp.route('/users/<user_id>', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_user(user_id):
+    """
+    Retrieve details of a specific user.
+    """
+    try:
+        users_settings = load_users_settings()
+        if user_id not in users_settings:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        user = users_settings[user_id]
+        user_data = {
+            "USERid": user_id,
+            "email_address": user.get("email_address", ""),
+            "contact_name": user.get("contact_name", ""),
+            "phone_number": user.get("phone_number", None),  # Add phone_number
+            "permissions": user.get("permissions", []),
+            "website_url": user.get("website_url", ""),
+            "wixClientId": user.get("wixClientId", ""),
+            "referrals": user.get("referrals", {"visits": [], "orders": []})
+        }
+        return jsonify({"status": "success", "user": user_data}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@user_management_bp.route('/permissions/<user_id>', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_permissions(user_id):
+    """
+    Retrieve the permissions of a specific user.
+    """
+    try:
+        users_settings = load_users_settings()
+        if user_id not in users_settings:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        permissions = users_settings[user_id].get('permissions', [])
+        return jsonify({"status": "success", "permissions": permissions}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@user_management_bp.route('/permissions/<user_id>', methods=['POST'])
+@login_required(["admin"], require_all=True)
+def add_permission(user_id):
+    """
+    Add a permission to a specific user.
+    """
+    data = request.get_json()
+    if 'permission' not in data:
+        return jsonify({"status": "error", "message": "Permission field is required"}), 400
+    permission = data['permission']
+    try:
+        users_settings = load_users_settings()
+        if user_id not in users_settings:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        if permission in users_settings[user_id].get('permissions', []):
+            return jsonify({"status": "error", "message": "Permission already exists"}), 400
+        users_settings[user_id]['permissions'].append(permission)
+        save_users_settings(users_settings)
+        return jsonify({"status": "success", "message": "Permission added"}), 200
+    except Exception as e:
+        return
+
++-user_settings.py
+def get_user_settings(USERid):
+    """
+    Retrieve the settings for a specific user.
+    """
+    try:
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        settings = users_settings[USERid]
+        return jsonify({
+            "status": "success",
+            "contact_name": settings.get("contact_name", ""),
+            "website_url": settings.get("website_url", ""),
+            "email_address": settings.get("email_address", ""),
+            "phone_number": settings.get("phone_number", ""),
+            "wixClientId": settings.get("wixClientId", "")
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@user_settings_bp.route('/<USERid>/user', methods=['PUT'])
+@login_required(["self", "admin"], require_all=False)
+def put_user_settings(USERid):
+    """
+    Replace the entire settings for a specific user.
+    """
+    if not request.json:
+        return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
+    settings = request.json
+    required_fields = ["contact_name", "website_url", "email_address", "phone_number", "wixClientId"]
+    if not all(field in settings for field in required_fields):
+        return jsonify({"status": "error", "message": "Settings must include all required fields"}), 400
+    try:
+        users_settings = load_users_settings()
+        users_settings[USERid] = settings
+        save_users_settings(users_settings)
+        return jsonify({
+            "status": "success",
+            "message": f"Settings for user {USERid} replaced",
+            "settings": settings
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@user_settings_bp.route('/<USERid>/user', methods=['PATCH'])
+@login_required(["self", "admin", "wixpro"], require_all=False)
+def patch_user_settings(USERid):
+    """
+    Partially update the settings for a specific user.
+    """
+    if not request.json:
+        return jsonify({"status": "error", "message": "Request body must contain settings"}), 400
+    new_settings = request.json
+    try:
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        current_settings = users_settings[USERid]
+        valid_fields = ["contact_name", "website_url", "email_address", "phone_number", "wixClientId"]
+
+        # Restrict "wixpro" users to only updating wixClientId unless they have admin or self permissions
+        if "wixpro" in request.permissions and not ("admin" in request.permissions or request.user_id == USERid):
+            if any(key not in ["wixClientId"] for key in new_settings.keys()):
+                return jsonify({"status": "error", "message": "Wixpro can only update wixClientId"}), 403
+
+        # Update only the provided fields
+        for key in new_settings:
+            if key in valid_fields:
+                current_settings[key] = new_settings[key]
+        users_settings[USERid] = current_settings
+        save_users_settings(users_settings)
+        return jsonify({
+            "status": "success",
+            "message": f"Settings for user {USERid} updated",
+            "settings": current_settings
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
++-utility.py
+def render_md(full_path):
+    """
+    Render Markdown files from the static folder or GitHub based on the URL path.
+    Returns an HTML response using templates from static/error/<status_code>.md.
+    """
+    from flask import current_app as app
+    try:
+        # Parse the full_path, removing trailing slashes
+        segments = full_path.rstrip('/').split('/')
+        if not segments or segments == ['']:
+            raise ValueError("Invalid path provided")
+
+        # Determine source: static folder or GitHub
+        if segments[0] == 'static':
+            # Handle static file
+            if len(segments) < 2:
+                raise ValueError("No file path provided after 'static'")
+            file_path = '/'.join(segments[1:])
+            if not file_path.endswith('.md'):
+                raise ValueError("Only .md files are supported")
+            static_file = os.path.join(app.static_folder, file_path)
+            if not os.path.isfile(static_file):
+                raise FileNotFoundError("File not found in static folder")
+            with open(static_file, 'r', encoding='utf-8') as f:
+                md_content = f.read()
+        else:
+            # Handle GitHub file
+            if len(segments) < 4:
+                raise ValueError("Invalid GitHub path: Must provide owner/repo/branch/path")
+            owner, repo, branch = segments[:3]
+            path_segments = segments[3:]
+            path = '/'.join(path_segments)
+            if not path.endswith('.md'):
+                raise ValueError("Only .md files are supported")
+            url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
+            response = requests.get(url)
+            if response.status_code != 200:
+                raise FileNotFoundError(f"File not found on GitHub: {response.status_code}")
+            md_content = response.text
+
+        # Convert Markdown to HTML with table support
+        html_content = markdown.markdown(md_content, extensions=['tables'])
+        status_code = 200
+    except ValueError as e:
+        status_code = 404
+        error_message = str(e)
+    except FileNotFoundError as e:
+        status_code = 404
+        error_message = str(e)
+    except requests.RequestException as e:
+        status_code = 500
+        error_message = "Failed to fetch from GitHub"
+    except Exception as e:
+        status_code = 500
+        error_message = "An unexpected error occurred"
+
+    # Load the corresponding template
+    template_path = os.path.join(app.static_folder, 'error', f'{status_code}.md')
+    if not os.path.exists(template_path):
+        return jsonify({"status": "error", "message": f"Template for status {status_code} not found"}), 500
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template = f.read()
+
+    # Replace the appropriate placeholder
+    if status_code == 200:
+        final_html = template.replace('{content}', html_content)
+    else:
+        final_html = template.replace('{error_message}', error_message)
+
+    # Create and return the response
+    response = make_response(final_html, status_code)
+    response.headers['Content-Type'] = 'text/html'
+    return response
+
+@utility_bp.route('/check-domain', methods=['GET'])
+@login_required(["allauth"], require_all=False)  # Changed from require_permissions
+def check_domain():
+    """
+    Check the availability of a domain name using WHOIS.
+    """
+    domain = request.args.get('domain')
+    
+    # Basic validation (matches client-side regex: /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/)
+    if not domain:
+        return jsonify({"error": "Please provide a domain name"}), 400
+    
+    if not all(c.isalnum() or c in '-.' for c in domain) or \
+       '.' not in domain or \
+       len(domain.split('.')[-1]) < 2:
+        return jsonify({"error": "Invalid domain name (e.g., mystore.uk)"}), 400
+    
+    # Query WHOIS data
+    try:
+        w = whois.whois(domain)
+        # If no registration data exists (e.g., creation_date is None), domain is available
+        is_available = w.creation_date is None
+        return jsonify({
+            "domain": domain,
+            "available": is_available
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to check domain availability: {str(e)}"}), 500
+

@@ -93,6 +93,39 @@
     <script>
         const apiUrl = window.location.origin;
 
+        // Override Toastr methods to log messages to the console
+        (function() {
+            // Store the original Toastr methods
+            const originalSuccess = toastr.success;
+            const originalError = toastr.error;
+            const originalInfo = toastr.info;
+            const originalWarning = toastr.warning;
+
+            // Override success method
+            toastr.success = function(message, title, options) {
+                console.log(`Toastr Success: ${title ? title + ' - ' : ''}${message}`);
+                return originalSuccess.call(toastr, message, title, options);
+            };
+
+            // Override error method
+            toastr.error = function(message, title, options) {
+                console.log(`Toastr Error: ${title ? title + ' - ' : ''}${message}`);
+                return originalError.call(toastr, message, title, options);
+            };
+
+            // Override info method
+            toastr.info = function(message, title, options) {
+                console.log(`Toastr Info: ${title ? title + ' - ' : ''}${message}`);
+                return originalInfo.call(toastr, message, title, options);
+            };
+
+            // Override warning method
+            toastr.warning = function(message, title, options) {
+                console.log(`Toastr Warning: ${title ? title + ' - ' : ''}${message}`);
+                return originalWarning.call(toastr, message, title, options);
+            };
+        })();
+
         toastr.options = {
             closeButton: true,
             progressBar: true,

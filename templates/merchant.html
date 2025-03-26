@@ -54,7 +54,9 @@
                     <h2>Merchant Info</h2>
                     <p>Welcome to your merchant dashboard overview. Use the menu to manage products, your store, Wix integration, and account settings.</p>
                 </div>
-                {% include 'my_account.html' with user_type='merchant' %}
+                {% with user_type='merchant' %}
+                    {% include 'my_account.html' %}
+                {% endwith %}
                 <div id="my-products" class="section">
                     <h2>My Products</h2>
                     <p>These are the products from your parts feed.</p>

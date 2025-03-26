@@ -1,9 +1,11 @@
+from functools import wraps
+from flask import request, jsonify, url_for, current_app
 import jwt
 import datetime
-from flask import current_app, request, jsonify, url_for
-from functools import wraps
 import bcrypt
-from .users import load_users_settings, save_users_settings, generate_code
+import string
+import random
+from .users import load_users_settings, save_users_settings  # Ensure this import is present
 
 def login_required(required_permissions, require_all=True):
     def decorator(f):
@@ -45,46 +47,64 @@ def login_required(required_permissions, require_all=True):
     return decorator
 
 def login_user():
-    data = request.get_json()
-    if not data or 'email' not in data or 'password' not in data:
-        return jsonify({"status": "error", "message": "Email and password required"}), 400
-    email = data["email"].strip().lower()
-    password = data["password"].strip()
-    users_settings = load_users_settings()
-    user_id = None
-    for uid, settings in users_settings.items():
-        if settings.get("email_address", "").lower() == email and bcrypt.checkpw(password.encode('utf-8'), settings["password"].encode('utf-8')):
-            user_id = uid
-            break
-    if not user_id:
-        return jsonify({"status": "error", "message": "Invalid credentials"}), 401
-    permissions = users_settings[user_id].get("permissions", [])
-    token = jwt.encode(
-        {"userId": user_id, "permissions": permissions, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
-        current_app.config['JWT_SECRET_KEY'],
-        algorithm="HS256"
-    )
-    
-    # Determine redirect URL based on permissions
-    redirect_url = None
-    if "admin" in permissions:
-        redirect_url = url_for('admin')  # Assuming an admin route exists
-    elif "merchant" in permissions:
-        redirect_url = url_for('merchant')  # Assuming a merchant route exists
-    elif "community" in permissions:
-        redirect_url = url_for('community')  # Assuming a community route exists
-    elif "wixpro" in permissions:
-        redirect_url = url_for('wixpro')  # Assuming a wixpro route exists
-    else:
-        redirect_url = url_for('home')  # Default fallback
+    try:
+        data = request.get_json()
+        if not data or 'email' not in data or 'password' not in data:
+            return jsonify({"status": "error", "message": "Email and password required"}), 400
+        email = data["email"].strip().lower()
+        password = data["password"].strip()
+        users_settings = load_users_settings()
+        print(f"login_user - Loaded users_settings: {len(users_settings)} users")
 
-    response_data = {
-        "status": "success",
-        "token": token,
-        "userId": user_id,
-        "redirect_url": redirect_url  # Add redirect URL to response
-    }
-    return jsonify(response_data), 200
+        user_id = None
+        user = None
+        for uid, settings in users_settings.items():
+            if settings.get("email_address", "").lower() == email:
+                try:
+                    if bcrypt.checkpw(password.encode('utf-8'), settings["password"].encode('utf-8')):
+                        user_id = uid
+                        user = settings
+                        break
+                except Exception as e:
+                    print(f"login_user - Error verifying password for email {email}: {str(e)}")
+                    return jsonify({"status": "error", "message": "Invalid password format in user data"}), 500
+
+        if not user_id:
+            print(f"login_user - No user found for email: {email}")
+            return jsonify({"status": "error", "message": "Invalid credentials"}), 401
+
+        permissions = user.get("permissions", [])
+        print(f"login_user - User found - User ID: {user_id}, Permissions: {permissions}")
+        token = jwt.encode(
+            {"userId": user_id, "permissions": permissions, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
+            current_app.config['JWT_SECRET_KEY'],
+            algorithm="HS256"
+        )
+        
+        # Determine redirect URL based on permissions
+        redirect_url = None
+        if "admin" in permissions:
+            redirect_url = url_for('role_pages.admin')
+        elif "merchant" in permissions:
+            redirect_url = url_for('role_pages.merchant')
+        elif "community" in permissions:
+            redirect_url = url_for('role_pages.community')
+        elif "wixpro" in permissions:
+            redirect_url = url_for('role_pages.wixpro')
+        else:
+            redirect_url = url_for('home')
+
+        response_data = {
+            "status": "success",
+            "token": token,
+            "userId": user_id,
+            "contact_name": user.get("contact_name", "User"),
+            "redirect_url": redirect_url
+        }
+        return jsonify(response_data), 200
+    except Exception as e:
+        print(f"login_user - Unexpected error: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 def signup_user():
     data = request.get_json()
@@ -129,3 +149,10 @@ def generate_token(user_id, permissions):
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)  # 24-hour expiry
     }
     return jwt.encode(payload, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+
+def generate_code():
+    charset = string.digits + string.ascii_uppercase
+    code = ''.join(random.choice(charset) for _ in range(7))
+    total = sum(charset.index(c) for c in code)
+    checksum = charset[total % 36]
+    return code + checksum

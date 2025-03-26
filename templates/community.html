@@ -90,7 +90,9 @@
                         <li>Update your account details in "My Account"</li>
                     </ul>
                 </div>
-                {% include 'my_account.html' with user_type='community' %}
+                {% with user_type='community' %}
+                    {% include 'my_account.html' %}
+                {% endwith %}
                 <div id="categories" class="section">
                     <h2>My Categories</h2>
                     <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
