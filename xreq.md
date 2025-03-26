@@ -290,6 +290,7 @@ To use the endpoint, you’d send a POST request like this:
   "phone_number": "+1234567890",
   "message": "Your OTP is 123456"
 }
+```
 
 ## Summary
 
