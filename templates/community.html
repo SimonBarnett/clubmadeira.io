@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23007BFF' d='M156.6 389.8c-5.3-5.3-5.3-13.8 0-19.1l37.1-37.1-37.1-37.1c-5.3-5.3-5.3-13.8 0-19.1s13.8-5.3 19.1 0l37.1 37.1 37.1-37.1c5.3-5.3 13.8-5.3 19.1 0s5.3 13.8 0 19.1l-37.1 37.1 37.1 37.1c5.3 5.3 5.3 13.8 0 19.1s-13.8 5.3-19.1 0l-37.1-37.1-37.1 37.1c-5.3 5.3-13.8 5.3-19.1 0zm192 0c-5.3-5.3-5.3-13.8 0-19.1l37.1-37.1-37.1-37.1c-5.3-5.3-5.3-13.8 0-19.1s13.8-5.3 19.1 0l37.1 37.1 37.1-37.1c5.3-5.3 13.8-5.3 19.1 0s5.3 13.8 0 19.1l-37.1 37.1 37.1 37.1c5.3 5.3 5.3 13.8 0 19.1s-13.8 5.3-19.1 0l-37.1-37.1-37.1 37.1c-5.3 5.3-13.8 5.3-19.1 0zM156.6 122.2c-5.3 5.3-5.3 13.8 0 19.1l37.1 37.1-37.1 37.1c-5.3 5.3-5.3 13.8 0 19.1s13.8 5.3 19.1 0l37.1-37.1 37.1 37.1c5.3 5.3 13.8 5.3 19.1 0s5.3-13.8 0-19.1l-37.1-37.1 37.1-37.1c-5.3-5.3-5.3-13.8 0-19.1s-13.8-5.3-19.1 0l-37.1 37.1-37.1-37.1c-5.3-5.3-13.8-5.3-19.1 0zm192 0c-5.3 5.3-5.3 13.8 0 19.1l37.1 37.1-37.1 37.1c-5.3 5.3-5.3 13.8 0 19.1s13.8 5.3 19.1 0l37.1-37.1 37.1 37.1c5.3 5.3 13.8 5.3 19.1 0s5.3-13.8 0-19.1l-37.1-37.1 37.1-37.1c-5.3-5.3-5.3-13.8 0-19.1s-13.8-5.3-19.1 0l-37.1 37.1-37.1-37.1c-5.3-5.3-13.8-5.3-19.1 0z'/%3E%3C/svg%3E">
+    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
@@ -17,23 +17,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" style="display: flex;">
-        <div class="multicircle-loader">
-            <div class="circle circle1"></div>
-            <div class="circle circle2"></div>
-            <div class="circle circle3"></div>
-            <div class="circle circle4"></div>
-        </div>
-    </div>
-
     <div class="layout-wrapper">
         <div class="header">
             <div class="header-content" id="brandingContent"></div>
         </div>
         <div class="main-container">
             <div class="menu-container">
-                <div class="menu" id="menu">
+                <div class="menu">
                     <button data-section="welcome">
                         <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
                     </button>
@@ -88,22 +78,19 @@
                     </button>
                     <div id="my-account-submenu" class="submenu">
                         <button data-section="my-account">
-                            <span class="button-content"><i class="fas fa-address-card"></i> Contact</span>
+                            <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
                         </button>
                         <button data-section="change-password">
                             <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
                         </button>
                     </div>
-                    <button data-href="/admin">
-                        <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
-                    </button>
                     <button id="logOffBtn" style="background-color: #dc3545;">
                         <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
                     </button>
                 </div>
             </div>
             <div class="content-wrapper">
-                <div id="welcome" class="section active" style="margin-left: 170px;">
+                <div id="welcome" class="section active">
                     <h2>Welcome to Your Community Dashboard</h2>
                     <p>Welcome! This dashboard is your hub for managing your community account and tracking referrals.</p>
                     <p>Use the menu on the left to:</p>
@@ -114,40 +101,40 @@
                         <li>Update your account details in "My Account"</li>
                     </ul>
                 </div>
-                <div id="my-account" class="section" style="margin-left: 170px;">
+                <div id="my-account" class="section">
                     <h2>My Account</h2>
-                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security. Use the options below to navigate to the desired section.</p>
+                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security. Use the options below to navigate to the desired section:</p>
                 </div>
-                <div id="change-password" class="section" style="margin-left: 170px;">
+                <div id="change-password" class="section">
                     <h2>Change Password</h2>
-                    <form id="changePasswordForm" class="settings-form">
-                        <label for="currentPassword">Current Password:</label>
+                    <div class="settings-form">
                         <div class="password-container">
-                            <input type="password" id="currentPassword" name="currentPassword" required>
-                            <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                            <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
                         </div>
-
-                        <label for="newPassword">New Password:</label>
                         <div class="password-container">
-                            <input type="password" id="newPassword" name="newPassword" required>
-                            <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                            <label for="newPassword">New Password:</label>
+                            <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                            <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
                         </div>
-
-                        <label for="confirmNewPassword">Confirm New Password:</label>
                         <div class="password-container">
-                            <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
-                            <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmNewPassword')"></i>
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                            <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
                         </div>
-
-                        <button type="button" data-action="changePassword"><i class="fas fa-key"></i> Change Password</button>
-                    </form>
+                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+                    </div>
                 </div>
-                <div id="categories" class="section" style="margin-left: 170px;">
+                {% with user_type='community' %}
+                    {% include 'my_account.html' %}
+                {% endwith %}
+                <div id="categories" class="section">
                     <h2>My Categories</h2>
                     <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
                     <div class="treeview" id="categoryTree"></div>
                 </div>
-                <div id="referrals_intro" class="section" style="margin-left: 170px;">
+                <div id="referrals_intro" class="section">
                     <h2>My Referrals</h2>
                     <p>This section allows you to track your referral activity.</p>
                     <p>Select from the submenu options:</p>
@@ -156,7 +143,7 @@
                         <li><strong>Orders:</strong> See orders placed via your referrals.</li>
                     </ul>
                 </div>
-                <div id="visits" class="section" style="margin-left: 170px;">
+                <div id="visits" class="section">
                     <h2>Visits</h2>
                     <div class="toggle-section" data-toggle="visits_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
                     <div id="visits_this_month" class="toggle-content open">
@@ -180,7 +167,7 @@
                         </table>
                     </div>
                 </div>
-                <div id="orders" class="section" style="margin-left: 170px;">
+                <div id="orders" class="section">
                     <h2>Orders</h2>
                     <div class="toggle-section" data-toggle="orders_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
                     <div id="orders_this_month" class="toggle-content open">
@@ -204,7 +191,7 @@
                         </table>
                     </div>
                 </div>
-                <div id="my_website_intro" class="section" style="margin-left: 170px;">
+                <div id="my_website_intro" class="section">
                     <h2>My Web Site</h2>
                     <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
                     <ul>
@@ -216,7 +203,7 @@
                         <li><strong>I Don’t Have a Website Yet:</strong> Request a site setup.</li>
                     </ul>
                 </div>
-                <div id="wix" class="section" style="margin-left: 170px;">
+                <div id="wix" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" style="height: 32px; width: auto; margin-right: 10px;">
                             <!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
@@ -232,7 +219,7 @@
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="wordpress" class="section" style="margin-left: 170px;">
+                <div id="wordpress" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fab fa-wordpress" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>WordPress Integration</h2>
@@ -245,7 +232,7 @@
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="squarespace" class="section" style="margin-left: 170px;">
+                <div id="squarespace" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fab fa-squarespace" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Squarespace Integration</h2>
@@ -258,7 +245,7 @@
                         <li>Update site.</li>
                     </ol>
                 </div>
-                <div id="weebly" class="section" style="margin-left: 170px;">
+                <div id="weebly" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fab fa-weebly" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Weebly Integration</h2>
@@ -271,7 +258,7 @@
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="joomla" class="section" style="margin-left: 170px;">
+                <div id="joomla" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fab fa-joomla" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Joomla Integration</h2>
@@ -284,7 +271,7 @@
                         <li>Save.</li>
                     </ol>
                 </div>
-                <div id="no_website" class="section" style="margin-left: 170px;">
+                <div id="no_website" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-question-circle" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>I Don’t Have a Website Yet</h2>
@@ -349,7 +336,6 @@
     <script src="/static/js/site-navigation.js"></script>
     <script src="/static/js/category-management.js"></script>
     <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/user-management.js"></script>
     <script src="/static/js/community-page.js"></script>
     <script src="/static/js/page-load.js"></script>
     <script>

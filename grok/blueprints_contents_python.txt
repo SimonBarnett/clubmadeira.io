@@ -1,0 +1,1565 @@
++ [blueprints]
++----authentication_bp.py
++----content_bp.py
++----manager_bp.py
++----referral_bp.py
++----role_pages_bp.py
++----site_request_bp.py
++----user_settings_bp.py
++----utility_bp.py
+
+authentication_bp.py
+from flask import Blueprint, render_template, request, jsonify, current_app
+from utils.auth import login_required, load_users_settings, save_users_settings, generate_token
+from utils.users import generate_code
+from utils.config import load_config
+import logging
+import datetime
+import json
+import bcrypt
+import jwt
+import requests
+import string
+import random
+
+# region Blueprint Setup
+# Here begins the grand adventure of authentication_bp, a blueprint forged in the fires of Mount Doom (or at least the xAI labs).
+# Zaphod Beeblebrox would approve—two heads are better than one, and this module handles signups and password resets with flair!
+authentication_bp = Blueprint('authentication_bp', __name__)
+# endregion
+
+# region /signup GET - The Holy Grail of New User Entry
+@authentication_bp.route('/signup', methods=['GET'])
+def signup_page():
+    """
+    Renders the signup page, a portal to the galaxy for new users.
+    Purpose: Like the Knights of the Round Table seeking the Grail, this endpoint offers a form for brave souls to join the ranks.
+    Inputs: None—just point your browser and pray you’re not a shrubbery.
+    Outputs: 
+        - Success: HTML signup form, a beacon of hope.
+        - Error: JSON {"status": "error", "message": "Server error"}, status 500—like Marvin groaning, "I’ve got a brain the size of a planet and they ask me to render a page."
+    """
+    try:
+        # Trillian would navigate this smoothly—straight to the template!
+        return render_template('signup.html')
+    except Exception as e:
+        # Alas, the Parrot is no more! It’s an ex-page!
+        logging.error(f"UX Issue - Failed to render signup page: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# region /signup POST - Joining the Galactic Crew
+@authentication_bp.route('/signup', methods=['POST'])
+def signup():
+    """
+    Registers a new user, faster than Zaphod escaping a Vogon poetry reading.
+    Purpose: Takes JSON data to create a user account—think of it as signing up for the Rebel Alliance, but with less paperwork.
+    Inputs: JSON payload with:
+        - signup_type (str): "seller", "community", "wixpro", etc.
+        - contact_name (str): Your alias, e.g., "Arthur Dent".
+        - signup_email (str): Galactic comms address.
+        - signup_password (str): Secret key, not "four candles".
+        - signup_phone (str, optional): Required for seller/community, else optional like a spare towel.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "User created, please verify OTP"}, status 201—welcome aboard!
+        - Errors:
+            - 400: {"status": "error", "message": "Missing required fields"}—you forgot the fork handles!
+            - 400: {"status": "error", "message": "Phone required for Merchant/Community"}—no phone, no entry!
+            - 409: {"status": "error", "message": "Email already registered"}—this email’s already in the Biggus Dickus database.
+            - 500: {"status": "error", "message": "Server error"}—the Spanish Inquisition struck unexpectedly!
+    """
+    try:
+        # Arthur Dent fumbles with the JSON—let’s hope it’s all there!
+        data = request.get_json()
+        required_fields = ['signup_type', 'contact_name', 'signup_email', 'signup_password']
+        if not all(k in data for k in required_fields):
+            logging.warning(f"UX Issue - Signup attempt missing required fields: {json.dumps(data)}")
+            return jsonify({"status": "error", "message": "Missing required fields"}), 400
+        
+        signup_type = data['signup_type']
+        contact_name = data['contact_name']
+        signup_email = data['signup_email']
+        signup_password = data['signup_password']
+        signup_phone = data.get('signup_phone', '')
+
+        # Seller or community? Better have a phone, or it’s “Nobody expects the Spanish Inquisition!”
+        if signup_type in ['seller', 'community'] and not signup_phone:
+            logging.warning(f"UX Issue - Signup failed for {signup_type} - Phone required")
+            return jsonify({"status": "error", "message": "Phone required for Merchant/Community"}), 400
+
+        # Load the user database—like the Guide, but less likely to say "Don’t Panic".
+        users_settings = load_users_settings()
+        if any(u['email_address'].lower() == signup_email.lower() for u in users_settings.values()):
+            logging.warning(f"UX Issue - Signup failed - Email already registered: {signup_email}")
+            return jsonify({"status": "error", "message": "Email already registered"}), 409
+
+        # Generate a user ID—unique as Zaphod’s second head.
+        user_id = generate_code()
+        # Hash the password with bcrypt—stronger than a Wookiee’s grip!
+        hashed_password = bcrypt.hashpw(signup_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Map signup types to permissions—Ronnie Corbett would approve this tidy switch.
+        permission_map = {'seller': 'merchant', 'community': 'community', 'wixpro': 'wixpro'}
+        permission = permission_map.get(signup_type, signup_type)
+
+        # Assemble the user record—fit for the Life of Brian’s People’s Front of Judea.
+        users_settings[user_id] = {
+            "email_address": signup_email.lower(),
+            "contact_name": contact_name,
+            "phone_number": signup_phone,
+            "password": hashed_password,
+            "permissions": [permission]
+        }
+        save_users_settings(users_settings)
+        logging.debug(f"User signed up - User ID: {user_id}, Permission: {permission}")
+        return jsonify({"status": "success", "message": "User created, please verify OTP"}), 201
+    except Exception as e:
+        # Marvin’s lament: “I tried to sign up, but the universe broke.”
+        logging.error(f"UX Issue - Signup processing error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# ASCII Art 1: The Dead Parrot
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "It's not pining, it's passed on! This parrot is no more!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+
+# region /reset-password POST - A New Hope for Forgotten Passwords
+@authentication_bp.route('/reset-password', methods=['POST'])
+def reset_password():
+    """
+    Initiates a password reset, sending an OTP faster than Trillian can say “Don’t Panic!”.
+    Purpose: Like Brian’s sandal leading the masses, this endpoint guides users back to access with a one-time password.
+    Inputs: JSON payload with:
+        - email (str): The user’s galactic address to reset.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "A one-time password has been sent to your phone"}, status 200—help is on the way!
+        - Errors:
+            - 400: {"status": "error", "message": "Email is required"}—no email, no fork handles!
+            - 404: {"status": "error", "message": "Email not found"}—this user’s not in the Guide.
+            - 400: {"status": "error", "message": "No phone number associated with this account"}—no comms, no reset!
+            - 500: {"status": "error", "message": "TextMagic credentials not configured"}—the Vogons forgot the keys!
+            - 500: {"status": "error", "message": "Failed to send SMS: <reason>"}—a comedy of errors!
+    """
+    try:
+        # Arthur Dent checks the JSON—where’s that email?
+        data = request.get_json()
+        if not data or 'email' not in data:
+            logging.warning("UX Issue - Reset password attempt missing email")
+            return jsonify({"status": "error", "message": "Email is required"}), 400
+        
+        email = data.get("email").lower()
+        users_settings = load_users_settings()
+        matching_user_id = next((uid for uid, settings in users_settings.items() if settings.get("email_address", "").lower() == email), None)
+        
+        # No user? It’s like looking for the Holy Grail in a galaxy far, far away.
+        if not matching_user_id:
+            logging.warning(f"UX Issue - Reset password failed - Email not found: {email}")
+            return jsonify({"status": "error", "message": "Email not found"}), 404
+
+        user = users_settings[matching_user_id]
+        phone_number = user.get("phone_number", "").strip()
+        if not phone_number:
+            logging.warning(f"UX Issue - Reset password failed for {email} - No phone number")
+            return jsonify({"status": "error", "message": "No phone number associated with this account"}), 400
+
+        # Generate OTP—six digits of pure, random brilliance, courtesy of Zaphod’s improbability drive.
+        otp = ''.join(random.choices(string.digits, k=6))
+        reset_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+        if "reset_codes" not in current_app.config:
+            current_app.config["reset_codes"] = {}
+        current_app.config["reset_codes"][matching_user_id] = {"code": otp, "expires": reset_expiry.isoformat()}
+        logging.debug(f"Generated OTP for reset - User ID: {matching_user_id}, OTP: {otp}")
+
+        # Load TextMagic config—Ronnie Barker’s “four candles” would be easier to find!
+        config = load_config()
+        textmagic_config = config.get("textmagic", {})
+        username = textmagic_config.get("USERNAME")
+        api_key = textmagic_config.get("API_KEY")
+        if not username or not api_key:
+            logging.error("Security Issue - TextMagic credentials not configured")
+            return jsonify({"status": "error", "message": "TextMagic credentials not configured"}), 500
+
+        # Send the SMS—faster than a lumberjack singing in drag!
+        url = "https://rest.textmagic.com/api/v2/messages"
+        payload = {"text": f"clubmadeira.io one-time password: {otp}. Expires in 15 mins.", "phones": phone_number}
+        headers = {"X-TM-Username": username, "X-TM-Key": api_key, "Content-Type": "application/x-www-form-urlencoded"}
+        response = requests.post(url, data=payload, headers=headers)
+
+        if response.status_code != 201:
+            logging.error(f"UX Issue - Failed to send SMS for reset - User ID: {matching_user_id}, Response: {response.text}")
+            return jsonify({"status": "error", "message": f"Failed to send SMS: {response.text}"}), 500
+        
+        logging.info(f"SMS sent successfully for password reset - User ID: {matching_user_id}")
+        return jsonify({"status": "success", "message": "A one-time password has been sent to your phone"}), 200
+    except Exception as e:
+        # Marvin’s take: “I sent an SMS, and now the universe hates me.”
+        logging.error(f"UX Issue - Reset password error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# region /verify-reset-code POST - The Messiah of Password Recovery
+@authentication_bp.route('/verify-reset-code', methods=['POST'])
+def verify_reset_code():
+    """
+    Verifies an OTP and resets the password—like Arthur Dent finding the Ultimate Answer (42, obviously).
+    Purpose: Validates the OTP and updates the password, granting access like the *Life of Brian* crowd shouting “He IS the Messiah!”.
+    Inputs: JSON payload with:
+        - email (str): The user’s address.
+        - code (str): The OTP, six digits of destiny.
+        - new_password (str): The new key to the galaxy.
+    Outputs:
+        - Success: JSON {"status": "success", "token": "<JWT>", "user_id": "<id>"}, status 200—access granted!
+        - Errors:
+            - 400: {"status": "error", "message": "Email, code, and new password are required"}—no shortcuts here!
+            - 404: {"status": "error", "message": "Email not found"}—lost in space!
+            - 400: {"status": "error", "message": "No reset code found for this user"}—no OTP, no entry!
+            - 500: {"status": "error", "message": "Invalid reset code expiry format"}—time’s gone wonky!
+            - 400: {"status": "error", "message": "Invalid or expired reset code"}—this code’s pining for the fjords!
+            - 500: {"status": "error", "message": "Server error"}—the Ronnies misplaced the candles!
+    """
+    try:
+        # Trillian checks the JSON—three items, or it’s a bust!
+        data = request.get_json(silent=True)
+        if not data or not isinstance(data, dict) or not all(k in data for k in ['email', 'code', 'new_password']):
+            logging.warning(f"UX Issue - Verify reset code missing required fields: {json.dumps(data)}")
+            return jsonify({"status": "error", "message": "Email, code, and new password are required"}), 400
+        
+        email = data.get("email").lower()
+        code = data.get("code")
+        new_password = data.get("new_password")
+
+        users_settings = load_users_settings()
+        matching_user_id = next((uid for uid, settings in users_settings.items() if settings.get("email_address", "").lower() == email), None)
+        
+        # No user? It’s like Zaphod losing both heads at once!
+        if not matching_user_id:
+            logging.warning(f"UX Issue - Verify reset code failed - Email not found: {email}")
+            return jsonify({"status": "error", "message": "Email not found"}), 404
+
+        stored_reset = current_app.config.get("reset_codes", {}).get(matching_user_id, {})
+        stored_code = stored_reset.get("code")
+        if not stored_code:
+            logging.warning(f"UX Issue - No reset code found for user {matching_user_id}")
+            return jsonify({"status": "error", "message": "No reset code found for this user"}), 400
+
+        # Check expiry—don’t let it join the Parrot in the great beyond!
+        try:
+            expiry = datetime.datetime.fromisoformat(stored_reset.get("expires", "2000-01-01T00:00:00"))
+        except (ValueError, TypeError) as e:
+            logging.error(f"Security Issue - Invalid reset code expiry format for user {matching_user_id}: {str(e)}", exc_info=True)
+            return jsonify({"status": "error", "message": "Invalid reset code expiry format"}), 500
+
+        if stored_code != code or datetime.datetime.utcnow() > expiry:
+            logging.warning(f"Security Issue - Invalid or expired reset code for user {matching_user_id}: {code}")
+            return jsonify({"status": "error", "message": "Invalid or expired reset code"}), 400
+
+        user = users_settings[matching_user_id]
+        # Hash the new password—stronger than a Wookiee’s grip!
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        user["password"] = hashed_password
+        
+        # Add 'verified' permission if missing—like Brian gaining a halo!
+        if "verified" not in user.get("permissions", []):
+            user["permissions"].append("verified")
+        
+        save_users_settings(users_settings)
+        if matching_user_id in current_app.config.get("reset_codes", {}):
+            del current_app.config["reset_codes"][matching_user_id]
+
+        # Generate a token—your key to the galaxy, courtesy of Zaphod’s improbability!
+        token = generate_token(matching_user_id, user.get("permissions", []))
+        response_data = {"status": "success", "token": "[REDACTED]", "user_id": matching_user_id}
+        logging.debug(f"Reset code verified - User ID: {matching_user_id}, Response: {json.dumps(response_data)}")
+        return jsonify({"status": "success", "token": token, "user_id": matching_user_id}), 200
+    except Exception as e:
+        # Marvin’s verdict: “I verified the code, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Verify reset code error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# region /update-password POST - Changing the Galactic Key
+@authentication_bp.route('/update-password', methods=['POST'])
+@login_required(["self"], require_all=True)
+def update_password():
+    """
+    Updates a user’s password, secure as a Two Ronnies sketch twist.
+    Purpose: Lets an authenticated user change their password—like swapping four candles for fork handles, but with more security.
+    Permissions: Restricted to "self"—only you can wield this lightsaber!
+    Inputs: JSON payload with:
+        - email (str): Your address, matching your JWT.
+        - password (str): The new password to hash.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Password updated for <email>", "user_id": "<id>"}, status 200—victory!
+        - Errors:
+            - 400: {"status": "error", "message": "Email and password required"}—no dice without both!
+            - 403: {"status": "error", "message": "Unauthorized"}—this isn’t your password, you naughty boy!
+            - 500: {"status": "error", "message": "Server error"}—the system’s gone to the People’s Front of Judea!
+    """
+    try:
+        # Arthur Dent fumbles again—where’s that email and password?
+        data = request.get_json()
+        if not data or 'email' not in data or 'password' not in data:
+            logging.warning(f"UX Issue - Update password attempt missing email or password: {json.dumps(data)}")
+            return jsonify({"status": "error", "message": "Email and password required"}), 400
+        
+        email = data["email"].strip().lower()
+        new_password = data["password"].strip()
+        users_settings = load_users_settings()
+        user_id = next((uid for uid, u in users_settings.items() if u["email_address"].lower() == email), None)
+        
+        # Only you can change your password—or it’s “Nobody expects the Spanish Inquisition!”
+        if not user_id or user_id != request.user_id:
+            logging.warning(f"Security Issue - Unauthorized password update attempt for {email} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+        
+        # Hash it up—bcrypt’s grip is Wookiee-strong!
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        users_settings[user_id]["password"] = hashed_password
+        save_users_settings(users_settings)
+        logging.info(f"Password updated for user {user_id}")
+        return jsonify({"status": "success", "message": f"Password updated for {email}", "user_id": user_id}), 200
+    except Exception as e:
+        # Marvin sighs: “I updated the password, and now I’m broken.”
+        logging.error(f"UX Issue - Update password error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+content_bp.py
+from flask import Blueprint, request, jsonify
+from utils.products import search_all_discounted
+from utils.categories import get_all_categories
+import logging
+import json
+
+# region Blueprint Setup
+# Welcome to content_bp, the blueprint that’s more organized than the Spanish Inquisition’s filing system.
+# Arthur Dent would be proud—simple, logical, and occasionally bewildered by its own existence.
+content_bp = Blueprint('content_bp', __name__)
+# endregion
+
+# region /discounted-products GET - The Quest for Bargain Treasures
+@content_bp.route('/discounted-products', methods=['GET'])
+def get_all_discounted_products():
+    """
+    Retrieves all discounted products for a given category, like Zaphod Beeblebrox hunting for the best Pan Galactic Gargle Blaster deals.
+    Purpose: To provide a list of products that are currently on discount, filtered by category—like the Holy Grail, but with price tags.
+    Inputs: Query parameter:
+        - category_id (str): The ID of the category to filter discounted products. Required, or it’s like asking for "four candles" and getting fork handles.
+    Outputs:
+        - Success: JSON {"status": "success", "count": <int>, "products": [<product_data>]}, status 200—your treasure map to savings!
+        - Errors:
+            - 400: {"status": "error", "message": "category_id required"}—you forgot the category, you naughty boy!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the system’s gone to the People’s Front of Judea!
+    """
+    try:
+        # Arthur Dent checks the query params—where’s that category_id?
+        category_id = request.args.get('category_id')
+        if not category_id:
+            logging.warning("UX Issue - No category_id provided for discounted products")
+            return jsonify({"status": "error", "message": "category_id required"}), 400
+        
+        # Search for discounted products—like finding a shrubbery in a galaxy far, far away.
+        products = search_all_discounted(category_id)
+        if not products:
+            logging.warning(f"UX Issue - No discounted products found for category_id: {category_id}")
+        
+        # Assemble the response—fit for the Life of Brian’s marketplace.
+        response_data = {"status": "success", "count": len(products), "products": products}
+        logging.debug(f"Retrieved discounted products for category_id {category_id}: {json.dumps(response_data)}")
+        return jsonify(response_data), 200
+    except Exception as e:
+        # Marvin’s lament: “I tried to fetch products, but the universe broke.”
+        logging.error(f"UX Issue - Failed to retrieve discounted products: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# ASCII Art 1: The Holy Grail
+"""
+       /\
+      /  \
+     /____\  "It's just a flesh wound! Keep searching for those discounts!"
+    |      |
+    |______|
+"""
+
+# region /categories GET - Mapping the Galactic Product Hierarchy
+@content_bp.route('/categories', methods=['GET'])
+def get_categories():
+    """
+    Retrieves product categories, optionally filtered by parent_id, like Trillian navigating the Heart of Gold’s improbability drive.
+    Purpose: To provide a list of categories, helping users explore the product galaxy—like the Guide, but for shopping.
+    Inputs: Query parameter (optional):
+        - parent_id (str): The ID of the parent category to filter subcategories. If omitted, returns top-level categories.
+    Outputs:
+        - Success: JSON {"status": "success", "count": <int>, "categories": [<category_data>]}, status 200—your map to the stars!
+        - Errors:
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies misplaced the candles!
+    """
+    try:
+        # Zaphod checks the query—parent_id or bust!
+        parent_id = request.args.get('parent_id')
+        # Fetch categories—like finding the right fork handle in a sea of four candles.
+        categories = get_all_categories(parent_id)
+        if not categories:
+            logging.warning(f"UX Issue - No categories returned for parent_id: {parent_id or 'None'}")
+        
+        # Assemble the response—neater than a Two Ronnies sketch.
+        response_data = {"status": "success", "count": len(categories), "categories": categories}
+        logging.debug(f"Retrieved categories for parent_id {parent_id or 'None'}: {json.dumps(response_data)}")
+        return jsonify(response_data), 200
+    except Exception as e:
+        # Marvin’s take: “I fetched categories, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Failed to retrieve categories: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# ASCII Art 2: Zaphod Beeblebrox
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "Two heads are better than one—especially for finding bargains!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+manager_bp.py
+from flask import Blueprint, request, jsonify
+from utils.auth import login_required
+from utils.users import load_users_settings, save_users_settings
+from utils.config import load_config, save_config
+import logging
+import json
+
+# region Blueprint Setup
+# Behold manager_bp, the blueprint that governs with the authority of Zaphod Beeblebrox’s dual-headed presidency!
+# This is the control room—admin-only, like the bridge of the Heart of Gold, but with less improbability.
+manager_bp = Blueprint('manager_bp', __name__)
+# endregion
+
+# region /users/<user_id> GET - The Admin’s Guide to the User Galaxy
+@manager_bp.route('/users/<user_id>', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_user(user_id):
+    """
+    Retrieves detailed user info for admins, faster than Trillian can calculate the meaning of life.
+    Purpose: Like the Holy Grail sought by the Knights Who Say Ni, this endpoint delivers a user’s full profile—admin eyes only!
+    Permissions: Restricted to "admin"—you must be the Messiah (or at least Brian) to wield this power!
+    Inputs: URL parameter:
+        - user_id (str): The ID of the user to fetch, e.g., "42".
+    Outputs:
+        - Success: JSON {"status": "success", "user": {"USERid": "<id>", "email_address": "<email>", ...}}, status 200—user data delivered!
+        - Errors:
+            - 404: {"status": "error", "message": "User not found"}—this user’s as dead as a parrot!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies lost the fork handles!
+    """
+    try:
+        # Load the user database—like Arthur Dent flipping through the Guide, but with less tea.
+        users_settings = load_users_settings()
+        if user_id not in users_settings:
+            logging.warning(f"UX Issue - User not found: {user_id}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        
+        # Assemble the user data—fit for the Life of Brian’s People’s Front.
+        user = users_settings[user_id]
+        user_data = {
+            "USERid": user_id,
+            "email_address": user.get("email_address", ""),
+            "contact_name": user.get("contact_name", ""),
+            "phone_number": user.get("phone_number", ""),
+            "permissions": user.get("permissions", []),
+            "website_url": user.get("website_url", ""),
+            "wixClientId": user.get("wixClientId", ""),
+            "referrals": user.get("referrals", {"visits": [], "orders": []})
+        }
+        # Redact sensitive data in logs—nobody expects the password!
+        log_data = user_data.copy()
+        if "password" in log_data:
+            log_data["password"] = "[REDACTED]"
+        logging.debug(f"Retrieved user data for {user_id}: {json.dumps(log_data)}")
+        return jsonify({"status": "success", "user": user_data}), 200
+    except Exception as e:
+        # Marvin’s take: “I fetched a user, and now I’m broken.”
+        logging.error(f"UX Issue - Failed to retrieve user {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# ASCII Art 1: The Two Ronnies’ Fork Handles
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "Four candles? No, fork handles—admin privileges required!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+
+# region /permissions/<user_id> GET - Checking the Galactic Rank
+@manager_bp.route('/permissions/<user_id>', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_permissions(user_id):
+    """
+    Fetches a user’s permissions, like Zaphod checking his presidential privileges.
+    Purpose: Returns the list of permissions for a user—admin-only, because only the chosen one (or Brian) gets to peek!
+    Permissions: Restricted to "admin"—you’re either the Messiah or nobody!
+    Inputs: URL parameter:
+        - user_id (str): The ID of the user whose permissions are sought.
+    Outputs:
+        - Success: JSON {"status": "success", "permissions": [<permission_list>]}, status 200—rank revealed!
+        - Errors:
+            - 404: {"status": "error", "message": "User not found"}—this user’s not in the Guide!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
+    """
+    try:
+        # Load the user settings—like the Guide, but less likely to say "Don’t Panic".
+        users_settings = load_users_settings()
+        if user_id not in users_settings:
+            logging.warning(f"UX Issue - User not found for permissions: {user_id}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        
+        # Fetch permissions—neater than Ronnie Corbett’s wordplay.
+        permissions = users_settings[user_id].get('permissions', [])
+        logging.debug(f"Retrieved permissions for user {user_id}: {json.dumps(permissions)}")
+        return jsonify({"status": "success", "permissions": permissions}), 200
+    except Exception as e:
+        # Marvin groans: “I checked permissions, and now I’m depressed.”
+        logging.error(f"UX Issue - Failed to retrieve permissions for user {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# region /permissions/<user_id> POST - Granting Galactic Privileges
+@manager_bp.route('/permissions/<user_id>', methods=['POST'])
+@login_required(["admin"], require_all=True)
+def add_permission(user_id):
+    """
+    Adds a permission to a user, like giving Zaphod a third head (if only!).
+    Purpose: Grants a new permission to a user—admin-only, because only the chosen can wield this power!
+    Permissions: Restricted to "admin"—you’re the Messiah, not just a naughty boy!
+    Inputs: JSON payload with:
+        - permission (str): The permission to add, e.g., "merchant", "wixpro".
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Permission added"}, status 200—rank upgraded!
+        - Errors:
+            - 400: {"status": "error", "message": "Permission field is required"}—no permission, no fork handles!
+            - 404: {"status": "error", "message": "User not found"}—this user’s not in the galaxy!
+            - 400: {"status": "error", "message": "Permission already exists"}—already got it, Biggus Dickus!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the system’s gone to Judea!
+    """
+    try:
+        # Arthur Dent fumbles the JSON—where’s that permission?
+        data = request.get_json()
+        if not data or 'permission' not in data:
+            logging.warning(f"UX Issue - Missing permission field in request for user {user_id}: {json.dumps(data)}")
+            return jsonify({"status": "error", "message": "Permission field is required"}), 400
+        
+        permission = data['permission']
+        users_settings = load_users_settings()
+        if user_id not in users_settings:
+            logging.warning(f"UX Issue - User not found for adding permission: {user_id}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        
+        # Check if they’ve already got it—like asking for four candles twice!
+        user_permissions = users_settings[user_id].get('permissions', [])
+        if permission in user_permissions:
+            logging.warning(f"UX Issue - Permission already exists for user {user_id}: {permission}")
+            return jsonify({"status": "error", "message": "Permission already exists"}), 400
+        
+        # Add the permission—stronger than a Wookiee’s grip!
+        user_permissions.append(permission)
+        users_settings[user_id]['permissions'] = user_permissions
+        save_users_settings(users_settings)
+        logging.info(f"Added permission {permission} to user {user_id}")
+        return jsonify({"status": "success", "message": "Permission added"}), 200
+    except Exception as e:
+        # Marvin’s verdict: “I added a permission, and now I’m broken.”
+        logging.error(f"UX Issue - Failed to add permission for user {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# region /config/<affiliate> PATCH - Tuning the Galactic Config
+@manager_bp.route('/config/<affiliate>', methods=['PATCH'])
+@login_required(["admin"], require_all=True)
+def replace_config(affiliate):
+    """
+    Updates affiliate configuration, like Marvin tweaking the Heart of Gold’s circuits (grudgingly).
+    Purpose: Replaces an affiliate’s config settings—admin-only, because only the elite can adjust the galaxy’s dials!
+    Permissions: Restricted to "admin"—you’re the Messiah, not just a candle merchant!
+    Inputs: URL parameter:
+        - affiliate (str): The affiliate key to update, e.g., "wixpro".
+        JSON payload:
+        - <dict>: The new config data to replace the existing settings.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Updated <affiliate> config"}, status 200—config tuned!
+        - Errors:
+            - 400: {"status": "error", "message": "Invalid data"}—no proper data, no four candles!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
+    """
+    try:
+        # Load the config—like the Guide, but with less towel advice.
+        config = load_config()
+        data = request.get_json()
+        if not data or not isinstance(data, dict):
+            logging.warning(f"UX Issue - Invalid config update data for affiliate {affiliate}: {json.dumps(data)}")
+            return jsonify({"status": "error", "message": "Invalid data"}), 400
+        
+        # Replace the config—Ronnie Barker would approve this swap!
+        config[affiliate] = data
+        save_config(config)
+        # Redact sensitive bits in logs—nobody expects the JWT secret!
+        log_config = config.copy()
+        if "jwt" in log_config and "SECRET_KEY" in log_config["jwt"]:
+            log_config["jwt"]["SECRET_KEY"] = "[REDACTED]"
+        logging.info(f"Updated config for affiliate {affiliate}: {json.dumps(log_config)}")
+        return jsonify({"status": "success", "message": f"Updated {affiliate} config"}), 200
+    except Exception as e:
+        # Marvin sighs: “I updated the config, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Failed to update config for affiliate {affiliate}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+
+referral_bp.py
+from flask import Blueprint, request, jsonify
+from utils.auth import login_required
+from utils.users import load_users_settings, save_users_settings
+import logging
+import json
+
+# region Blueprint Setup
+# Welcome to referral_bp, the blueprint that tracks referrals like Zaphod Beeblebrox tracks the best parties in the galaxy!
+# This module is the galactic hub for recording and retrieving referral data—prepare for some improbably fun stats!
+referral_bp = Blueprint('referral_bp', __name__)
+# endregion
+
+# region /referral POST - Recording Galactic Referrals
+@referral_bp.route('/referral', methods=['POST'])
+def handle_referral():
+    """
+    Records referral data (visits or orders), like the Spanish Inquisition—nobody expects it, but it’s here!
+    Purpose: To log referral activities, whether it’s a page visit or an order, for tracking and analytics. Public access—no permissions needed, just like the People’s Front of Judea’s open meetings.
+    Inputs: JSON payload with:
+        - timestamp (str): When the referral happened, e.g., "2023-10-26T12:34:56Z".
+        - referer (str, optional): The ID of the referer, defaults to "none" if not provided.
+        - page (str, optional): The page visited, required for visit referrals.
+        - orderId (str, optional): The order ID, required for order referrals.
+        - buyer (str, optional): The buyer’s name or ID for orders.
+        - total (float, optional): The order total for orders.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Referral recorded", "referer": "<referer>"}, status 200—referral logged!
+        - Errors:
+            - 400: {"status": "error", "message": "Invalid data: timestamp required"}—no timestamp, no fork handles!
+            - 400: {"status": "error", "message": "Invalid referral data: page or orderId required"}—missing key data!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
+    """
+    try:
+        # Arthur Dent checks the JSON—timestamp is crucial, or it’s a bust!
+        data = request.get_json()
+        if not data or 'timestamp' not in data:
+            logging.warning(f"UX Issue - Invalid referral data: {json.dumps(data)}")
+            return jsonify({"status": "error", "message": "Invalid data: timestamp required"}), 400
+        
+        # Load the user settings—like the Guide, but with less towel advice.
+        users_settings = load_users_settings()
+        referer = data.get("referer", "none")
+        if referer not in users_settings:
+            # Initialize new referer—like Zaphod discovering a new head!
+            logging.debug(f"New referer {referer} initialized with empty referral data")
+            users_settings[referer] = {"referrals": {"visits": [], "orders": []}}
+        
+        # Record the referral—page visit or order, like the Holy Grail or a shrubbery.
+        if "page" in data:
+            users_settings[referer]["referrals"]["visits"].append({
+                "page": data["page"],
+                "timestamp": data["timestamp"]
+            })
+        elif "orderId" in data:
+            users_settings[referer]["referrals"]["orders"].append({
+                "orderId": data["orderId"],
+                "buyer": data.get("buyer", "unknown"),
+                "total": data.get("total", 0.0),
+                "timestamp": data["timestamp"]
+            })
+        else:
+            # Missing page or orderId? That’s like asking for four candles and getting fork handles!
+            logging.warning(f"UX Issue - Referral data missing page or orderId: {json.dumps(data)}")
+            return jsonify({"status": "error", "message": "Invalid referral data: page or orderId required"}), 400
+        
+        # Save the updated settings—stronger than a Wookiee’s grip!
+        save_users_settings(users_settings)
+        logging.info(f"Referral recorded for referer {referer}: {json.dumps(data)}")
+        return jsonify({"status": "success", "message": "Referral recorded", "referer": referer}), 200
+    except Exception as e:
+        # Marvin’s take: “I recorded a referral, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Failed to handle referral: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# ASCII Art 1: The Dead Parrot
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "This referral is no more! It has ceased to be!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+
+# region /<user_id>/visits GET - Checking Referral Visits
+@referral_bp.route('/<user_id>/visits', methods=['GET'])
+@login_required(["self", "admin"], require_all=False)
+def get_referral_visits(user_id):
+    """
+    Retrieves referral visits for a user, like Zaphod checking his party RSVPs.
+    Purpose: To list all page visits referred by the user—restricted to the user themselves or admins, because privacy is key in the galaxy!
+    Permissions: Restricted to "self" or "admin"—you’re either the referer or the Messiah!
+    Inputs: URL parameter:
+        - user_id (str): The ID of the user whose referral visits are sought.
+    Outputs:
+        - Success: JSON {"status": "success", "visits": [<visit_data>]}, status 200—visits revealed!
+        - Errors:
+            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the chosen one!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies lost the candles!
+    """
+    try:
+        # Permission check—like the Knights Who Say Ni demanding a shrubbery!
+        if user_id != request.user_id and "admin" not in request.permissions:
+            logging.warning(f"Security Issue - Unauthorized visits retrieval attempt for {user_id} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+        
+        # Load the user settings—like the Guide, but with less towel advice.
+        users_settings = load_users_settings()
+        if user_id not in users_settings or "referrals" not in users_settings[user_id]:
+            logging.warning(f"UX Issue - No referral data found for user {user_id}")
+            return jsonify({"status": "success", "visits": []}), 200
+        
+        # Fetch the visits—neater than Ronnie Corbett’s wordplay.
+        visits = users_settings[user_id]["referrals"].get("visits", [])
+        logging.debug(f"Retrieved referral visits for user {user_id}: {json.dumps(visits)}")
+        return jsonify({"status": "success", "visits": visits}), 200
+    except Exception as e:
+        # Marvin groans: “I fetched visits, and now I’m broken.”
+        logging.error(f"UX Issue - Failed to retrieve referral visits for user {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# region /<user_id>/orders GET - Checking Referral Orders
+@referral_bp.route('/<user_id>/orders', methods=['GET'])
+@login_required(["self", "admin"], require_all=False)
+def get_referral_orders(user_id):
+    """
+    Retrieves referral orders for a user, like Trillian tallying up the galaxy’s shopping spree.
+    Purpose: To list all orders referred by the user—restricted to the user or admins, because only the elite can peek at the ledger!
+    Permissions: Restricted to "self" or "admin"—you’re either the referer or the chosen one!
+    Inputs: URL parameter:
+        - user_id (str): The ID of the user whose referral orders are sought.
+    Outputs:
+        - Success: JSON {"status": "success", "orders": [<order_data>]}, status 200—orders revealed!
+        - Errors:
+            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the Messiah, you’re a very naughty boy!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
+    """
+    try:
+        # Permission check—like the Holy Hand Grenade, only the worthy may pass!
+        if user_id != request.user_id and "admin" not in request.permissions:
+            logging.warning(f"Security Issue - Unauthorized orders retrieval attempt for {user_id} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+        
+        # Load the user settings—like the Guide, but with less towel advice.
+        users_settings = load_users_settings()
+        if user_id not in users_settings or "referrals" not in users_settings[user_id]:
+            logging.warning(f"UX Issue - No referral data found for user {user_id}")
+            return jsonify({"status": "success", "orders": []}), 200
+        
+        # Fetch the orders—neater than a Two Ronnies sketch.
+        orders = users_settings[user_id]["referrals"].get("orders", [])
+        logging.debug(f"Retrieved referral orders for user {user_id}: {json.dumps(orders)}")
+        return jsonify({"status": "success", "orders": orders}), 200
+    except Exception as e:
+        # Marvin sighs: “I fetched orders, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Failed to retrieve referral orders for user {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# ASCII Art 2: The Towel (Hitchhiker’s Guide)
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "Don’t forget your towel—essential for referral success!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+role_pages_bp.py
+from flask import Blueprint, render_template, request, jsonify
+from utils.auth import login_required
+from utils.users import load_users_settings
+import logging
+import os
+import json
+
+# region Blueprint Setup
+# This is role_pages_bp, more organized than Zaphod Beeblebrox’s two-headed filing system!
+# It handles role-specific pages and branding—think of it as the Heart of Gold’s control panel.
+role_pages_bp = Blueprint('role_pages', __name__)
+# endregion
+
+# region Helper Function: load_branding_data
+def load_branding_data():
+    """
+    Loads branding data from 'branding.json', like Arthur Dent deciphering the Guide.
+    Purpose: Fetches custom branding for roles, making pages as unique as Vogon poetry.
+    Inputs: None—reads from a file, like the Dead Parrot’s final squawk.
+    Outputs:
+        - Success: Dict of branding data, e.g., {"admin": "<h1>Admin Dashboard</h1>", ...}
+        - Fallback: Default branding if the file’s missing, like Marvin’s default gloom.
+    """
+    try:
+        branding_file = os.path.join(os.path.dirname(__file__), '..', 'branding.json')
+        if os.path.exists(branding_file):
+            with open(branding_file, 'r') as f:
+                return json.load(f)
+        else:
+            # No file? It’s like asking for four candles and getting fork handles!
+            logging.warning("UX Issue - branding.json not found, using fallback data")
+            return {
+                "admin": "<h1>Admin Dashboard</h1>",
+                "merchant": "<h1>Merchant Dashboard</h1>",
+                "community": "<h1>Community Dashboard</h1>",
+                "wixpro": "<h1>Partner Dashboard</h1>",
+                "login": "<h1>Login</h1>",
+                "signup": "<h1>Sign Up</h1>"
+            }
+    except Exception as e:
+        # Marvin: “I tried to load branding, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Failed to load branding data: {str(e)}", exc_info=True)
+        return {
+            "admin": "<h1>Admin Dashboard</h1>",
+            "merchant": "<h1>Merchant Dashboard</h1>",
+            "community": "<h1>Community Dashboard</h1>",
+            "wixpro": "<h1>Partner Dashboard</h1>",
+            "login": "<h1>Login</h1>",
+            "signup": "<h1>Sign Up</h1>"
+        }
+# endregion
+
+# region /admin GET - Admin’s Command Center
+@role_pages_bp.route('/admin', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def admin():
+    """
+    Renders the admin dashboard, faster than Zaphod saying “Don’t Panic!”.
+    Purpose: Provides a control panel for admins—like the Heart of Gold’s bridge, admin-only!
+    Permissions: "admin" only—you’re either the Messiah or nobody!
+    Inputs: None—just be logged in as admin, or it’s “Nobody expects the Spanish Inquisition!”
+    Outputs:
+        - Success: HTML admin dashboard with user data.
+        - Errors:
+            - 401: {"status": "error", "message": "User ID not found in token"}
+            - 404: {"status": "error", "message": "User not found"}
+            - 500: {"status": "error", "message": "Server error"}
+    """
+    try:
+        # Check user_id—like the Knights Who Say Ni demanding a shrubbery!
+        user_id = request.user_id
+        if not user_id:
+            logging.error("Security Issue - Admin route accessed with no user_id")
+            return jsonify({"status": "error", "message": "User ID not found in token"}), 401
+        
+        # Load user settings—like the Guide, but less towel-focused.
+        users_settings = load_users_settings()
+        user = users_settings.get(user_id)
+        if not user:
+            logging.warning(f"UX Issue - Admin route - User not found: {user_id}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        
+        # Render the dashboard—stronger than a Wookiee’s grip!
+        logging.debug(f"Rendering admin dashboard for user {user_id}")
+        return render_template('admin.html', user=user)
+    except Exception as e:
+        # Marvin: “I tried to render the admin page, and now I’m broken.”
+        logging.error(f"UX Issue - Failed to render admin page: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# ASCII Art 1: The Holy Hand Grenade
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "And Saint Attila raised the hand grenade up on high..."
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+
+# region /community GET - Community Hub
+@role_pages_bp.route('/community', methods=['GET'])
+@login_required(["community", "admin"], require_all=False)
+def community():
+    """
+    Renders the community dashboard, like Trillian hosting a galactic tea party.
+    Purpose: A space for community users and admins, like the People’s Front of Judea’s lair.
+    Permissions: "community" or "admin"—part of the community or the chosen one!
+    Inputs: None—just be logged in, or it’s “Nobody expects the Spanish Inquisition!”
+    Outputs:
+        - Success: HTML community dashboard with user data (if available).
+        - Errors:
+            - 500: {"status": "error", "message": "Server error"}
+    """
+    try:
+        # Fetch user_id—like Zaphod checking his second head.
+        user_id = request.user_id
+        users_settings = load_users_settings()
+        user = users_settings.get(user_id) if user_id else None
+        if not user and user_id:
+            logging.warning(f"UX Issue - Community route - User not found: {user_id}")
+        
+        # Render the dashboard—neater than a Two Ronnies sketch.
+        logging.debug(f"Rendering community dashboard for user {user_id}")
+        return render_template('community.html', user=user)
+    except Exception as e:
+        # Marvin: “I tried to render the community page, and now I’m depressed.”
+        logging.error(f"UX Issue - Failed to render community page: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# region /merchant GET - Merchant’s Marketplace
+@role_pages_bp.route('/merchant', methods=['GET'])
+@login_required(["merchant", "admin"], require_all=False)
+def merchant():
+    """
+    Renders the merchant dashboard, like Arthur Dent navigating Magrathea’s marketplace.
+    Purpose: A control panel for merchants and admins—like the Heart of Gold’s bridge!
+    Permissions: "merchant" or "admin"—merchant or Messiah!
+    Inputs: None—just be logged in, or it’s “Nobody expects the Spanish Inquisition!”
+    Outputs:
+        - Success: HTML merchant dashboard with user data (if available).
+        - Errors:
+            - 500: {"status": "error", "message": "Server error"}
+    """
+    try:
+        # Fetch user_id—like Zaphod checking his second head.
+        user_id = request.user_id
+        users_settings = load_users_settings()
+        user = users_settings.get(user_id) if user_id else None
+        if not user and user_id:
+            logging.warning(f"UX Issue - Merchant route - User not found: {user_id}")
+        
+        # Render the dashboard—stronger than a Wookiee’s grip!
+        logging.debug(f"Rendering merchant dashboard for user {user_id}")
+        return render_template('merchant.html', user=user)
+    except Exception as e:
+        # Marvin: “I tried to render the merchant page, and now I’m broken.”
+        logging.error(f"UX Issue - Failed to render merchant page: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# region /partner GET - Partner’s Portal
+@role_pages_bp.route('/partner', methods=['GET'])
+@login_required(["wixpro", "admin"], require_all=False)
+def partner():
+    """
+    Renders the partner dashboard, like Trillian tweaking the improbability drive.
+    Purpose: A control panel for partners (wixpro) and admins—like the Heart of Gold’s bridge!
+    Permissions: "wixpro" or "admin"—partner or chosen one!
+    Inputs: None—just be logged in, or it’s “Nobody expects the Spanish Inquisition!”
+    Outputs:
+        - Success: HTML partner dashboard with user data (if available).
+        - Errors:
+            - 500: {"status": "error", "message": "Server error"}
+    """
+    try:
+        # Fetch user_id—like Zaphod checking his second head.
+        user_id = request.user_id
+        users_settings = load_users_settings()
+        user = users_settings.get(user_id) if user_id else None
+        if not user and user_id:
+            logging.warning(f"UX Issue - Partner route - User not found: {user_id}")
+        
+        # Render the dashboard—neater than a Two Ronnies sketch.
+        logging.debug(f"Rendering partner dashboard for user {user_id}")
+        return render_template('partner.html', user=user)
+    except Exception as e:
+        # Marvin: “I tried to render the partner page, and now I’m depressed.”
+        logging.error(f"UX Issue - Failed to render partner page: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# region /branding GET - Fetch Galactic Branding
+@role_pages_bp.route('/branding', methods=['GET'])
+@login_required(["allauth"], require_all=False)
+def get_branding():
+    """
+    Retrieves branding data, like Marvin fetching the Ultimate Answer (42, obviously).
+    Purpose: Provides custom branding for roles, as unique as Vogon poetry.
+    Permissions: "allauth"—any authenticated user can peek, like the People’s Front of Judea.
+    Inputs: Query parameter:
+        - type (str): Branding type, e.g., "admin", "merchant".
+    Outputs:
+        - Success: JSON {"status": "success", "branding": "<html_content>"}, 200
+        - Errors:
+            - 400: {"status": "error", "message": "Branding type not specified"}
+            - 500: {"status": "error", "message": "Server error: <reason>"}
+    """
+    try:
+        # Check branding type—like the Knights Who Say Ni demanding a shrubbery!
+        branding_type = request.args.get('type')
+        if not branding_type:
+            logging.warning("UX Issue - No branding type provided")
+            return jsonify({"status": "error", "message": "Branding type not specified"}), 400
+        
+        # Map "partner" to "wixpro"—Ronnie Barker would approve!
+        if branding_type == 'partner':
+            branding_type = 'wixpro'
+
+        # Fetch branding—like Arthur Dent flipping through the Guide.
+        branding_data = load_branding_data()
+        branding = branding_data.get(branding_type, '<h1>Dashboard</h1>')
+        if branding == '<h1>Dashboard</h1>':
+            logging.warning(f"UX Issue - No branding for type: {branding_type}")
+        
+        # Assemble response—fit for the Life of Brian’s marketplace.
+        response_data = {"status": "success", "branding": branding}
+        logging.debug(f"Sending branding for {branding_type}: {json.dumps(response_data)}")
+        return jsonify(response_data), 200
+    except Exception as e:
+        # Marvin: “I tried to fetch branding, and now I’m broken.”
+        logging.error(f"UX Issue - Failed to retrieve branding: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# ASCII Art 2: The Towel (Hitchhiker’s Guide)
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "Don’t forget your towel—essential for navigating role pages!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+site_request_bp.py
+from flask import Blueprint, request, jsonify
+from utils.auth import login_required
+from utils.data import load_site_request, save_site_request
+from utils.users import load_users_settings
+import logging
+import os
+import datetime
+import json
+import re
+
+# region Blueprint Setup
+# Welcome to site_request_bp, the blueprint that handles site requests like Zaphod Beeblebrox handles improbability—fast and with flair!
+# This module is the galactic hub for listing and saving site requests. Prepare for some cosmic organization!
+site_request_bp = Blueprint('site_request_bp', __name__)
+# endregion
+
+# region /siterequests GET - Listing Galactic Site Requests
+@site_request_bp.route('/siterequests', methods=['GET'])
+@login_required(["admin", "wixpro"], require_all=False)
+def list_site_requests():
+    """
+    Lists all site requests, like the Spanish Inquisition—nobody expects it, but it’s here for admins and wixpro users!
+    Purpose: To provide a list of site requests for admins or wixpro users, helping them manage the galaxy’s site needs.
+    Permissions: Restricted to "admin" or "wixpro"—you’re either the chosen one or a very naughty boy!
+    Inputs: None—just be logged in with the right permissions, or it’s “Nobody expects the Spanish Inquisition!”
+    Outputs:
+        - Success: JSON {"status": "success", "siterequests": [<siterequest_data>]}, status 200—your map to the site requests!
+        - Errors:
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
+    """
+    try:
+        # Check permissions—like the Knights Who Say Ni demanding a shrubbery!
+        if "admin" not in request.permissions and "wixpro" not in request.permissions:
+            logging.warning(f"Security Issue - Unauthorized site request list attempt by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+        
+        # Load the site request directory—like Arthur Dent flipping through the Guide.
+        siterequest_dir = 'siterequest'
+        if not os.path.exists(siterequest_dir):
+            logging.warning("UX Issue - No site requests directory found")
+            return jsonify({"status": "success", "siterequests": []}), 200
+
+        # Load user settings—like the Guide, but with less towel advice.
+        users_settings = load_users_settings()
+        siterequests = []
+
+        # Process each site request file—like the Holy Grail, but with JSON.
+        for filename in os.listdir(siterequest_dir):
+            if filename.endswith('.json'):
+                user_id = filename.replace('.json', '')
+                site_request = load_site_request(user_id)
+                if site_request:
+                    contact_name = users_settings.get(user_id, {}).get('contact_name', '')
+                    email = users_settings.get(user_id, {}).get('email_address', '')
+                    request_type = site_request.get('type', '')
+                    store_name = site_request.get('communityName')  # Adjusted to match POST logic
+                    community_name = site_request.get('communityName')
+                    organisation = store_name if store_name else community_name if community_name else ''
+                    received_at = site_request.get('submitted_at', '')
+
+                    # Assemble the site request data—fit for the Life of Brian’s marketplace.
+                    siterequests.append({
+                        'user_id': user_id,
+                        'type': request_type,
+                        'received_at': received_at,
+                        'contact_name': contact_name,
+                        'email': email,
+                        'organisation': organisation
+                    })
+
+        if not siterequests:
+            logging.warning("UX Issue - No site requests found in directory")
+        logging.debug(f"Listed site requests: {json.dumps(siterequests)}")
+        return jsonify({"status": "success", "siterequests": siterequests}), 200
+    except Exception as e:
+        # Marvin’s take: “I tried to list site requests, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Failed to list site requests: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# ASCII Art 1: The Dead Parrot
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "This site request is no more! It has ceased to be!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+
+# region /siterequests POST - Saving New Galactic Site Requests
+@site_request_bp.route('/siterequests', methods=['POST'])
+@login_required(["self"], require_all=True)
+def save_site_request_endpoint():
+    """
+    Saves a new site request, faster than Zaphod’s spaceship escaping a Vogon poetry reading.
+    Purpose: Allows users to submit new site requests, restricted to themselves—like the People’s Front of Judea’s secret meetings.
+    Permissions: Restricted to "self"—only you can submit your own request, or it’s “Nobody expects the Spanish Inquisition!”
+    Inputs: JSON payload with:
+        - userId (str, optional): Must match the authenticated user.
+        - type (str, optional): Request type, defaults to "community".
+        - communityName (str): Name of the community or store.
+        - aboutCommunity (str): Description of the community or store.
+        - communityLogos (list): Logos for the community or store.
+        - colorPrefs (str): Color preferences.
+        - stylingDetails (str): Styling details.
+        - preferredDomain (str): Preferred domain, e.g., "mycommunity.org".
+        - emails (list): List of emails.
+        - pages (list): List of pages.
+        - widgets (list): List of widgets.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Site request saved successfully"}, status 200—request logged!
+        - Errors:
+            - 400: {"status": "error", "message": "No data provided"}—no data, no fork handles!
+            - 400: {"status": "error", "message": "User ID in body does not match authenticated user"}—mismatch!
+            - 403: {"status": "error", "message": "Unauthorized: Must be admin or match user_id"}—unauthorized!
+            - 400: {"status": "error", "message": "Community name or store name is required"}—missing name!
+            - 400: {"status": "error", "message": "Invalid domain name"}—bad domain!
+            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
+    """
+    try:
+        # Arthur Dent checks the JSON—where’s that data?
+        data = request.get_json()
+        if not data:
+            logging.warning("UX Issue - Site request save attempt with no data")
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        # Check user_id—like the Knights Who Say Ni demanding a shrubbery!
+        user_id = request.user_id
+        body_user_id = data.get("userId")
+        if body_user_id and body_user_id != user_id:
+            logging.warning(f"Security Issue - User ID mismatch: URL={user_id}, Body={body_user_id}")
+            return jsonify({"status": "error", "message": "User ID in body does not match authenticated user"}), 400
+
+        # Permission check—only self or admin can submit, or it’s “Nobody expects the Spanish Inquisition!”
+        if "admin" not in request.permissions and request.user_id != user_id:
+            logging.warning(f"Security Issue - Unauthorized site request save by {request.user_id} for {user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized: Must be admin or match user_id"}), 403
+
+        # Assemble the site request—like the Holy Grail, but with JSON.
+        request_type = data.get("type", "community")
+        site_request = {
+            "user_id": user_id,
+            "type": request_type,
+            "communityName": data.get("communityName") or data.get("storeName") or "",
+            "aboutCommunity": data.get("aboutCommunity") or data.get("aboutStore") or "",
+            "communityLogos": data.get("communityLogos") or data.get("storeLogos") or [],
+            "colorPrefs": data.get("colorPrefs", ""),
+            "stylingDetails": data.get("stylingDetails", ""),
+            "preferredDomain": data.get("preferredDomain", "mycommunity.org"),
+            "emails": data.get("emails", []),
+            "pages": data.get("pages", []),
+            "widgets": data.get("widgets", []),
+            "submitted_at": datetime.datetime.utcnow().isoformat()
+        }
+
+        # Check for community/store name—or it’s like asking for four candles and getting fork handles!
+        if not site_request["communityName"]:
+            logging.warning(f"UX Issue - Site request missing community/store name for user {user_id}")
+            return jsonify({"status": "error", "message": "Community name or store name is required"}), 400
+
+        # Validate domain—like checking if a parrot is still alive.
+        domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+        if not re.match(domain_regex, site_request["preferredDomain"]):
+            logging.warning(f"UX Issue - Invalid domain name for user {user_id}: {site_request['preferredDomain']}")
+            return jsonify({"status": "error", "message": "Invalid domain name"}), 400
+
+        # Process page images—like the Holy Hand Grenade, but less explosive.
+        for page in site_request["pages"]:
+            if "images" in page and page["images"]:
+                page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
+
+        # Save the site request—stronger than a Wookiee’s grip!
+        save_site_request(user_id, site_request)
+        logging.info(f"Site request saved successfully for user {user_id}: {json.dumps(site_request)}")
+        return jsonify({"status": "success", "message": "Site request saved successfully"}), 200
+    except Exception as e:
+        # Marvin’s take: “I tried to save the site request, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Failed to save site request: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# ASCII Art 2: The Towel (Hitchhiker’s Guide)
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "Don’t forget your towel—essential for site requests!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+user_settings_bp.py
+from flask import Blueprint, request, jsonify
+from utils.auth import login_required
+from utils.users import load_users_settings, save_users_settings
+import logging
+import json
+
+user_settings_bp = Blueprint('user_settings_bp', __name__)
+
+@user_settings_bp.route('/<USERid>/user', methods=['PUT'])
+@login_required(["self", "admin"], require_all=True)
+def update_user_full(USERid):
+    try:
+        if USERid != request.user_id and "admin" not in request.permissions:
+            logging.warning(f"Security Issue - Unauthorized full user update attempt for {USERid} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        data = request.get_json()
+        if not data:
+            logging.warning(f"UX Issue - Full user update attempt with no data for {USERid}")
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            logging.warning(f"UX Issue - User not found for full update: {USERid}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
+        # Full update replaces the entire user settings (except password, which requires /update-password)
+        updated_user = {
+            "email_address": data.get("email_address", users_settings[USERid]["email_address"]).lower(),
+            "contact_name": data.get("contact_name", users_settings[USERid]["contact_name"]),
+            "phone_number": data.get("phone_number", users_settings[USERid].get("phone_number", "")),
+            "permissions": users_settings[USERid]["permissions"],  # Preserve existing permissions
+            "password": users_settings[USERid]["password"]  # Password preserved
+        }
+
+        users_settings[USERid] = updated_user
+        save_users_settings(users_settings)
+        logging.info(f"Full user settings updated for user {USERid}")
+        return jsonify({"status": "success", "message": f"User {USERid} settings updated"}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to fully update user {USERid}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+
+@user_settings_bp.route('/<USERid>/user', methods=['PATCH'])
+@login_required(["self", "admin", "wixpro"], require_all=False)
+def update_user_partial(USERid):
+    try:
+        if USERid != request.user_id and "admin" not in request.permissions and "wixpro" not in request.permissions:
+            logging.warning(f"Security Issue - Unauthorized partial user update attempt for {USERid} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        data = request.get_json()
+        if not data:
+            logging.warning(f"UX Issue - Partial user update attempt with no data for {USERid}")
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            logging.warning(f"UX Issue - User not found for partial update: {USERid}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
+        # Partial update modifies only provided fields
+        user = users_settings[USERid]
+        if "email_address" in data:
+            user["email_address"] = data["email_address"].lower()
+        if "contact_name" in data:
+            user["contact_name"] = data["contact_name"]
+        if "phone_number" in data:
+            user["phone_number"] = data["phone_number"]
+
+        users_settings[USERid] = user
+        save_users_settings(users_settings)
+        logging.info(f"Partial user settings updated for user {USERid}")
+        return jsonify({"status": "success", "message": f"User {USERid} settings partially updated"}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to partially update user {USERid}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+
+@user_settings_bp.route('/<USERid>/categories', methods=['GET'])
+@login_required(["self"], require_all=True)
+def get_user_categories(USERid):
+    try:
+        if USERid != request.user_id:
+            logging.warning(f"Security Issue - Unauthorized categories retrieval attempt for {USERid} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            logging.warning(f"UX Issue - User not found for categories retrieval: {USERid}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
+        categories = users_settings[USERid].get("categories", [])
+        logging.debug(f"Retrieved categories for user {USERid}: {json.dumps(categories)}")
+        return jsonify({"status": "success", "categories": categories}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to retrieve categories for user {USERid}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+
+@user_settings_bp.route('/<USERid>/categories', methods=['PUT'])
+@login_required(["self"], require_all=True)
+def replace_user_categories(USERid):
+    try:
+        if USERid != request.user_id:
+            logging.warning(f"Security Issue - Unauthorized categories replacement attempt for {USERid} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        data = request.get_json()
+        if not data or "categories" not in data:
+            logging.warning(f"UX Issue - Categories replacement attempt missing data for {USERid}")
+            return jsonify({"status": "error", "message": "Categories data required"}), 400
+
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            logging.warning(f"UX Issue - User not found for categories replacement: {USERid}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
+        # Replace entire categories list
+        users_settings[USERid]["categories"] = data["categories"]
+        save_users_settings(users_settings)
+        logging.info(f"Categories replaced for user {USERid}")
+        return jsonify({"status": "success", "message": f"Categories replaced for user {USERid}"}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to replace categories for user {USERid}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+
+@user_settings_bp.route('/<USERid>/categories', methods=['PATCH'])
+@login_required(["self"], require_all=True)
+def update_user_categories(USERid):
+    try:
+        if USERid != request.user_id:
+            logging.warning(f"Security Issue - Unauthorized categories update attempt for {USERid} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        data = request.get_json()
+        if not data or "categories" not in data:
+            logging.warning(f"UX Issue - Categories update attempt missing data for {USERid}")
+            return jsonify({"status": "error", "message": "Categories data required"}), 400
+
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            logging.warning(f"UX Issue - User not found for categories update: {USERid}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
+        # Update categories by merging with existing ones
+        current_categories = users_settings[USERid].get("categories", [])
+        updated_categories = data["categories"]
+        users_settings[USERid]["categories"] = current_categories + [cat for cat in updated_categories if cat not in current_categories]
+        save_users_settings(users_settings)
+        logging.info(f"Categories updated for user {USERid}")
+        return jsonify({"status": "success", "message": f"Categories updated for user {USERid}"}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to update categories for user {USERid}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+
+@user_settings_bp.route('/<USERid>/categories', methods=['DELETE'])
+@login_required(["self"], require_all=True)
+def delete_user_categories(USERid):
+    try:
+        if USERid != request.user_id:
+            logging.warning(f"Security Issue - Unauthorized categories deletion attempt for {USERid} by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        users_settings = load_users_settings()
+        if USERid not in users_settings:
+            logging.warning(f"UX Issue - User not found for categories deletion: {USERid}")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
+        if "categories" in users_settings[USERid]:
+            del users_settings[USERid]["categories"]
+            save_users_settings(users_settings)
+            logging.info(f"Categories deleted for user {USERid}")
+        else:
+            logging.debug(f"No categories found to delete for user {USERid}")
+        
+        return jsonify({"status": "success", "message": f"Categories deleted for user {USERid}"}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to delete categories for user {USERid}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+utility_bp.py
+from flask import Blueprint, request, jsonify
+from utils.auth import login_required
+from utils.helpers import get_system_stats, ping_service, log_activity
+import logging
+
+# region Blueprint Setup
+# Welcome to utility_bp, the unsung hero of the Flask galaxy, much like R2-D2 fixing the Millennium Falcon mid-flight!
+# This blueprint handles utility endpoints for system stats, pings, and activity logging—essential tools for any admin with a towel handy.
+utility_bp = Blueprint('utility_bp', __name__)
+# endregion
+
+# region /system/stats GET - Retrieve System Statistics
+@utility_bp.route('/system/stats', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def system_stats():
+    """
+    Retrieves system statistics, because even Marvin needs to know how the ship’s holding up!
+    Purpose: To provide admins with system performance metrics—CPU, memory, and more.
+    Permissions: Restricted to "admin"—you must be a Jedi Master to access this!
+    Inputs: None—just a GET request from an authorized admin.
+    Outputs:
+        - Success: JSON {"status": "success", "stats": {<system_stats>}}, status 200—stats delivered!
+        - Errors:
+            - 403: {"status": "error", "message": "Unauthorized"}—you’re not on the list, Brian!
+            - 500: {"status": "error", "message": "Server error"}—this system’s expired and gone to meet its maker!
+    """
+    try:
+        # Check permissions—like the Two Ronnies guarding the fork handles!
+        if "admin" not in request.permissions:
+            logging.warning(f"Security Issue - Unauthorized system stats access attempt by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        # Fetch system stats—faster than a Pan-Galactic Gargle Blaster hitting your brain!
+        stats = get_system_stats()
+        logging.debug(f"System stats retrieved by admin {request.user_id}: {stats}")
+        return jsonify({"status": "success", "stats": stats}), 200
+    except Exception as e:
+        # Zaphod’s take: “I tried to get stats, but both my heads are spinning!”
+        logging.error(f"UX Issue - Failed to retrieve system stats: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# ASCII Art 1: R2-D2 (Star Wars)
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "Beep boop! System stats online, Master!"
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""
+
+# region /ping GET - Ping Service Check
+@utility_bp.route('/ping', methods=['GET'])
+@login_required(["admin", "wixpro"], require_all=False)
+def ping():
+    """
+    Pings the service to check if it’s alive, like shouting “Is there anybody out there?” into the void!
+    Purpose: To verify service availability—admins and wixpro users can poke the system.
+    Permissions: Restricted to "admin" or "wixpro"—you’re either a Jedi or a droid technician!
+    Inputs: None—just a GET request to see if the service responds.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Pong!"}, status 200—service is alive!
+        - Errors:
+            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the droid we’re looking for!
+            - 500: {"status": "error", "message": "Service error"}—this service is pining for the fjords!
+    """
+    try:
+        # Check permissions—like the Knights Who Say Ni demanding a shrubbery!
+        if "admin" not in request.permissions and "wixpro" not in request.permissions:
+            logging.warning(f"Security Issue - Unauthorized ping attempt by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        # Ping the service—like Trillian checking if the Heart of Gold’s still humming!
+        ping_result = ping_service()
+        if ping_result:
+            logging.debug(f"Ping successful by {request.user_id}")
+            return jsonify({"status": "success", "message": "Pong!"}), 200
+        else:
+            logging.error(f"UX Issue - Ping failed by {request.user_id}")
+            return jsonify({"status": "error", "message": "Service error"}), 500
+    except Exception as e:
+        # Marvin’s take: “I pinged the service, and now I’m even more depressed.”
+        logging.error(f"UX Issue - Failed to ping service: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Service error"}), 500
+# endregion
+
+# region /activity/log POST - Log User Activity
+@utility_bp.route('/activity/log', methods=['POST'])
+@login_required(["admin"], require_all=True)
+def log_user_activity():
+    """
+    Logs user activity, because even the Spanish Inquisition needs to keep records!
+    Purpose: To record specific user actions for admin oversight—like a galactic logbook.
+    Permissions: Restricted to "admin"—only the High Council can write in this tome!
+    Inputs: JSON payload:
+        - user_id (str): The ID of the user whose activity is being logged.
+        - action (str): The action performed (e.g., "login", "update_settings").
+        - details (dict, optional): Additional details about the action.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Activity logged"}, status 201—logged successfully!
+        - Errors:
+            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the Messiah, you’re a very naughty boy!
+            - 400: {"status": "error", "message": "Invalid data"}—no data, no four candles!
+            - 500: {"status": "error", "message": "Server error"}—this log’s an ex-log!
+    """
+    try:
+        # Check permissions—like Obi-Wan sensing a disturbance in the Force!
+        if "admin" not in request.permissions:
+            logging.warning(f"Security Issue - Unauthorized activity log attempt by {request.user_id}")
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+        # Arthur Dent checks the JSON—where’s that data?
+        data = request.get_json()
+        if not data or "user_id" not in data or "action" not in data:
+            logging.warning(f"UX Issue - Invalid activity log data from {request.user_id}: {data}")
+            return jsonify({"status": "error", "message": "Invalid data"}), 400
+
+        # Log the activity—neater than a Two Ronnies sketch!
+        user_id = data["user_id"]
+        action = data["action"]
+        details = data.get("details", {})
+        log_activity(user_id, action, details)
+        logging.info(f"Activity logged by admin {request.user_id} for user {user_id}: {action}")
+        return jsonify({"status": "success", "message": "Activity logged"}), 201
+    except Exception as e:
+        # Zaphod’s take: “I tried logging activity, but my second head vetoed it!”
+        logging.error(f"UX Issue - Failed to log activity: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# ASCII Art 2: Marvin (Hitchhiker’s Guide)
+"""
+       ______
+      /|_||_\`.__
+     (   _    _ _\
+     =|  _    _  |  "Here I am, your very own utility bot, with a brain the size of a planet..."
+      | (_)  (_) |
+       \._|\'|\'_./
+          |__|__| 
+"""

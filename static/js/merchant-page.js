@@ -24,11 +24,34 @@ function initializeMerchant() {
         window.location.href = '/';
         return;
     }
-    if (userId) document.getElementById('userId').value = userId;
+    const userIdInput = document.getElementById('userId');
+    if (userIdInput && userId) {
+        userIdInput.value = userId;
+    } else if (!userId) {
+        console.warn('initializeMerchant - No userId found in localStorage');
+    } else {
+        console.warn('initializeMerchant - userId input element not found');
+    }
+
+    // Set up navigation and event listeners
+    setupNavigation(); // From site-navigation.js
     checkAdminPermission();
-    loadBranding();
+    loadBranding('merchant', 'brandingContent'); // Adjusted to match typical usage
     showSection('info');
-    attachEventListeners();
+    loadProducts(); // Load merchant products
+    loadStoreRequest(); // Load store request data
+    attachEventListeners(); // From page-load.js
+
+    // Call shared "Change Password" logic
+    if (typeof setupChangePassword === 'function') {
+        setupChangePassword(); // From user-management.js
+        console.log('initializeMerchant - Change Password logic initialized');
+    } else {
+        console.error('initializeMerchant - setupChangePassword function not found');
+    }
+
+    // Hide loading overlay after initialization
+    hideLoadingOverlay(); // From page-load.js
     console.log('initializeMerchant - Merchant page initialized successfully');
 }
 
@@ -47,7 +70,7 @@ function checkAdminPermission() {
 // Loads and displays merchant products.
 async function loadProducts() {
     console.log('loadProducts - Loading products');
-    const userId = document.getElementById('userId').value;
+    const userId = document.getElementById('userId') ? document.getElementById('userId').value : '';
     if (!userId) {
         console.error('loadProducts - User ID not found in session');
         toastr.error('User ID not found in session');
@@ -79,13 +102,13 @@ function createProductRow(product) {
     console.log('createProductRow - Creating row - Product:', JSON.stringify(product));
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td class="hidden">${product.id}</td>
+        <td class="hidden">${product.id || ''}</td>
         <td>${product.category || 'N/A'}</td>
-        <td>${product.title}</td>
-        <td><a href="${product.product_url}" target="_blank">Link</a></td>
-        <td>${product.current_price}</td>
-        <td>${product.original_price}</td>
-        <td><img src="${product.image_url}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
+        <td>${product.title || 'N/A'}</td>
+        <td><a href="${product.product_url || '#'}" target="_blank">${product.product_url ? 'Link' : 'N/A'}</a></td>
+        <td>${product.current_price || 'N/A'}</td>
+        <td>${product.original_price || 'N/A'}</td>
+        <td><img src="${product.image_url || ''}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
         <td>${product.qty || 'N/A'}</td>
     `;
     return tr;
@@ -94,7 +117,7 @@ function createProductRow(product) {
 // Loads store request data specific to merchant page.
 async function loadStoreRequest() {
     console.log('loadStoreRequest - Loading store request');
-    const userId = document.getElementById('userId').value;
+    const userId = document.getElementById('userId') ? document.getElementById('userId').value : '';
     if (!userId) {
         console.error('loadStoreRequest - User ID not found in session');
         toastr.error('User ID not found in session');
@@ -121,20 +144,24 @@ async function loadStoreRequest() {
         const emails = storeRequest.emails || ['info'];
         window.emailCount = 0;
         const emailsContainer = document.getElementById('emailsContainer');
-        emailsContainer.innerHTML = '';
-        emails.forEach((email, index) => {
-            window.emailCount++;
-            const emailDiv = document.createElement('div');
-            emailDiv.className = 'email-section';
-            emailDiv.dataset.email = window.emailCount;
-            emailDiv.innerHTML = `
-                <label for="email${window.emailCount}Name">Email Name:</label>
-                <input type="text" id="email${window.emailCount}Name" name="email${window.emailCount}Name" value="${email}">
-                <span id="email${window.emailCount}Domain">@${storeRequest.preferredDomain || 'mystore.uk'}</span>
-                ${window.emailCount > 1 ? `<button type="button" class="remove-email-btn" onclick="removeEmail(${window.emailCount})">Remove Email</button>` : ''}
-            `;
-            emailsContainer.appendChild(emailDiv);
-        });
+        if (emailsContainer) {
+            emailsContainer.innerHTML = '';
+            emails.forEach((email, index) => {
+                window.emailCount++;
+                const emailDiv = document.createElement('div');
+                emailDiv.className = 'email-section';
+                emailDiv.dataset.email = window.emailCount;
+                emailDiv.innerHTML = `
+                    <label for="email${window.emailCount}Name">Email Name:</label>
+                    <input type="text" id="email${window.emailCount}Name" name="email${window.emailCount}Name" value="${email}">
+                    <span id="email${window.emailCount}Domain">@${storeRequest.preferredDomain || 'mystore.uk'}</span>
+                    ${window.emailCount > 1 ? `<button type="button" class="remove-email-btn" onclick="removeEmail(${window.emailCount})">Remove Email</button>` : ''}
+                `;
+                emailsContainer.appendChild(emailDiv);
+            });
+        } else {
+            console.warn('loadStoreRequest - Emails container not found');
+        }
 
         const pages = storeRequest.pages && storeRequest.pages.length >= 2 ? storeRequest.pages : [
             { name: 'Home', content: '' },
@@ -142,46 +169,57 @@ async function loadStoreRequest() {
         ];
         window.pageCount = 0;
         const pagesContainer = document.getElementById('pagesContainer');
-        pagesContainer.innerHTML = '';
-        pages.forEach((page, index) => {
-            window.pageCount++;
-            const pageDiv = document.createElement('div');
-            pageDiv.className = 'page-section';
-            pageDiv.dataset.page = window.pageCount;
-            pageDiv.innerHTML = `
-                <label for="page${window.pageCount}Name">Page Name:</label>
-                <input type="text" id="page${window.pageCount}Name" name="page${window.pageCount}Name" value="${page.name || ''}" ${window.pageCount <= 2 ? 'readonly' : ''}>
-                <br><br>
-                <label for="page${window.pageCount}Content">${window.pageCount === 1 ? 'Home Page' : window.pageCount === 2 ? 'Returns Policy' : 'Page'} Content:</label>
-                <textarea id="page${window.pageCount}Content" name="page${window.pageCount}Content">${page.content || ''}</textarea>
-                <label for="page${window.pageCount}Images">Additional Images:</label>
-                <input type="file" id="page${window.pageCount}Images" name="page${window.pageCount}Images" accept="image/*" multiple>
-                ${window.pageCount > 2 ? `<button type="button" class="remove-page-btn" onclick="removePage(${window.pageCount})">Remove Page</button>` : ''}
-            `;
-            pagesContainer.appendChild(pageDiv);
-            if (window.tinyMCELoaded) {
-                tinymce.init({
-                    selector: `#page${window.pageCount}Content`,
-                    height: 200,
-                    menubar: false,
-                    plugins: 'lists',
-                    toolbar: 'bold italic | bullist numlist',
-                    setup: editor => {
-                        editor.on('init', () => console.log(`TinyMCE editor initialized for page${window.pageCount}`));
-                    }
-                });
-            }
-        });
+        if (pagesContainer) {
+            pagesContainer.innerHTML = '';
+            pages.forEach((page, index) => {
+                window.pageCount++;
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page-section';
+                pageDiv.dataset.page = window.pageCount;
+                pageDiv.innerHTML = `
+                    <label for="page${window.pageCount}Name">Page Name:</label>
+                    <input type="text" id="page${window.pageCount}Name" name="page${window.pageCount}Name" value="${page.name || ''}" ${window.pageCount <= 2 ? 'readonly' : ''}>
+                    <br><br>
+                    <label for="page${window.pageCount}Content">${window.pageCount === 1 ? 'Home Page' : window.pageCount === 2 ? 'Returns Policy' : 'Page'} Content:</label>
+                    <textarea id="page${window.pageCount}Content" name="page${window.pageCount}Content">${page.content || ''}</textarea>
+                    <label for="page${window.pageCount}Images">Additional Images:</label>
+                    <input type="file" id="page${window.pageCount}Images" name="page${window.pageCount}Images" accept="image/*" multiple>
+                    ${window.pageCount > 2 ? `<button type="button" class="remove-page-btn" onclick="removePage(${window.pageCount})">Remove Page</button>` : ''}
+                `;
+                pagesContainer.appendChild(pageDiv);
+                if (window.tinyMCELoaded) {
+                    tinymce.init({
+                        selector: `#page${window.pageCount}Content`,
+                        height: 200,
+                        menubar: false,
+                        plugins: 'lists',
+                        toolbar: 'bold italic | bullist numlist',
+                        setup: editor => {
+                            editor.on('init', () => console.log(`TinyMCE editor initialized for page${window.pageCount}`));
+                        }
+                    });
+                }
+            });
+        } else {
+            console.warn('loadStoreRequest - Pages container not found');
+        }
 
         const widgets = storeRequest.widgets || [];
         document.querySelectorAll('input[name="widgets"]').forEach(checkbox => {
             checkbox.checked = widgets.includes(checkbox.value);
         });
 
-        updateDomainPreview();
+        updateDomainPreview(); // Assumed function from site-request.js
         console.log('loadStoreRequest - Store request loaded successfully');
     } catch (error) {
         console.error('loadStoreRequest - Error loading store request - Error:', error.message, 'Stack:', error.stack);
         toastr.error(`Error loading store request: ${error.message}`);
     }
 }
+
+// Export for use in other scripts
+window.initializeMerchant = initializeMerchant;
+window.checkAdminPermission = checkAdminPermission;
+window.loadProducts = loadProducts;
+window.createProductRow = createProductRow;
+window.loadStoreRequest = loadStoreRequest;

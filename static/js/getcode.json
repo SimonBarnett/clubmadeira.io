@@ -1,6 +1,6 @@
 [
     {
-        "mode": "functions",
+        "mode": "contents",
         "content_type": "javascript",
         "output_directory": "C:\\inetpub\\clubmadeira.io\\grok\\",
         "save_as": "js_functions_all.txt"

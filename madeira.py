@@ -1,14 +1,14 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 from flask_cors import CORS
-from blueprints.authentication import authentication_bp
+from blueprints.authentication_bp import authentication_bp
 from blueprints.site_request import site_request_bp
-from blueprints.user_management import user_management_bp
-from blueprints.user_settings import user_settings_bp
-from blueprints.utility import utility_bp
-from blueprints.role_pages import role_pages_bp
-from blueprints.data_retrieval import data_retrieval_bp
-from blueprints.configuration import configuration_bp
-from utils.auth import login_required 
+from blueprints.user_settings_bp import user_settings_bp
+from blueprints.utility_bp import utility_bp
+from blueprints.role_pages_bp import role_pages_bp
+from blueprints.content_bp import content_bp
+from blueprints.referral_bp import referral_bp
+from blueprints.manager_bp import manager_bp
+from utils.auth import login_required
 import json
 import os
 import logging
@@ -20,6 +20,7 @@ app = Flask(__name__, template_folder='templates')  # Explicitly set template fo
 CORS(app)
 
 CONFIG_FILE = "config.json"
+
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as f:
@@ -104,14 +105,14 @@ def log_response(response):
     return response
 
 # Register blueprints
-app.register_blueprint(authentication_bp, url_prefix='')  # Ensure no prefix conflicts
+app.register_blueprint(authentication_bp, url_prefix='')
 app.register_blueprint(site_request_bp, url_prefix='')
-app.register_blueprint(user_management_bp, url_prefix='')
 app.register_blueprint(user_settings_bp, url_prefix='')
 app.register_blueprint(utility_bp, url_prefix='')
 app.register_blueprint(role_pages_bp, url_prefix='')
-app.register_blueprint(data_retrieval_bp, url_prefix='')
-app.register_blueprint(configuration_bp, url_prefix='')
+app.register_blueprint(content_bp, url_prefix='')
+app.register_blueprint(referral_bp, url_prefix='')
+app.register_blueprint(manager_bp, url_prefix='')
 
 @app.route('/')
 def home():

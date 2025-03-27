@@ -1,5 +1,5 @@
 // user-management.js
-// Purpose: Manages user-specific settings and Wix client ID operations.
+// Purpose: Manages user-specific settings, Wix client ID operations, and shared "Change Password" logic.
 
 // Loads user settings into the DOM.
 async function loadSettings() {
@@ -122,7 +122,7 @@ async function loadWixClientId() {
         // Update DOM with Wix client ID
         const wixClientIdField = document.getElementById('wixClientId');
         if (wixClientIdField) {
-            wixClientIdField.value = data.client_id || data.clientId || ''; // Flexible key name
+            wixClientIdField.value = data.client_id || data.clientId || '';
             console.log('loadWixClientId - DOM updated - wixClientId:', data.client_id || data.clientId || '');
         } else {
             console.warn('loadWixClientId - Wix client ID field not found - ID: wixClientId');
@@ -170,3 +170,131 @@ async function saveWixClientId(clientId) {
     }
     console.log('saveWixClientId - Save process completed');
 }
+
+// Validates password complexity
+function validatePassword(password) {
+    console.log('validatePassword - Validating password');
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (password.length < minLength) {
+        toastr.error('Password must be at least 8 characters long.');
+        console.log('validatePassword - Failed: Length < 8');
+        return false;
+    }
+    if (!hasUpperCase) {
+        toastr.error('Password must contain at least one uppercase letter.');
+        console.log('validatePassword - Failed: No uppercase');
+        return false;
+    }
+    if (!hasLowerCase) {
+        toastr.error('Password must contain at least one lowercase letter.');
+        console.log('validatePassword - Failed: No lowercase');
+        return false;
+    }
+    if (!hasNumber) {
+        toastr.error('Password must contain at least one number.');
+        console.log('validatePassword - Failed: No number');
+        return false;
+    }
+    if (!hasSpecialChar) {
+        toastr.error('Password must contain at least one special character.');
+        console.log('validatePassword - Failed: No special character');
+        return false;
+    }
+    console.log('validatePassword - Password valid');
+    return true;
+}
+
+// Sets up the "Change Password" form submission logic
+function setupChangePassword() {
+    console.log('setupChangePassword - Setting up change password logic');
+    const changePasswordButton = document.querySelector('button[data-action="savePassword"]');
+    if (!changePasswordButton) {
+        console.warn('setupChangePassword - Change password button not found');
+        return;
+    }
+
+    changePasswordButton.addEventListener('click', async () => {
+        console.log('setupChangePassword - Change password button clicked');
+        const currentPasswordInput = document.getElementById('currentPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        // Validate input elements exist
+        if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) {
+            toastr.error('Password fields are missing on this page.');
+            console.error('setupChangePassword - One or more password input elements not found');
+            return;
+        }
+
+        const currentPassword = currentPasswordInput.value.trim();
+        const newPassword = newPasswordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+
+        // Check for empty fields
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            toastr.error('All password fields are required.');
+            console.log('setupChangePassword - Empty password field detected');
+            return;
+        }
+
+        // Check password match
+        if (newPassword !== confirmPassword) {
+            toastr.error('New password and confirmation do not match.');
+            console.log('setupChangePassword - Passwords do not match');
+            return;
+        }
+
+        // Validate password complexity
+        if (!validatePassword(newPassword)) {
+            console.log('setupChangePassword - Password complexity validation failed');
+            return;
+        }
+
+        // Submit password change request
+        try {
+            console.log('setupChangePassword - Submitting password change request');
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await authenticatedFetch(`${window.apiUrl}/update-password`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to update password: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('setupChangePassword - Password updated successfully:', data);
+            toastr.success('Password updated successfully!');
+            // Clear form fields after success
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+        } catch (error) {
+            console.error('setupChangePassword - Error updating password:', error.message);
+            toastr.error(error.message || 'An error occurred while updating the password.');
+        }
+    });
+    console.log('setupChangePassword - Event listener attached');
+}
+
+// Export for use in other scripts
+window.loadSettings = loadSettings;
+window.saveSettings = saveSettings;
+window.loadWixClientId = loadWixClientId;
+window.saveWixClientId = saveWixClientId;
+window.validatePassword = validatePassword;
+window.setupChangePassword = setupChangePassword;

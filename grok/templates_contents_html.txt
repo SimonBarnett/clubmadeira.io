@@ -17,6 +17,8 @@ admin.html
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
+    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Define window.apiUrl before loading scripts -->
     <script>
         window.apiUrl = 'https://clubmadeira.io';
@@ -525,6 +527,8 @@ community.html
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
@@ -587,9 +591,18 @@ community.html
                             <span class="button-content"><i class="fas fa-shopping-cart"></i> Orders</span>
                         </button>
                     </div>
-                    <button data-section="settings">
+                    <button data-submenu="my-account-submenu" data-section="my-account">
                         <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                        <i class="fas fa-caret-right caret"></i>
                     </button>
+                    <div id="my-account-submenu" class="submenu">
+                        <button data-section="my-account">
+                            <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
+                        </button>
+                        <button data-section="change-password">
+                            <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
+                        </button>
+                    </div>
                     <button id="logOffBtn" style="background-color: #dc3545;">
                         <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
                     </button>
@@ -606,6 +619,31 @@ community.html
                         <li>View referral statistics under "My Referrals"</li>
                         <li>Update your account details in "My Account"</li>
                     </ul>
+                </div>
+                <div id="my-account" class="section">
+                    <h2>My Account</h2>
+                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security. Use the options below to navigate to the desired section:</p>
+                </div>
+                <div id="change-password" class="section">
+                    <h2>Change Password</h2>
+                    <div class="settings-form">
+                        <div class="password-container">
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                            <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="newPassword">New Password:</label>
+                            <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                            <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                            <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
+                        </div>
+                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+                    </div>
                 </div>
                 {% with user_type='community' %}
                     {% include 'my_account.html' %}
@@ -863,6 +901,8 @@ login.html
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/static/styles.css">
+    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
 </head>
 <body class="login-page">
     <div id="loadingOverlay" style="display: none;">
@@ -1309,6 +1349,8 @@ merchant.html
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Define window.apiUrl before loading scripts -->
     <script>
         window.apiUrl = 'https://clubmadeira.io';
@@ -1332,9 +1374,18 @@ merchant.html
                     <button data-section="my-store">
                         <span class="button-content"><i class="fas fa-store"></i> My Store</span>
                     </button>
-                    <button data-section="my-account">
+                    <button data-submenu="my-account-submenu" data-section="my-account">
                         <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                        <i class="fas fa-caret-right caret"></i>
                     </button>
+                    <div id="my-account-submenu" class="submenu">
+                        <button data-section="my-account">
+                            <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
+                        </button>
+                        <button data-section="change-password">
+                            <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
+                        </button>
+                    </div>
                     <button data-href="/admin">
                         <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
                     </button>
@@ -1352,6 +1403,31 @@ merchant.html
                     <h2>Merchant Info</h2>
                     <p>Welcome to your merchant dashboard overview. Use the menu to manage products, your store, Wix integration, and account settings.</p>
                 </div>
+                <div id="my-account" class="section">
+                    <h2>My Account</h2>
+                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security. Use the options below to navigate to the desired section:</p>
+                </div>
+                <div id="change-password" class="section">
+                    <h2>Change Password</h2>
+                    <div class="settings-form">
+                        <div class="password-container">
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                            <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="newPassword">New Password:</label>
+                            <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                            <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                            <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
+                        </div>
+                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+                    </div>
+                </div>
                 {% with user_type='merchant' %}
                     {% include 'my_account.html' %}
                 {% endwith %}
@@ -1365,7 +1441,7 @@ merchant.html
                         <tbody id="productList"></tbody>
                     </table>
                 </div>
-                <div id="my-store" class="section" style="margin-left: 210px; margin-right: 10px; width: calc(100% - 220px);">
+                <div id="my-store" class="section" style="margin-left: 170px; margin-right: 10px; width: calc(100% - 220px);">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>My Store</h2>
@@ -1551,6 +1627,8 @@ partner.html
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="/static/styles.css">
+    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Define window.apiUrl before loading scripts -->
     <script>
         window.apiUrl = 'https://clubmadeira.io';
@@ -1571,14 +1649,20 @@ partner.html
                     <button data-section="welcome">
                         <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
                     </button>
-                    <button data-section="my-account">
+                    <button data-submenu="my-account-submenu" data-section="my-account">
                         <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                        <i class="fas fa-caret-right caret"></i>
                     </button>
+                    <div id="my-account-submenu" class="submenu">
+                        <button data-section="my-account">
+                            <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
+                        </button>
+                        <button data-section="change-password">
+                            <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
+                        </button>
+                    </div>
                     <button data-section="my-products">
                         <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
-                    </button>
-                    <button data-section="wix-keys">
-                        <span class="button-content"><i class="fab fa-wix-simple"></i> Wix Keys</span>
                     </button>
                     <button data-section="site-requests">
                         <span class="button-content"><i class="fas fa-file-alt"></i> Site Requests</span>
@@ -1597,7 +1681,32 @@ partner.html
             <div class="content-wrapper">
                 <div id="welcome" class="section active">
                     <h2>Welcome to Your Partner Dashboard</h2>
-                    <p>This dashboard is designed for partners to manage merchant integrations with clubmadeira.io. Use the "My Account" section to update your contact details or change your password. If you have admin privileges, you can return to the admin panel using the "Back to Admin" button.</p>
+                    <p>This dashboard is designed for partners to manage merchant integrations with clubmadeira.io. Use the "My Account" section to update your contact details or change your password for security. If you have admin privileges, you can return to the admin panel using the "Back to Admin" button.</p>
+                </div>
+                <div id="my-account" class="section">
+                    <h2>My Account</h2>
+                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security. Use the options below to navigate to the desired section:</p>
+                </div>
+                <div id="change-password" class="section">
+                    <h2>Change Password</h2>
+                    <div class="settings-form">
+                        <div class="password-container">
+                            <label for="currentPassword">Current Password:</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                            <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="newPassword">New Password:</label>
+                            <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+                            <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
+                        </div>
+                        <div class="password-container">
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+                            <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
+                        </div>
+                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+                    </div>
                 </div>
                 {% with user_type='partner' %}
                     {% include 'my_account.html' %}
@@ -1612,19 +1721,7 @@ partner.html
                         <tbody id="productList"></tbody>
                     </table>
                 </div>
-                <div id="wix-keys" class="section" style="padding-left: 200px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fab fa-wix-simple" style="font-size: 32px; margin-right: 10px;"></i>
-                        <h2>Wix Keys</h2>
-                    </div>
-                    <p>Your Wix Client ID is used to integrate your merchant account with Wix services. Ensure it matches the key provided in your Wix developer dashboard.</p>
-                    <div class="settings-form">
-                        <label for="wixClientId">Wix Client ID:</label>
-                        <input type="text" id="wixClientId" placeholder="Enter Wix Client ID">
-                        <button data-action="saveWixClientId"><i class="fas fa-save"></i> Save Wix Client ID</button>
-                    </div>
-                </div>
-                <div id="site-requests" class="section" style="padding-left: 200px;">
+                <div id="site-requests" class="section" style="margin-left: 170px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-file-alt" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Site Requests</h2>
@@ -1643,6 +1740,15 @@ partner.html
                         </thead>
                         <tbody id="siteRequestsList"></tbody>
                     </table>
+                    <div id="apiKeyModal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close" data-action="closeApiKeyModal"><i class="fas fa-times"></i></span>
+                            <h3><i class="fas fa-key"></i> Enter API Key</h3>
+                            <label for="merchantWixClientId">Wix Client ID:</label>
+                            <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
+                            <button data-action="saveMerchantWixClientId"><i class="fas fa-save"></i> Save</button>
+                        </div>
+                    </div>
                 </div>
                 <div id="site-request-detail" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
@@ -1661,15 +1767,6 @@ partner.html
                     </div>
                     <div id="documentation-content">
                         <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
-                    </div>
-                </div>
-                <div id="apiKeyModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close" data-action="closeApiKeyModal"><i class="fas fa-times"></i></span>
-                        <h3><i class="fas fa-key"></i> Enter API Key</h3>
-                        <label for="merchantWixClientId">Wix Client ID:</label>
-                        <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
-                        <button data-action="saveMerchantWixClientId"><i class="fas fa-save"></i> Save</button>
                     </div>
                 </div>
             </div>
@@ -1711,6 +1808,8 @@ signup.html
     <title>Sign Up</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <style>
         body {
             font-family: Arial, sans-serif;

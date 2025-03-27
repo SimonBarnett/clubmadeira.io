@@ -24,11 +24,33 @@ function initializePartner() {
         window.location.href = '/';
         return;
     }
-    if (userId) document.getElementById('userId').value = userId;
+    const userIdInput = document.getElementById('userId');
+    if (userIdInput && userId) {
+        userIdInput.value = userId;
+    } else if (!userId) {
+        console.warn('initializePartner - No userId found in localStorage');
+    } else {
+        console.warn('initializePartner - userId input element not found');
+    }
+
+    // Set up navigation and load initial content
+    setupNavigation(); // From site-navigation.js
     checkAdminPermission();
-    loadBranding();
+    loadBranding('partner', 'brandingContent'); // Adjusted to match typical usage
     showSection('welcome');
-    attachEventListeners();
+    loadPartnerIntegrations(); // Load partner-specific integrations
+    attachEventListeners(); // From page-load.js
+
+    // Call shared "Change Password" logic
+    if (typeof setupChangePassword === 'function') {
+        setupChangePassword(); // From user-management.js
+        console.log('initializePartner - Change Password logic initialized');
+    } else {
+        console.error('initializePartner - setupChangePassword function not found');
+    }
+
+    // Hide loading overlay after initialization
+    hideLoadingOverlay(); // From page-load.js
     console.log('initializePartner - Partner page initialized successfully');
 }
 
@@ -47,7 +69,7 @@ function checkAdminPermission() {
 // Loads and displays partner-specific integrations or tests.
 async function loadPartnerIntegrations() {
     console.log('loadPartnerIntegrations - Loading partner integrations');
-    const userId = document.getElementById('userId').value;
+    const userId = document.getElementById('userId') ? document.getElementById('userId').value : '';
     if (!userId) {
         console.error('loadPartnerIntegrations - User ID not found in session');
         toastr.error('User ID not found in session');
@@ -77,3 +99,8 @@ async function loadPartnerIntegrations() {
         toastr.error(`Error loading integrations: ${error.message}`);
     }
 }
+
+// Export for use in other scripts
+window.initializePartner = initializePartner;
+window.checkAdminPermission = checkAdminPermission;
+window.loadPartnerIntegrations = loadPartnerIntegrations;
