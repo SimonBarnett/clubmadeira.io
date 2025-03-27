@@ -17,6 +17,61 @@ import random
 authentication_bp = Blueprint('authentication_bp', __name__)
 # endregion
 
+# region /login POST - User Login
+@authentication_bp.route('/login', methods=['POST'])
+def login():
+    """
+    Authenticates a user and returns a JWT token if successful.
+    Purpose: Allows users to log in using their email and password.
+    Inputs: JSON payload with:
+        - email (str): The user's email address.
+        - password (str): The user's password.
+    Outputs:
+        - Success: JSON {"status": "success", "token": "<JWT>", "user_id": "<id>"}, status 200
+        - Errors:
+            - 400: {"status": "error", "message": "Email and password are required"}
+            - 401: {"status": "error", "message": "Invalid credentials"}
+            - 500: {"status": "error", "message": "Server error"}
+    """
+    try:
+        # Log the raw JSON data before any processing to debug middleware interference
+        raw_data = request.get_json(force=True, cache=False)
+        logging.debug(f"Raw JSON received: {json.dumps(raw_data)}")
+        data = raw_data
+        
+        if not data or 'email' not in data or 'password' not in data:
+            logging.warning(f"UX Issue - Login attempt missing email or password: {json.dumps(data)}")
+            return jsonify({"status": "error", "message": "Email and password are required"}), 400
+        
+        email = data['email'].strip().lower()
+        password = data['password'].strip()
+        # Log the raw password for debugging
+        logging.debug(f"Login attempt - Email: {email}, Password (sent): {password}")
+        
+        users_settings = load_users_settings()
+        logging.debug(f"Loaded users: {json.dumps({k: {**v, 'password': '[REDACTED]'} for k, v in users_settings.items()})}")
+        user_entry = next(((uid, u) for uid, u in users_settings.items() if u['email_address'].lower() == email), None)
+        
+        if user_entry:
+            user_id, user = user_entry
+            logging.debug(f"User found - ID: {user_id}, Stored Hash: {user['password']}")
+            logging.debug(f"Password sent bytes: {password.encode('utf-8')}, Stored hash bytes: {user['password'].encode('utf-8')}")
+            if bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+                logging.debug("Password matches")
+                token = generate_token(user_id, user['permissions'])
+                return jsonify({"status": "success", "token": token, "user_id": user_id}), 200
+            else:
+                logging.debug("Password does not match")
+        else:
+            logging.debug(f"User not found for email: {email}")
+        
+        logging.warning(f"Security Issue - Invalid login attempt for email: {email}")
+        return jsonify({"status": "error", "message": "Invalid credentials"}), 401
+    except Exception as e:
+        logging.error(f"UX Issue - Login processing error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
 # region /signup GET - The Holy Grail of New User Entry
 @authentication_bp.route('/signup', methods=['GET'])
 def signup_page():

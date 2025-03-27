@@ -11,6 +11,14 @@ import json
 manager_bp = Blueprint('manager_bp', __name__)
 # endregion
 
+@manager_bp.route('/users', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_users():
+    users_settings = load_users_settings()
+    user_list = [{"USERid": user_id, "email_address": user["email_address"], "contact_name": user["contact_name"]} 
+                 for user_id, user in users_settings.items()]
+    return jsonify({"status": "success", "users": user_list}), 200
+
 # region /users/<user_id> GET - The Admin’s Guide to the User Galaxy
 @manager_bp.route('/users/<user_id>', methods=['GET'])
 @login_required(["admin"], require_all=True)
@@ -152,6 +160,12 @@ def add_permission(user_id):
 # endregion
 
 # region /config/<affiliate> PATCH - Tuning the Galactic Config
+@manager_bp.route('/config', methods=['GET']) 
+@login_required(["admin"], require_all=True) 
+def get_config(): 
+    config = load_config() 
+    return jsonify({"status": "success", "count": len(config), "config": config}), 200 
+ 
 @manager_bp.route('/config/<affiliate>', methods=['PATCH'])
 @login_required(["admin"], require_all=True)
 def replace_config(affiliate):

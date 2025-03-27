@@ -38,32 +38,62 @@ async function hideLoadingOverlay(minDelay = 1000) {
     }
 }
 
+// Loads branding content into #brandingContent
+async function loadBranding(brandingType) {
+    console.log('loadBranding - Loading branding - Type:', brandingType);
+    const brandingContent = document.getElementById('brandingContent');
+    if (!brandingContent) {
+        console.error('loadBranding - Branding container not found - ID: brandingContent');
+        return;
+    }
+    try {
+        console.log('loadBranding - Fetching branding from /branding - Type:', brandingType);
+        const response = await authenticatedFetch(`${window.apiUrl}/branding?type=${brandingType}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Failed to fetch branding: ${response.status} - ${errorData.message || 'Unknown error'}`);
+        }
+        const data = await response.json();
+        if (data.status === 'success' && data.branding) {
+            brandingContent.innerHTML = data.branding;
+            console.log('loadBranding - Branding loaded successfully - Type:', brandingType);
+        } else {
+            throw new Error('Invalid branding response');
+        }
+    } catch (error) {
+        console.error('loadBranding - Error fetching branding:', error.message);
+        brandingContent.innerHTML = `<h1>${brandingType.charAt(0).toUpperCase() + brandingType.slice(1)} Dashboard</h1>`;
+        console.log('loadBranding - Fallback branding applied - Type:', brandingType);
+    }
+}
+
 // Attaches event listeners for navigation and section handling.
 function attachEventListeners() {
     console.log('attachEventListeners - Attaching event listeners');
-    const buttons = document.querySelectorAll('button[data-section], button[data-submenu], button[data-href]');
+    const buttons = document.querySelectorAll('button[data-section], button[data-href]'); // Exclude data-submenu to avoid overlap
     console.log('attachEventListeners - Found buttons with data attributes:', buttons.length);
     buttons.forEach(button => {
-        if (button.dataset.section || button.dataset.submenu) {
-            button.addEventListener('click', handleSectionClick);
-            console.log('attachEventListeners - Added click listener to button with data-section/submenu:', button.dataset.section || button.dataset.submenu);
-        }
-        if (button.dataset.href) {
-            button.addEventListener('click', handleHrefClick);
-            console.log('attachEventListeners - Added click listener to button with data-href:', button.dataset.href);
-        }
-    });
-
-    // Add delegated listener for logOffBtn
-    document.addEventListener('click', (e) => {
-        if (e.target.matches('#logOffBtn')) {
-            e.preventDefault();
-            console.log('Document click - Log Off button clicked');
-            logOff();
+        const sectionId = button.getAttribute('data-section');
+        const href = button.getAttribute('data-href');
+        if (sectionId || href) { // Only handle sections or SPA links, not submenus
+            button.addEventListener('click', (event) => {
+                if (href) {
+                    event.preventDefault();
+                    fetchProtectedPage(href, '.content-wrapper');
+                } else if (sectionId) {
+                    siteNavigation.showSection(sectionId);
+                }
+            });
+            console.log('attachEventListeners - Added click listener to button with data:', sectionId || href);
         }
     });
-    console.log('attachEventListeners - Added delegated click listener for logOffBtn');
-
+    // Log off button logic remains
+    const contentWrapper = document.querySelector('.content-wrapper');
+    if (contentWrapper) {
+        contentWrapper.addEventListener('click', (event) => {
+            if (event.target.id === 'logOffBtn') handleLogOff(event);
+        });
+    }
     console.log('attachEventListeners - Event listeners attached');
 }
 
@@ -111,6 +141,7 @@ async function initialize(pageType) {
             requiresUserId: false,
             extraSteps: () => {
                 console.log('initialize - Executing partner-specific steps');
+                initializePartner(); // From partner-page.js
                 attachEventListeners();
                 console.log('initialize - Partner-specific steps completed');
             }
@@ -122,14 +153,7 @@ async function initialize(pageType) {
             requiresUserId: true,
             extraSteps: () => {
                 console.log('initialize - Executing merchant-specific steps');
-                const userId = localStorage.getItem('userId');
-                console.log('initialize - Retrieved userId from localStorage:', userId || 'None');
-                if (userId) {
-                    console.log('initialize - Setting userId in DOM - ID:', userId);
-                    document.getElementById('userId').value = userId;
-                } else {
-                    console.warn('initialize - No userId found for merchant - Proceeding without setting');
-                }                
+                initializeMerchant(); // From merchant-page.js
                 attachEventListeners();
                 console.log('initialize - Merchant-specific steps completed');
             }
@@ -141,18 +165,7 @@ async function initialize(pageType) {
             requiresUserId: true,
             extraSteps: () => {
                 console.log('initialize - Executing community-specific steps');
-                const userId = localStorage.getItem('userId');
-                console.log('initialize - Retrieved userId from localStorage:', userId || 'None');
-                if (!userId) {
-                    console.warn('initialize - User ID not found for community - Redirecting to /');
-                    toastr.error('User ID not found in session');
-                    window.location.href = '/';
-                    return;
-                }
-                console.log('initialize - Setting userId in DOM - ID:', userId);
-                document.getElementById('userId').value = userId;
-                updateMenu();
-                waitForTinyMCE(initializeTinyMCE);
+                initializeCommunity(); // From community-page.js
                 attachEventListeners();
                 console.log('initialize - Community-specific steps completed');
             }
@@ -164,6 +177,7 @@ async function initialize(pageType) {
             requiresUserId: false,
             extraSteps: () => {
                 console.log('initialize - Executing admin-specific steps');
+                initializeAdmin('admin'); // From admin-page.js
                 attachEventListeners();
                 console.log('initialize - Admin-specific steps completed');
             }
@@ -357,3 +371,123 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded - Determined page type:', pageType);
     initialize(pageType);
 });
+
+// Common initialize function handling page-specific setup based on page type.
+async function initialize(pageType) {
+    console.log('initialize - Starting page initialization - Page type:', pageType);
+    
+    showLoadingOverlay();
+
+    const pageConfigs = {
+        'partner': {
+            permissions: ["wixpro", "admin"],
+            brandingType: 'partner',
+            initialSection: null,
+            requiresUserId: false,
+            extraSteps: () => {
+                console.log('initialize - Executing partner-specific steps');
+                attachEventListeners();
+                console.log('initialize - Partner-specific steps completed');
+            }
+        },
+        'merchant': {
+            permissions: ["merchant", "admin"],
+            brandingType: 'merchant',
+            initialSection: 'info',
+            requiresUserId: true,
+            extraSteps: () => {
+                console.log('initialize - Executing merchant-specific steps');
+                const userId = localStorage.getItem('userId');
+                console.log('initialize - Retrieved userId from localStorage:', userId || 'None');
+                if (userId) {
+                    console.log('initialize - Setting userId in DOM - ID:', userId);
+                    document.getElementById('userId').value = userId;
+                } else {
+                    console.warn('initialize - No userId found for merchant - Proceeding without setting');
+                }                
+                attachEventListeners();
+                console.log('initialize - Merchant-specific steps completed');
+            }
+        },
+        'community': {
+            permissions: ["community", "admin"],
+            brandingType: 'community',
+            initialSection: 'welcome',
+            requiresUserId: true,
+            extraSteps: () => {
+                console.log('initialize - Executing community-specific steps');
+                const userId = localStorage.getItem('userId');
+                console.log('initialize - Retrieved userId from localStorage:', userId || 'None');
+                if (!userId) {
+                    console.warn('initialize - User ID not found for community - Redirecting to /');
+                    toastr.error('User ID not found in session');
+                    window.location.href = '/';
+                    return;
+                }
+                console.log('initialize - Setting userId in DOM - ID:', userId);
+                document.getElementById('userId').value = userId;
+                updateMenu();
+                waitForTinyMCE(initializeTinyMCE);
+                attachEventListeners();
+                console.log('initialize - Community-specific steps completed');
+            }
+        },
+        'admin': {
+            permissions: ["admin"],
+            brandingType: 'admin',
+            initialSection: 'welcome',
+            requiresUserId: false,
+            extraSteps: () => {
+                console.log('initialize - Executing admin-specific steps');
+                attachEventListeners();
+                console.log('initialize - Admin-specific steps completed');
+            }
+        },
+        'login': {
+            permissions: [],
+            brandingType: 'login',
+            initialSection: null,
+            requiresUserId: false,
+            extraSteps: () => {
+                console.log('initialize - Executing login-specific steps');
+                console.log('initialize - Login-specific steps completed');
+            }
+        },
+        'signup': {
+            permissions: [],
+            brandingType: 'signup',
+            initialSection: null,
+            requiresUserId: false,
+            extraSteps: () => {
+                console.log('initialize - Executing signup-specific steps');
+                console.log('initialize - Signup-specific steps completed');
+            }
+        }
+    };
+
+    const config = pageConfigs[pageType];
+    if (!config) {
+        console.error('initialize - Invalid page type provided - Type:', pageType);
+        toastr.error('Invalid page type');
+        await hideLoadingOverlay();
+        return;
+    }
+    console.log('initialize - Configuration loaded for page type:', pageType, 'Config:', JSON.stringify(config));
+
+    if (config.permissions && config.permissions.length > 0) {
+        console.log('initialize - Performing permission check for:', config.permissions);
+        initializePage(config.permissions, async () => {
+            console.log('initialize - Permission validated for:', config.permissions);
+            await performPageSetup(pageType, config);
+            await hideLoadingOverlay();
+        });
+    } else {
+        console.log('initialize - No permissions required for:', pageType);
+        await performPageSetup(pageType, config);
+        await hideLoadingOverlay();
+    }
+    console.log('initialize - Initialization process completed for:', pageType);
+}
+
+// Attach initialize to the window object to ensure it's globally available
+window.initialize = initialize;

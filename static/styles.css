@@ -89,8 +89,8 @@ body {
 }
 
 .menu-container {
-    flex: 0 0 160px; /* Updated from 200px to 160px per CREQ */
-    max-width: 160px; /* Updated from 200px to 160px per CREQ */
+    flex: 0 0 200px; /* Reverted to 200px from 160px */
+    max-width: 200px; /* Reverted to 200px from 160px */
     margin-top: 10px;
 }
 
@@ -114,7 +114,7 @@ body {
     cursor: pointer;
     font-size: 14px;
     width: 100%;
-    max-width: 160px; /* Updated from 200px to 160px per CREQ */
+    max-width: 200px; /* Reverted to 200px from 160px */
     margin-bottom: 5px;
     display: flex;
     align-items: center;
@@ -216,31 +216,22 @@ body {
 .submenu {
     display: none;
     padding-left: 20px;
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out;
+    padding-bottom: 0; /* Remove extra space at the bottom */
+    overflow: visible;
     max-height: 0;
+    transition: all 0.3s ease-in-out;
 }
-
 .submenu.open {
-    display: block;
-    max-height: 500px;
+    display: block !important;
+    max-height: 1000px !important;
+    height: auto !important;
+    /* Removed min-height since submenus are working */
 }
 
 .submenu button {
-    padding: 8px 10px;
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    width: 100%;
-    max-width: 140px; /* Updated from 180px to 140px per CREQ (160px - 20px indent) */
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    position: relative;
+    display: block !important;
+    min-height: 30px !important;
+    background-color: #6c757d !important;
 }
 
 .submenu button:hover {
@@ -254,7 +245,7 @@ body {
 
 .section {
     display: none;
-    margin-left: 170px; /* Added per CREQ to align content with 10px gap after 160px menu */
+    margin-left: 210px; /* Reverted to 210px (200px + 10px gap) from 170px */
 }
 
 .section.active {

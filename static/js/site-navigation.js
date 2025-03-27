@@ -1,77 +1,287 @@
+// site-navigation.js
+// Purpose: Handles navigation, content loading, branding, and section/submenu management across the site.
+
+// Check if window.apiUrl is defined, throw an error if not
+if (!window.apiUrl) {
+    console.error('site-navigation.js - window.apiUrl is not defined. Please set window.apiUrl before loading this script.');
+    throw new Error('window.apiUrl is not defined');
+}
+console.log('site-navigation.js - Using apiUrl:', window.apiUrl);
+
+// Performs authenticated fetch requests for protected resources
+async function authenticatedFetch(url, options = {}) {
+    console.log('authenticatedFetch - Initiating fetch - URL:', url);
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        console.warn('authenticatedFetch - No authentication token found - Redirecting to /');
+        toastr.error('No authentication token found. Please log in.');
+        window.location.href = '/';
+        return null;
+    }
+    const headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': options.body instanceof FormData ? undefined : 'application/json'
+    };
+    const fetchUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    try {
+        const response = await fetch(fetchUrl, { ...options, headers });
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('authenticatedFetch - Fetch failed - Status:', response.status, 'Error text:', errorText);
+            throw new Error(`Server returned ${response.status}: ${errorText}`);
+        }
+        if (response.status === 401) {
+            console.warn('authenticatedFetch - Unauthorized response (401) - Clearing token and redirecting to /');
+            toastr.error('Session expired. Please log in again.');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            window.location.href = '/';
+            return null;
+        }
+        return response;
+    } catch (error) {
+        console.error('authenticatedFetch - Error during fetch:', error.message);
+        toastr.error(error.message || 'Failed to connect to server');
+        return null;
+    }
+}
+
+// Fetches protected page content for navigation
+async function fetchProtectedPage(url, targetContainer = null) {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        toastr.error('No authentication token found. Please log in.');
+        showLogin(); // Assumes showLogin is defined elsewhere
+        return;
+    }
+    const overlay = showLoadingOverlay(); // Assumes showLoadingOverlay is defined
+    try {
+        const response = await authenticatedFetch(`${window.apiUrl}${url}`, {
+            method: 'GET',
+            headers: { 'Accept': 'text/html' }
+        });
+        if (!response) throw new Error('No response from server');
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const scripts = doc.querySelectorAll('script');
+        scripts.forEach(script => script.remove());
+
+        if (targetContainer) {
+            const container = document.querySelector(targetContainer);
+            if (!container) throw new Error(`Target container not found: ${targetContainer}`);
+            const newContent = doc.querySelector('.content-wrapper') || doc.body;
+            container.innerHTML = newContent.innerHTML;
+
+            await Promise.all([...scripts].map(script => {
+                if (script.src) {
+                    return new Promise(resolve => {
+                        const newScript = document.createElement('script');
+                        newScript.src = script.src;
+                        newScript.async = false;
+                        newScript.onload = resolve;
+                        newScript.onerror = () => console.error(`Failed to load script: ${script.src}`);
+                        document.head.appendChild(newScript);
+                    });
+                } else if (script.innerHTML.trim()) {
+                    new Function(script.innerHTML)();
+                }
+            }));
+
+            if (typeof window.initialize === 'function') {
+                const pageType = url.split('/')[1] || 'admin';
+                window.initialize(pageType);
+            }
+            initializeNavigation();
+            setTimeout(() => hideLoadingOverlay(), 500); // Assumes hideLoadingOverlay is defined
+            return html;
+        } else {
+            document.documentElement.innerHTML = doc.documentElement.innerHTML;
+            setTimeout(() => hideLoadingOverlay(), 1000);
+            return html;
+        }
+    } catch (error) {
+        console.error('fetchProtectedPage - Error:', error);
+        toastr.error(error.message || 'Failed to load protected page');
+        hideLoadingOverlay();
+    }
+}
+
+// Loads page-specific branding content
+async function loadBranding(brandingType, containerId = 'brandingContent') {
+    console.log('loadBranding - Starting branding load - Type:', brandingType, 'Container ID:', containerId);
+    const defaultContents = {
+        'partner': '<h1>Partner Dashboard</h1>',
+        'merchant': '<h1>Merchant Dashboard</h1>',
+        'community': '<h1>Community Dashboard</h1>',
+        'admin': '<h1>Admin Dashboard</h1>',
+        'login': '<h1>Login</h1>',
+        'signup': '<h1>Signup</h1>'
+    };
+    const defaultContent = defaultContents[brandingType] || '<h1>Dashboard</h1>';
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.error('loadBranding - Container not found - ID:', containerId);
+        return;
+    }
+    try {
+        const response = await authenticatedFetch(`${window.apiUrl}/branding?type=${encodeURIComponent(brandingType)}`);
+        if (!response) {
+            container.innerHTML = defaultContent;
+            return;
+        }
+        const data = await response.json();
+        if (data.status === 'success' && data.branding) {
+            container.innerHTML = data.branding;
+        } else {
+            container.innerHTML = defaultContent;
+        }
+    } catch (error) {
+        console.error('loadBranding - Error:', error.message);
+        toastr.error(`Error loading ${brandingType} branding: ${error.message}`);
+        container.innerHTML = defaultContent;
+    }
+}
+
+// Loads content for a specific section
+async function loadSection(sectionId) {
+    console.log('loadSection - Starting section load - Section ID:', sectionId);
+    // Example stub; expand with actual logic from your app
+    if (sectionId === 'deal_listings') {
+        await loadCategories(); // Assumes loadCategories is defined elsewhere
+    } else if (sectionId === 'merchants') {
+        await loadMerchants(); // Assumes loadMerchants is defined elsewhere
+    } else {
+        try {
+            const response = await authenticatedFetch(`${window.apiUrl}/config`);
+            if (!response) throw new Error('No response from fetch');
+            const data = await response.json();
+            const config = data.config[sectionId] || {};
+            // Populate section-specific fields (stubbed example)
+            const el = document.getElementById(`${sectionId}Field`);
+            if (el) el.value = config.value || '';
+        } catch (error) {
+            console.error('loadSection - Error:', error.message);
+            toastr.error(`Error loading ${sectionId}: ${error.message}`);
+        }
+    }
+}
+
+// Function to show a section and hide others
 function showSection(sectionId, onSectionLoad = null) {
     console.log('showSection - Starting section display - Section ID:', sectionId);
-    console.log('showSection - Callback provided:', typeof onSectionLoad === 'function' ? 'Yes' : 'No');
     const allSections = document.querySelectorAll('.section');
-    console.log('showSection - Found sections to hide:', allSections.length);
     allSections.forEach(s => {
-        console.log('showSection - Hiding section - ID:', s.id);
         s.classList.remove('active');
         s.style.display = 'none';
     });
-
     const section = document.getElementById(sectionId);
     if (section) {
-        console.log('showSection - Showing section - ID:', sectionId);
         section.style.display = 'block';
         section.classList.add('active');
         if (typeof onSectionLoad === 'function') {
-            onSectionLoad();
+            console.log('showSection - Executing callback for:', sectionId);
+            onSectionLoad(sectionId);
+        } else {
+            loadSection(sectionId); // Default to loadSection if no callback
         }
     } else {
         console.error('showSection - Section not found - ID:', sectionId);
     }
 }
 
+// Function to toggle a submenu
 function toggleSubmenu(submenuId) {
     console.log(`toggleSubmenu - Starting toggle - Submenu ID: ${submenuId}`);
     const submenu = document.getElementById(submenuId);
     const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
     const caret = button ? button.querySelector('.caret') : null;
-
     if (submenu && button && caret) {
-        const isOpen = submenu.style.display === 'block';
-        submenu.style.display = isOpen ? 'none' : 'block';
+        const isOpen = submenu.classList.contains('open'); // Use class as source of truth
         submenu.classList.toggle('open', !isOpen);
+        submenu.style.display = isOpen ? 'none' : 'block'; // Sync display with class
         caret.classList.toggle('fa-caret-down', !isOpen);
         caret.classList.toggle('fa-caret-right', isOpen);
         button.setAttribute('aria-expanded', !isOpen);
-        console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'closed' : 'open'}`);
+        console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'closed' : 'open'}`, {
+            display: submenu.style.display,
+            className: submenu.className
+        });
     } else {
         console.error(`toggleSubmenu - Submenu or button not found - Submenu ID: ${submenuId}`);
     }
 }
 
+// Function to handle clicks on navigation buttons
 function handleSectionClick(event) {
-    console.log('handleSectionClick - Section click event triggered');
     const target = event.target.closest('button[data-section], button[data-submenu]');
-    console.log('handleSectionClick - Event target:', target);
     if (!target) return;
-
-    event.stopPropagation(); // Stop bubbling to parent elements
-
+    event.stopPropagation();
+    event.preventDefault();
     const sectionId = target.getAttribute('data-section');
     const submenuId = target.getAttribute('data-submenu');
-    console.log(`handleSectionClick - Extracted attributes - Section: ${sectionId}, Submenu: ${submenuId}`);
+    console.log('handleSectionClick - Clicked:', { sectionId, submenuId });
+
+    // Debug: Log all top-level submenu buttons
+    const topLevelButtons = document.querySelectorAll('.menu > button[data-submenu]');
+    console.log('handleSectionClick - Found top-level submenu buttons:', topLevelButtons.length);
+    topLevelButtons.forEach(button => {
+        const otherSubmenuId = button.getAttribute('data-submenu');
+        console.log(`handleSectionClick - Top-level button: ${otherSubmenuId}`);
+    });
+
+    // Close all other top-level submenus
+    topLevelButtons.forEach(button => {
+        const otherSubmenuId = button.getAttribute('data-submenu');
+        if (submenuId && otherSubmenuId === submenuId) return;
+        const otherSubmenu = document.getElementById(otherSubmenuId);
+        if (otherSubmenu && otherSubmenu.classList.contains('open')) {
+            console.log(`handleSectionClick - Closing other submenu: ${otherSubmenuId}`);
+            toggleSubmenu(otherSubmenuId);
+        }
+    });
 
     if (submenuId === 'my-account-submenu') {
-        console.log('handleSectionClick - Handling "My Account" click');
-        showSection('my-account'); // Show the explanatory page immediately
-        toggleSubmenu(submenuId); // Expand the submenu
-        // Do not highlight submenu items by default
+        showSection('my-account');
+        toggleSubmenu(submenuId);
     } else if (submenuId) {
         toggleSubmenu(submenuId);
-        if (sectionId) {
-            showSection(sectionId);
-        }
+        if (sectionId) showSection(sectionId);
     } else if (sectionId) {
         showSection(sectionId);
     }
 }
 
+// Ensure toggleSubmenu uses class-based visibility for CSS control
+function toggleSubmenu(submenuId) {
+    console.log(`toggleSubmenu - Starting toggle - Submenu ID: ${submenuId}`);
+    const submenu = document.getElementById(submenuId);
+    const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
+    const caret = button ? button.querySelector('.caret') : null;
+    if (submenu && button && caret) {
+        const isOpen = submenu.classList.contains('open'); // Use class as source of truth
+        submenu.classList.toggle('open', !isOpen);
+        submenu.style.display = isOpen ? 'none' : 'block'; // Sync display with class
+        caret.classList.toggle('fa-caret-down', !isOpen);
+        caret.classList.toggle('fa-caret-right', isOpen);
+        button.setAttribute('aria-expanded', !isOpen);
+        const computedStyle = window.getComputedStyle(submenu);
+        console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'closed' : 'open'}`, {
+            inlineDisplay: submenu.style.display,
+            computedDisplay: computedStyle.display,
+            height: computedStyle.height,
+            maxHeight: computedStyle.maxHeight,
+            className: submenu.className
+        });
+    } else {
+        console.error(`toggleSubmenu - Submenu or button not found - Submenu ID: ${submenuId}`);
+    }
+}
+
+// Main function to initialize navigation
 function initializeNavigation() {
     console.log('initializeNavigation - Starting navigation setup');
-
-    // Initialize submenu states (all closed by default)
     document.querySelectorAll('.submenu').forEach(submenu => {
         submenu.style.display = 'none';
         submenu.classList.remove('open');
@@ -86,15 +296,41 @@ function initializeNavigation() {
             }
         }
     });
-
-    // Attach event listeners to all buttons with data-section or data-submenu
     document.querySelectorAll('.menu button[data-section], .menu button[data-submenu]').forEach(button => {
         button.addEventListener('click', handleSectionClick);
         console.log('initializeNavigation - Added click listener to button:', button.dataset.section || button.dataset.submenu);
     });
+
+    document.querySelectorAll('button[data-href]').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const href = button.getAttribute('data-href');
+            await fetchProtectedPage(href, '.content-wrapper');
+            const pageType = href.split('/')[1] || 'admin';
+            await loadBranding(pageType);
+        });
+    });
 }
 
-// Export for use in other scripts
-window.showSection = showSection;
-window.toggleSubmenu = toggleSubmenu;
-window.initializeNavigation = initializeNavigation;
+// Export navigation functions under a namespace
+window.siteNavigation = {
+    showSection,
+    toggleSubmenu,
+    initializeNavigation,
+    authenticatedFetch,
+    fetchProtectedPage,
+    loadBranding,
+    loadSection
+};
+
+// Initialize navigation based on document readiness
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded - Initializing navigation');
+        initializeNavigation();
+    });
+} else {
+    console.log('Document already loaded - Initializing navigation immediately');
+    initializeNavigation();
+}

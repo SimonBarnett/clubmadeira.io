@@ -59,7 +59,7 @@ setup_logging()
 # Middleware to log requests and responses with JWT redaction
 @app.before_request
 def log_request():
-    if request.path.startswith('/static'):  # Skip static files
+    if request.path.startswith('/static'):
         return
     start_time = time.time()
     request_data = {
@@ -67,16 +67,17 @@ def log_request():
         "url": request.full_path,
         "headers": dict(request.headers),
         "ip": request.remote_addr,
-        "body": request.get_json(silent=True) or request.form.to_dict() or "[NO BODY]",
-        "user_id": getattr(request, "user_id", "Unauthenticated")
+        "body": request.get_json(silent=True) or request.form.to_dict() or "[NO BODY]"
     }
-    # Redact JWT from headers
-    if "Authorization" in request_data["headers"]:
-        request_data["headers"]["Authorization"] = "[REDACTED]"
-    # Redact password from body
-    if isinstance(request_data["body"], dict) and "password" in request_data["body"]:
-        request_data["body"]["password"] = "[REDACTED]"
-    logging.debug(f"Request: {json.dumps(request_data)}")
+    # Create a copy to avoid modifying the original request data
+    log_data = request_data.copy()
+    # Redact JWT from headers in the copy
+    if "Authorization" in log_data["headers"]:
+        log_data["headers"]["Authorization"] = "[REDACTED]"
+    # Redact password from body in the copy
+    if isinstance(log_data["body"], dict) and "password" in log_data["body"]:
+        log_data["body"]["password"] = "[REDACTED]"
+    logging.debug(f"Request: {json.dumps(log_data)}")
     request.start_time = start_time
 
 @app.after_request
@@ -89,6 +90,8 @@ def log_response(response):
         "duration_ms": f"{duration:.2f}",
         "body": response.get_data(as_text=True)[:1000] + ("..." if len(response.get_data()) > 1000 else "")
     }
+    # Log the full response before redaction
+    logging.debug(f"Full Response: Status {response.status_code}, Body: {response.get_data(as_text=True)}")
     # Redact JWT from response body
     if "token" in response_data["body"].lower():
         try:
@@ -134,4 +137,4 @@ def home():
         return jsonify({"status": "error", "message": "Server error"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=80)

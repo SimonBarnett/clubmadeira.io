@@ -11,7 +11,7 @@ content_bp = Blueprint('content_bp', __name__)
 # endregion
 
 # region /discounted-products GET - The Quest for Bargain Treasures
-@content_bp.route('/discounted-products', methods=['GET'])
+@content_bp.route('/deals', methods=['GET'])
 def get_all_discounted_products():
     """
     Retrieves all discounted products for a given category, like Zaphod Beeblebrox hunting for the best Pan Galactic Gargle Blaster deals.

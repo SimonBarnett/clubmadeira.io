@@ -36,10 +36,12 @@ function initializeAdmin(pageType) {
 
 function setupNavigation() {
     console.log('setupNavigation - Setting up navigation');
-    // Delegate to site-navigation.js, but retain fallback logic
-    if (typeof window.setupNavigation === 'function') {
-        window.setupNavigation();
+    // Delegate to site-navigation.js's initializeNavigation
+    if (typeof window.siteNavigation?.initializeNavigation === 'function') {
+        window.siteNavigation.initializeNavigation();
     } else {
+        console.warn('setupNavigation - window.siteNavigation.initializeNavigation not found, using fallback');
+        // Fallback logic
         document.querySelectorAll('.menu button[data-section]').forEach(button => {
             button.addEventListener('click', function() {
                 const sectionId = this.getAttribute('data-section');
@@ -116,6 +118,6 @@ function setupEventListeners() {
 
 // Export for use in other scripts
 window.initializeAdmin = initializeAdmin;
-window.setupNavigation = setupNavigation;
 window.loadInitialData = loadInitialData;
 window.setupEventListeners = setupEventListeners;
+// Removed: window.setupNavigation = setupNavigation;
