@@ -2260,11 +2260,11 @@ if (document.readyState === 'loading') {
 }
 site-request.js
 // site-request.js
-// Purpose: Manages site request functionality for merchants and communities (e.g., merchant.html, community.html), 
+// Purpose: Manages site request functionality for merchants and communities using the consolidated siterequest.inc template,
 // including page/email management, domain handling, and TinyMCE integration.
 
-// Adds a page to the site request form based on type (merchant/community).
-function addPage(type = 'merchant') {
+// Adds a page to the site request form based on user type (merchant/community).
+function addPage(type) {
     console.log('addPage - Adding page to site request - Type:', type);
     const maxPages = 5;
     let pageCount = parseInt(localStorage.getItem(`${type}PageCount`) || (type === 'merchant' ? 2 : 1));
@@ -2311,8 +2311,8 @@ function addPage(type = 'merchant') {
     console.log('addPage - Page addition completed');
 }
 
-// Removes a page from the site request form based on type (merchant/community).
-function removePage(pageNum, type = 'merchant') {
+// Removes a page from the site request form based on user type (merchant/community).
+function removePage(pageNum, type) {
     console.log('removePage - Removing page - Page number:', pageNum, 'Type:', type);
     let pageCount = parseInt(localStorage.getItem(`${type}PageCount`) || (type === 'merchant' ? 2 : 1));
     console.log('removePage - Current page count:', pageCount);
@@ -2340,7 +2340,7 @@ function removePage(pageNum, type = 'merchant') {
 }
 
 // Adds an email to the site request form.
-function addEmail(type = 'merchant') {
+function addEmail(type) {
     console.log('addEmail - Adding email to site request - Type:', type);
     const maxEmails = 5;
     let emailCount = parseInt(localStorage.getItem(`${type}EmailCount`) || 1);
@@ -2382,7 +2382,7 @@ function addEmail(type = 'merchant') {
 }
 
 // Removes an email from the site request form.
-function removeEmail(emailNum, type = 'merchant') {
+function removeEmail(emailNum, type) {
     console.log('removeEmail - Removing email - Email number:', emailNum, 'Type:', type);
     let emailCount = parseInt(localStorage.getItem(`${type}EmailCount`) || 1);
     console.log('removeEmail - Current email count:', emailCount);
@@ -2408,7 +2408,7 @@ function removeEmail(emailNum, type = 'merchant') {
 }
 
 // Updates the domain preview and email domain spans for the site request.
-function updateDomainPreview(type = 'merchant') {
+function updateDomainPreview(type) {
     console.log('updateDomainPreview - Updating domain preview - Type:', type);
     const domain = document.getElementById('preferredDomain')?.value || (type === 'merchant' ? 'mystore.uk' : 'mycommunity.org');
     console.log('updateDomainPreview - Domain value:', domain);
@@ -2522,7 +2522,7 @@ async function loadTinyMCE() {
 }
 
 // Initializes TinyMCE editor for site request content editing with a specific selector.
-function initializeTinyMCE(selector = 'textarea[name$="Content"], #aboutStore, #aboutCommunity') {
+function initializeTinyMCE(selector = 'textarea[name$="Content"], #about') {
     console.log('initializeTinyMCE - Starting TinyMCE initialization - Selector:', selector);
     if (!window.tinymce) {
         console.error('initializeTinyMCE - TinyMCE not available');
@@ -2565,10 +2565,11 @@ function getCurrentTimestamp() {
 }
 
 // Saves the site request form data for either a merchant store or community site.
-async function saveSiteRequest(type = 'merchant') {
-    console.log('saveSiteRequest - Starting site request save - Type:', type);
+async function saveSiteRequest() {
+    console.log('saveSiteRequest - Starting site request save');
     const userId = document.getElementById('userId')?.value || localStorage.getItem('userId');
-    console.log('saveSiteRequest - Retrieved userId:', userId);
+    const userType = document.getElementById('userType')?.value;
+    console.log('saveSiteRequest - Retrieved userId:', userId, 'userType:', userType);
 
     if (!userId) {
         console.error('saveSiteRequest - User ID not found in session or DOM');
@@ -2576,17 +2577,19 @@ async function saveSiteRequest(type = 'merchant') {
         return;
     }
 
-    const nameField = type === 'merchant' ? 'storeName' : 'communityName';
-    const aboutField = type === 'merchant' ? 'aboutStore' : 'aboutCommunity';
-    const logoField = type === 'merchant' ? 'storeLogos' : 'communityLogos';
-    const defaultDomain = type === 'merchant' ? 'mystore.uk' : 'mycommunity.org';
+    if (!userType) {
+        console.error('saveSiteRequest - User type not found in form');
+        toastr.error('User type not specified');
+        return;
+    }
 
+    const defaultDomain = userType === 'merchant' ? 'mystore.uk' : 'mycommunity.org';
     const siteRequest = {
         userId: userId,
-        type: type,
-        [nameField]: document.getElementById(nameField)?.value.trim() || '',
-        [aboutField]: tinymce.get(aboutField)?.getContent() || document.getElementById(aboutField)?.value || '',
-        [logoField]: [],
+        type: userType,
+        name: document.getElementById('name')?.value.trim() || '',
+        about: tinymce.get('about')?.getContent() || document.getElementById('about')?.value || '',
+        logos: [],
         colorPrefs: document.getElementById('colorPrefs')?.value.trim() || '',
         stylingDetails: document.getElementById('stylingDetails')?.value.trim() || '',
         preferredDomain: document.getElementById('preferredDomain')?.value.trim() || defaultDomain,
@@ -2597,9 +2600,9 @@ async function saveSiteRequest(type = 'merchant') {
     console.log('saveSiteRequest - Initial site request object:', JSON.stringify(siteRequest));
 
     // Validation
-    if (!siteRequest[nameField]) {
-        console.warn('saveSiteRequest - Name field is empty - Field:', nameField);
-        toastr.error(`${type === 'merchant' ? 'Store' : 'Community'} name is required`);
+    if (!siteRequest.name) {
+        console.warn('saveSiteRequest - Name field is empty');
+        toastr.error(`${userType === 'merchant' ? 'Store' : 'Community'} name is required`);
         return;
     }
 
@@ -2611,7 +2614,7 @@ async function saveSiteRequest(type = 'merchant') {
     }
 
     // Handle logos
-    const logoFiles = document.getElementById(logoField)?.files || [];
+    const logoFiles = document.getElementById('logos')?.files || [];
     console.log('saveSiteRequest - Logo files count:', logoFiles.length);
     if (logoFiles.length > 5) {
         console.warn('saveSiteRequest - Too many logos - Count:', logoFiles.length);
@@ -2622,7 +2625,7 @@ async function saveSiteRequest(type = 'merchant') {
         const reader = new FileReader();
         await new Promise(resolve => {
             reader.onload = () => {
-                siteRequest[logoField].push(reader.result);
+                siteRequest.logos.push(reader.result);
                 console.log('saveSiteRequest - Added logo - Index:', i, 'Result length:', reader.result.length);
                 resolve();
             };
@@ -2631,7 +2634,7 @@ async function saveSiteRequest(type = 'merchant') {
     }
 
     // Collect emails
-    let emailCount = parseInt(localStorage.getItem(`${type}EmailCount`) || 1);
+    let emailCount = parseInt(localStorage.getItem(`${userType}EmailCount`) || 1);
     console.log('saveSiteRequest - Collecting emails - Email count:', emailCount);
     for (let i = 1; i <= emailCount; i++) {
         const emailInput = document.getElementById(`email${i}Name`);
@@ -2642,7 +2645,7 @@ async function saveSiteRequest(type = 'merchant') {
     }
 
     // Collect pages
-    let pageCount = parseInt(localStorage.getItem(`${type}PageCount`) || (type === 'merchant' ? 2 : 1));
+    let pageCount = parseInt(localStorage.getItem(`${userType}PageCount`) || (userType === 'merchant' ? 2 : 1));
     console.log('saveSiteRequest - Collecting pages - Page count:', pageCount);
     for (let i = 1; i <= pageCount; i++) {
         const nameInput = document.getElementById(`page${i}Name`);
@@ -2674,10 +2677,10 @@ async function saveSiteRequest(type = 'merchant') {
         }
     }
 
-    const minPages = type === 'merchant' ? 2 : 1;
-    if (siteRequest.pages.length < minPages || (type === 'merchant' && (!siteRequest.pages.some(p => p.name === 'Home') || !siteRequest.pages.some(p => p.name === 'Returns Policy')))) {
+    const minPages = userType === 'merchant' ? 2 : 1;
+    if (siteRequest.pages.length < minPages || (userType === 'merchant' && (!siteRequest.pages.some(p => p.name === 'Home') || !siteRequest.pages.some(p => p.name === 'Returns Policy')))) {
         console.warn('saveSiteRequest - Insufficient or missing required pages - Pages:', siteRequest.pages.length, 'Required:', minPages);
-        toastr.error(type === 'merchant' ? 'Home and Returns Policy pages are required' : 'At least one page is required');
+        toastr.error(userType === 'merchant' ? 'Home and Returns Policy pages are required' : 'At least one page is required');
         return;
     }
 
@@ -2703,10 +2706,10 @@ async function saveSiteRequest(type = 'merchant') {
         }
 
         console.log('saveSiteRequest - Save successful - Duration:', `${duration}ms`);
-        toastr.success(`${type === 'merchant' ? 'Store' : 'Site'} request saved successfully`);
+        toastr.success(`${userType === 'merchant' ? 'Store' : 'Site'} request saved successfully`);
     } catch (error) {
         console.error('saveSiteRequest - Error saving site request - Error:', error.message, 'Stack:', error.stack);
-        toastr.error(`Error saving ${type === 'merchant' ? 'store' : 'site'} request: ${error.message}`);
+        toastr.error(`Error saving ${userType === 'merchant' ? 'store' : 'site'} request: ${error.message}`);
     }
     console.log('saveSiteRequest - Save process completed');
 }

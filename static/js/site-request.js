@@ -1,5 +1,5 @@
 // site-request.js
-// Purpose: Manages site request functionality for merchants and communities using the consolidated siterequest.html template,
+// Purpose: Manages site request functionality for merchants and communities using the consolidated siterequest.inc template,
 // including page/email management, domain handling, and TinyMCE integration.
 
 // Adds a page to the site request form based on user type (merchant/community).
