@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 from flask_cors import CORS
 from blueprints.authentication_bp import authentication_bp
-from blueprints.site_request import site_request_bp
+from blueprints.site_request_bp import site_request_bp
 from blueprints.user_settings_bp import user_settings_bp
 from blueprints.utility_bp import utility_bp
 from blueprints.role_pages_bp import role_pages_bp
