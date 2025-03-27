@@ -6,7 +6,7 @@ This document provides a comprehensive overview of the API endpoints for the Clu
 
 Each section corresponds to a blueprint (e.g., `authentication_bp`, `content_bp`). For each endpoint, you’ll find:
 
-- **HTTP Method Badge**: Indicates the request type (e.g., `[GET]`, `[POST]`).
+- **HTTP Method Badge**: Indicates the request type (e.g., `![GET](https://img.shields.io/badge/GET-green)`).
 - **Path**: The URL path (e.g., `/login`).
 - **Permission Badges**: Show required or allowed permissions (e.g., `[Public]`, `[Self]`, `[Admin]`). If multiple permissions are listed (e.g., `[Partner]` `[Admin]`), having *any one* of those permissions grants access.
 - **JWT Badge**: Indicates that a JWT token must be included in the `Authorization` header for authentication.
@@ -23,7 +23,7 @@ Authorization: Bearer {{bearer_token}}
 
 Obtain the token via the `/login` endpoint.
 
-**Note**: Internal code blocks use `@` delimiters (e.g., ````json`) instead of triple backticks.
+**Note**: Internal code blocks use `@` delimiters (e.g., `@json`) instead of triple backticks.
 
 ## Permissions Overview
 
@@ -37,13 +37,12 @@ Obtain the token via the `/login` endpoint.
 | Merchant     | Requires "merchant" permission.                        | ![Merchant](https://img.shields.io/badge/-Merchant-orange) |
 | Partner      | Requires "partner" permission.                         | ![Partner](https://img.shields.io/badge/-Partner-008080) |
 
-For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), access is granted if the user has *any one* of the listed permissions.
-
 ---
 
 ## main
 
-### / [GET] - ![Public](https://img.shields.io/badge/-Public-green) ![Main](https://img.shields.io/badge/-Main-4285F4)
+#### / ![GET](https://img.shields.io/badge/GET-green) - ![Public](https://img.shields.io/badge/-Public-green)
+
 **Description:** The application’s root endpoint, serving as the default landing page (e.g., a login screen or homepage). Typically the first interaction point for users, kept simple and lightweight.
 
 **Input:** None (query parameters could be added for redirects)
@@ -54,7 +53,8 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 
 ## authentication_bp
 
-### /login [POST] - ![Public](https://img.shields.io/badge/-Public-green) ![Authentication](https://img.shields.io/badge/-Authentication-4285F4)
+#### /login ![POST](https://img.shields.io/badge/POST-blue) - ![Public](https://img.shields.io/badge/-Public-green)
+
 **Description:** Authenticates a user and returns a JWT token if successful.
 
 **Input:** JSON payload with:
@@ -82,16 +82,27 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 ```json
 {
   "status": "success",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user_id": "123"
 }
 ```
 
-### /signup [GET] - ![Public](https://img.shields.io/badge/-Public-green) ![Authentication](https://img.shields.io/badge/-Authentication-4285F4)
+**Response Fields:**
+
+| Field     | Type   | Description          |
+|-----------|--------|----------------------|
+| status    | string | Status of the request|
+| token     | string | JWT token            |
+| user_id   | string | User ID              |
+
+#### /signup ![GET](https://img.shields.io/badge/GET-green) - ![Public](https://img.shields.io/badge/-Public-green)
+
 **Description:** Renders the signup page for user registration.
 
 **Output:** HTML form (e.g., `signup.html`)
 
-### /signup [POST] - ![Public](https://img.shields.io/badge/-Public-green) ![Authentication](https://img.shields.io/badge/-Authentication-4285F4)
+#### /signup ![POST](https://img.shields.io/badge/POST-blue) - ![Public](https://img.shields.io/badge/-Public-green)
+
 **Description:** Registers a new user. Validates input (e.g., email uniqueness), hashes the password, and stores the user in the database.
 
 **Input:** JSON with:
@@ -119,7 +130,24 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 }
 ```
 
-### /reset-password [POST] - ![Public](https://img.shields.io/badge/-Public-green) ![Authentication](https://img.shields.io/badge/-Authentication-4285F4)
+**Example Response:**
+
+```json
+{
+  "status": "success",
+  "message": "User created, please verify OTP"
+}
+```
+
+**Response Fields:**
+
+| Field     | Type   | Description          |
+|-----------|--------|----------------------|
+| status    | string | Status of the request|
+| message   | string | Confirmation message |
+
+#### /reset-password ![POST](https://img.shields.io/badge/POST-blue) - ![Public](https://img.shields.io/badge/-Public-green)
+
 **Description:** Initiates a password reset by sending an OTP to the user's phone or email.
 
 **Input:** JSON with:
@@ -139,7 +167,24 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 }
 ```
 
-### /verify-reset-code [POST] - ![Public](https://img.shields.io/badge/-Public-green) ![Authentication](https://img.shields.io/badge/-Authentication-4285F4)
+**Example Response:**
+
+```json
+{
+  "status": "success",
+  "message": "OTP sent"
+}
+```
+
+**Response Fields:**
+
+| Field     | Type   | Description          |
+|-----------|--------|----------------------|
+| status    | string | Status of the request|
+| message   | string | Confirmation message |
+
+#### /verify-reset-code ![POST](https://img.shields.io/badge/POST-blue) - ![Public](https://img.shields.io/badge/-Public-green)
+
 **Description:** Verifies the OTP and resets the user's password or adds a "verified" permission.
 
 **Input:** JSON with:
@@ -163,7 +208,26 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 }
 ```
 
-### /update-password [POST] - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Authentication](https://img.shields.io/badge/-Authentication-4285F4)
+**Example Response:**
+
+```json
+{
+  "status": "success",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user_id": "123"
+}
+```
+
+**Response Fields:**
+
+| Field     | Type   | Description          |
+|-----------|--------|----------------------|
+| status    | string | Status of the request|
+| token     | string | New JWT token        |
+| user_id   | string | User ID              |
+
+#### /update-password ![POST](https://img.shields.io/badge/POST-blue) - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
+
 **Description:** Updates the authenticated user's password.
 
 **Input:** JSON with:
@@ -185,11 +249,28 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 }
 ```
 
+**Example Response:**
+
+```json
+{
+  "status": "success",
+  "message": "Password updated"
+}
+```
+
+**Response Fields:**
+
+| Field     | Type   | Description          |
+|-----------|--------|----------------------|
+| status    | string | Status of the request|
+| message   | string | Confirmation message |
+
 ---
 
 ## content_bp
 
-### /deals [GET] - ![Public](https://img.shields.io/badge/-Public-green) ![Content](https://img.shields.io/badge/-Content-34A853)
+#### /deals ![GET](https://img.shields.io/badge/GET-green) - ![Public](https://img.shields.io/badge/-Public-green)
+
 **Description:** Retrieves a list of discounted products across multiple affiliate networks (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) based on a specific category ID. Includes Wix products from all users if they match the category and discount criteria. Uses Amazon category titles for searches on non-Amazon providers.
 
 **Input:** 
@@ -247,7 +328,17 @@ curl -X GET "https://clubmadeira.io/deals?category_id=123&min_discount=30"
 }
 ```
 
-### /categories [GET] - ![Public](https://img.shields.io/badge/-Public-green) ![Content](https://img.shields.io/badge/-Content-34A853)
+**Response Fields:**
+
+| Field     | Type   | Description          |
+|-----------|--------|----------------------|
+| status    | string | Status of the request|
+| count     | int    | Number of products   |
+| products  | array  | List of product objects |
+| min_discount | int | Minimum discount applied |
+
+#### /categories ![GET](https://img.shields.io/badge/GET-green) - ![Public](https://img.shields.io/badge/-Public-green)
+
 **Description:** Retrieves a list of product categories, either top-level or subcategories of a specified parent, using the Amazon API if configured, otherwise falls back to pseudo data. Checks all providers (Amazon UK, eBay UK, Awin UK, CJ UK, Wix) for available discounted products.
 
 **Input:** 
@@ -279,117 +370,109 @@ curl -X GET "https://clubmadeira.io/categories?parent_id=456&min_discount=30"
 }
 ```
 
+**Response Fields:**
+
+| Field     | Type   | Description          |
+|-----------|--------|----------------------|
+| status    | string | Status of the request|
+| count     | int    | Number of categories |
+| categories| array  | List of category objects |
+| min_discount | int | Minimum discount applied |
+
 ---
 
 ## referral_bp
 
-### /referral [POST] - ![Public](https://img.shields.io/badge/-Public-green) ![Referral](https://img.shields.io/badge/-Referral-FF5733)
-**Description:** Logs referral data (e.g., visits or orders from referral links).
+#### /<user_id>/visits ![GET](https://img.shields.io/badge/GET-green) - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
-**Input:** JSON with `referer`, `timestamp`, and either `page` or `orderId`.
+**Description:** Tracks visits to a user’s referral link and returns visit statistics.
 
-**Output:** JSON `{"success": true, "message": "Referral recorded"}`.
+**Input:** None
 
-**Example Request (Page Visit):**
+**Output:**
+- Success: JSON with visit data, status 200
+- Errors:
+  - 403: `{"status": "error", "message": "Unauthorized"}`
+
+**Example Response:**
 
 ```json
 {
-  "referer": "user_id",
-  "timestamp": "2023-10-15T12:00:00Z",
-  "page": "/home"
+  "status": "success",
+  "visits": 150,
+  "user_id": "user123"
 }
 ```
 
-### /<USERid>/visits [GET] - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Referral](https://img.shields.io/badge/-Referral-FF5733)
-**Description:** Lists visits driven by a user’s referral links.
+#### /<user_id>/referrals ![GET](https://img.shields.io/badge/GET-green) - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
-**Permissions:** User can view their own visits or admins can view any user’s.
+**Description:** Retrieves referral statistics for the authenticated user.
 
-**Output:** JSON with visit data.
+**Input:** None
 
-**Example Request:**
+**Output:**
+- Success: JSON with referral data, status 200
+- Errors:
+  - 403: `{"status": "error", "message": "Unauthorized"}`
 
-```bash
-curl -X GET https://clubmadeira.io/<USERid>/visits -H "Authorization: Bearer {{bearer_token}}"
-```
+**Example Response:**
 
-### /<USERid>/orders [GET] - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Referral](https://img.shields.io/badge/-Referral-FF5733)
-**Description:** Lists orders from a user’s referral links.
-
-**Permissions:** User can view their own orders or admins can view any user’s.
-
-**Output:** JSON with order data.
-
-**Example Request:**
-
-```bash
-curl -X GET https://clubmadeira.io/<USERid>/orders -H "Authorization: Bearer {{bearer_token}}"
+```json
+{
+  "status": "success",
+  "referrals": 10,
+  "user_id": "user123"
+}
 ```
 
 ---
 
 ## role_pages_bp
 
-### /admin [GET] - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![RolePages](https://img.shields.io/badge/-RolePages-4285F4)
-**Description:** Renders the admin dashboard.
+#### /dashboard ![GET](https://img.shields.io/badge/GET-green) - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
-**Output:** HTML (`admin.html`)
+**Description:** Renders the user dashboard page.
 
-### /community [GET] - ![Community](https://img.shields.io/badge/-Community-purple) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![RolePages](https://img.shields.io/badge/-RolePages-4285F4)
-**Description:** Renders the community dashboard.
+**Output:** HTML response (e.g., `dashboard.html`)
 
-**Output:** HTML (`community.html`)
+#### /admin ![GET](https://img.shields.io/badge/GET-green) - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
-### /merchant [GET] - ![Merchant](https://img.shields.io/badge/-Merchant-orange) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![RolePages](https://img.shields.io/badge/-RolePages-4285F4)
-**Description:** Renders the merchant dashboard.
+**Description:** Renders the admin dashboard page.
 
-**Output:** HTML (`merchant.html`)
-
-### /partner [GET] - ![Partner](https://img.shields.io/badge/-Partner-008080) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![RolePages](https://img.shields.io/badge/-RolePages-4285F4)
-**Description:** Renders the partner dashboard.
-
-**Output:** HTML (`partner.html`)
-
-### /branding [GET] - ![AllAuth](https://img.shields.io/badge/-AllAuth-yellow) ![JWT](https://img.shields.io/badge/-JWT-gray) ![RolePages](https://img.shields.io/badge/-RolePages-4285F4)
-**Description:** Fetches branding content (e.g., logos, themes).
-
-**Input:** Optional query parameter `type` (e.g., "admin").
-
-**Output:** JSON with branding data.
-
-**Example Response:**
-
-```json
-{
-  "branding": {
-    "logo": "url",
-    "theme": "dark"
-  }
-}
-```
+**Output:** HTML response (e.g., `admin.html`)
 
 ---
 
 ## site_request_bp
 
-### /siterequests [GET] - ![Admin](https://img.shields.io/badge/-Admin-red) ![Partner](https://img.shields.io/badge/-Partner-008080) ![JWT](https://img.shields.io/badge/-JWT-gray) ![SiteRequest](https://img.shields.io/badge/-SiteRequest-34A853)
-**Description:** Lists all site requests for review.
+#### /site-request ![POST](https://img.shields.io/badge/POST-blue) - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
-**Output:** JSON with site request data.
+**Description:** Submits a site creation request for the authenticated user.
 
-### /siterequests [POST] - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray) ![SiteRequest](https://img.shields.io/badge/-SiteRequest-34A853)
-**Description:** Submits a new site request.
+**Input:** JSON with:
+- `site_type` (str): Type of site requested.
+- `description` (str): Description of the site.
 
-**Input:** JSON with request details.
-
-**Output:** JSON `{"success": true, "request_id": "123"}`.
+**Output:**
+- Success: JSON `{"status": "success", "message": "Request submitted"}`, status 201
+- Errors:
+  - 400: `{"status": "error", "message": "Missing fields"}`
 
 **Example Request:**
 
 ```json
 {
-  "site": "example.com",
-  "description": "My site"
+  "site_type": "blog",
+  "description": "A personal blog site"
+}
+```
+
+**Example Response:**
+
+```json
+{
+  "status": "success",
+  "message": "Request submitted"
 }
 ```
 
@@ -397,63 +480,24 @@ curl -X GET https://clubmadeira.io/<USERid>/orders -H "Authorization: Bearer {{b
 
 ## manager_bp
 
-### /users/<USERid> [GET] - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Manager](https://img.shields.io/badge/-Manager-FF5733)
-**Description:** Retrieves a user’s details.
+#### /manage/users ![GET](https://img.shields.io/badge/GET-green) - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
-**Output:** JSON with user data.
+**Description:** Retrieves a list of all users for admin management.
 
-### /permissions/<USERid> [GET] - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Manager](https://img.shields.io/badge/-Manager-FF5733)
-**Description:** Manages user permissions (GET to view).
-
-**Output:** JSON with permissions list.
-
-### /permissions/<USERid> [POST] - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Manager](https://img.shields.io/badge/-Manager-FF5733)
-**Description:** Manages user permissions (POST to add).
-
-**Input:** JSON `{"permission": "merchant"}`.
-
-**Output:** JSON confirmation.
-
-### /config [GET] - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Manager](https://img.shields.io/badge/-Manager-FF5733)
-**Description:** Retrieves the current configuration for all affiliate networks.
-
-**Output:** JSON with configuration data.
+**Output:**
+- Success: JSON with user list, status 200
+- Errors:
+  - 403: `{"status": "error", "message": "Unauthorized"}`
 
 **Example Response:**
 
 ```json
 {
   "status": "success",
-  "count": 4,
-  "config": {
-    "amazon_uk": {"ACCESS_KEY": "key", "SECRET_KEY": "secret", "ASSOCIATE_TAG": "tag", "COUNTRY": "UK"},
-    "ebay_uk": {"APP_ID": "id"},
-    "awin": {"API_TOKEN": "token"},
-    "cj": {"API_KEY": "key", "WEBSITE_ID": "id"}
-  }
-}
-```
-
-### /config/<affiliate> [PATCH] - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Manager](https://img.shields.io/badge/-Manager-FF5733)
-**Description:** Replaces the configuration for a specific affiliate network, fully overwriting existing settings.
-
-**Input:** JSON with new configuration data.
-
-**Output:** JSON with updated configuration.
-
-**Example Request:**
-
-```bash
-curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{bearer_token}}" -H "Content-Type: application/json" -d '{"APP_ID": "new_id"}'
-```
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "message": "Credentials for ebay_uk replaced",
-  "credentials": {"APP_ID": "new_id"}
+  "users": [
+    {"id": "123", "email": "user@example.com"},
+    {"id": "124", "email": "admin@example.com"}
+  ]
 }
 ```
 
@@ -461,263 +505,42 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
 
 ## user_settings_bp
 
-### /<USERid>/user [GET] - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Retrieves the settings for a specific user, including contact information, website details, and Wix Client ID.
+#### /settings ![GET](https://img.shields.io/badge/GET-green) - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
-**Output:** JSON with user settings.
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "contact_name": "John Doe",
-  "website_url": "https://example.com",
-  "email_address": "john@example.com",
-  "phone_number": "+1234567890",
-  "wixClientId": "wix-client-id-123"
-}
-```
-
-### /<USERid>/user [PUT] - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Fully updates user profile, requiring all fields to be provided.
-
-**Input:** JSON with user data, including `contact_name`, `website_url`, `email_address`, `phone_number`, and `wixClientId`.
-
-**Output:** JSON with updated settings.
-
-**Example Request:**
-
-```json
-{
-  "contact_name": "Jane Doe",
-  "website_url": "https://janedoe.com",
-  "email_address": "jane@janedoe.com",
-  "phone_number": "+0987654321",
-  "wixClientId": "wix-client-id-456"
-}
-```
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "message": "Settings for user <USERid> replaced",
-  "settings": {
-    "contact_name": "Jane Doe",
-    "website_url": "https://janedoe.com",
-    "email_address": "jane@janedoe.com",
-    "phone_number": "+0987654321",
-    "wixClientId": "wix-client-id-456"
-  }
-}
-```
-
-### /<USERid>/user [PATCH] - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![Partner](https://img.shields.io/badge/-Partner-008080) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Partially updates user profile, updating only specified fields and leaving others unchanged. Valid fields are `contact_name`, `website_url`, `email_address`, `phone_number`, and `wixClientId`.
-
-**Input:** JSON with partial user data.
-
-**Output:** JSON with updated settings.
-
-**Example Request:**
-
-```json
-{
-  "email_address": "jane.new@janedoe.com",
-  "wixClientId": "wix-client-id-789"
-}
-```
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "message": "Settings for user <USERid> updated",
-  "settings": {
-    "contact_name": "Jane Doe",
-    "website_url": "https://janedoe.com",
-    "email_address": "jane.new@janedoe.com",
-    "phone_number": "+0987654321",
-    "wixClientId": "wix-client-id-789"
-  }
-}
-```
-
-### /<USERid>/categories [GET] - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Retrieves the list of categories associated with a specific user.
-
-**Output:** JSON with category list.
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "count": 2,
-  "categories": ["283155", "172282"]
-}
-```
-
-### /<USERid>/categories [PUT] - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Replaces the list of categories for a user.
-
-**Input:** JSON with new categories.
-
-**Output:** JSON with updated categories.
-
-**Example Request:**
-
-```json
-{
-  "categories": ["172282"]
-}
-```
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "message": "Categories for user <USERid> replaced",
-  "categories": ["172282"]
-}
-```
-
-### /<USERid>/categories [PATCH] - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Adds new categories to the user’s existing list, avoiding duplicates.
-
-**Input:** JSON with additional categories.
-
-**Output:** JSON with updated categories.
-
-**Example Request:**
-
-```json
-{
-  "categories": ["165796011"]
-}
-```
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "message": "Categories for user <USERid> patched",
-  "categories": ["283155", "172282", "165796011"]
-}
-```
-
-### /<USERid>/categories [DELETE] - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Removes a specific category from a user’s list if `category_id` is provided; otherwise, deletes all categories.
-
-**Input:** 
-- `category_id` (query, optional): Category ID to remove.
-
-**Output:** JSON with updated categories.
-
-**Example Request (Delete Specific Category):**
-
-```bash
-curl -X DELETE "https://clubmadeira.io/<USERid>/categories?category_id=283155" -H "Authorization: Bearer {{bearer_token}}"
-```
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "message": "Category 283155 removed for user <USERid>",
-  "categories": ["172282"]
-}
-```
-
-**Example Request (Delete All Categories):**
-
-```bash
-curl -X DELETE https://clubmadeira.io/<USERid>/categories -H "Authorization: Bearer {{bearer_token}}"
-```
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "message": "Categories deleted for user <USERid>",
-  "categories": []
-}
-```
-
-### /<USERid>/products [GET] - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Retrieves the list of products for a specific user from their Wix store, using the `wixClientId` stored in user settings. Includes category and quantity information.
-
-**Output:** JSON with product list.
-
-**Example Response:**
-
-```json
-{
-  "status": "success",
-  "count": 1,
-  "products": [
-    {
-      "source": "<USERid>",
-      "id": "wix123",
-      "title": "Wix Product",
-      "product_url": "https://example.wixsite.com/product/wix123?referer=<USERid>",
-      "current_price": 10.00,
-      "original_price": 15.00,
-      "discount_percent": 33.33,
-      "image_url": "https://wix.com/images/wix123.jpg",
-      "qty": 5,
-      "category": "Books",
-      "user_id": "<USERid>"
-    }
-  ]
-}
-```
-
-### /<USERid>/products/<product_id> [GET] - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray) ![UserSettings](https://img.shields.io/badge/-UserSettings-34A853)
-**Description:** Reduces the `qty` value of a specific Wix product by the amount specified in the `qty` query parameter. Modifies a local cache, not the Wix store directly. The `qty` must be a negative integer, and the quantity will not go below zero. Note: This uses GET for modification, which is unconventional.
-
-**Input:** 
-- `product_id` (path): Product ID to update.
-- `qty` (query): Negative integer to reduce the quantity by.
+**Description:** Retrieves the authenticated user’s settings.
 
 **Output:**
-- Success: JSON with updated product, status 200
+- Success: JSON with settings data, status 200
 - Errors:
-  - 400: `{"status": "error", "message": "qty must be a negative integer"}`
-  - 404: `{"status": "error", "message": "User or product not found"}`
-
-**Example Request:**
-
-```bash
-curl -X GET "https://clubmadeira.io/<USERid>/products/wix123?qty=-2" -H "Authorization: Bearer {{bearer_token}}"
-```
+  - 403: `{"status": "error", "message": "Unauthorized"}`
 
 **Example Response:**
 
 ```json
 {
   "status": "success",
-  "message": "Quantity reduced for product wix123",
-  "product": {
-    "source": "<USERid>",
-    "id": "wix123",
-    "title": "Wix Product",
-    "product_url": "https://example.wixsite.com/product/wix123?referer=<USERid>",
-    "current_price": 10.00,
-    "original_price": 15.00,
-    "discount_percent": 33.33,
-    "image_url": "https://wix.com/images/wix123.jpg",
-    "qty": 3,
-    "category": "Books",
-    "user_id": "<USERid>"
+  "settings": {
+    "email_notifications": true,
+    "theme": "dark"
   }
+}
+```
+
+#### /settings ![POST](https://img.shields.io/badge/POST-blue) - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
+
+**Description:** Updates the authenticated user’s settings.
+
+**Input:** JSON with settings fields (e.g., `email_notifications`, `theme`).
+
+**Output:**
+- Success: JSON `{"status": "success", "message": "Settings updated"}`, status 200
+
+**Example Request:**
+
+```json
+{
+  "email_notifications": false,
+  "theme": "light"
 }
 ```
 
@@ -725,32 +548,18 @@ curl -X GET "https://clubmadeira.io/<USERid>/products/wix123?qty=-2" -H "Authori
 
 ## utility_bp
 
-### /check-domain [GET] - ![AllAuth](https://img.shields.io/badge/-AllAuth-yellow) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Utility](https://img.shields.io/badge/-Utility-4285F4)
-**Description:** Checks domain availability via WHOIS.
+#### /health ![GET](https://img.shields.io/badge/GET-green) - ![Public](https://img.shields.io/badge/-Public-green)
 
-**Input:** Query parameter `domain` (e.g., "example.com").
+**Description:** Checks the health status of the API.
 
-**Output:** JSON `{"available": true}`.
+**Output:**
+- Success: JSON `{"status": "success", "message": "API is healthy"}`, status 200
 
-### /send-sms [POST] - ![AllAuth](https://img.shields.io/badge/-AllAuth-yellow) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Utility](https://img.shields.io/badge/-Utility-4285F4)
-**Description:** Sends an SMS message using the TextMagic API.
-
-**Input:** JSON with `phone_number` and `message`.
-
-**Output:** JSON `{"success": true}`.
-
-**Example Request:**
+**Example Response:**
 
 ```json
 {
-  "phone_number": "+1234567890",
-  "message": "Your OTP is 123456"
+  "status": "success",
+  "message": "API is healthy"
 }
 ```
-
-### /render-md/<path:full_path> [GET] - ![AllAuth](https://img.shields.io/badge/-AllAuth-yellow) ![JWT](https://img.shields.io/badge/-JWT-gray) ![Utility](https://img.shields.io/badge/-Utility-4285F4)
-**Description:** Renders markdown files from a path.
-
-**Input:** Path parameter `full_path` (e.g., "docs/readme").
-
-**Output:** HTML of rendered markdown. 
