@@ -17,13 +17,13 @@ Each section corresponds to a blueprint (e.g., `authentication_bp`, `content_bp`
 
 For authenticated endpoints, include the JWT token in the `Authorization` header:
 
-@@@bash
+```bash
 Authorization: Bearer {{bearer_token}}
-@@@
+```
 
 Obtain the token via the `/login` endpoint.
 
-**Note**: Internal code blocks use `@` delimiters (e.g., `@@@json`) instead of triple backticks.
+**Note**: Internal code blocks use `@` delimiters (e.g., ````json`) instead of triple backticks.
 
 ## Permissions Overview
 
@@ -70,21 +70,21 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 
 **Example Request:**
 
-@@@json
+```json
 {
   "email": "user@example.com",
   "password": "password"
 }
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
-@@@
+```
 
 ### ![GET](https://img.shields.io/badge/-GET-green) /signup - ![Public](https://img.shields.io/badge/-Public-green)
 
@@ -111,7 +111,7 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 
 **Example Request:**
 
-@@@json
+```json
 {
   "signup_type": "merchant",
   "contact_name": "John Doe",
@@ -119,7 +119,7 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
   "signup_password": "secure123",
   "signup_phone": "123-456-7890"
 }
-@@@
+```
 
 ### ![POST](https://img.shields.io/badge/-POST-blue) /reset-password - ![Public](https://img.shields.io/badge/-Public-green)
 
@@ -136,11 +136,11 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 
 **Example Request:**
 
-@@@json
+```json
 {
   "email": "user@example.com"
 }
-@@@
+```
 
 ### ![POST](https://img.shields.io/badge/-POST-blue) /verify-reset-code - ![Public](https://img.shields.io/badge/-Public-green)
 
@@ -159,13 +159,13 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 
 **Example Request:**
 
-@@@json
+```json
 {
   "email": "user@example.com",
   "code": "123456",
   "new_password": "newpassword123"
 }
-@@@
+```
 
 ### ![POST](https://img.shields.io/badge/-POST-blue) /update-password - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -183,12 +183,12 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 
 **Example Request:**
 
-@@@json
+```json
 {
   "email": "user@example.com",
   "password": "newpassword123"
 }
-@@@
+```
 
 ---
 
@@ -210,13 +210,13 @@ For endpoints with multiple permission badges (e.g., `[Partner]` `[Admin]`), acc
 
 **Example Request:**
 
-@@@bash
+```bash
 curl -X GET "https://clubmadeira.io/deals?category_id=123&min_discount=30"
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "count": 2,
@@ -251,7 +251,7 @@ curl -X GET "https://clubmadeira.io/deals?category_id=123&min_discount=30"
   ],
   "min_discount": 30
 }
-@@@
+```
 
 ### ![GET](https://img.shields.io/badge/-GET-green) /categories - ![Public](https://img.shields.io/badge/-Public-green)
 
@@ -268,13 +268,13 @@ curl -X GET "https://clubmadeira.io/deals?category_id=123&min_discount=30"
 
 **Example Request:**
 
-@@@bash
+```bash
 curl -X GET "https://clubmadeira.io/categories?parent_id=456&min_discount=30"
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "count": 2,
@@ -284,7 +284,7 @@ curl -X GET "https://clubmadeira.io/categories?parent_id=456&min_discount=30"
   ],
   "min_discount": 30
 }
-@@@
+```
 
 ---
 
@@ -300,13 +300,13 @@ curl -X GET "https://clubmadeira.io/categories?parent_id=456&min_discount=30"
 
 **Example Request (Page Visit):**
 
-@@@json
+```json
 {
   "referer": "user_id",
   "timestamp": "2023-10-15T12:00:00Z",
   "page": "/home"
 }
-@@@
+```
 
 ### ![GET](https://img.shields.io/badge/-GET-green) /<user_id>/visits - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -318,9 +318,9 @@ curl -X GET "https://clubmadeira.io/categories?parent_id=456&min_discount=30"
 
 **Example Request:**
 
-@@@bash
+```bash
 curl -X GET https://clubmadeira.io/user_id/visits -H "Authorization: Bearer {{bearer_token}}"
-@@@
+```
 
 ### ![GET](https://img.shields.io/badge/-GET-green) /<user_id>/orders - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -332,9 +332,9 @@ curl -X GET https://clubmadeira.io/user_id/visits -H "Authorization: Bearer {{be
 
 **Example Request:**
 
-@@@bash
+```bash
 curl -X GET https://clubmadeira.io/user_id/orders -H "Authorization: Bearer {{bearer_token}}"
-@@@
+```
 
 ---
 
@@ -374,14 +374,14 @@ curl -X GET https://clubmadeira.io/user_id/orders -H "Authorization: Bearer {{be
 
 **Example Response:**
 
-@@@json
+```json
 {
   "branding": {
     "logo": "url",
     "theme": "dark"
   }
 }
-@@@
+```
 
 ---
 
@@ -403,12 +403,12 @@ curl -X GET https://clubmadeira.io/user_id/orders -H "Authorization: Bearer {{be
 
 **Example Request:**
 
-@@@json
+```json
 {
   "site": "example.com",
   "description": "My site"
 }
-@@@
+```
 
 ---
 
@@ -442,7 +442,7 @@ curl -X GET https://clubmadeira.io/user_id/orders -H "Authorization: Bearer {{be
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "count": 4,
@@ -453,7 +453,7 @@ curl -X GET https://clubmadeira.io/user_id/orders -H "Authorization: Bearer {{be
     "cj": {"API_KEY": "key", "WEBSITE_ID": "id"}
   }
 }
-@@@
+```
 
 ### ![PATCH](https://img.shields.io/badge/-PATCH-orange) /config/<affiliate> - ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -465,19 +465,19 @@ curl -X GET https://clubmadeira.io/user_id/orders -H "Authorization: Bearer {{be
 
 **Example Request:**
 
-@@@bash
+```bash
 curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{bearer_token}}" -H "Content-Type: application/json" -d '{"APP_ID": "new_id"}'
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "message": "Credentials for ebay_uk replaced",
   "credentials": {"APP_ID": "new_id"}
 }
-@@@
+```
 
 ---
 
@@ -491,7 +491,7 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "contact_name": "John Doe",
@@ -500,7 +500,7 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
   "phone_number": "+1234567890",
   "wixClientId": "wix-client-id-123"
 }
-@@@
+```
 
 ### ![PUT](https://img.shields.io/badge/-PUT-yellow) /<USERid>/user - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -512,7 +512,7 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
 
 **Example Request:**
 
-@@@json
+```json
 {
   "contact_name": "Jane Doe",
   "website_url": "https://janedoe.com",
@@ -520,11 +520,11 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
   "phone_number": "+0987654321",
   "wixClientId": "wix-client-id-456"
 }
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "message": "Settings for user user123 replaced",
@@ -536,7 +536,7 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
     "wixClientId": "wix-client-id-456"
   }
 }
-@@@
+```
 
 ### ![PATCH](https://img.shields.io/badge/-PATCH-orange) /<USERid>/user - ![Self](https://img.shields.io/badge/-Self-blue) ![Admin](https://img.shields.io/badge/-Admin-red) ![Partner](https://img.shields.io/badge/-Partner-008080) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -548,16 +548,16 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
 
 **Example Request:**
 
-@@@json
+```json
 {
   "email_address": "jane.new@janedoe.com",
   "wixClientId": "wix-client-id-789"
 }
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "message": "Settings for user user123 updated",
@@ -569,7 +569,7 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
     "wixClientId": "wix-client-id-789"
   }
 }
-@@@
+```
 
 ### ![GET](https://img.shields.io/badge/-GET-green) /<USERid>/categories - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -579,13 +579,13 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "count": 2,
   "categories": ["283155", "172282"]
 }
-@@@
+```
 
 ### ![PUT](https://img.shields.io/badge/-PUT-yellow) /<USERid>/categories - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -597,21 +597,21 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
 
 **Example Request:**
 
-@@@json
+```json
 {
   "categories": ["172282"]
 }
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "message": "Categories for user user123 replaced",
   "categories": ["172282"]
 }
-@@@
+```
 
 ### ![PATCH](https://img.shields.io/badge/-PATCH-orange) /<USERid>/categories - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -623,21 +623,21 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
 
 **Example Request:**
 
-@@@json
+```json
 {
   "categories": ["165796011"]
 }
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "message": "Categories for user user123 patched",
   "categories": ["283155", "172282", "165796011"]
 }
-@@@
+```
 
 ### ![DELETE](https://img.shields.io/badge/-DELETE-red) /<USERid>/categories - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -650,35 +650,35 @@ curl -X PATCH https://clubmadeira.io/config/ebay_uk -H "Authorization: Bearer {{
 
 **Example Request (Delete Specific Category):**
 
-@@@bash
+```bash
 curl -X DELETE "https://clubmadeira.io/user123/categories?category_id=283155" -H "Authorization: Bearer {{bearer_token}}"
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "message": "Category 283155 removed for user user123",
   "categories": ["172282"]
 }
-@@@
+```
 
 **Example Request (Delete All Categories):**
 
-@@@bash
+```bash
 curl -X DELETE https://clubmadeira.io/user123/categories -H "Authorization: Bearer {{bearer_token}}"
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "message": "Categories deleted for user user123",
   "categories": []
 }
-@@@
+```
 
 ### ![GET](https://img.shields.io/badge/-GET-green) /<USERid>/products - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -688,7 +688,7 @@ curl -X DELETE https://clubmadeira.io/user123/categories -H "Authorization: Bear
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "count": 1,
@@ -708,7 +708,7 @@ curl -X DELETE https://clubmadeira.io/user123/categories -H "Authorization: Bear
     }
   ]
 }
-@@@
+```
 
 ### ![GET](https://img.shields.io/badge/-GET-green) /<USERid>/products/<product_id> - ![Self](https://img.shields.io/badge/-Self-blue) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
@@ -726,13 +726,13 @@ curl -X DELETE https://clubmadeira.io/user123/categories -H "Authorization: Bear
 
 **Example Request:**
 
-@@@bash
+```bash
 curl -X GET "https://clubmadeira.io/user123/products/wix123?qty=-2" -H "Authorization: Bearer {{bearer_token}}"
-@@@
+```
 
 **Example Response:**
 
-@@@json
+```json
 {
   "status": "success",
   "message": "Quantity reduced for product wix123",
@@ -750,7 +750,7 @@ curl -X GET "https://clubmadeira.io/user123/products/wix123?qty=-2" -H "Authoriz
     "user_id": "user123"
   }
 }
-@@@
+```
 
 ---
 
@@ -774,12 +774,12 @@ curl -X GET "https://clubmadeira.io/user123/products/wix123?qty=-2" -H "Authoriz
 
 **Example Request:**
 
-@@@json
+```json
 {
   "phone_number": "+1234567890",
   "message": "Your OTP is 123456"
 }
-@@@
+```
 
 ### ![GET](https://img.shields.io/badge/-GET-green) /render-md/<path:full_path> - ![AllAuth](https://img.shields.io/badge/-AllAuth-yellow) ![JWT](https://img.shields.io/badge/-JWT-gray)
 
