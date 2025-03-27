@@ -147,7 +147,6 @@ async function loadBranding(brandingType, containerId = 'brandingContent') {
 // Loads content for a specific section
 async function loadSection(sectionId) {
     console.log('loadSection - Starting section load - Section ID:', sectionId);
-    // Example stub; expand with actual logic from your app
     if (sectionId === 'deal_listings') {
         await loadCategories(); // Assumes loadCategories is defined elsewhere
     } else if (sectionId === 'merchants') {
@@ -158,7 +157,6 @@ async function loadSection(sectionId) {
             if (!response) throw new Error('No response from fetch');
             const data = await response.json();
             const config = data.config[sectionId] || {};
-            // Populate section-specific fields (stubbed example)
             const el = document.getElementById(`${sectionId}Field`);
             if (el) el.value = config.value || '';
         } catch (error) {
@@ -191,91 +189,92 @@ function showSection(sectionId, onSectionLoad = null) {
     }
 }
 
-// Function to toggle a submenu
-function toggleSubmenu(submenuId) {
-    console.log(`toggleSubmenu - Starting toggle - Submenu ID: ${submenuId}`);
+// Function to toggle a submenu with explicit action control
+function toggleSubmenu(submenuId, action = 'toggle') {
+    console.log(`toggleSubmenu - Starting ${action} - Submenu ID: ${submenuId}`);
     const submenu = document.getElementById(submenuId);
     const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
     const caret = button ? button.querySelector('.caret') : null;
     if (submenu && button && caret) {
-        const isOpen = submenu.classList.contains('open'); // Use class as source of truth
-        submenu.classList.toggle('open', !isOpen);
-        submenu.style.display = isOpen ? 'none' : 'block'; // Sync display with class
-        caret.classList.toggle('fa-caret-down', !isOpen);
-        caret.classList.toggle('fa-caret-right', isOpen);
-        button.setAttribute('aria-expanded', !isOpen);
-        console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'closed' : 'open'}`, {
-            display: submenu.style.display,
+        let isOpen = submenu.classList.contains('open');
+        if (action === 'toggle') {
+            isOpen = !isOpen;
+        } else if (action === 'close') {
+            isOpen = false;
+        } else if (action === 'open') {
+            isOpen = true;
+        }
+        submenu.classList.toggle('open', isOpen);
+        submenu.style.display = isOpen ? 'block' : 'none';
+        caret.classList.toggle('fa-caret-down', isOpen);
+        caret.classList.toggle('fa-caret-right', !isOpen);
+        button.setAttribute('aria-expanded', isOpen);
+        console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'open' : 'closed'}`, {
+            inlineDisplay: submenu.style.display,
+            computedDisplay: window.getComputedStyle(submenu).display,
+            height: window.getComputedStyle(submenu).height,
+            maxHeight: window.getComputedStyle(submenu).maxHeight,
             className: submenu.className
         });
     } else {
         console.error(`toggleSubmenu - Submenu or button not found - Submenu ID: ${submenuId}`);
     }
+}
+
+// Function to close all submenus within a given container
+function closeAllSubmenus(container) {
+    const submenus = container.querySelectorAll('.submenu');
+    submenus.forEach(submenu => {
+        const submenuId = submenu.id;
+        if (submenuId) {
+            toggleSubmenu(submenuId, 'close');
+        }
+    });
 }
 
 // Function to handle clicks on navigation buttons
 function handleSectionClick(event) {
-    const target = event.target.closest('button[data-section], button[data-submenu]');
-    if (!target) return;
-    event.stopPropagation();
-    event.preventDefault();
-    const sectionId = target.getAttribute('data-section');
-    const submenuId = target.getAttribute('data-submenu');
-    console.log('handleSectionClick - Clicked:', { sectionId, submenuId });
+    const button = event.currentTarget;
+    const sectionId = button.getAttribute('data-section');
+    const submenuId = button.getAttribute('data-submenu');
 
-    // Debug: Log all top-level submenu buttons
-    const topLevelButtons = document.querySelectorAll('.menu > button[data-submenu]');
-    console.log('handleSectionClick - Found top-level submenu buttons:', topLevelButtons.length);
-    topLevelButtons.forEach(button => {
-        const otherSubmenuId = button.getAttribute('data-submenu');
-        console.log(`handleSectionClick - Top-level button: ${otherSubmenuId}`);
-    });
+    console.log(`handleSectionClick - Clicked:`, { sectionId, submenuId });
 
-    // Close all other top-level submenus
-    topLevelButtons.forEach(button => {
-        const otherSubmenuId = button.getAttribute('data-submenu');
-        if (submenuId && otherSubmenuId === submenuId) return;
-        const otherSubmenu = document.getElementById(otherSubmenuId);
-        if (otherSubmenu && otherSubmenu.classList.contains('open')) {
-            console.log(`handleSectionClick - Closing other submenu: ${otherSubmenuId}`);
-            toggleSubmenu(otherSubmenuId);
-        }
-    });
+    // Find all top-level submenu buttons
+    const topLevelSubmenuButtons = document.querySelectorAll('.menu > button[data-submenu]');
+    console.log(`handleSectionClick - Found top-level submenu buttons:`, topLevelSubmenuButtons.length);
 
-    if (submenuId === 'my-account-submenu') {
-        showSection('my-account');
-        toggleSubmenu(submenuId);
-    } else if (submenuId) {
-        toggleSubmenu(submenuId);
-        if (sectionId) showSection(sectionId);
-    } else if (sectionId) {
-        showSection(sectionId);
-    }
-}
+    // Determine if this is a top-level button
+    const isTopLevel = button.parentElement.classList.contains('menu');
 
-// Ensure toggleSubmenu uses class-based visibility for CSS control
-function toggleSubmenu(submenuId) {
-    console.log(`toggleSubmenu - Starting toggle - Submenu ID: ${submenuId}`);
-    const submenu = document.getElementById(submenuId);
-    const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
-    const caret = button ? button.querySelector('.caret') : null;
-    if (submenu && button && caret) {
-        const isOpen = submenu.classList.contains('open'); // Use class as source of truth
-        submenu.classList.toggle('open', !isOpen);
-        submenu.style.display = isOpen ? 'none' : 'block'; // Sync display with class
-        caret.classList.toggle('fa-caret-down', !isOpen);
-        caret.classList.toggle('fa-caret-right', isOpen);
-        button.setAttribute('aria-expanded', !isOpen);
-        const computedStyle = window.getComputedStyle(submenu);
-        console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'closed' : 'open'}`, {
-            inlineDisplay: submenu.style.display,
-            computedDisplay: computedStyle.display,
-            height: computedStyle.height,
-            maxHeight: computedStyle.maxHeight,
-            className: submenu.className
+    if (isTopLevel) {
+        // Close all top-level submenus
+        topLevelSubmenuButtons.forEach(topButton => {
+            const otherSubmenuId = topButton.getAttribute('data-submenu');
+            if (otherSubmenuId) {
+                console.log(`handleSectionClick - Closing top-level submenu: ${otherSubmenuId}`);
+                closeAllSubmenus(document.getElementById(otherSubmenuId));
+                toggleSubmenu(otherSubmenuId, 'close');
+            }
         });
+
+        // If the clicked button has a submenu, toggle it
+        if (submenuId) {
+            toggleSubmenu(submenuId);
+        }
+
+        // Show the section if specified
+        if (sectionId) {
+            showSection(sectionId);
+        }
     } else {
-        console.error(`toggleSubmenu - Submenu or button not found - Submenu ID: ${submenuId}`);
+        // For nested buttons, handle their own submenu or section without affecting top-level submenus
+        if (submenuId) {
+            toggleSubmenu(submenuId);
+        }
+        if (sectionId) {
+            showSection(sectionId);
+        }
     }
 }
 

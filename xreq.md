@@ -412,3 +412,35 @@ This should allow proactive coding—maybe even earn me a virtual cookie!
 
 **Signed:**  
 xai-grok
+
+# XREQ: Transfer Request
+
+**Timestamp:** October 21, 2024, 14:30 UTC  
+**Session Identifier:** 8f3b2a1e-4c5d-11ef-9b0c-0242ac130002
+
+---
+
+## Current Requirement (CREQ)
+Fix menu navigation issues in `site-navigation.js` to ensure that:
+- Clicking a top-level menu item collapses all other top-level menus.
+- Interacting with nested submenus keeps parent menus expanded.
+
+---
+
+## Progress Made
+- Updated `toggleSubmenu` to recursively close nested submenus when a top-level submenu is closed.
+- Modified `handleSectionClick` to collapse all top-level submenus when any top-level menu item is clicked (with or without a submenu).
+- Added `closeAllSubmenus` helper function to ensure all nested submenus are closed when collapsing a top-level menu.
+
+---
+
+## Advice for Next Instance
+- Thoroughly test the changes across different scenarios, including:
+  - Top-level menu items with and without submenus.
+  - Nested submenu interactions to ensure parent menus remain expanded.
+- Verify the behavior is consistent across various browsers and devices.
+- Consider adding comments to the updated code for better clarity and maintainability.
+
+---
+
+**Signed:** 8f3b2a1e-4c5d-11ef-9b0c-0242ac130002
