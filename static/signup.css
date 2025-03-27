@@ -1,0 +1,147 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.options {
+    display: flex;
+    gap: 15px; /* Increased gap for better spacing */
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.option {
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+    transition: border 0.3s ease;
+}
+
+.option.selected {
+    border: 3px solid #007BFF;
+    border-radius: 5px;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.option img {
+    width: 150px; /* Fixed width for uniformity */
+    height: 200px; /* Fixed height for uniformity */
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.option span {
+    display: block;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.option input[type="radio"] {
+    display: none;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin: 0 auto; /* Center the form, removed margin-right */
+    width: 100%;
+    max-width: 400px; /* Match form-group max-width for alignment */
+}
+
+button {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    max-width: 200px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-group label {
+    font-weight: bold;
+    flex: 1;
+    text-align: right;
+    margin-bottom: 0;
+}
+
+.form-group .input-container {
+    position: relative;
+    width: 192px; /* 160px + 20% = 192px */
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    padding-right: 30px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-group .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Pulse animation keyframes */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    }
+}

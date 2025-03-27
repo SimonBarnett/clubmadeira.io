@@ -5,6 +5,7 @@ import logging
 import requests
 import os
 import markdown
+import whois
 
 # region Blueprint Setup
 # Welcome to utility_bp, the unsung hero of the Flask galaxy, much like R2-D2 fixing the Millennium Falcon mid-flight!

@@ -277,55 +277,9 @@
                         <h2>I Don’t Have a Website Yet</h2>
                     </div>
                     <p>Request a custom Wix website for your community from our Wix Professionals. Fill out the form below to specify your needs:</p>
-                    <form id="siteRequestForm" class="settings-form">
-                        <label for="communityName">Community Name:</label>
-                        <input type="text" id="communityName" name="communityName" placeholder="Enter your community name" required>
-                        <label for="aboutCommunity">About Our Community:</label>
-                        <textarea id="aboutCommunity" name="aboutCommunity" placeholder="Tell us about your community"></textarea>
-                        <label for="communityLogos">Community Logos:</label>
-                        <input type="file" id="communityLogos" name="communityLogos" accept="image/*" multiple>
-                        <small>Upload up to 5 logos (e.g., main logo, secondary logos).</small>
-                        <label for="colorPrefs">Color Preferences:</label>
-                        <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
-                        <label for="stylingDetails">Styling Details:</label>
-                        <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., modern layout, bold fonts"></textarea>
-                        <label for="preferredDomain">Preferred Domain Name:</label>
-                        <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., mycommunity.org" oninput="updateEmailDomains()">
-                        <button type="button" data-action="checkDomainAvailability"><i class="fas fa-search"></i> Check Availability</button>
-                        <label>Email Addresses to Set Up (up to 5):</label>
-                        <div id="emailsContainer">
-                            <div class="email-section" data-email="1">
-                                <label for="email1Name">Email Name:</label>
-                                <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
-                                <span id="email1Domain">@mycommunity.org</span>
-                            </div>
-                        </div>
-                        <button type="button" data-action="addEmail"><i class="fas fa-plus"></i> Add Another Email</button>
-                        <label>Requested Pages (up to 5):</label>
-                        <div id="pagesContainer">
-                            <div class="page-section" data-page="1">
-                                <label for="page1Name">Page Name:</label>
-                                <input type="text" id="page1Name" name="page1Name" value="Home">
-                                <br><br>
-                                <label for="page1Content">Page Content:</label>
-                                <textarea id="page1Content" name="page1Content" placeholder="Describe this page"></textarea>
-                                <label for="page1Images">Additional Images:</label>
-                                <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
-                            </div>
-                        </div>
-                        <button type="button" data-action="addPage"><i class="fas fa-plus"></i> Add Another Page</button>
-                        <label>Wix Widgets:</label>
-                        <div class="widget-checkboxes">
-                            <div><label><input type="checkbox" name="widgets" value="events"> Events</label> - Add an events calendar.</div>
-                            <div><label><input type="checkbox" name="widgets" value="socialMediaFeeds"> Social Media Feeds</label> - Display live social media feeds.</div>
-                            <div><label><input type="checkbox" name="widgets" value="gallery"> Gallery</label> - Showcase photos.</div>
-                            <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Simple contact form.</div>
-                            <div><label><input type="checkbox" name="widgets" value="blog"> Blog</label> - Share updates and stories.</div>
-                            <div><label><input type="checkbox" name="widgets" value="weather"> Weather</label> - Show real-time weather.</div>
-                            <div><label><input type="checkbox" name="widgets" value="socialMediaLinks"> Social Media Links</label> - Quick links to profiles.</div>
-                        </div>
-                        <button type="button" data-action="saveSiteRequest"><i class="fas fa-paper-plane"></i> Submit Request</button>
-                    </form>
+                    {% with user_type='community' %}
+                        {% include 'siterequest.html' %}
+                    {% endwith %}
                 </div>
             </div>
         </div>
