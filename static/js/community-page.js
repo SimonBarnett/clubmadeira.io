@@ -48,6 +48,7 @@ function initializeCommunity() {
     waitForTinyMCE(() => initializeTinyMCE('#aboutCommunity, #stylingDetails, #page1Content'));
     loadVisits();
     loadOrders();
+    loadCategories(userId, false); // Added for treeview (Requirement 1)
 
     // Set up shared "Change Password" logic
     if (typeof setupChangePassword === 'function') {
@@ -70,9 +71,6 @@ function updateMenu() {
     if (menu) {
         menu.innerHTML = `<input type="text" id="userId" style="display: none;" value="${userId || ''}">`;
         menu.innerHTML += `
-            <button data-section="welcome">
-                <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
-            </button>
             <button data-submenu="my_website_intro" data-section="my_website_intro">
                 <span class="button-content"><i class="fas fa-globe"></i> My Web Site</span>
                 <i class="fas fa-caret-right caret"></i>
@@ -257,7 +255,7 @@ async function loadOrders() {
             const ordersEarlier = [];
             data.orders.forEach(order => {
                 const orderDate = new Date(order.timestamp);
-                if (orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth) {
+                if (orderDate.getFullYear() === thisYear && orderDate.getMonth())  {
                     ordersThisMonth.push(order);
                 } else if ((orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth - 1) ||
                           (orderDate.getFullYear() === thisYear - 1 && thisMonth === 0 && orderDate.getMonth() === 11)) {

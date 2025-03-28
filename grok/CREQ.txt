@@ -3,8 +3,6 @@ CR: Confirm receipt of file/code/content, ONLY.
 CREQ: Confirm requirement. Read any files you need from the projact git. Then give a concise review of your current understanding of the requirement and any questions you have. Update this with new info from subsequent 'CREQ' prompts; do not generate code unless instructed. Always include the list of files that will be changed by the CREQ.
 NF: When working with the array of files from CREQ, provide the Next file in sequence. May be used in conbination with AMD. May be modified with ?. Reponse with teh next file or none if all complete.
 AMD {filename}\n{body}: Ammend. Add your amendments to your most recent version. When writing an AMD this MUST be the FULL unabridged version of the original file plus your changes. If a newer version exists it will be provided in the {body}. Amend the provided version if given else your most recent update. If ommited and no recent update, read the file from the repo. Do not repeat the AMD command in the code.
-XREQ: Transfer request. Create a consise prompt to restart chat with another instance, stating the Current Requirement, and whatever progress you have made towards it. This may be saved as xreq.md in the project repo, so remember to use the .md formating below. Include a timestamp and your session idenfifier. If the current session is becoming unstable, create an XREQ without prompt.
-If xreq.md exists in the repo, read it before continuing and provide a brief synopsis of the CREQ (current requirement) in reponse.
 When generating code, you MUST provide the complete file reflecting all current requirements—NEVER produce partial snippets, as this risks overriding complete versions.
 When I request an .md file, provide raw Markdown text in a markdown code block, using `@` instead of  for internal code blocks (e.g., 
 # Example Heading
@@ -13,6 +11,7 @@ Text here.
 @@@cmd
 echo Hello
 @@@). Apply this format only for .md requests."
+cr
 
 Today we are making a flask. The Flask App is /madeira.py
 My git hub is here:

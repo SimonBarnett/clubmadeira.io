@@ -1,0 +1,10 @@
+New abbreviation: XREQ: A Transfer Request. Create a concise prompt to restart the chat with another instance, stating the Current Requirement and progress made toward it. List files changed in AMD amendments, and the nefore and after code that you changed. Add a section of observations for code improvement. This may be saved as xreq.md in the project repo, so use .md formatting. Include a timestamp, session identifier, self-assessment of your performance in our session, and advice for future instances. 
+When I request an .md file, provide raw Markdown text in a Markdown code block, using @ instead of backticks for internal code blocks (e.g.,  
+Example Heading
+Text here.  
+@@@cmd
+
+echo Hello
+@@@). Apply this format only for .md requests."
+
+CR please, as there may be session specific requirments not covered above.

@@ -67,29 +67,13 @@
                     <h2>My Account</h2>
                     <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security. Use the options below to navigate to the desired section:</p>
                 </div>
-                <div id="change-password" class="section">
-                    <h2>Change Password</h2>
-                    <div class="settings-form">
-                        <div class="password-container">
-                            <label for="currentPassword">Current Password:</label>
-                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
-                            <i class="fas fa-eye password-toggle" data-target="currentPassword"></i>
-                        </div>
-                        <div class="password-container">
-                            <label for="newPassword">New Password:</label>
-                            <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
-                            <i class="fas fa-eye password-toggle" data-target="newPassword"></i>
-                        </div>
-                        <div class="password-container">
-                            <label for="confirmPassword">Confirm New Password:</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
-                            <i class="fas fa-eye password-toggle" data-target="confirmPassword"></i>
-                        </div>
-                        <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
-                    </div>
-                </div>
                 {% with user_type='partner' %}
                     {% include 'my_account.inc' %}
+                {% endwith %}
+                {% with user_type='partner' %}
+                    <div id="change-password" class="section" style="display: none;">
+                        {% include 'change_password.inc' %}
+                    </div>
                 {% endwith %}
                 <div id="my-products" class="section">
                     <h2>My Products</h2>
