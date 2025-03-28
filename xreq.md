@@ -913,7 +913,7 @@ Please restart the chat with another instance to continue optimizing the Flask a
 ### 1. `/static/styles.css`
 
 **Before (Relevant Section):**
-@@@css
+```css
 /* Assumed existing styles */
 .menu-container {
     /* Existing styles */
@@ -926,10 +926,10 @@ Please restart the chat with another instance to continue optimizing the Flask a
 .content-wrapper {
     /* Existing styles */
 }
-@@@
+```
 
 **After (Relevant Section):**
-@@@css
+```css
 /* Menu container adjustments */
 .menu-container {
     padding-left: 0; /* Remove left padding to align flush with the left edge */
@@ -947,17 +947,17 @@ Please restart the chat with another instance to continue optimizing the Flask a
     text-align: left; /* Ensure content is left-aligned */
     /* Existing styles for .content-wrapper */
 }
-@@@
+```
 
 ### 2. `/templates/merchant.html`
 
 **Before (Relevant Section - Overlay and Scripts):**
-@@@html
+```html
 <body>
     <div class="layout-wrapper">
-@@@
+```
 
-@@@html
+```html
 <!-- Load scripts in the correct order -->
 <script src="/static/js/site-auth.js"></script>
 <script src="/static/js/site-navigation.js"></script>
@@ -965,21 +965,21 @@ Please restart the chat with another instance to continue optimizing the Flask a
 <script src="/static/js/user-management.js"></script>
 <script src="/static/js/merchant-page.js"></script>
 <script src="/static/js/page-load.js"></script>
-@@@
+```
 
 **Before (Relevant Section - Inline Styles in #my-store):**
-@@@html
+```html
 <div id="my-store" class="section" style="margin-left: 170px; margin-right: 10px; width: calc(100% - 220px);">
-@@@
+```
 
 **After (Relevant Section - Overlay and Scripts):**
-@@@html
+```html
 <body>
     {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
-@@@
+```
 
-@@@html
+```html
 <!-- Load scripts in the correct order with defer where appropriate -->
 <script src="/static/js/site-auth.js" defer></script>
 <script src="/static/js/site-navigation.js" defer></script>
@@ -987,22 +987,22 @@ Please restart the chat with another instance to continue optimizing the Flask a
 <script src="/static/js/user-management.js" defer></script>
 <script src="/static/js/merchant-page.js" defer></script>
 <script src="/static/js/page-load.js" defer></script>
-@@@
+```
 
 **After (Relevant Section - Inline Styles in #my-store):**
-@@@html
+```html
 <div id="my-store" class="section">
-@@@
+```
 
 ### 3. `/templates/community.html`
 
 **Before (Relevant Section - Overlay and Scripts):**
-@@@html
+```html
 <body>
     <div class="layout-wrapper">
-@@@
+```
 
-@@@html
+```html
 <!-- Load scripts in the correct order -->
 <script src="/static/js/site-auth.js"></script>
 <script src="/static/js/site-navigation.js"></script>
@@ -1010,21 +1010,21 @@ Please restart the chat with another instance to continue optimizing the Flask a
 <script src="/static/js/site-request.js"></script>
 <script src="/static/js/community-page.js"></script>
 <script src="/static/js/page-load.js"></script>
-@@@
+```
 
 **Before (Relevant Section - Inline Styles in #wix, #wordpress, etc.):**
-@@@html
+```html
 <div id="wix" class="section" style="padding-left: 200px;">
-@@@
+```
 
 **After (Relevant Section - Overlay and Scripts):**
-@@@html
+```html
 <body>
     {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
-@@@
+```
 
-@@@html
+```html
 <!-- Load scripts in the correct order with defer where appropriate -->
 <script src="/static/js/site-auth.js" defer></script>
 <script src="/static/js/site-navigation.js" defer></script>
@@ -1032,22 +1032,22 @@ Please restart the chat with another instance to continue optimizing the Flask a
 <script src="/static/js/site-request.js" defer></script>
 <script src="/static/js/community-page.js" defer></script>
 <script src="/static/js/page-load.js" defer></script>
-@@@
+```
 
 **After (Relevant Section - Inline Styles in #wix, #wordpress, etc.):**
-@@@html
+```html
 <div id="wix" class="section">
-@@@
+```
 
 ### 4. `/templates/partner.html`
 
 **Before (Relevant Section - Overlay and Scripts):**
-@@@html
+```html
 <body>
     <div class="layout-wrapper">
-@@@
+```
 
-@@@html
+```html
 <!-- Load scripts in the correct order -->
 <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
 <script src="/static/js/site-auth.js"></script>
@@ -1056,21 +1056,21 @@ Please restart the chat with another instance to continue optimizing the Flask a
 <script src="/static/js/user-management.js"></script>
 <script src="/static/js/partner-page.js"></script>
 <script src="/static/js/page-load.js"></script>
-@@@
+```
 
 **Before (Relevant Section - Inline Styles in #site-requests, #site-request-detail, #documentation):**
-@@@html
+```html
 <div id="site-requests" class="section" style="margin-left: 170px;">
-@@@
+```
 
 **After (Relevant Section - Overlay and Scripts):**
-@@@html
+```html
 <body>
     {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
-@@@
+```
 
-@@@html
+```html
 <!-- Load scripts in the correct order with defer where appropriate -->
 <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js" defer></script>
 <script src="/static/js/site-auth.js" defer></script>
@@ -1079,17 +1079,17 @@ Please restart the chat with another instance to continue optimizing the Flask a
 <script src="/static/js/user-management.js" defer></script>
 <script src="/static/js/partner-page.js" defer></script>
 <script src="/static/js/page-load.js" defer></script>
-@@@
+```
 
 **After (Relevant Section - Inline Styles in #site-requests, #site-request-detail, #documentation):**
-@@@html
+```html
 <div id="site-requests" class="section">
-@@@
+```
 
 ### 5. `/templates/admin.html`
 
 **Before (Relevant Section - Overlay and Inline Script):**
-@@@html
+```html
 <body>
     <!-- Loading Overlay: Start visible with inline styles, doubled circle sizes -->
     <div id="loadingOverlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 1); justify-content: center; align-items: center; z-index: 9999;">
@@ -1179,10 +1179,10 @@ Please restart the chat with another instance to continue optimizing the Flask a
             });
         })();
     </script>
-@@@
+```
 
 **Before (Relevant Section - Scripts):**
-@@@html
+```html
 <!-- Load scripts in the correct order -->
 <script src="/static/js/site-auth.js"></script>
 <script src="/static/js/site-navigation.js"></script>
@@ -1190,21 +1190,21 @@ Please restart the chat with another instance to continue optimizing the Flask a
 <script src="/static/js/site-request.js"></script>
 <script src="/static/js/admin-page.js"></script>
 <script src="/static/js/page-load.js"></script>
-@@@
+```
 
 **Before (Relevant Section - Inline Styles in #amazon_uk, #ebay_uk, etc.):**
-@@@html
+```html
 <div id="amazon_uk" class="section" style="padding-left: 200px;">
-@@@
+```
 
 **After (Relevant Section - Overlay and Scripts):**
-@@@html
+```html
 <body>
     {% include 'overlay.inc' %}  <!-- Centralized loading overlay -->
     <div class="layout-wrapper" style="display: none;">
-@@@
+```
 
-@@@html
+```html
 <!-- Load scripts in the correct order with defer where appropriate -->
 <script src="/static/js/site-auth.js" defer></script>
 <script src="/static/js/site-navigation.js" defer></script>
@@ -1212,12 +1212,12 @@ Please restart the chat with another instance to continue optimizing the Flask a
 <script src="/static/js/site-request.js" defer></script>
 <script src="/static/js/admin-page.js" defer></script>
 <script src="/static/js/page-load.js" defer></script>
-@@@
+```
 
 **After (Relevant Section - Inline Styles in #amazon_uk, #ebay_uk, etc.):**
-@@@html
+```html
 <div id="amazon_uk" class="section">
-@@@
+```
 
 ## Observations for Code Improvement
 
