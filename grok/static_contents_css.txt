@@ -160,6 +160,26 @@ function initializeAdmin(pageType) {
     loadBranding(pageType, 'brandingContent');
     setupNavigation();
     showSection('welcome');
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const userContactNameSpan = document.getElementById('user-contact-name');
+            if (userContactNameSpan) {
+                userContactNameSpan.textContent = contactName;
+                console.log('initializeAdmin - Updated contact name in welcome section:', contactName);
+            } else {
+                console.warn('initializeAdmin - user-contact-name span not found');
+            }
+        }).catch(error => {
+            console.error('initializeAdmin - Error loading settings:', error.message);
+            toastr.error('Failed to load user settings');
+        });
+    } else {
+        console.error('initializeAdmin - loadSettings function not found');
+    }
+
     loadInitialData();
     setupEventListeners();
 
@@ -261,8 +281,7 @@ function setupEventListeners() {
 // Export for use in other scripts
 window.initializeAdmin = initializeAdmin;
 window.loadInitialData = loadInitialData;
-window.setupEventListeners = setupEventListeners;
-// Removed: window.setupNavigation = setupNavigation;
+window.setupEventListeners = setupEventListeners;
 js/category-management.js
 // category-management.js
 // Purpose: Manages treeview functionality for displaying and editing nested category information (used in community.html and admin.html).
@@ -564,8 +583,8 @@ function initializeCommunity() {
     }
 
     // Set up navigation and event listeners to fix button functionality
-    setupNavigation(); // From site-navigation.js (CREQ Requirement 1)
-    attachEventListeners(); // From page-load.js (CREQ Requirement 1)
+    setupNavigation(); // From site-navigation.js
+    attachEventListeners(); // From page-load.js
 
     // Load branding and initial data
     loadBranding('community', 'brandingContent');
@@ -574,18 +593,45 @@ function initializeCommunity() {
     waitForTinyMCE(() => initializeTinyMCE('#aboutCommunity, #stylingDetails, #page1Content'));
     loadVisits();
     loadOrders();
-    loadCategories(userId, false); // Added for treeview (Requirement 1)
+    loadCategories(userId, false); // Added for treeview
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializeCommunity - Updated contact name in welcome section:', contactName);
+                } else {
+                    console.warn('initializeCommunity - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializeCommunity - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializeCommunity - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+    } else {
+        console.error('initializeCommunity - loadSettings function not found');
+    }
+
+    // Set up collapsible sections for Orders and Visits
+    setupCollapsibleSections();
 
     // Set up shared "Change Password" logic
     if (typeof setupChangePassword === 'function') {
-        setupChangePassword(); // From user-management.js (CREQ Requirement 2)
+        setupChangePassword(); // From user-management.js
         console.log('initializeCommunity - Change Password logic initialized');
     } else {
         console.error('initializeCommunity - setupChangePassword function not found');
     }
 
     // Hide loading overlay after initialization
-    hideLoadingOverlay(); // From page-load.js (CREQ Requirement 3)
+    hideLoadingOverlay(); // From page-load.js
     console.log('initializeCommunity - Community page initialized successfully');
 }
 
@@ -603,22 +649,22 @@ function updateMenu() {
             </button>
             <div id="my_website_intro" class="submenu">
                 <button data-section="wix">
-                    <span class="button-content"><i class="fab fa-wix-simple"></i> Wix</span>
+                    <span class="button-content"><span class="icon-wix menu-size"></span> Wix</span>
                 </button>
                 <button data-section="wordpress">
-                    <span class="button-content"><i class="fab fa-wordpress"></i> WordPress</span>
+                    <span class="button-content"><span class="icon-wordpress menu-size"></span> WordPress</span>
                 </button>
                 <button data-section="squarespace">
-                    <span class="button-content"><i class="fab fa-squarespace"></i> Squarespace</span>
+                    <span class="button-content"><span class="icon-squarespace menu-size"></span> Squarespace</span>
                 </button>
                 <button data-section="weebly">
-                    <span class="button-content"><i class="fab fa-weebly"></i> Weebly</span>
+                    <span class="button-content"><span class="icon-weebly menu-size"></span> Weebly</span>
                 </button>
                 <button data-section="joomla">
-                    <span class="button-content"><i class="fab fa-joomla"></i> Joomla</span>
+                    <span class="button-content"><span class="icon-joomla menu-size"></span> Joomla</span>
                 </button>
                 <button data-section="no_website">
-                    <span class="button-content"><i class="fas fa-question-circle"></i> I Don’t Have a Website Yet</span>
+                    <span class="button-content"><i class="fas fa-question-circle menu-size"></i> I Don’t Have a Website Yet</span>
                 </button>
             </div>
             <button data-section="categories">
@@ -626,11 +672,7 @@ function updateMenu() {
             </button>
             <button data-submenu="referrals_intro" data-section="referrals_intro">
                 <span class="button-content">
-                    <span class="svg-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" preserveAspectRatio="xMidYMid meet">
-                            <path d="M72 88a56 56 0 1 1 112 0A56 56 0 1 1 72 88zM64 245.7C54 256.9 48 271.8 48 288s6 31.1 16 42.3l0-84.7zm144.4-49.3C178.7 222.7 160 261.2 160 304c0 34.3 12 65.8 32 90.5l0 21.5c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-26.8C26.2 371.2 0 332.7 0 288c0-61.9 50.1-112 112-112l32 0c24 0 46.2 7.5 64.4 20.3zM448 416l0-21.5c20-24.7 32-56.2 32-90.5c0-42.8-18.7-81.3-48.4-107.7C449.8 183.5 472 176 496 176l32 0c61.9 0 112 50.1 112 112c0 44.7-26.2 83.2-64 101.2l0 26.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32zm8-328a56 56 0 1 1 112 0A56 56 0 1 1 456 88zM576 245.7l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM320 32a64 64 0 1 1 0 128 64 64 0 1 1 0-128zM240 304c0 16.2 6 31 16 42.3l0-84.7c-10 11.3-16 26.1-16 42.3zm144-42.3l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM448 304c0 44.7-26.2 83.2-64 101.2l0 42.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-42.8c-37.8-18-64-56.5-64-101.2c0-61.9 50.1-112 112-112l32 0c61.9 0 112 50.1 112 112z"/>
-                        </svg>
-                    </span> My Referrals
+                    <span class="icon-community menu-size"></span> My Referrals
                 </span>
                 <i class="fas fa-caret-right caret"></i>
             </button>
@@ -647,7 +689,7 @@ function updateMenu() {
                 <i class="fas fa-caret-right caret"></i>
             </button>
             <div id="my-account-submenu" class="submenu">
-                <button data-section="my-account">
+                <button data-section="contact-details">
                     <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
                 </button>
                 <button data-section="change-password">
@@ -657,17 +699,25 @@ function updateMenu() {
         `;
         if (window.userPermissions.includes('admin')) {
             menu.innerHTML += `
-                <button data-href="/admin" class="btn-admin">
+                <button data-href="/admin" style="background-color: #dc3545;">
                     <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
                 </button>
             `;
         }
         menu.innerHTML += `
-            <button id="logOffBtn" class="btn-logoff">
+            <button id="logOffBtn" style="background-color: #dc3545;">
                 <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
             </button>
         `;
         console.log('updateMenu - Menu updated');
+
+        // Ensure submenu visibility is handled correctly
+        if (typeof initializeNavigation === 'function') {
+            initializeNavigation(); // From site-navigation.js to fix submenu hiding
+            console.log('updateMenu - initializeNavigation called to fix submenu hiding');
+        } else {
+            console.error('updateMenu - initializeNavigation function not found');
+        }
     } else {
         console.error('updateMenu - Menu element not found');
     }
@@ -781,7 +831,7 @@ async function loadOrders() {
             const ordersEarlier = [];
             data.orders.forEach(order => {
                 const orderDate = new Date(order.timestamp);
-                if (orderDate.getFullYear() === thisYear && orderDate.getMonth())  {
+                if (orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth) {
                     ordersThisMonth.push(order);
                 } else if ((orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth - 1) ||
                           (orderDate.getFullYear() === thisYear - 1 && thisMonth === 0 && orderDate.getMonth() === 11)) {
@@ -821,6 +871,36 @@ function updateOrdersTable(tableId, orders) {
     }
 }
 
+function setupCollapsibleSections() {
+    console.log('setupCollapsibleSections - Setting up collapsible sections');
+    const toggleSections = document.querySelectorAll('.toggle-section');
+    toggleSections.forEach(section => {
+        section.addEventListener('click', () => {
+            const targetId = section.getAttribute('data-toggle');
+            const targetContent = document.getElementById(targetId);
+            if (targetContent) {
+                const isOpen = targetContent.classList.contains('open');
+                // Close all sections in the same group
+                const parentSection = section.closest('.section');
+                if (parentSection) {
+                    parentSection.querySelectorAll('.toggle-content.open').forEach(content => {
+                        content.classList.remove('open');
+                        content.style.display = 'none';
+                    });
+                }
+                // Toggle the clicked section
+                if (!isOpen) {
+                    targetContent.classList.add('open');
+                    targetContent.style.display = 'block';
+                }
+                console.log('setupCollapsibleSections - Toggled section:', targetId, 'Is open:', !isOpen);
+            } else {
+                console.warn('setupCollapsibleSections - Target content not found for ID:', targetId);
+            }
+        });
+    });
+}
+
 function waitForTinyMCE(callback) {
     console.log('waitForTinyMCE - Checking if TinyMCE is loaded');
     if (typeof tinymce !== 'undefined' && tinymce.init) {
@@ -849,6 +929,7 @@ window.loadVisits = loadVisits;
 window.updateVisitsTable = updateVisitsTable;
 window.loadOrders = loadOrders;
 window.updateOrdersTable = updateOrdersTable;
+window.setupCollapsibleSections = setupCollapsibleSections;
 window.waitForTinyMCE = waitForTinyMCE;
 js/merchant-page.js
 // merchant-page.js
@@ -890,9 +971,34 @@ function initializeMerchant() {
     setupNavigation(); // From site-navigation.js
     checkAdminPermission();
     loadBranding('merchant', 'brandingContent'); // Adjusted to match typical usage
-    showSection('info');
+    showSection('info'); // Ensure the info section is shown on load
     loadProducts(); // Load merchant products
     loadStoreRequest(); // Load store request data
+
+    // Fetch and display contact_name in the info section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializeMerchant - Updated contact name in info section:', contactName);
+                } else {
+                    console.warn('initializeMerchant - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializeMerchant - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializeMerchant - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+    } else {
+        console.error('initializeMerchant - loadSettings function not found');
+    }
+
     attachEventListeners(); // From page-load.js
 
     // Call shared "Change Password" logic
@@ -1080,6 +1186,62 @@ js/page-load.js
 // /static/js/page-load.js
 // Purpose: Manages page initialization, event listener attachment for navigation and section handling, and loading overlay behavior.
 
+// Queue for Toastr messages to delay display until overlay is hidden
+let toastrQueue = [];
+
+// Override Toastr methods to queue messages during initial load
+(function() {
+    const originalSuccess = toastr.success;
+    const originalError = toastr.error;
+    const originalInfo = toastr.info;
+    const originalWarning = toastr.warning;
+
+    function queueMessage(type, message, title, options) {
+        toastrQueue.push({ type, message, title, options });
+        console.log(`Toastr ${type} queued: ${title ? title + ' - ' : ''}${message}`);
+    }
+
+    toastr.success = function(message, title, options) {
+        if (!window.overlayHidden) {
+            queueMessage('success', message, title, options);
+        } else {
+            return originalSuccess.call(toastr, message, title, options);
+        }
+    };
+
+    toastr.error = function(message, title, options) {
+        if (!window.overlayHidden) {
+            queueMessage('error', message, title, options);
+        } else {
+            return originalError.call(toastr, message, title, options);
+        }
+    };
+
+    toastr.info = function(message, title, options) {
+        if (!window.overlayHidden) {
+            queueMessage('info', message, title, options);
+        } else {
+            return originalInfo.call(toastr, message, title, options);
+        }
+    };
+
+    toastr.warning = function(message, title, options) {
+        if (!window.overlayHidden) {
+            queueMessage('warning', message, title, options);
+        } else {
+            return originalWarning.call(toastr, message, title, options);
+        }
+    };
+})();
+
+// Function to process queued Toastr messages
+function processToastrQueue() {
+    while (toastrQueue.length > 0) {
+        const { type, message, title, options } = toastrQueue.shift();
+        toastr[type](message, title, options);
+    }
+}
+
 // Function to show the loading overlay
 function showLoadingOverlay() {
     let loadingOverlay = document.getElementById('loadingOverlay');
@@ -1112,9 +1274,38 @@ async function hideLoadingOverlay(minDelay = 1000) {
         loadingOverlay.style.display = 'none';
         layoutWrapper.style.display = 'block';
         console.log('hideLoadingOverlay - Loading overlay hidden, main content displayed');
+        window.overlayHidden = true;
+        processToastrQueue();
     } else {
         console.warn('hideLoadingOverlay - Loading overlay or layout wrapper not found');
     }
+}
+
+// Function to wait for styles.css to load
+function waitForCssLoad() {
+    return new Promise((resolve) => {
+        const link = document.getElementById('styles-css');
+        if (link && link.sheet) {
+            console.log('waitForCssLoad - styles.css already loaded');
+            resolve();
+        } else if (link) {
+            link.addEventListener('load', () => {
+                console.log('waitForCssLoad - styles.css loaded');
+                resolve();
+            });
+            link.addEventListener('error', () => {
+                console.warn('waitForCssLoad - styles.css failed to load');
+                resolve(); // Proceed even if CSS fails
+            });
+            setTimeout(() => {
+                console.warn('waitForCssLoad - CSS load timeout after 5 seconds');
+                resolve(); // Fallback after 5 seconds
+            }, 5000);
+        } else {
+            console.warn('waitForCssLoad - styles.css link not found');
+            resolve(); // Proceed if link isn’t found
+        }
+    });
 }
 
 // Loads branding content into #brandingContent
@@ -1198,8 +1389,12 @@ async function initialize(pageType) {
     }
     isInitializing = true;
     console.log('initialize - Starting page initialization - Page type:', pageType);
-    
+
+    // Show the loading overlay
     showLoadingOverlay();
+
+    // Wait for styles.css to load
+    await waitForCssLoad();
 
     const pageConfigs = {
         'partner': {
@@ -1284,18 +1479,21 @@ async function initialize(pageType) {
 
     if (config.permissions && config.permissions.length > 0) {
         console.log('initialize - Performing permission check for:', config.permissions);
-        initializePage(config.permissions, async () => {
-            console.log('initialize - Permission validated for:', config.permissions);
-            await performPageSetup(pageType, config);
-            await hideLoadingOverlay();
-            isInitializing = false;
+        await new Promise(resolve => {
+            initializePage(config.permissions, async () => {
+                console.log('initialize - Permission validated for:', config.permissions);
+                await performPageSetup(pageType, config);
+                resolve();
+            });
         });
     } else {
         console.log('initialize - No permissions required for:', pageType);
         await performPageSetup(pageType, config);
-        await hideLoadingOverlay();
-        isInitializing = false;
     }
+
+    // Hide the overlay after setup is complete
+    await hideLoadingOverlay();
+    isInitializing = false;
     console.log('initialize - Initialization process completed for:', pageType);
 }
 
@@ -1373,8 +1571,33 @@ function initializePartner() {
     setupNavigation(); // From site-navigation.js
     checkAdminPermission();
     loadBranding('partner', 'brandingContent'); // Adjusted to match typical usage
-    showSection('welcome');
+    showSection('welcome'); // Ensure the welcome section is shown on load
     loadPartnerIntegrations(); // Load partner-specific integrations
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializePartner - Updated contact name in welcome section:', contactName);
+                } else {
+                    console.warn('initializePartner - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializePartner - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializePartner - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+    } else {
+        console.error('initializePartner - loadSettings function not found');
+    }
+
     attachEventListeners(); // From page-load.js
 
     // Call shared "Change Password" logic
@@ -1931,6 +2154,23 @@ if (window.siteNavigationInitialized) {
         });
     }
 
+    // Function to attach branding header click listener
+    function attachBrandingHeaderListener() {
+        if (!window.brandingHeaderListenerAttached) {
+            const brandingContent = document.getElementById('brandingContent');
+            if (brandingContent) {
+                brandingContent.addEventListener('click', function() {
+                    const sectionToShow = window.currentPageType === 'merchant' ? 'info' : 'welcome';
+                    showSection(sectionToShow);
+                });
+                window.brandingHeaderListenerAttached = true;
+                console.log('Branding header click listener attached');
+            } else {
+                console.warn('Branding header element not found');
+            }
+        }
+    }
+
     // Export navigation functions under a namespace
     window.siteNavigation = {
         showSection,
@@ -1942,15 +2182,17 @@ if (window.siteNavigationInitialized) {
         loadSection
     };
 
-    // Initialize navigation based on document readiness
+    // Initialize navigation and attach branding header listener based on document readiness
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOMContentLoaded - Initializing navigation');
             initializeNavigation();
+            attachBrandingHeaderListener();
         });
     } else {
         console.log('Document already loaded - Initializing navigation immediately');
         initializeNavigation();
+        attachBrandingHeaderListener();
     }
 }
 js/site-request.js
@@ -17074,4 +17316,43 @@ h1 {
 
 .settings-form button i {
     margin-right: 5px;
+}
+
+/* Fixed Headers for Orders and Visits Tables */
+#orders table thead, #visits table thead {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* Light background for visibility */
+    z-index: 1;
+}
+
+/* Style for Collapsible Toggle Sections */
+.toggle-section {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-section:hover {
+    background-color: #dee2e6;
+}
+
+/* Collapsible Content Styling */
+.toggle-content {
+    display: none;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    max-height: 0;
+    padding: 0 10px;
+}
+
+.toggle-content.open {
+    display: block;
+    max-height: 500px; /* Adjust based on content */
+    padding: 10px;
 }

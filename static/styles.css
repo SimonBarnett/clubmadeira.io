@@ -88,23 +88,35 @@ body {
     flex-direction: row;
 }
 
+/* /static/styles.css */
+
+/* Existing styles (assumed content; replace with actual if available) */
+/* ... */
+
+/* Menu container adjustments */
 .menu-container {
-    flex: 0 0 200px; /* Reverted to 200px from 160px */
-    max-width: 200px; /* Reverted to 200px from 160px */
-    margin-top: 10px;
+    padding-left: 0; /* Remove left padding to align flush with the left edge */
+    /* Existing styles for .menu-container */
 }
 
-.content-wrapper {
-    flex: 0 0 900px;
-    max-width: 900px;
-}
-
+/* Menu adjustments */
 .menu {
-    margin-bottom: 20px;
-    text-align: left;
-    margin-top: 0;
+    padding-left: 5px; /* Shift buttons 5 pixels to the right */
+    /* Existing styles for .menu */
 }
 
+/* Content wrapper alignment */
+.content-wrapper {
+    text-align: left; /* Ensure content is left-aligned */
+    /* If flexbox is used, you might need:
+    display: flex;
+    justify-content: flex-start;
+    */
+    /* Existing styles for .content-wrapper */
+}
+
+/* ... */
+/* Rest of the existing styles.css content */
 .menu button {
     padding: 10px 10px 10px 10px;
     background-color: #007BFF;

@@ -14,10 +14,11 @@
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
 </head>
 <body>
+    {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
         <div class="header" style="margin-bottom: 0; padding-bottom: 0;">
             <div class="header-content" id="brandingContent">
@@ -81,7 +82,7 @@
                         <tbody id="productList"></tbody>
                     </table>
                 </div>
-                <div id="my-store" class="section" style="margin-left: 170px; margin-right: 10px; width: calc(100% - 220px);">
+                <div id="my-store" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>My Store</h2>
@@ -95,13 +96,13 @@
         </div>
     </div>
 
-    <!-- Load scripts in the correct order -->
-    <script src="/static/js/site-auth.js"></script>
-    <script src="/static/js/site-navigation.js"></script>
-    <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/user-management.js"></script>
-    <script src="/static/js/merchant-page.js"></script>
-    <script src="/static/js/page-load.js"></script>
+    <!-- Load scripts in the correct order with defer where appropriate -->
+    <script src="/static/js/site-auth.js" defer></script>
+    <script src="/static/js/site-navigation.js" defer></script>
+    <script src="/static/js/site-request.js" defer></script>
+    <script src="/static/js/user-management.js" defer></script>
+    <script src="/static/js/merchant-page.js" defer></script>
+    <script src="/static/js/page-load.js" defer></script>
     <script>
         // Initialize TinyMCE with minimal configuration for specific textareas
         document.addEventListener('DOMContentLoaded', () => {
@@ -120,7 +121,7 @@
         });
 
         // Wait for the initialize function to become available
-        function waitForInitialize(attempts = 50, delay = 100) {
+        function waitForInitialize(attempts = 50, delay = 1000) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("merchant")');
                 window.initialize('merchant');

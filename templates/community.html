@@ -14,10 +14,11 @@
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
 </head>
 <body>
+    {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
         <div class="header">
             <div class="header-content" id="brandingContent"></div>
@@ -181,7 +182,7 @@
                         <li><strong>I Don’t Have a Website Yet:</strong> Request a site setup.</li>
                     </ul>
                 </div>
-                <div id="wix" class="section" style="padding-left: 200px;">
+                <div id="wix" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-wix section-icon"></span>
                         <h2>Wix Integration</h2>
@@ -194,7 +195,7 @@
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="wordpress" class="section" style="padding-left: 200px;">
+                <div id="wordpress" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-wordpress section-icon"></span>
                         <h2>WordPress Integration</h2>
@@ -207,7 +208,7 @@
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="squarespace" class="section" style="padding-left: 200px;">
+                <div id="squarespace" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-squarespace section-icon"></span>
                         <h2>Squarespace Integration</h2>
@@ -220,7 +221,7 @@
                         <li>Update site.</li>
                     </ol>
                 </div>
-                <div id="weebly" class="section" style="padding-left: 200px;">
+                <div id="weebly" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-weebly section-icon"></span>
                         <h2>Weebly Integration</h2>
@@ -233,7 +234,7 @@
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="joomla" class="section" style="padding-left: 200px;">
+                <div id="joomla" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-joomla section-icon"></span>
                         <h2>Joomla Integration</h2>
@@ -246,7 +247,7 @@
                         <li>Save.</li>
                     </ol>
                 </div>
-                <div id="no_website" class="section" style="padding-left: 200px;">
+                <div id="no_website" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-question-circle section-icon"></i>
                         <h2>I Don’t Have a Website Yet</h2>
@@ -260,13 +261,13 @@
         </div>
     </div>
 
-    <!-- Load scripts in the correct order -->
-    <script src="/static/js/site-auth.js"></script>
-    <script src="/static/js/site-navigation.js"></script>
-    <script src="/static/js/category-management.js"></script>
-    <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/community-page.js"></script>
-    <script src="/static/js/page-load.js"></script>
+    <!-- Load scripts in the correct order with defer where appropriate -->
+    <script src="/static/js/site-auth.js" defer></script>
+    <script src="/static/js/site-navigation.js" defer></script>
+    <script src="/static/js/category-management.js" defer></script>
+    <script src="/static/js/site-request.js" defer></script>
+    <script src="/static/js/community-page.js" defer></script>
+    <script src="/static/js/page-load.js" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             tinymce.init({
@@ -283,7 +284,7 @@
             });
         });
 
-        function waitForInitialize(attempts = 50, delay = 100) {
+        function waitForInitialize(attempts = 50, delay = 1000) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("community")');
                 window.initialize('community');

@@ -15,8 +15,8 @@ admin.html
     <title>clubmadeira.io | Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="stylesheet" href="/static/icons.css"> <!-- Ensure icons.css is linked -->
+    <link rel="stylesheet" href="/static/styles.css" id="styles-css">
+    <link rel="stylesheet" href="/static/icons.css">
     <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Define window.apiUrl before loading scripts -->
@@ -27,15 +27,94 @@ admin.html
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" style="display: flex;">
-        <div class="multicircle-loader">
-            <div class="circle circle1"></div>
-            <div class="circle circle2"></div>
-            <div class="circle circle3"></div>
-            <div class="circle circle4"></div>
+    <!-- Loading Overlay: Start visible with inline styles, doubled circle sizes -->
+    <div id="loadingOverlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 1); justify-content: center; align-items: center; z-index: 9999;">
+        <div style="position: relative; width: 200px; height: 200px;">
+            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 120px; height: 120px; border-top-color: #ff6f61; top: 40px; left: 40px; animation-delay: 0s;"></div>
+            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 90px; height: 90px; border-top-color: #6bff61; top: 55px; left: 55px; animation-delay: 0.3s;"></div>
+            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 60px; height: 60px; border-top-color: #61cfff; top: 70px; left: 70px; animation-delay: 0.6s;"></div>
+            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 30px; height: 30px; border-top-color: #ff61ff; top: 85px; left: 85px; animation-delay: 0.9s;"></div>
         </div>
     </div>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <!-- Inline script to hide overlay once styles.css is loaded and waitForInitialize completes -->
+    <script>
+        (function() {
+            console.log('Inline script - Starting overlay management');
+            const stylesLink = document.getElementById('styles-css');
+            const overlay = document.getElementById('loadingOverlay');
+            const maxWaitTime = 5000; // 5 seconds max wait for CSS load
+            let cssLoaded = false;
+            let initComplete = false;
+
+            function hideOverlay() {
+                if (cssLoaded && initComplete) {
+                    console.log('Inline script - Hiding overlay after CSS and init');
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        document.querySelector('.layout-wrapper').style.display = 'block';
+                        window.overlayHidden = true; // Signal for Toastr
+                    }, 200); // 200ms delay before hiding
+                }
+            }
+
+            // Check CSS load
+            if (stylesLink.sheet) {
+                console.log('Inline script - styles.css already loaded');
+                cssLoaded = true;
+                hideOverlay();
+            } else {
+                stylesLink.onload = () => {
+                    console.log('Inline script - styles.css loaded');
+                    cssLoaded = true;
+                    hideOverlay();
+                };
+                stylesLink.onerror = () => {
+                    console.error('Inline script - styles.css failed to load');
+                    cssLoaded = true; // Proceed even if CSS fails
+                    hideOverlay();
+                };
+                setTimeout(() => {
+                    if (!cssLoaded) {
+                        console.warn('Inline script - CSS load timeout');
+                        cssLoaded = true;
+                        hideOverlay();
+                    }
+                }, maxWaitTime);
+            }
+
+            // Wait for waitForInitialize to complete
+            window.waitForInitialize = function(attempts = 50, delay = 200) {
+                return new Promise(resolve => {
+                    console.log('waitForInitialize - Starting');
+                    if (typeof window.initialize === 'function') {
+                        console.log('Initialize function found, calling initialize("admin")');
+                        window.initialize('admin');
+                        resolve();
+                    } else if (attempts > 0) {
+                        console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
+                        setTimeout(() => {
+                            window.waitForInitialize(attempts - 1, delay).then(resolve);
+                        }, delay);
+                    } else {
+                        console.error('Initialize function not found after maximum retries');
+                        resolve(); // Resolve anyway to avoid hanging
+                    }
+                });
+            };
+
+            window.waitForInitialize().then(() => {
+                initComplete = true;
+                hideOverlay();
+            });
+        })();
+    </script>
 
     <div class="layout-wrapper" style="display: none;">
         <div class="header">
@@ -453,7 +532,7 @@ admin.html
     <script src="/static/js/page-load.js"></script>
     <script>
         // Wait for the initialize function to become available
-        function waitForInitialize(attempts = 50, delay = 100) {
+        function waitForInitialize(attempts = 50, delay = 200) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("admin")');
                 window.initialize('admin');
@@ -502,22 +581,22 @@ community.html
                     </button>
                     <div id="my_website_intro" class="submenu">
                         <button data-section="wix">
-                            <span class="button-content"><span class="icon-wix" style="width: 24px; height: 24px;"></span> Wix</span>
+                            <span class="button-content"><span class="icon-wix menu-size"></span> Wix</span>
                         </button>
                         <button data-section="wordpress">
-                            <span class="button-content"><span class="icon-wordpress" style="width: 24px; height: 24px;"></span> WordPress</span>
+                            <span class="button-content"><span class="icon-wordpress menu-size"></span> WordPress</span>
                         </button>
                         <button data-section="squarespace">
-                            <span class="button-content"><span class="icon-squarespace" style="width: 24px; height: 24px;"></span> Squarespace</span>
+                            <span class="button-content"><span class="icon-squarespace menu-size"></span> Squarespace</span>
                         </button>
                         <button data-section="weebly">
-                            <span class="button-content"><span class="icon-weebly" style="width: 24px; height: 24px;"></span> Weebly</span>
+                            <span class="button-content"><span class="icon-weebly menu-size"></span> Weebly</span>
                         </button>
                         <button data-section="joomla">
-                            <span class="button-content"><span class="icon-joomla" style="width: 24px; height: 24px;"></span> Joomla</span>
+                            <span class="button-content"><span class="icon-joomla menu-size"></span> Joomla</span>
                         </button>
                         <button data-section="no_website">
-                            <span class="button-content"><i class="fas fa-question-circle"></i> I Don’t Have a Website Yet</span>
+                            <span class="button-content"><i class="fas fa-question-circle menu-size"></i> I Don’t Have a Website Yet</span>
                         </button>
                     </div>
                     <button data-section="categories">
@@ -525,11 +604,7 @@ community.html
                     </button>
                     <button data-submenu="referrals_intro" data-section="referrals_intro">
                         <span class="button-content">
-                            <span class="svg-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" preserveAspectRatio="xMidYMid meet">
-                                    <path d="M72 88a56 56 0 1 1 112 0A56 56 0 1 1 72 88zM64 245.7C54 256.9 48 271.8 48 288s6 31.1 16 42.3l0-84.7zm144.4-49.3C178.7 222.7 160 261.2 160 304c0 34.3 12 65.8 32 90.5l0 21.5c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-26.8C26.2 371.2 0 332.7 0 288c0-61.9 50.1-112 112-112l32 0c24 0 46.2 7.5 64.4 20.3zM448 416l0-21.5c20-24.7 32-56.2 32-90.5c0-42.8-18.7-81.3-48.4-107.7C449.8 183.5 472 176 496 176l32 0c61.9 0 112 50.1 112 112c0 44.7-26.2 83.2-64 101.2l0 26.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32zm8-328a56 56 0 1 1 112 0A56 56 0 1 1 456 88zM576 245.7l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM320 32a64 64 0 1 1 0 128 64 64 0 1 1 0-128zM240 304c0 16.2 6 31 16 42.3l0-84.7c-10 11.3-16 26.1-16 42.3zm144-42.3l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM448 304c0 44.7-26.2 83.2-64 101.2l0 42.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-42.8c-37.8-18-64-56.5-64-101.2c0-61.9 50.1-112 112-112l32 0c61.9 0 112 50.1 112 112z"/>
-                                </svg>
-                            </span> My Referrals
+                            <span class="icon-community menu-size"></span> My Referrals
                         </span>
                         <i class="fas fa-caret-right caret"></i>
                     </button>
@@ -546,13 +621,16 @@ community.html
                         <i class="fas fa-caret-right caret"></i>
                     </button>
                     <div id="my-account-submenu" class="submenu">
-                        <button data-section="my-account">
+                        <button data-section="contact-details">
                             <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
                         </button>
                         <button data-section="change-password">
                             <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
                         </button>
                     </div>
+                    <button data-href="/admin" style="background-color: #dc3545;">
+                        <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
+                    </button>
                     <button id="logOffBtn" style="background-color: #dc3545;">
                         <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
                     </button>
@@ -561,7 +639,7 @@ community.html
             <div class="content-wrapper">
                 <div id="welcome" class="section">
                     <h2>Welcome to Your Community Dashboard</h2>
-                    <p>Welcome! This dashboard is your hub for managing your community account and tracking referrals.</p>
+                    <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard is your hub for managing your community account and tracking referrals.</p>
                     <p>As a valued member, connect with other community groups to share resources and grow together.</p>
                     <p>Use the menu on the left to:</p>
                     <ul>
@@ -655,7 +733,7 @@ community.html
                 </div>
                 <div id="wix" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <span class="icon-wix" style="width: 32px; height: 32px; margin-right: 10px;"></span>
+                        <span class="icon-wix section-icon"></span>
                         <h2>Wix Integration</h2>
                     </div>
                     <p>Add discounts to your Wix site:</p>
@@ -668,7 +746,7 @@ community.html
                 </div>
                 <div id="wordpress" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <span class="icon-wordpress" style="width: 32px; height: 32px; margin-right: 10px;"></span>
+                        <span class="icon-wordpress section-icon"></span>
                         <h2>WordPress Integration</h2>
                     </div>
                     <p>Add discounts to WordPress:</p>
@@ -681,7 +759,7 @@ community.html
                 </div>
                 <div id="squarespace" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <span class="icon-squarespace" style="width: 32px; height: 32px; margin-right: 10px;"></span>
+                        <span class="icon-squarespace section-icon"></span>
                         <h2>Squarespace Integration</h2>
                     </div>
                     <p>Integrate discounts into Squarespace:</p>
@@ -694,7 +772,7 @@ community.html
                 </div>
                 <div id="weebly" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <span class="icon-weebly" style="width: 32px; height: 32px; margin-right: 10px;"></span>
+                        <span class="icon-weebly section-icon"></span>
                         <h2>Weebly Integration</h2>
                     </div>
                     <p>Add discounts to Weebly:</p>
@@ -707,7 +785,7 @@ community.html
                 </div>
                 <div id="joomla" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <span class="icon-joomla" style="width: 32px; height: 32px; margin-right: 10px;"></span>
+                        <span class="icon-joomla section-icon"></span>
                         <h2>Joomla Integration</h2>
                     </div>
                     <p>Integrate discounts into Joomla:</p>
@@ -720,7 +798,7 @@ community.html
                 </div>
                 <div id="no_website" class="section" style="padding-left: 200px;">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fas fa-question-circle" style="font-size: 32px; margin-right: 10px;"></i>
+                        <i class="fas fa-question-circle section-icon"></i>
                         <h2>I Don’t Have a Website Yet</h2>
                     </div>
                     <p>Request a custom Wix website for your community from our Wix Professionals. Fill out the form below to specify your needs:</p>
@@ -1148,8 +1226,7 @@ login.html
                         toastr.success('Verification successful! Redirecting...');
                         redirectBasedOnPermissions();
                     });
-                } else {
-                    toastr.success(`Welcome back, ${data.contact_name || 'User'}!`);
+                } else {                    
                     redirectBasedOnPermissions();
                 }
             } catch (error) {
@@ -1258,14 +1335,14 @@ merchant.html
                         <i class="fas fa-caret-right caret"></i>
                     </button>
                     <div id="my-account-submenu" class="submenu">
-                        <button data-section="my-account">
+                        <button data-section="contact-details">
                             <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
                         </button>
                         <button data-section="change-password">
                             <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
                         </button>
                     </div>
-                    <button data-href="/admin">
+                    <button data-href="/admin" style="background-color: #dc3545;">
                         <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
                     </button>
                     <button id="logOffBtn" style="background-color: #dc3545;">
@@ -1274,13 +1351,10 @@ merchant.html
                 </div>
             </div>
             <div class="content-wrapper" style="margin-top: 0;">
-                <div id="welcome" class="section">
-                    <h2>Welcome to Your Merchant Dashboard</h2>
-                    <p>This dashboard allows you to link the parts on your Wix site to a network of community groups, who show relevant discounted products on their websites from clubmadeira.io.</p>
-                </div>
                 <div id="info" class="section">
                     <h2>Merchant Info</h2>
-                    <p>Welcome to your merchant dashboard overview. Use the menu to manage products, your store, Wix integration, and account settings.</p>
+                    <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard is designed for merchants to manage integrations with clubmadeira.io.</p>
+                    <p>Use the menu to manage products, your store, Wix integration, and account settings.</p>
                 </div>
                 <div id="my-account" class="section">
                     <h2>My Account</h2>

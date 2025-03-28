@@ -13,10 +13,11 @@
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
 </head>
 <body>
+    {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
         <div class="header">
             <div class="header-content" id="brandingContent">
@@ -85,7 +86,7 @@
                         <tbody id="productList"></tbody>
                     </table>
                 </div>
-                <div id="site-requests" class="section" style="margin-left: 170px;">
+                <div id="site-requests" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-file-alt" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Site Requests</h2>
@@ -114,7 +115,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="site-request-detail" class="section" style="padding-left: 200px;">
+                <div id="site-request-detail" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-info-circle" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Site Request Details</h2>
@@ -124,7 +125,7 @@
                         <div id="siteRequestContent"></div>
                     </div>
                 </div>
-                <div id="documentation" class="section" style="padding-left: 200px;">
+                <div id="documentation" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-book" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Documentation</h2>
@@ -137,17 +138,17 @@
         </div>
     </div>
 
-    <!-- Load scripts in the correct order -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
-    <script src="/static/js/site-auth.js"></script>
-    <script src="/static/js/site-navigation.js"></script>
-    <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/user-management.js"></script>
-    <script src="/static/js/partner-page.js"></script>
-    <script src="/static/js/page-load.js"></script>
+    <!-- Load scripts in the correct order with defer where appropriate -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js" defer></script>
+    <script src="/static/js/site-auth.js" defer></script>
+    <script src="/static/js/site-navigation.js" defer></script>
+    <script src="/static/js/site-request.js" defer></script>
+    <script src="/static/js/user-management.js" defer></script>
+    <script src="/static/js/partner-page.js" defer></script>
+    <script src="/static/js/page-load.js" defer></script>
     <script>
         // Wait for the initialize function to become available
-        function waitForInitialize(attempts = 50, delay = 100) {
+        function waitForInitialize(attempts = 50, delay = 1000) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("partner")');
                 window.initialize('partner');
