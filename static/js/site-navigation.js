@@ -80,22 +80,17 @@ if (window.siteNavigationInitialized) {
                 const container = document.querySelector(targetContainer);
                 if (!container) throw new Error(`Target container not found: ${targetContainer}`);
                 
-                // Clear existing content
                 container.innerHTML = '';
-
-                // Inject new content
                 const newContent = doc.querySelector('.content-wrapper');
                 if (!newContent) throw new Error('No .content-wrapper found in fetched content');
                 container.innerHTML = newContent.innerHTML;
 
-                // Update menu to match target page layout
                 const newMenu = doc.querySelector('.menu-container');
                 const currentMenu = document.querySelector('.menu-container');
                 if (newMenu && currentMenu) {
                     currentMenu.innerHTML = newMenu.innerHTML;
                 }
 
-                // Re-execute scripts selectively
                 await Promise.all([...scripts].map(script => {
                     if (script.src && !script.src.includes('site-navigation.js')) {
                         return new Promise(resolve => {
@@ -111,16 +106,14 @@ if (window.siteNavigationInitialized) {
                     }
                 }));
 
-                // Reinitialize page with navigation flag
                 const pageType = url.split('/')[1] || 'admin';
                 if (typeof window.initialize === 'function') {
                     window.isNavigating = true;
                     window.initialize(pageType);
                 }
-                await new Promise(resolve => setTimeout(resolve, 100)); // Wait for DOM to settle
+                await new Promise(resolve => setTimeout(resolve, 100));
                 initializeNavigation();
                 
-                // Update branding after DOM injection
                 console.log('fetchProtectedPage - Updating branding for:', pageType);
                 await loadBranding(pageType);
                 console.log('fetchProtectedPage - Branding update completed for:', pageType);
@@ -217,7 +210,7 @@ if (window.siteNavigationInitialized) {
                 console.log('showSection - Executing callback for:', sectionId);
                 onSectionLoad(sectionId);
             } else {
-                loadSection(sectionId); // Default to loadSection if no callback
+                loadSection(sectionId);
             }
         } else {
             console.error('showSection - Section not found - ID:', sectionId);
@@ -226,38 +219,28 @@ if (window.siteNavigationInitialized) {
 
     // Function to toggle a submenu with explicit action control
     function toggleSubmenu(submenuId, action = 'toggle') {
-        console.log(`toggleSubmenu - Starting ${action} - Submenu ID: ${submenuId}`);
         const submenu = document.getElementById(submenuId);
-        const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
-        const caret = button ? button.querySelector('.caret') : null;
-        if (submenu && button && caret) {
-            let isOpen = submenu.classList.contains('open');
-            if (action === 'toggle') {
-                isOpen = !isOpen;
-            } else if (action === 'close') {
-                isOpen = false;
-            } else if (action === 'open') {
-                isOpen = true;
-            }
-            submenu.classList.toggle('open', isOpen);
-            submenu.style.display = isOpen ? 'block' : 'none';
-            caret.classList.toggle('fa-caret-down', isOpen);
-            caret.classList.toggle('fa-caret-right', !isOpen);
-            button.setAttribute('aria-expanded', isOpen);
-            console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'open' : 'closed'}`, {
-                inlineDisplay: submenu.style.display,
-                computedDisplay: window.getComputedStyle(submenu).display,
-                height: window.getComputedStyle(submenu).height,
-                maxHeight: window.getComputedStyle(submenu).maxHeight,
-                className: submenu.className
-            });
+        if (!submenu) return;
+
+        const isOpen = submenu.classList.contains('open');
+        if (action === 'close' || (action === 'toggle' && isOpen)) {
+            // Close the submenu
+            submenu.style.display = 'none';
+            submenu.style.maxHeight = '0px';
+            submenu.classList.remove('open', 'active'); // Ensure both classes are removed
         } else {
-            console.error(`toggleSubmenu - Submenu or button not found - Submenu ID: ${submenuId}`, {
-                submenuExists: !!submenu,
-                buttonExists: !!button,
-                caretExists: !!caret
-            });
+            // Open the submenu
+            submenu.style.display = 'block';
+            submenu.style.maxHeight = '1000px'; // Adjust based on content size
+            submenu.classList.add('open');
         }
+
+        console.log(`toggleSubmenu - Submenu ${submenuId} set to`, {
+            inlineDisplay: submenu.style.display,
+            computedDisplay: window.getComputedStyle(submenu).display,
+            maxHeight: submenu.style.maxHeight,
+            className: submenu.className
+        });
     }
 
     // Function to close all submenus within a given container
@@ -273,7 +256,7 @@ if (window.siteNavigationInitialized) {
 
     // Function to handle clicks on navigation buttons
     function handleSectionClick(event) {
-        event.stopPropagation(); // Prevent bubbling to ensure isolated handling
+        event.stopPropagation();
         const button = event.currentTarget;
         const sectionId = button.getAttribute('data-section');
         const submenuId = button.getAttribute('data-submenu');
@@ -281,19 +264,13 @@ if (window.siteNavigationInitialized) {
 
         console.log(`handleSectionClick - Clicked:`, { sectionId, submenuId, href });
 
-        // Find all top-level submenu buttons
         const topLevelSubmenuButtons = document.querySelectorAll('.menu > button[data-submenu]');
-        console.log(`handleSectionClick - Found top-level submenu buttons:`, topLevelSubmenuButtons.length);
-
-        // Determine if this is a top-level button
         const isTopLevel = button.parentElement.classList.contains('menu');
 
-        // Handle submenu toggling first
         if (submenuId) {
             console.log(`handleSectionClick - Toggling submenu: ${submenuId}`);
             toggleSubmenu(submenuId, 'toggle');
             if (isTopLevel) {
-                // Close other top-level submenus
                 topLevelSubmenuButtons.forEach(topButton => {
                     const otherSubmenuId = topButton.getAttribute('data-submenu');
                     if (otherSubmenuId && otherSubmenuId !== submenuId) {
@@ -305,13 +282,11 @@ if (window.siteNavigationInitialized) {
             }
         }
 
-        // Handle section display if no href
         if (sectionId && !href) {
             console.log(`handleSectionClick - Showing section: ${sectionId}`);
             showSection(sectionId);
         }
 
-        // Handle SPA navigation if href exists
         if (href) {
             console.log(`handleSectionClick - Navigating to: ${href}`);
             fetchProtectedPage(href, '.content-wrapper');
@@ -321,7 +296,6 @@ if (window.siteNavigationInitialized) {
     // Main function to initialize navigation
     function initializeNavigation() {
         console.log('initializeNavigation - Starting navigation setup');
-        // Clean up existing listeners
         document.querySelectorAll('.menu button[data-section], .menu button[data-submenu], .menu button[data-href]').forEach(button => {
             button.removeEventListener('click', handleSectionClick);
         });

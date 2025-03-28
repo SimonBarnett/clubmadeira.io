@@ -23,99 +23,11 @@ admin.html
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
 </head>
 <body>
-    <!-- Loading Overlay: Start visible with inline styles, doubled circle sizes -->
-    <div id="loadingOverlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 1); justify-content: center; align-items: center; z-index: 9999;">
-        <div style="position: relative; width: 200px; height: 200px;">
-            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 120px; height: 120px; border-top-color: #ff6f61; top: 40px; left: 40px; animation-delay: 0s;"></div>
-            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 90px; height: 90px; border-top-color: #6bff61; top: 55px; left: 55px; animation-delay: 0.3s;"></div>
-            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 60px; height: 60px; border-top-color: #61cfff; top: 70px; left: 70px; animation-delay: 0.6s;"></div>
-            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 30px; height: 30px; border-top-color: #ff61ff; top: 85px; left: 85px; animation-delay: 0.9s;"></div>
-        </div>
-    </div>
-    <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-
-    <!-- Inline script to hide overlay once styles.css is loaded and waitForInitialize completes -->
-    <script>
-        (function() {
-            console.log('Inline script - Starting overlay management');
-            const stylesLink = document.getElementById('styles-css');
-            const overlay = document.getElementById('loadingOverlay');
-            const maxWaitTime = 5000; // 5 seconds max wait for CSS load
-            let cssLoaded = false;
-            let initComplete = false;
-
-            function hideOverlay() {
-                if (cssLoaded && initComplete) {
-                    console.log('Inline script - Hiding overlay after CSS and init');
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        document.querySelector('.layout-wrapper').style.display = 'block';
-                        window.overlayHidden = true; // Signal for Toastr
-                    }, 200); // 200ms delay before hiding
-                }
-            }
-
-            // Check CSS load
-            if (stylesLink.sheet) {
-                console.log('Inline script - styles.css already loaded');
-                cssLoaded = true;
-                hideOverlay();
-            } else {
-                stylesLink.onload = () => {
-                    console.log('Inline script - styles.css loaded');
-                    cssLoaded = true;
-                    hideOverlay();
-                };
-                stylesLink.onerror = () => {
-                    console.error('Inline script - styles.css failed to load');
-                    cssLoaded = true; // Proceed even if CSS fails
-                    hideOverlay();
-                };
-                setTimeout(() => {
-                    if (!cssLoaded) {
-                        console.warn('Inline script - CSS load timeout');
-                        cssLoaded = true;
-                        hideOverlay();
-                    }
-                }, maxWaitTime);
-            }
-
-            // Wait for waitForInitialize to complete
-            window.waitForInitialize = function(attempts = 50, delay = 200) {
-                return new Promise(resolve => {
-                    console.log('waitForInitialize - Starting');
-                    if (typeof window.initialize === 'function') {
-                        console.log('Initialize function found, calling initialize("admin")');
-                        window.initialize('admin');
-                        resolve();
-                    } else if (attempts > 0) {
-                        console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
-                        setTimeout(() => {
-                            window.waitForInitialize(attempts - 1, delay).then(resolve);
-                        }, delay);
-                    } else {
-                        console.error('Initialize function not found after maximum retries');
-                        resolve(); // Resolve anyway to avoid hanging
-                    }
-                });
-            };
-
-            window.waitForInitialize().then(() => {
-                initComplete = true;
-                hideOverlay();
-            });
-        })();
-    </script>
-
+    {% include 'overlay.inc' %}  <!-- Centralized loading overlay -->
     <div class="layout-wrapper" style="display: none;">
         <div class="header">
             <div class="header-content" id="brandingContent" style="display: block;">
@@ -284,7 +196,7 @@ admin.html
                     <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
                 </div>
 
-                <div id="amazon_uk" class="section" style="padding-left: 200px;">
+                <div id="amazon_uk" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-amazon-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
                         <h2>Amazon UK Credentials</h2>
@@ -305,7 +217,7 @@ admin.html
                     </div>
                 </div>
 
-                <div id="ebay_uk" class="section" style="padding-left: 200px;">
+                <div id="ebay_uk" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-ebay-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
                         <h2>eBay UK Credentials</h2>
@@ -320,7 +232,7 @@ admin.html
                     </div>
                 </div>
 
-                <div id="awin" class="section" style="padding-left: 200px;">
+                <div id="awin" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-network-wired" style="font-size: 32px; margin-right: 10px; color: white;"></i>
                         <h2>Awin Credentials</h2>
@@ -335,7 +247,7 @@ admin.html
                     </div>
                 </div>
 
-                <div id="cj" class="section" style="padding-left: 200px;">
+                <div id="cj" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-link" style="font-size: 32px; margin-right: 10px; color: white;"></i>
                         <h2>CJ Credentials</h2>
@@ -352,7 +264,7 @@ admin.html
                     </div>
                 </div>
 
-                <div id="textmagic" class="section" style="padding-left: 200px;">
+                <div id="textmagic" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-sms" style="font-size: 32px; margin-right: 10px; color: white;"></i>
                         <h2>TextMagic Credentials</h2>
@@ -369,7 +281,7 @@ admin.html
                     </div>
                 </div>
 
-                <div id="tiny" class="section" style="padding-left: 200px;">
+                <div id="tiny" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-pen" style="font-size: 32px; margin-right: 10px; color: white;"></i>
                         <h2>tiny Credentials</h2>
@@ -523,16 +435,16 @@ admin.html
         </div>
     </div>
 
-    <!-- Load scripts in the correct order -->
-    <script src="/static/js/site-auth.js"></script>
-    <script src="/static/js/site-navigation.js"></script>
-    <script src="/static/js/category-management.js"></script>
-    <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/admin-page.js"></script>
-    <script src="/static/js/page-load.js"></script>
+    <!-- Load scripts in the correct order with defer where appropriate -->
+    <script src="/static/js/site-auth.js" defer></script>
+    <script src="/static/js/site-navigation.js" defer></script>
+    <script src="/static/js/category-management.js" defer></script>
+    <script src="/static/js/site-request.js" defer></script>
+    <script src="/static/js/admin-page.js" defer></script>
+    <script src="/static/js/page-load.js" defer></script>
     <script>
         // Wait for the initialize function to become available
-        function waitForInitialize(attempts = 50, delay = 200) {
+        function waitForInitialize(attempts = 50, delay = 100) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("admin")');
                 window.initialize('admin');
@@ -564,10 +476,11 @@ community.html
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
 </head>
 <body>
+    {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
         <div class="header">
             <div class="header-content" id="brandingContent"></div>
@@ -731,7 +644,7 @@ community.html
                         <li><strong>I Don’t Have a Website Yet:</strong> Request a site setup.</li>
                     </ul>
                 </div>
-                <div id="wix" class="section" style="padding-left: 200px;">
+                <div id="wix" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-wix section-icon"></span>
                         <h2>Wix Integration</h2>
@@ -744,7 +657,7 @@ community.html
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="wordpress" class="section" style="padding-left: 200px;">
+                <div id="wordpress" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-wordpress section-icon"></span>
                         <h2>WordPress Integration</h2>
@@ -757,7 +670,7 @@ community.html
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="squarespace" class="section" style="padding-left: 200px;">
+                <div id="squarespace" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-squarespace section-icon"></span>
                         <h2>Squarespace Integration</h2>
@@ -770,7 +683,7 @@ community.html
                         <li>Update site.</li>
                     </ol>
                 </div>
-                <div id="weebly" class="section" style="padding-left: 200px;">
+                <div id="weebly" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-weebly section-icon"></span>
                         <h2>Weebly Integration</h2>
@@ -783,7 +696,7 @@ community.html
                         <li>Publish.</li>
                     </ol>
                 </div>
-                <div id="joomla" class="section" style="padding-left: 200px;">
+                <div id="joomla" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <span class="icon-joomla section-icon"></span>
                         <h2>Joomla Integration</h2>
@@ -796,7 +709,7 @@ community.html
                         <li>Save.</li>
                     </ol>
                 </div>
-                <div id="no_website" class="section" style="padding-left: 200px;">
+                <div id="no_website" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-question-circle section-icon"></i>
                         <h2>I Don’t Have a Website Yet</h2>
@@ -810,13 +723,13 @@ community.html
         </div>
     </div>
 
-    <!-- Load scripts in the correct order -->
-    <script src="/static/js/site-auth.js"></script>
-    <script src="/static/js/site-navigation.js"></script>
-    <script src="/static/js/category-management.js"></script>
-    <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/community-page.js"></script>
-    <script src="/static/js/page-load.js"></script>
+    <!-- Load scripts in the correct order with defer where appropriate -->
+    <script src="/static/js/site-auth.js" defer></script>
+    <script src="/static/js/site-navigation.js" defer></script>
+    <script src="/static/js/category-management.js" defer></script>
+    <script src="/static/js/site-request.js" defer></script>
+    <script src="/static/js/community-page.js" defer></script>
+    <script src="/static/js/page-load.js" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             tinymce.init({
@@ -833,7 +746,7 @@ community.html
             });
         });
 
-        function waitForInitialize(attempts = 50, delay = 100) {
+        function waitForInitialize(attempts = 50, delay = 1000) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("community")');
                 window.initialize('community');
@@ -1311,10 +1224,11 @@ merchant.html
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
 </head>
 <body>
+    {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
         <div class="header" style="margin-bottom: 0; padding-bottom: 0;">
             <div class="header-content" id="brandingContent">
@@ -1378,7 +1292,7 @@ merchant.html
                         <tbody id="productList"></tbody>
                     </table>
                 </div>
-                <div id="my-store" class="section" style="margin-left: 170px; margin-right: 10px; width: calc(100% - 220px);">
+                <div id="my-store" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>My Store</h2>
@@ -1392,13 +1306,13 @@ merchant.html
         </div>
     </div>
 
-    <!-- Load scripts in the correct order -->
-    <script src="/static/js/site-auth.js"></script>
-    <script src="/static/js/site-navigation.js"></script>
-    <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/user-management.js"></script>
-    <script src="/static/js/merchant-page.js"></script>
-    <script src="/static/js/page-load.js"></script>
+    <!-- Load scripts in the correct order with defer where appropriate -->
+    <script src="/static/js/site-auth.js" defer></script>
+    <script src="/static/js/site-navigation.js" defer></script>
+    <script src="/static/js/site-request.js" defer></script>
+    <script src="/static/js/user-management.js" defer></script>
+    <script src="/static/js/merchant-page.js" defer></script>
+    <script src="/static/js/page-load.js" defer></script>
     <script>
         // Initialize TinyMCE with minimal configuration for specific textareas
         document.addEventListener('DOMContentLoaded', () => {
@@ -1417,7 +1331,7 @@ merchant.html
         });
 
         // Wait for the initialize function to become available
-        function waitForInitialize(attempts = 50, delay = 100) {
+        function waitForInitialize(attempts = 50, delay = 1000) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("merchant")');
                 window.initialize('merchant');
@@ -1449,10 +1363,11 @@ partner.html
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
 </head>
 <body>
+    {% include 'overlay.inc' %}  <!-- Loading overlay added -->
     <div class="layout-wrapper">
         <div class="header">
             <div class="header-content" id="brandingContent">
@@ -1521,7 +1436,7 @@ partner.html
                         <tbody id="productList"></tbody>
                     </table>
                 </div>
-                <div id="site-requests" class="section" style="margin-left: 170px;">
+                <div id="site-requests" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-file-alt" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Site Requests</h2>
@@ -1550,7 +1465,7 @@ partner.html
                         </div>
                     </div>
                 </div>
-                <div id="site-request-detail" class="section" style="padding-left: 200px;">
+                <div id="site-request-detail" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-info-circle" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Site Request Details</h2>
@@ -1560,7 +1475,7 @@ partner.html
                         <div id="siteRequestContent"></div>
                     </div>
                 </div>
-                <div id="documentation" class="section" style="padding-left: 200px;">
+                <div id="documentation" class="section">
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <i class="fas fa-book" style="font-size: 32px; margin-right: 10px;"></i>
                         <h2>Documentation</h2>
@@ -1573,17 +1488,17 @@ partner.html
         </div>
     </div>
 
-    <!-- Load scripts in the correct order -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
-    <script src="/static/js/site-auth.js"></script>
-    <script src="/static/js/site-navigation.js"></script>
-    <script src="/static/js/site-request.js"></script>
-    <script src="/static/js/user-management.js"></script>
-    <script src="/static/js/partner-page.js"></script>
-    <script src="/static/js/page-load.js"></script>
+    <!-- Load scripts in the correct order with defer where appropriate -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js" defer></script>
+    <script src="/static/js/site-auth.js" defer></script>
+    <script src="/static/js/site-navigation.js" defer></script>
+    <script src="/static/js/site-request.js" defer></script>
+    <script src="/static/js/user-management.js" defer></script>
+    <script src="/static/js/partner-page.js" defer></script>
+    <script src="/static/js/page-load.js" defer></script>
     <script>
         // Wait for the initialize function to become available
-        function waitForInitialize(attempts = 50, delay = 100) {
+        function waitForInitialize(attempts = 50, delay = 1000) {
             if (typeof window.initialize === 'function') {
                 console.log('Initialize function found, calling initialize("partner")');
                 window.initialize('partner');

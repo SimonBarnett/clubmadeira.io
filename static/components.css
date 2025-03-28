@@ -1,0 +1,280 @@
+.menu {
+    padding-left: 5px;
+}
+
+.menu button {
+    padding: 10px 10px 10px 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    max-width: 200px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding-right: 30px;
+}
+
+.menu button:hover {
+    background-color: #0056b3;
+}
+
+.menu button[data-submenu][aria-expanded="true"] {
+    background-color: #0056b3;
+    border-left: 4px solid #fff;
+}
+
+.menu button i,
+.menu button .svg-icon,
+.menu button .icon-group {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.menu button i::before {
+    font-family: "Font Awesome 6 Free";
+}
+
+.menu button i.fas::before {
+    font-weight: 900;
+}
+
+.menu button .svg-icon {
+    display: inline-block;
+    height: 16px;
+    width: auto;
+}
+
+.menu button .svg-icon svg {
+    height: 100%;
+    width: auto;
+    fill: white;
+}
+
+.menu button .icon-group {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.menu button .icon-group .small-icon {
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+    right: -8px;
+    color: white;
+}
+
+.menu button .button-content {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.menu button .caret {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+.menu .btn-admin {
+    background-color: #dc3545;
+}
+
+.menu .btn-admin:hover {
+    background-color: #c82333;
+}
+
+.menu .btn-logoff {
+    background-color: #dc3545;
+}
+
+.menu .btn-logoff:hover {
+    background-color: #c82333;
+}
+
+.menu button[data-href="/admin"] {
+    background-color: #dc3545;
+}
+
+.menu button[data-href="/admin"]:hover {
+    background-color: #c82333;
+}
+
+.submenu {
+    display: none;
+    padding-left: 20px;
+    padding-bottom: 0;
+    overflow: visible;
+    max-height: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.submenu.open {
+    display: block;
+    max-height: 1000px;
+    height: auto;
+}
+
+.submenu button {
+    display: block !important;
+    min-height: 30px !important;
+    background-color: #6c757d !important;
+}
+
+.submenu button:hover {
+    background-color: #5a6268;
+}
+
+.submenu button.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.form label {
+    font-weight: bold;
+}
+
+.form input, .form select {
+    padding: 5px;
+}
+
+.form button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.form button:hover {
+    background-color: #0056b3;
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+}
+
+.settings-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.settings-form input, 
+.settings-form textarea {
+    padding: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.settings-form button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.settings-form button:hover {
+    background-color: #0056b3;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.deals-table th {
+    background-color: #f2f2f2;
+}
+
+.treeview {
+    max-height: 600px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.treeview, .treeview ul, .treeview li {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.treeview .node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+}
+
+.treeview .toggle {
+    cursor: pointer;
+    width: 20px;
+    text-align: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.treeview input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.treeview .subcategories {
+    display: none;
+    padding-left: 20px;
+}
+
+.treeview .subcategories.open {
+    display: block;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    max-width: 200px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}

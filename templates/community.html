@@ -26,11 +26,11 @@
         <div class="main-container">
             <div class="menu-container">
                 <div class="menu">
-                    <button data-submenu="my_website_intro" data-section="my_website_intro">
+                    <button data-submenu="my_website_submenu" data-section="my_website_intro_section">
                         <span class="button-content"><i class="fas fa-globe"></i> My Web Site</span>
                         <i class="fas fa-caret-right caret"></i>
                     </button>
-                    <div id="my_website_intro" class="submenu">
+                    <div id="my_website_submenu" class="submenu">
                         <button data-section="wix">
                             <span class="button-content"><span class="icon-wix menu-size"></span> Wix</span>
                         </button>
@@ -53,13 +53,13 @@
                     <button data-section="categories">
                         <span class="button-content"><i class="fas fa-list"></i> My Categories</span>
                     </button>
-                    <button data-submenu="referrals_intro" data-section="referrals_intro">
+                    <button data-submenu="referrals_submenu" data-section="referrals_intro_section">
                         <span class="button-content">
                             <span class="icon-community menu-size"></span> My Referrals
                         </span>
                         <i class="fas fa-caret-right caret"></i>
                     </button>
-                    <div id="referrals_intro" class="submenu">
+                    <div id="referrals_submenu" class="submenu">
                         <button data-section="visits">
                             <span class="button-content"><i class="fas fa-eye"></i> Visits</span>
                         </button>
@@ -67,15 +67,15 @@
                             <span class="button-content"><i class="fas fa-shopping-cart"></i> Orders</span>
                         </button>
                     </div>
-                    <button data-submenu="my-account-submenu" data-section="my-account">
+                    <button data-submenu="my_account_submenu" data-section="my_account_intro_section">
                         <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
                         <i class="fas fa-caret-right caret"></i>
                     </button>
-                    <div id="my-account-submenu" class="submenu">
-                        <button data-section="contact-details">
+                    <div id="my_account_submenu" class="submenu">
+                        <button data-section="contact_details">
                             <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
                         </button>
-                        <button data-section="change-password">
+                        <button data-section="change_password">
                             <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
                         </button>
                     </div>
@@ -104,7 +104,7 @@
                     {% include 'my_account.inc' %}
                 {% endwith %}
                 {% with user_type='community' %}
-                    <div id="change-password" class="section" style="display: none;">
+                    <div id="change_password" class="section" style="display: none;">
                         {% include 'change_password.inc' %}
                     </div>
                 {% endwith %}
@@ -113,7 +113,7 @@
                     <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
                     <div class="treeview" id="categoryTree"></div>
                 </div>
-                <div id="referrals_intro" class="section">
+                <div id="referrals_intro_section" class="section">
                     <h2>My Referrals</h2>
                     <p>This section allows you to track your referral activity.</p>
                     <p>Select from the submenu options:</p>
@@ -170,7 +170,7 @@
                         </table>
                     </div>
                 </div>
-                <div id="my_website_intro" class="section">
+                <div id="my_website_intro_section" class="section">
                     <h2>My Web Site</h2>
                     <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
                     <ul>

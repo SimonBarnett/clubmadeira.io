@@ -108,6 +108,7 @@ body {
 /* Content wrapper alignment */
 .content-wrapper {
     text-align: left; /* Ensure content is left-aligned */
+    width: 800px; /* Set a fixed width to prevent layout issues with buttons */
     /* If flexbox is used, you might need:
     display: flex;
     justify-content: flex-start;
@@ -218,6 +219,220 @@ body {
 
 .menu button[data-href="/admin"] {
     background-color: #dc3545; /* Added per CREQ to match Log Off button color */
+}body {
+    font-family: Arial, sans-serif;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #f4f4f4;
+    min-height: 100vh;
+    display: block !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+    text-align: initial !important;
+}
+
+.layout-wrapper {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    display: block !important;
+    align-items: initial !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+.header {
+    width: 100%;
+    max-width: 1200px;
+    margin: 2 auto !important;
+    background-color: #f4f4f4;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important; /* Ensure no extra space below header */
+}
+
+.layout-wrapper .header .header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto !important;
+    padding: 12px 20px;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 8px;
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    box-sizing: border-box;
+    max-height: 80px;
+    overflow: hidden;
+}
+
+.layout-wrapper .header .header-content h1 {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+}
+
+.layout-wrapper .header .header-content p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.main-container {
+    max-width: 1020px; /* Adjusted to 200px (menu) + 20px (gap) + 800px (content) */
+    margin: 0 auto !important;
+    display: flex;
+    gap: 20px;
+    padding: 0 20px 20px 0;
+    flex-direction: row;
+    align-items: flex-start; /* Added to align content-wrapper with top of menu-container */
+    margin-top: 5px; /* Added to match the 5px gap between buttons */
+}
+
+/* Menu container adjustments */
+.menu-container {
+    padding-left: 0; /* Remove left padding to align flush with the left edge */
+    width: 200px; /* Added to ensure fixed width matching the buttons */
+}
+
+/* Menu adjustments */
+.menu {
+    padding-left: 5px; /* Shift buttons 5 pixels to the right */
+}
+
+/* Content wrapper alignment */
+.content-wrapper {
+    text-align: left; /* Ensure content is left-aligned */
+    width: 800px; /* Fixed width to prevent layout issues with buttons */
+    margin-top: 0; /* Added to remove any extra vertical gap */
+    padding-top: 0; /* Added to remove any extra vertical gap */
+}
+
+/* Rest of the existing styles.css content */
+.menu button {
+    padding: 10px 10px 10px 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    max-width: 200px; /* Already set to 200px */
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding-right: 30px;
+}
+
+.menu button:hover {
+    background-color: #0056b3;
+}
+
+.menu button[data-submenu][aria-expanded="true"] {
+    background-color: #0056b3;
+    border-left: 4px solid #fff;
+}
+
+.menu button i,
+.menu button .svg-icon,
+.menu button .icon-group {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.menu button i::before {
+    font-family: "Font Awesome 6 Free";
+}
+
+.menu button i.fas::before {
+    font-weight: 900;
+}
+
+.menu button .svg-icon {
+    display: inline-block;
+    height: 16px;
+    width: auto;
+}
+
+.menu button .svg-icon svg {
+    height: 100%;
+    width: auto;
+    fill: white;
+}
+
+.menu button .icon-group {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.menu button .icon-group .small-icon {
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+    right: -8px;
+    color: white;
+}
+
+.menu button .button-content {
+    display: flex;
+    align-items: center; /* Vertically centers the SVG and text */
+    justify-content: flex-start; /* Aligns content to the left */
+}
+
+.menu button .caret {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+.menu .btn-admin {
+    background-color: #dc3545;
+}
+
+.menu .btn-admin:hover {
+    background-color: #c82333;
+}
+
+.menu .btn-logoff {
+    background-color: #dc3545;
+}
+
+.menu .btn-logoff:hover {
+    background-color: #c82333;
+}
+
+.menu button[data-href="/admin"] {
+    background-color: #dc3545; /* Added per CREQ to match Log Off button color */
 }
 
 .menu button[data-href="/admin"]:hover {
@@ -232,11 +447,11 @@ body {
     max-height: 0;
     transition: all 0.3s ease-in-out;
 }
+
 .submenu.open {
-    display: block !important;
-    max-height: 1000px !important;
-    height: auto !important;
-    /* Removed min-height since submenus are working */
+    display: block; /* Removed !important */
+    max-height: 1000px; /* Removed !important */
+    height: auto; /* Removed !important */
 }
 
 .submenu button {

@@ -235,3 +235,93 @@ Permissions: ["allauth"]
   @curl -X POST https://madeira.io/login -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "secure123"}'@  
 - Adjust placeholders (e.g., `user@example.com`, `123`) with valid data from `users_settings.json`.  
 - Assumes `https://madeira.io` as the production URL; use `http://localhost` for local testing if needed.
+
+CR Prompt for Next Instance
+
+Continue working on the Flask app's role-based pages (`/admin`, `/community`, `/merchant`, `/partner`). The following JavaScript files in `/static/js/` provide key functionality:
+
+- **admin-page.js:** Admin page management.
+  - `initializeAdmin(pageType)`: Initializes admin page with permission checks, loads branding, and sets up navigation.
+  - `setupNavigation()`: Configures navigation, delegating to `site-navigation.js` or using fallback logic.
+  - `loadInitialData()`: Fetches initial deal data for admin dashboard.
+  - `setupEventListeners()`: Attaches listeners for saving settings.
+
+- **category-management.js:** Treeview for category management (used in `community.html`, `admin.html`).
+  - `createTreeNode(category, level, isAdmin, savedCategories)`: Creates a treeview node for a category.
+  - `loadCategories(userId, isAdmin)`: Loads and renders categories in a treeview.
+  - `toggleSubcategories(categoryId, toggle)`: Toggles subcategory visibility, loading them dynamically.
+  - `saveCategories(userId)`: Saves selected categories for a user (community context).
+  - `handleCategorySelection(categoryId, checkbox)`: Loads discounted products for a selected category (admin context).
+
+- **common.js:** Shared utilities.
+  - `setupToastr()`: Configures Toastr for consistent toast notifications.
+
+- **community-page.js:** Community page functionality.
+  - `initializeCommunity()`: Initializes community page with permission checks, loads branding, visits, orders, and categories.
+  - `updateMenu()`: Dynamically updates the menu based on permissions.
+  - `updateIntegrationCode(section)`: Updates iframe code for website integrations (e.g., Wix, WordPress).
+  - `loadVisits()`: Fetches and categorizes visit data (this month, last month, earlier).
+  - `updateVisitsTable(tableId, visits)`: Updates visit tables with fetched data.
+  - `loadOrders()`: Fetches and categorizes order data.
+  - `updateOrdersTable(tableId, orders)`: Updates order tables with fetched data.
+  - `setupCollapsibleSections()`: Sets up collapsible sections for visits and orders.
+  - `waitForTinyMCE(callback)`: Waits for TinyMCE to load before executing a callback.
+
+- **merchant-page.js:** Merchant page functionality.
+  - `initializeMerchant()`: Initializes merchant page with permission checks, loads products and store requests.
+  - `checkAdminPermission()`: Toggles visibility of admin-specific elements.
+  - `loadProducts()`: Fetches and displays merchant products.
+  - `createProductRow(product)`: Creates a table row for a product.
+  - `loadStoreRequest()`: Loads store request data into the form.
+
+- **page-load.js:** Page initialization and overlay management.
+  - `showLoadingOverlay()`: Displays the loading overlay.
+  - `hideLoadingOverlay(minDelay)`: Hides the overlay after a delay (default 1000ms).
+  - `waitForCssLoad()`: Waits for `styles.css` to load.
+  - `loadBranding(brandingType)`: Fetches and applies branding content.
+  - `attachEventListeners()`: Attaches logoff event listeners.
+  - `initializePage(requiredPermissions, callback)`: Performs permission checks before page setup.
+  - `initialize(pageType)`: Initializes a page based on its type (e.g., admin, merchant).
+  - `performPageSetup(pageType, config)`: Sets up a page with branding and initial sections.
+
+- **partner-page.js:** Partner page functionality.
+  - `initializePartner()`: Initializes partner page with permission checks, loads integrations.
+  - `checkAdminPermission()`: Toggles visibility of admin-specific elements.
+  - `loadPartnerIntegrations()`: Fetches and displays partner-specific integrations.
+
+- **site-auth.js:** Authentication utilities.
+  - `togglePassword(fieldId)`: Toggles password field visibility.
+  - `logOff()`: Logs out the user, clearing session data.
+  - `decodeJWT(token)`: Decodes a JWT token to extract user data.
+  - `savePassword(newPassword)`: Saves an updated user password.
+
+- **site-navigation.js:** Navigation and content loading.
+  - `authenticatedFetch(url, options)`: Performs authenticated fetch requests.
+  - `fetchProtectedPage(url, targetContainer)`: Fetches and loads protected page content.
+  - `loadBranding(brandingType, containerId)`: Loads branding content into a container.
+  - `loadSection(sectionId)`: Loads content for a specific section.
+  - `showSection(sectionId, onSectionLoad)`: Shows a section, hiding others.
+  - `toggleSubmenu(submenuId, action)`: Toggles submenu visibility.
+  - `initializeNavigation()`: Initializes navigation event listeners.
+
+- **site-request.js:** Site request form management.
+  - `addPage(type)`: Adds a page to the site request form.
+  - `removePage(pageNum, type)`: Removes a page from the form.
+  - `addEmail(type)`: Adds an email to the form.
+  - `removeEmail(emailNum, type)`: Removes an email from the form.
+  - `updateDomainPreview(type)`: Updates domain preview and email domains.
+  - `checkDomainAvailability()`: Checks domain availability.
+  - `loadTinyMCE()`: Loads TinyMCE for content editing.
+  - `initializeTinyMCE(selector)`: Initializes TinyMCE for a selector.
+  - `getCurrentTimestamp()`: Generates a formatted timestamp.
+  - `saveSiteRequest()`: Saves the site request form data.
+
+- **user-management.js:** User settings and Wix client ID management.
+  - `loadSettings()`: Loads user settings into the DOM.
+  - `saveSettings(settings)`: Saves user settings.
+  - `loadWixClientId()`: Loads Wix client ID into the DOM.
+  - `saveWixClientId(clientId)`: Saves Wix client ID.
+  - `validatePassword(password)`: Validates password complexity.
+  - `setupChangePassword()`: Sets up "Change Password" form submission.
+
+Use these functions to continue optimizing the app, focusing on performance, consistency, and user experience.

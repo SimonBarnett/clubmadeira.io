@@ -1,0 +1,138 @@
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+.signup-instructions {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.signup-instructions a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+.signup-instructions a:hover {
+    text-decoration: underline;
+}
+
+.login-page {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 20px;
+}
+
+.login-page .container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-page h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.login-page .form-group {
+    margin-bottom: 15px;
+    transform: translateX(-40px);
+}
+
+.login-page .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0;
+    max-width: 70px;
+}
+
+.login-page input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.login-page button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.login-page button:hover {
+    background-color: #0056b3;
+}
+
+.login-page .toggle-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.login-page .toggle-link a {
+    color: #007BFF;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.login-page .toggle-link a:hover {
+    text-decoration: underline;
+}
+
+.login-page .custom-login-notice {
+    background-color: #f0e68c;
+    border: 2px dashed #4682b4;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+    font-family: 'Courier New', Courier, monospace;
+    color: #2f4f4f;
+    transition: transform 0.3s ease-in-out;
+    margin-bottom: 30px;
+}
+
+.login-page .custom-login-notice .highlight {
+    color: #007BFF;
+    font-weight: bold;
+}
+
+.login-page .custom-login-notice:hover {
+    transform: scale(1.02);
+}
+
+#my-store .settings-form {
+    max-width: 600px;
+}
+
+#my-store .email-section input[type="text"] {
+    width: 50%;
+}
+
+#my-store .widget-checkboxes input[type="checkbox"] {
+    width: 10px;
+}
