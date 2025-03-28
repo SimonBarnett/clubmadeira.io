@@ -353,6 +353,23 @@ if (window.siteNavigationInitialized) {
         });
     }
 
+    // Function to attach branding header click listener
+    function attachBrandingHeaderListener() {
+        if (!window.brandingHeaderListenerAttached) {
+            const brandingContent = document.getElementById('brandingContent');
+            if (brandingContent) {
+                brandingContent.addEventListener('click', function() {
+                    const sectionToShow = window.currentPageType === 'merchant' ? 'info' : 'welcome';
+                    showSection(sectionToShow);
+                });
+                window.brandingHeaderListenerAttached = true;
+                console.log('Branding header click listener attached');
+            } else {
+                console.warn('Branding header element not found');
+            }
+        }
+    }
+
     // Export navigation functions under a namespace
     window.siteNavigation = {
         showSection,
@@ -364,14 +381,16 @@ if (window.siteNavigationInitialized) {
         loadSection
     };
 
-    // Initialize navigation based on document readiness
+    // Initialize navigation and attach branding header listener based on document readiness
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOMContentLoaded - Initializing navigation');
             initializeNavigation();
+            attachBrandingHeaderListener();
         });
     } else {
         console.log('Document already loaded - Initializing navigation immediately');
         initializeNavigation();
+        attachBrandingHeaderListener();
     }
 }

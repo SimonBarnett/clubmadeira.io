@@ -20,74 +20,47 @@ authentication_bp = Blueprint('authentication_bp', __name__)
 # region /login POST - User Login
 @authentication_bp.route('/login', methods=['POST'])
 def login():
-    """
-    Authenticates a user and returns a JWT token if successful.
-    Purpose: Allows users to log in using their email and password.
-    Inputs: JSON payload with:
-        - email (str): The user's email address.
-        - password (str): The user's password.
-    Outputs:
-        - Success: JSON {"status": "success", "token": "<JWT>", "user_id": "<id>"}, status 200
-        - Errors:
-            - 400: {"status": "error", "message": "Email and password are required"}
-            - 401: {"status": "error", "message": "Invalid credentials"}
-            - 500: {"status": "error", "message": "Server error"}
-    """
     try:
-        # Log request like madeira.py
-        request_data = {
+        data = request.get_json(silent=True, force=True, cache=False)
+        logging.debug(f"Raw JSON from request: {data}")
+
+        # Log without modifying original data
+        log_data = {
             "method": request.method,
             "url": request.full_path,
-            "headers": dict(request.headers),
+            "headers": {k: "[REDACTED]" if k == "Authorization" else v for k, v in request.headers.items()},
             "ip": request.remote_addr,
-            "body": request.get_json(silent=True, force=True, cache=False) or "[NO BODY]"
+            "body": {"email": data["email"], "password": "[REDACTED]"} if data else "[NO BODY]"
         }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        if isinstance(log_data["body"], dict) and "password" in log_data["body"]:
-            log_data["body"]["password"] = "[REDACTED]"
         logging.debug(f"Request: {json.dumps(log_data)}")
 
-        data = request_data["body"]
         if not data or 'email' not in data or 'password' not in data:
-            logging.warning(f"UX Issue - Login attempt missing email or password: {json.dumps(data)}")
-            response_data = {"status": "error", "message": "Email and password are required"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
+            logging.warning(f"Missing fields: {data}")
+            return jsonify({"status": "error", "message": "Email and password are required"}), 400
         
         email = data['email'].strip().lower()
         password = data['password'].strip()
-        logging.debug(f"Login attempt - Email: {email}, Password: [REDACTED]")
+        logging.debug(f"Raw password before validation: {password}")
         
         users_settings = load_users_settings()
-        logging.debug(f"Loaded users: {json.dumps({k: {**v, 'password': '[REDACTED]'} for k, v in users_settings.items()})}")
         user_entry = next(((uid, u) for uid, u in users_settings.items() if u['email_address'].lower() == email), None)
         
         if user_entry:
             user_id, user = user_entry
-            logging.debug(f"User found - ID: {user_id}, Stored Hash: [REDACTED]")
+            logging.debug(f"Stored hash for user {user_id}: {user['password']}")
             if bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
-                logging.debug("Password matches")
                 token = generate_token(user_id, user['permissions'])
-                logging.info(f"Login successful for user {user_id}")
-                response_data = {"status": "success", "token": "[REDACTED]", "user_id": user_id}
-                logging.debug(f"Response: {json.dumps(response_data)}")
                 return jsonify({"status": "success", "token": token, "user_id": user_id}), 200
             else:
                 logging.debug("Password does not match")
         else:
             logging.debug(f"User not found for email: {email}")
         
-        logging.warning(f"Security Issue - Invalid login attempt for email: {email}")
-        response_data = {"status": "error", "message": "Invalid credentials"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 401
+        return jsonify({"status": "error", "message": "Invalid credentials"}), 401
     except Exception as e:
-        logging.error(f"UX Issue - Login processing error: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
+        logging.error(f"Login error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+    
 # endregion
 
 # region /signup GET - The Holy Grail of New User Entry

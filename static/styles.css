@@ -865,3 +865,42 @@ h1 {
 .settings-form button i {
     margin-right: 5px;
 }
+
+/* Fixed Headers for Orders and Visits Tables */
+#orders table thead, #visits table thead {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* Light background for visibility */
+    z-index: 1;
+}
+
+/* Style for Collapsible Toggle Sections */
+.toggle-section {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-section:hover {
+    background-color: #dee2e6;
+}
+
+/* Collapsible Content Styling */
+.toggle-content {
+    display: none;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    max-height: 0;
+    padding: 0 10px;
+}
+
+.toggle-content.open {
+    display: block;
+    max-height: 500px; /* Adjust based on content */
+    padding: 10px;
+}

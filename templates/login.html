@@ -375,8 +375,7 @@
                         toastr.success('Verification successful! Redirecting...');
                         redirectBasedOnPermissions();
                     });
-                } else {
-                    toastr.success(`Welcome back, ${data.contact_name || 'User'}!`);
+                } else {                    
                     redirectBasedOnPermissions();
                 }
             } catch (error) {

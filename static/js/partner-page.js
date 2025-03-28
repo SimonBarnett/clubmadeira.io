@@ -37,8 +37,33 @@ function initializePartner() {
     setupNavigation(); // From site-navigation.js
     checkAdminPermission();
     loadBranding('partner', 'brandingContent'); // Adjusted to match typical usage
-    showSection('welcome');
+    showSection('welcome'); // Ensure the welcome section is shown on load
     loadPartnerIntegrations(); // Load partner-specific integrations
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializePartner - Updated contact name in welcome section:', contactName);
+                } else {
+                    console.warn('initializePartner - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializePartner - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializePartner - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+    } else {
+        console.error('initializePartner - loadSettings function not found');
+    }
+
     attachEventListeners(); // From page-load.js
 
     // Call shared "Change Password" logic

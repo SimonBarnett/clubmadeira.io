@@ -18,6 +18,26 @@ function initializeAdmin(pageType) {
     loadBranding(pageType, 'brandingContent');
     setupNavigation();
     showSection('welcome');
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const userContactNameSpan = document.getElementById('user-contact-name');
+            if (userContactNameSpan) {
+                userContactNameSpan.textContent = contactName;
+                console.log('initializeAdmin - Updated contact name in welcome section:', contactName);
+            } else {
+                console.warn('initializeAdmin - user-contact-name span not found');
+            }
+        }).catch(error => {
+            console.error('initializeAdmin - Error loading settings:', error.message);
+            toastr.error('Failed to load user settings');
+        });
+    } else {
+        console.error('initializeAdmin - loadSettings function not found');
+    }
+
     loadInitialData();
     setupEventListeners();
 
@@ -120,4 +140,3 @@ function setupEventListeners() {
 window.initializeAdmin = initializeAdmin;
 window.loadInitialData = loadInitialData;
 window.setupEventListeners = setupEventListeners;
-// Removed: window.setupNavigation = setupNavigation;

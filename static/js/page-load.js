@@ -1,6 +1,62 @@
 // /static/js/page-load.js
 // Purpose: Manages page initialization, event listener attachment for navigation and section handling, and loading overlay behavior.
 
+// Queue for Toastr messages to delay display until overlay is hidden
+let toastrQueue = [];
+
+// Override Toastr methods to queue messages during initial load
+(function() {
+    const originalSuccess = toastr.success;
+    const originalError = toastr.error;
+    const originalInfo = toastr.info;
+    const originalWarning = toastr.warning;
+
+    function queueMessage(type, message, title, options) {
+        toastrQueue.push({ type, message, title, options });
+        console.log(`Toastr ${type} queued: ${title ? title + ' - ' : ''}${message}`);
+    }
+
+    toastr.success = function(message, title, options) {
+        if (!window.overlayHidden) {
+            queueMessage('success', message, title, options);
+        } else {
+            return originalSuccess.call(toastr, message, title, options);
+        }
+    };
+
+    toastr.error = function(message, title, options) {
+        if (!window.overlayHidden) {
+            queueMessage('error', message, title, options);
+        } else {
+            return originalError.call(toastr, message, title, options);
+        }
+    };
+
+    toastr.info = function(message, title, options) {
+        if (!window.overlayHidden) {
+            queueMessage('info', message, title, options);
+        } else {
+            return originalInfo.call(toastr, message, title, options);
+        }
+    };
+
+    toastr.warning = function(message, title, options) {
+        if (!window.overlayHidden) {
+            queueMessage('warning', message, title, options);
+        } else {
+            return originalWarning.call(toastr, message, title, options);
+        }
+    };
+})();
+
+// Function to process queued Toastr messages
+function processToastrQueue() {
+    while (toastrQueue.length > 0) {
+        const { type, message, title, options } = toastrQueue.shift();
+        toastr[type](message, title, options);
+    }
+}
+
 // Function to show the loading overlay
 function showLoadingOverlay() {
     let loadingOverlay = document.getElementById('loadingOverlay');
@@ -33,9 +89,38 @@ async function hideLoadingOverlay(minDelay = 1000) {
         loadingOverlay.style.display = 'none';
         layoutWrapper.style.display = 'block';
         console.log('hideLoadingOverlay - Loading overlay hidden, main content displayed');
+        window.overlayHidden = true;
+        processToastrQueue();
     } else {
         console.warn('hideLoadingOverlay - Loading overlay or layout wrapper not found');
     }
+}
+
+// Function to wait for styles.css to load
+function waitForCssLoad() {
+    return new Promise((resolve) => {
+        const link = document.getElementById('styles-css');
+        if (link && link.sheet) {
+            console.log('waitForCssLoad - styles.css already loaded');
+            resolve();
+        } else if (link) {
+            link.addEventListener('load', () => {
+                console.log('waitForCssLoad - styles.css loaded');
+                resolve();
+            });
+            link.addEventListener('error', () => {
+                console.warn('waitForCssLoad - styles.css failed to load');
+                resolve(); // Proceed even if CSS fails
+            });
+            setTimeout(() => {
+                console.warn('waitForCssLoad - CSS load timeout after 5 seconds');
+                resolve(); // Fallback after 5 seconds
+            }, 5000);
+        } else {
+            console.warn('waitForCssLoad - styles.css link not found');
+            resolve(); // Proceed if link isn’t found
+        }
+    });
 }
 
 // Loads branding content into #brandingContent
@@ -119,8 +204,12 @@ async function initialize(pageType) {
     }
     isInitializing = true;
     console.log('initialize - Starting page initialization - Page type:', pageType);
-    
+
+    // Show the loading overlay
     showLoadingOverlay();
+
+    // Wait for styles.css to load
+    await waitForCssLoad();
 
     const pageConfigs = {
         'partner': {
@@ -205,18 +294,21 @@ async function initialize(pageType) {
 
     if (config.permissions && config.permissions.length > 0) {
         console.log('initialize - Performing permission check for:', config.permissions);
-        initializePage(config.permissions, async () => {
-            console.log('initialize - Permission validated for:', config.permissions);
-            await performPageSetup(pageType, config);
-            await hideLoadingOverlay();
-            isInitializing = false;
+        await new Promise(resolve => {
+            initializePage(config.permissions, async () => {
+                console.log('initialize - Permission validated for:', config.permissions);
+                await performPageSetup(pageType, config);
+                resolve();
+            });
         });
     } else {
         console.log('initialize - No permissions required for:', pageType);
         await performPageSetup(pageType, config);
-        await hideLoadingOverlay();
-        isInitializing = false;
     }
+
+    // Hide the overlay after setup is complete
+    await hideLoadingOverlay();
+    isInitializing = false;
     console.log('initialize - Initialization process completed for:', pageType);
 }
 

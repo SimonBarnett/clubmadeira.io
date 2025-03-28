@@ -38,8 +38,8 @@ function initializeCommunity() {
     }
 
     // Set up navigation and event listeners to fix button functionality
-    setupNavigation(); // From site-navigation.js (CREQ Requirement 1)
-    attachEventListeners(); // From page-load.js (CREQ Requirement 1)
+    setupNavigation(); // From site-navigation.js
+    attachEventListeners(); // From page-load.js
 
     // Load branding and initial data
     loadBranding('community', 'brandingContent');
@@ -48,18 +48,45 @@ function initializeCommunity() {
     waitForTinyMCE(() => initializeTinyMCE('#aboutCommunity, #stylingDetails, #page1Content'));
     loadVisits();
     loadOrders();
-    loadCategories(userId, false); // Added for treeview (Requirement 1)
+    loadCategories(userId, false); // Added for treeview
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializeCommunity - Updated contact name in welcome section:', contactName);
+                } else {
+                    console.warn('initializeCommunity - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializeCommunity - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializeCommunity - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+    } else {
+        console.error('initializeCommunity - loadSettings function not found');
+    }
+
+    // Set up collapsible sections for Orders and Visits
+    setupCollapsibleSections();
 
     // Set up shared "Change Password" logic
     if (typeof setupChangePassword === 'function') {
-        setupChangePassword(); // From user-management.js (CREQ Requirement 2)
+        setupChangePassword(); // From user-management.js
         console.log('initializeCommunity - Change Password logic initialized');
     } else {
         console.error('initializeCommunity - setupChangePassword function not found');
     }
 
     // Hide loading overlay after initialization
-    hideLoadingOverlay(); // From page-load.js (CREQ Requirement 3)
+    hideLoadingOverlay(); // From page-load.js
     console.log('initializeCommunity - Community page initialized successfully');
 }
 
@@ -77,22 +104,22 @@ function updateMenu() {
             </button>
             <div id="my_website_intro" class="submenu">
                 <button data-section="wix">
-                    <span class="button-content"><i class="fab fa-wix-simple"></i> Wix</span>
+                    <span class="button-content"><span class="icon-wix menu-size"></span> Wix</span>
                 </button>
                 <button data-section="wordpress">
-                    <span class="button-content"><i class="fab fa-wordpress"></i> WordPress</span>
+                    <span class="button-content"><span class="icon-wordpress menu-size"></span> WordPress</span>
                 </button>
                 <button data-section="squarespace">
-                    <span class="button-content"><i class="fab fa-squarespace"></i> Squarespace</span>
+                    <span class="button-content"><span class="icon-squarespace menu-size"></span> Squarespace</span>
                 </button>
                 <button data-section="weebly">
-                    <span class="button-content"><i class="fab fa-weebly"></i> Weebly</span>
+                    <span class="button-content"><span class="icon-weebly menu-size"></span> Weebly</span>
                 </button>
                 <button data-section="joomla">
-                    <span class="button-content"><i class="fab fa-joomla"></i> Joomla</span>
+                    <span class="button-content"><span class="icon-joomla menu-size"></span> Joomla</span>
                 </button>
                 <button data-section="no_website">
-                    <span class="button-content"><i class="fas fa-question-circle"></i> I Don’t Have a Website Yet</span>
+                    <span class="button-content"><i class="fas fa-question-circle menu-size"></i> I Don’t Have a Website Yet</span>
                 </button>
             </div>
             <button data-section="categories">
@@ -100,11 +127,7 @@ function updateMenu() {
             </button>
             <button data-submenu="referrals_intro" data-section="referrals_intro">
                 <span class="button-content">
-                    <span class="svg-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" preserveAspectRatio="xMidYMid meet">
-                            <path d="M72 88a56 56 0 1 1 112 0A56 56 0 1 1 72 88zM64 245.7C54 256.9 48 271.8 48 288s6 31.1 16 42.3l0-84.7zm144.4-49.3C178.7 222.7 160 261.2 160 304c0 34.3 12 65.8 32 90.5l0 21.5c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-26.8C26.2 371.2 0 332.7 0 288c0-61.9 50.1-112 112-112l32 0c24 0 46.2 7.5 64.4 20.3zM448 416l0-21.5c20-24.7 32-56.2 32-90.5c0-42.8-18.7-81.3-48.4-107.7C449.8 183.5 472 176 496 176l32 0c61.9 0 112 50.1 112 112c0 44.7-26.2 83.2-64 101.2l0 26.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32zm8-328a56 56 0 1 1 112 0A56 56 0 1 1 456 88zM576 245.7l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM320 32a64 64 0 1 1 0 128 64 64 0 1 1 0-128zM240 304c0 16.2 6 31 16 42.3l0-84.7c-10 11.3-16 26.1-16 42.3zm144-42.3l0 84.7c10-11.3 16-26.1 16-42.3s-6-31.1-16-42.3zM448 304c0 44.7-26.2 83.2-64 101.2l0 42.8c0 17.7-14.3 32-32 32l-64 0c-17.7 0-32-14.3-32-32l0-42.8c-37.8-18-64-56.5-64-101.2c0-61.9 50.1-112 112-112l32 0c61.9 0 112 50.1 112 112z"/>
-                        </svg>
-                    </span> My Referrals
+                    <span class="icon-community menu-size"></span> My Referrals
                 </span>
                 <i class="fas fa-caret-right caret"></i>
             </button>
@@ -121,7 +144,7 @@ function updateMenu() {
                 <i class="fas fa-caret-right caret"></i>
             </button>
             <div id="my-account-submenu" class="submenu">
-                <button data-section="my-account">
+                <button data-section="contact-details">
                     <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
                 </button>
                 <button data-section="change-password">
@@ -131,17 +154,25 @@ function updateMenu() {
         `;
         if (window.userPermissions.includes('admin')) {
             menu.innerHTML += `
-                <button data-href="/admin" class="btn-admin">
+                <button data-href="/admin" style="background-color: #dc3545;">
                     <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
                 </button>
             `;
         }
         menu.innerHTML += `
-            <button id="logOffBtn" class="btn-logoff">
+            <button id="logOffBtn" style="background-color: #dc3545;">
                 <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
             </button>
         `;
         console.log('updateMenu - Menu updated');
+
+        // Ensure submenu visibility is handled correctly
+        if (typeof initializeNavigation === 'function') {
+            initializeNavigation(); // From site-navigation.js to fix submenu hiding
+            console.log('updateMenu - initializeNavigation called to fix submenu hiding');
+        } else {
+            console.error('updateMenu - initializeNavigation function not found');
+        }
     } else {
         console.error('updateMenu - Menu element not found');
     }
@@ -255,7 +286,7 @@ async function loadOrders() {
             const ordersEarlier = [];
             data.orders.forEach(order => {
                 const orderDate = new Date(order.timestamp);
-                if (orderDate.getFullYear() === thisYear && orderDate.getMonth())  {
+                if (orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth) {
                     ordersThisMonth.push(order);
                 } else if ((orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth - 1) ||
                           (orderDate.getFullYear() === thisYear - 1 && thisMonth === 0 && orderDate.getMonth() === 11)) {
@@ -295,6 +326,36 @@ function updateOrdersTable(tableId, orders) {
     }
 }
 
+function setupCollapsibleSections() {
+    console.log('setupCollapsibleSections - Setting up collapsible sections');
+    const toggleSections = document.querySelectorAll('.toggle-section');
+    toggleSections.forEach(section => {
+        section.addEventListener('click', () => {
+            const targetId = section.getAttribute('data-toggle');
+            const targetContent = document.getElementById(targetId);
+            if (targetContent) {
+                const isOpen = targetContent.classList.contains('open');
+                // Close all sections in the same group
+                const parentSection = section.closest('.section');
+                if (parentSection) {
+                    parentSection.querySelectorAll('.toggle-content.open').forEach(content => {
+                        content.classList.remove('open');
+                        content.style.display = 'none';
+                    });
+                }
+                // Toggle the clicked section
+                if (!isOpen) {
+                    targetContent.classList.add('open');
+                    targetContent.style.display = 'block';
+                }
+                console.log('setupCollapsibleSections - Toggled section:', targetId, 'Is open:', !isOpen);
+            } else {
+                console.warn('setupCollapsibleSections - Target content not found for ID:', targetId);
+            }
+        });
+    });
+}
+
 function waitForTinyMCE(callback) {
     console.log('waitForTinyMCE - Checking if TinyMCE is loaded');
     if (typeof tinymce !== 'undefined' && tinymce.init) {
@@ -323,4 +384,5 @@ window.loadVisits = loadVisits;
 window.updateVisitsTable = updateVisitsTable;
 window.loadOrders = loadOrders;
 window.updateOrdersTable = updateOrdersTable;
+window.setupCollapsibleSections = setupCollapsibleSections;
 window.waitForTinyMCE = waitForTinyMCE;

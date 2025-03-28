@@ -37,9 +37,34 @@ function initializeMerchant() {
     setupNavigation(); // From site-navigation.js
     checkAdminPermission();
     loadBranding('merchant', 'brandingContent'); // Adjusted to match typical usage
-    showSection('info');
+    showSection('info'); // Ensure the info section is shown on load
     loadProducts(); // Load merchant products
     loadStoreRequest(); // Load store request data
+
+    // Fetch and display contact_name in the info section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializeMerchant - Updated contact name in info section:', contactName);
+                } else {
+                    console.warn('initializeMerchant - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializeMerchant - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializeMerchant - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+    } else {
+        console.error('initializeMerchant - loadSettings function not found');
+    }
+
     attachEventListeners(); // From page-load.js
 
     // Call shared "Change Password" logic
