@@ -1,464 +1,526 @@
 + [templates]
 +----admin.html
++----auth.inc
++----base.inc
++----change_password.inc
 +----community.html
 +----login.html
 +----merchant.html
++----my_account.inc
++----overlay.inc
 +----partner.html
 +----signup.html
++----siterequest.inc
 
 admin.html
+{% extends "base.inc" %}
+{% block content %}
+<div class="main-container">
+    <div class="menu-container">
+        <div class="menu">
+            <button data-section="deal_listings">
+                <span class="button-content"><i class="fas fa-tags"></i> Deal Listings</span>
+            </button>
+            <button data-submenu="affiliatePrograms" data-section="affiliateProgramsIntro">
+                <span class="button-content"><i class="fas fa-handshake"></i> Affiliate Programs</span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="affiliatePrograms" class="submenu">
+                <button data-section="amazon_uk">
+                    <span class="button-content">
+                        <span class="icon-amazon-uk menu-size"></span> Amazon UK
+                    </span>
+                </button>
+                <button data-section="ebay_uk">
+                    <span class="button-content">
+                        <span class="icon-ebay-uk menu-size"></span> eBay UK
+                    </span>
+                </button>
+                <button data-section="awin">
+                    <span class="button-content"><i class="fas fa-network-wired"></i> Awin</span>
+                </button>
+                <button data-section="cj">
+                    <span class="button-content"><i class="fas fa-link"></i> CJ</span>
+                </button>
+                <button data-section="textmagic">
+                    <span class="button-content"><i class="fas fa-sms"></i> TextMagic</span>
+                </button>
+                <button data-section="tiny">
+                    <span class="button-content"><i class="fas fa-pen"></i> tiny</span>
+                </button>
+            </div>
+            <button data-submenu="userManagement" data-section="userManagementIntro">
+                <span class="button-content"><i class="fas fa-users"></i> User Management</span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="userManagement" class="submenu">
+                <button data-section="partners">
+                    <span class="button-content">
+                        <span class="menu-size icon-partner"></span> Partners
+                    </span>
+                </button>
+                <button data-section="communities">
+                    <span class="button-content">
+                        <span class="menu-size icon-community"></span> Communities
+                    </span>
+                </button>
+                <button data-section="merchants">
+                    <span class="button-content">
+                        <span class="menu-size icon-merchant"></span> Merchants
+                    </span>
+                </button>
+            </div>
+            <button data-submenu="testScripts" data-section="testScriptsIntro">
+                <span class="button-content"><i class="fas fa-flask"></i> Test Scripts</span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="testScripts" class="submenu">
+                <button data-href="/partner">
+                    <span class="button-content">
+                        <span class="icon-group">
+                            <span class="menu-size icon-partner"></span>
+                            <i class="fas fa-flask small-icon"></i>
+                        </span> Partner
+                    </span>
+                </button>
+                <button data-href="/community">
+                    <span class="button-content">
+                        <span class="icon-group">
+                            <span class="menu-size icon-community"></span>
+                            <i class="fas fa-flask small-icon"></i>
+                        </span> Community
+                    </span>
+                </button>
+                <button data-href="/merchant">
+                    <span class="button-content">
+                        <span class="icon-group">
+                            <span class="menu-size icon-merchant"></span>
+                            <i class="fas fa-flask small-icon"></i>
+                        </span> Merchant
+                    </span>
+                </button>
+                <button data-submenu="referralTests" data-section="referralTestsIntro">
+                    <span class="button-content"><i class="fas fa-link"></i> Referral Tests</span>
+                    <i class="fas fa-caret-right caret"></i>
+                </button>
+                <div id="referralTests" class="submenu">
+                    <button data-section="page_visit_test">
+                        <span class="button-content"><i class="fas fa-eye"></i> Page Visit Referral Test</span>
+                    </button>
+                    <button data-section="order_test">
+                        <span class="button-content"><i class="fas fa-shopping-cart"></i> Order Referral Test</span>
+                    </button>
+                </div>
+            </div>
+            <button data-submenu="myAccountSubmenu" data-section="myAccountIntro">
+                <span class="button-content"><i class="fas fa-user"></i> My Account</span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="myAccountSubmenu" class="submenu">
+                <button data-section="contactDetails">
+                    <span class="button-content"><i class="fas fa-address-book"></i> Contact Details</span>
+                </button>
+                <button data-section="changePassword">
+                    <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
+                </button>
+            </div>
+            <button id="logOffBtn" style="background-color: #dc3545;">
+                <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
+            </button>
+        </div>
+    </div>
+    <div class="content-wrapper">
+        <div id="welcome" class="section">
+            <h2>Welcome to Admin Dashboard</h2>
+            <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
+            <p>Use the menu on the left to:</p>
+            <ul>
+                <li>View and filter discounted deals in "Deal Listings"</li>
+                <li>Manage affiliate credentials under "Affiliate Programs"</li>
+                <li>Manage users under "User Management"</li>
+                <li>Test referral tracking with "Test Scripts"</li>
+                <li>Update your account details in "My Account"</li>
+            </ul>
+        </div>
+
+        <div id="deal_listings" class="section">
+            <h2>Discounted Deal Listings</h2>
+            <p>This section displays all currently active deal listings available across your affiliate programs.</p>
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1; max-width: 300px;">
+                    <h3>Categories</h3>
+                    <div class="treeview" id="categoryTree"></div>
+                </div>
+                <div style="flex: 2;">
+                    <table class="deals-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Title</th>
+                                <th>URL</th>
+                                <th>Price</th>
+                                <th>Original</th>
+                                <th>Discount %</th>
+                                <th>Image</th>
+                                <th>QTY</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dealList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="affiliateProgramsIntro" class="section">
+            <h2>Affiliate Programs</h2>
+            <p>Use this section to manage your affiliate program credentials.</p>
+            <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
+        </div>
+
+        <div id="amazon_uk" class="section">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <span class="icon-amazon-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
+                <h2>Amazon UK Credentials</h2>
+            </div>
+            <div class="form" style="margin: 0; max-width: 400px;">
+                <label for="amazonAccessKey">Access Key:</label>
+                <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
+                <label for="amazonSecretKey">Secret Key:</label>
+                <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
+                <label for="amazonAssociateTag">Associate Tag:</label>
+                <input type="text" id="amazonAssociateTag" placeholder="Enter Associate Tag">
+                <label for="amazonCountry">Country:</label>
+                <input type="text" id="amazonCountry" placeholder="Enter Country (e.g., UK)">
+                <button data-affiliate="amazon_uk">Update Credentials</button>
+            </div>
+            <div class="signup-instructions">
+                <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
+            </div>
+        </div>
+
+        <div id="ebay_uk" class="section">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <span class="icon-ebay-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
+                <h2>eBay UK Credentials</h2>
+            </div>
+            <div class="form" style="margin: 0; max-width: 400px;">
+                <label for="ebayAppId">App ID:</label>
+                <input type="text" id="ebayAppId" placeholder="Enter App ID">
+                <button data-affiliate="ebay_uk">Update Credentials</button>
+            </div>
+            <div class="signup-instructions">
+                <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
+            </div>
+        </div>
+
+        <div id="awin" class="section">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-network-wired" style="font-size: 32px; margin-right: 10px; color: white;"></i>
+                <h2>Awin Credentials</h2>
+            </div>
+            <div class="form" style="margin: 0; max-width: 400px;">
+                <label for="awinApiToken">API Token:</label>
+                <input type="text" id="awinApiToken" placeholder="Enter API Token">
+                <button data-affiliate="awin">Update Credentials</button>
+            </div>
+            <div class="signup-instructions">
+                <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
+            </div>
+        </div>
+
+        <div id="cj" class="section">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-link" style="font-size: 32px; margin-right: 10px; color: white;"></i>
+                <h2>CJ Credentials</h2>
+            </div>
+            <div class="form" style="margin: 0; max-width: 400px;">
+                <label for="cjApiKey">API Key:</label>
+                <input type="text" id="cjApiKey" placeholder="Enter API Key">
+                <label for="cjWebsiteId">Website ID:</label>
+                <input type="text" id="cjWebsiteId" placeholder="Enter Website ID">
+                <button data-affiliate="cj">Update Credentials</button>
+            </div>
+            <div class="signup-instructions">
+                <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
+            </div>
+        </div>
+
+        <div id="textmagic" class="section">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-sms" style="font-size: 32px; margin-right: 10px; color: white;"></i>
+                <h2>TextMagic Credentials</h2>
+            </div>
+            <div class="form" style="margin: 0; max-width: 400px;">
+                <label for="textmagicUsername">Username:</label>
+                <input type="text" id="textmagicUsername" placeholder="Enter Username">
+                <label for="textmagicApiKey">API Key:</label>
+                <input type="text" id="textmagicApiKey" placeholder="Enter API Key">
+                <button data-affiliate="textmagic">Update Credentials</button>
+            </div>
+            <div class="signup-instructions">
+                <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
+            </div>
+        </div>
+
+        <div id="tiny" class="section">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-pen" style="font-size: 32px; margin-right: 10px; color: white;"></i>
+                <h2>tiny Credentials</h2>
+            </div>
+            <div class="form" style="margin: 0; max-width: 400px;">
+                <label for="tinyApiKey">API Key:</label>
+                <input type="text" id="tinyApiKey" placeholder="Enter API Key">
+                <button data-affiliate="tiny">Update Credentials</button>
+            </div>
+            <div class="signup-instructions">
+                <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
+            </div>
+        </div>
+
+        <div id="userManagementIntro" class="section">
+            <h2>User Management</h2>
+            <p>This section allows you to manage different types of users in your system.</p>
+            <p>Select a user type from the menu to view their details or modify their permissions:</p>
+            <ul>
+                <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
+                <li><strong>Communities:</strong> Manage community users.</li>
+                <li><strong>Merchants:</strong> Manage merchant users.</li>
+            </ul>
+        </div>
+
+        <div id="merchants" class="section">
+            <h2>Merchant Management</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>USERid</th>
+                        <th>Contact Name</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="merchantsList">
+                    <!-- Dynamically populated by updateUserTable -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="communities" class="section">
+            <h2>Communities Management</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>USERid</th>
+                        <th>Contact Name</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="communitiesList">
+                    <!-- Dynamically populated by updateUserTable -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="partners" class="section">
+            <h2>Partner Management</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>USERid</th>
+                        <th>Contact Name</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="partnersList">
+                    <!-- Dynamically populated by updateUserTable -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="testScriptsIntro" class="section">
+            <h2>Test Scripts</h2>
+            <p>Use this section to test referral tracking and other scripts.</p>
+            <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
+        </div>
+
+        <div id="referralTestsIntro" class="section">
+            <h2>Referral Tests</h2>
+            <p>This section contains tools to test referral tracking functionality.</p>
+            <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
+        </div>
+
+        <div id="page_visit_test" class="section">
+            <h2>Page Visit Referral Test</h2>
+            <div class="form">
+                <form id="pageVisitForm">
+                    <table>
+                        <tr><td><label for="pageReferer">Referer:</label></td><td><select id="pageReferer" name="referer"></select></td></tr>
+                        <tr><td><label for="page">Page:</label></td><td><input type="text" id="page" name="page" value="/home"></td></tr>
+                        <tr><td><label for="pageTimestamp">Timestamp:</label></td><td><input type="text" id="pageTimestamp" name="timestamp"></td></tr>
+                        <tr><td colspan="2"><button type="submit">Submit Page Visit</button></td></tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+
+        <div id="order_test" class="section">
+            <h2>Order Referral Test</h2>
+            <div class="form">
+                <form id="orderForm">
+                    <table>
+                        <tr><td><label for="orderReferer">Referer:</label></td><td><select id="orderReferer" name="referer"></select></td></tr>
+                        <tr><td><label for="orderId">Order ID:</label></td><td><input type="text" id="orderId" name="orderId" value="ORD12345"></td></tr>
+                        <tr><td><label for="buyer">Buyer Name:</label></td><td><input type="text" id="buyer" name="buyer" value="John Doe"></td></tr>
+                        <tr><td><label for="total">Total Amount (£):</label></td><td><input type="number" id="total" name="total" value="99.99" step="0.01"></td></tr>
+                        <tr><td><label for="orderTimestamp">Timestamp:</label></td><td><input type="text" id="orderTimestamp" name="timestamp"></td></tr>
+                        <tr><td colspan="2"><button type="submit">Submit Order</button></td></tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+
+        <div id="myAccountIntro" class="section">
+            <h2>My Account</h2>
+            <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security.</p>
+            <p>Use the options below to navigate to the desired section:</p>
+        </div>
+
+        {% include 'my_account.inc' %}
+                
+        <div id="changePassword" class="section" style="display: none;">
+            {% include 'change_password.inc' %}
+        </div>
+    
+    </div>
+</div>
+{% endblock %}
+
+
+auth.inc
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>clubmadeira.io | Admin</title>
+    <title>{{ title | default('clubmadeira.io') }}</title>
+    <!-- External CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <link rel="stylesheet" href="/static/styles.css" id="styles-css">
-    <link rel="stylesheet" href="/static/icons.css">
-    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
-    <!-- Define window.apiUrl before loading scripts -->
+    <!-- Local CSS -->
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
+    <!-- Dynamic API URL -->
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
+    <!-- Load jQuery and Toastr before inline script -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!-- Load common.js early -->
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
 </head>
 <body>
-    {% include 'overlay.inc' %}  <!-- Centralized loading overlay -->
-    <div class="layout-wrapper" style="display: none;">
+    {% block content %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/site-auth.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/site-navigation.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/category-management.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/site-request.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/admin-page.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/page-load.js') }}" defer></script>
+</body>
+</html>
+base.inc
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title | default('clubmadeira.io') }}</title>
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- Local CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}">
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='white' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
+    <!-- Dynamic API URL -->
+    <script>
+        window.apiUrl = 'https://clubmadeira.io';
+    </script>
+    <!-- External JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" defer></script>
+    <!-- Load common.js early for Toastr setup -->
+    <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+</head>
+<body>
+    <div class="layout-wrapper">
         <div class="header">
-            <div class="header-content" id="brandingContent" style="display: block;">
+            <div class="header-content" id="brandingContent">
                 <!-- Branding content will be loaded here -->
             </div>
-        </div>
-        <div class="main-container">
-            <div class="menu-container">
-                <div class="menu">
-                    <button data-section="deal_listings">
-                        <span class="button-content"><i class="fas fa-tags"></i> Deal Listings</span>
-                    </button>
-                    <button data-submenu="affiliatePrograms" data-section="affiliateProgramsIntro">
-                        <span class="button-content"><i class="fas fa-handshake"></i> Affiliate Programs</span>
-                        <i class="fas fa-caret-right caret"></i>
-                    </button>
-                    <div id="affiliatePrograms" class="submenu">
-                        <button data-section="amazon_uk">
-                            <span class="button-content">
-                                <span class="icon-amazon-uk menu-size"></span> Amazon UK
-                            </span>
-                        </button>
-                        <button data-section="ebay_uk">
-                            <span class="button-content">
-                                <span class="icon-ebay-uk menu-size"></span> eBay UK
-                            </span>
-                        </button>
-                        <button data-section="awin">
-                            <span class="button-content"><i class="fas fa-network-wired"></i> Awin</span>
-                        </button>
-                        <button data-section="cj">
-                            <span class="button-content"><i class="fas fa-link"></i> CJ</span>
-                        </button>
-                        <button data-section="textmagic">
-                            <span class="button-content"><i class="fas fa-sms"></i> TextMagic</span>
-                        </button>
-                        <button data-section="tiny">
-                            <span class="button-content"><i class="fas fa-pen"></i> tiny</span>
-                        </button>
-                    </div>
-                    <button data-submenu="userManagement" data-section="userManagementIntro">
-                        <span class="button-content"><i class="fas fa-users"></i> User Management</span>
-                        <i class="fas fa-caret-right caret"></i>
-                    </button>
-                    <div id="userManagement" class="submenu">
-                        <button data-section="partners">
-                            <span class="button-content">
-                                <span class="menu-size icon-partner"></span> Partners
-                            </span>
-                        </button>
-                        <button data-section="communities">
-                            <span class="button-content">
-                                <span class="menu-size icon-community"></span> Communities
-                            </span>
-                        </button>
-                        <button data-section="merchants">
-                            <span class="button-content">
-                                <span class="menu-size icon-merchant"></span> Merchants
-                            </span>
-                        </button>
-                    </div>
-                    <button data-submenu="testScripts" data-section="testScriptsIntro">
-                        <span class="button-content"><i class="fas fa-flask"></i> Test Scripts</span>
-                        <i class="fas fa-caret-right caret"></i>
-                    </button>
-                    <div id="testScripts" class="submenu">
-                        <button data-href="/partner">
-                            <span class="button-content">
-                                <span class="icon-group">
-                                    <span class="menu-size icon-partner"></span>
-                                    <i class="fas fa-flask small-icon"></i>
-                                </span> Partner
-                            </span>
-                        </button>
-                        <button data-href="/community">
-                            <span class="button-content">
-                                <span class="icon-group">
-                                    <span class="menu-size icon-community"></span>
-                                    <i class="fas fa-flask small-icon"></i>
-                                </span> Community
-                            </span>
-                        </button>
-                        <button data-href="/merchant">
-                            <span class="button-content">
-                                <span class="icon-group">
-                                    <span class="menu-size icon-merchant"></span>
-                                    <i class="fas fa-flask small-icon"></i>
-                                </span> Merchant
-                            </span>
-                        </button>
-                        <button data-submenu="referralTests" data-section="referralTestsIntro">
-                            <span class="button-content"><i class="fas fa-link"></i> Referral Tests</span>
-                            <i class="fas fa-caret-right caret"></i>
-                        </button>
-                        <div id="referralTests" class="submenu">
-                            <button data-section="page_visit_test">
-                                <span class="button-content"><i class="fas fa-eye"></i> Page Visit Referral Test</span>
-                            </button>
-                            <button data-section="order_test">
-                                <span class="button-content"><i class="fas fa-shopping-cart"></i> Order Referral Test</span>
-                            </button>
-                        </div>
-                    </div>
-                    <button data-submenu="myAccountSubmenu" data-section="myAccountIntro">
-                        <span class="button-content"><i class="fas fa-user"></i> My Account</span>
-                        <i class="fas fa-caret-right caret"></i>
-                    </button>
-                    <div id="myAccountSubmenu" class="submenu">
-                        <button data-section="contactDetails">
-                            <span class="button-content"><i class="fas fa-address-book"></i> Contact Details</span>
-                        </button>
-                        <button data-section="changePassword">
-                            <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
-                        </button>
-                    </div>
-                    <button id="logOffBtn" style="background-color: #dc3545;">
-                        <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
-                    </button>
-                </div>
-            </div>
-            <div class="content-wrapper">
-                <div id="welcome" class="section">
-                    <h2>Welcome to Admin Dashboard</h2>
-                    <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
-                    <p>Use the menu on the left to:</p>
-                    <ul>
-                        <li>View and filter discounted deals in "Deal Listings"</li>
-                        <li>Manage affiliate credentials under "Affiliate Programs"</li>
-                        <li>Manage users under "User Management"</li>
-                        <li>Test referral tracking with "Test Scripts"</li>
-                        <li>Update your account details in "My Account"</li>
-                    </ul>
-                </div>
-
-                <div id="deal_listings" class="section">
-                    <h2>Discounted Deal Listings</h2>
-                    <p>This section displays all currently active deal listings available across your affiliate programs.</p>
-                    <div style="display: flex; gap: 20px;">
-                        <div style="flex: 1; max-width: 300px;">
-                            <h3>Categories</h3>
-                            <div class="treeview" id="categoryTree"></div>
-                        </div>
-                        <div style="flex: 2;">
-                            <table class="deals-table">
-                                <thead>
-                                    <tr>
-                                        <th>Category</th>
-                                        <th>Title</th>
-                                        <th>URL</th>
-                                        <th>Price</th>
-                                        <th>Original</th>
-                                        <th>Discount %</th>
-                                        <th>Image</th>
-                                        <th>QTY</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dealList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="affiliateProgramsIntro" class="section">
-                    <h2>Affiliate Programs</h2>
-                    <p>Use this section to manage your affiliate program credentials.</p>
-                    <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
-                </div>
-
-                <div id="amazon_uk" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <span class="icon-amazon-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
-                        <h2>Amazon UK Credentials</h2>
-                    </div>
-                    <div class="form" style="margin: 0; max-width: 400px;">
-                        <label for="amazonAccessKey">Access Key:</label>
-                        <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
-                        <label for="amazonSecretKey">Secret Key:</label>
-                        <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
-                        <label for="amazonAssociateTag">Associate Tag:</label>
-                        <input type="text" id="amazonAssociateTag" placeholder="Enter Associate Tag">
-                        <label for="amazonCountry">Country:</label>
-                        <input type="text" id="amazonCountry" placeholder="Enter Country (e.g., UK)">
-                        <button data-affiliate="amazon_uk">Update Credentials</button>
-                    </div>
-                    <div class="signup-instructions">
-                        <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
-                    </div>
-                </div>
-
-                <div id="ebay_uk" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <span class="icon-ebay-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
-                        <h2>eBay UK Credentials</h2>
-                    </div>
-                    <div class="form" style="margin: 0; max-width: 400px;">
-                        <label for="ebayAppId">App ID:</label>
-                        <input type="text" id="ebayAppId" placeholder="Enter App ID">
-                        <button data-affiliate="ebay_uk">Update Credentials</button>
-                    </div>
-                    <div class="signup-instructions">
-                        <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
-                    </div>
-                </div>
-
-                <div id="awin" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fas fa-network-wired" style="font-size: 32px; margin-right: 10px; color: white;"></i>
-                        <h2>Awin Credentials</h2>
-                    </div>
-                    <div class="form" style="margin: 0; max-width: 400px;">
-                        <label for="awinApiToken">API Token:</label>
-                        <input type="text" id="awinApiToken" placeholder="Enter API Token">
-                        <button data-affiliate="awin">Update Credentials</button>
-                    </div>
-                    <div class="signup-instructions">
-                        <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
-                    </div>
-                </div>
-
-                <div id="cj" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fas fa-link" style="font-size: 32px; margin-right: 10px; color: white;"></i>
-                        <h2>CJ Credentials</h2>
-                    </div>
-                    <div class="form" style="margin: 0; max-width: 400px;">
-                        <label for="cjApiKey">API Key:</label>
-                        <input type="text" id="cjApiKey" placeholder="Enter API Key">
-                        <label for="cjWebsiteId">Website ID:</label>
-                        <input type="text" id="cjWebsiteId" placeholder="Enter Website ID">
-                        <button data-affiliate="cj">Update Credentials</button>
-                    </div>
-                    <div class="signup-instructions">
-                        <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
-                    </div>
-                </div>
-
-                <div id="textmagic" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fas fa-sms" style="font-size: 32px; margin-right: 10px; color: white;"></i>
-                        <h2>TextMagic Credentials</h2>
-                    </div>
-                    <div class="form" style="margin: 0; max-width: 400px;">
-                        <label for="textmagicUsername">Username:</label>
-                        <input type="text" id="textmagicUsername" placeholder="Enter Username">
-                        <label for="textmagicApiKey">API Key:</label>
-                        <input type="text" id="textmagicApiKey" placeholder="Enter API Key">
-                        <button data-affiliate="textmagic">Update Credentials</button>
-                    </div>
-                    <div class="signup-instructions">
-                        <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
-                    </div>
-                </div>
-
-                <div id="tiny" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fas fa-pen" style="font-size: 32px; margin-right: 10px; color: white;"></i>
-                        <h2>tiny Credentials</h2>
-                    </div>
-                    <div class="form" style="margin: 0; max-width: 400px;">
-                        <label for="tinyApiKey">API Key:</label>
-                        <input type="text" id="tinyApiKey" placeholder="Enter API Key">
-                        <button data-affiliate="tiny">Update Credentials</button>
-                    </div>
-                    <div class="signup-instructions">
-                        <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
-                    </div>
-                </div>
-
-                <div id="userManagementIntro" class="section">
-                    <h2>User Management</h2>
-                    <p>This section allows you to manage different types of users in your system.</p>
-                    <p>Select a user type from the menu to view their details or modify their permissions:</p>
-                    <ul>
-                        <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
-                        <li><strong>Communities:</strong> Manage community users.</li>
-                        <li><strong>Merchants:</strong> Manage merchant users.</li>
-                    </ul>
-                </div>
-
-                <div id="merchants" class="section">
-                    <h2>Merchant Management</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>USERid</th>
-                                <th>Contact Name</th>
-                                <th>Email</th>
-                                <th>Phone Number</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="merchantsList">
-                            <!-- Dynamically populated by updateUserTable -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div id="communities" class="section">
-                    <h2>Communities Management</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>USERid</th>
-                                <th>Contact Name</th>
-                                <th>Email</th>
-                                <th>Phone Number</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="communitiesList">
-                            <!-- Dynamically populated by updateUserTable -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div id="partners" class="section">
-                    <h2>Partner Management</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>USERid</th>
-                                <th>Contact Name</th>
-                                <th>Email</th>
-                                <th>Phone Number</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="partnersList">
-                            <!-- Dynamically populated by updateUserTable -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div id="testScriptsIntro" class="section">
-                    <h2>Test Scripts</h2>
-                    <p>Use this section to test referral tracking and other scripts.</p>
-                    <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
-                </div>
-
-                <div id="referralTestsIntro" class="section">
-                    <h2>Referral Tests</h2>
-                    <p>This section contains tools to test referral tracking functionality.</p>
-                    <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
-                </div>
-
-                <div id="page_visit_test" class="section">
-                    <h2>Page Visit Referral Test</h2>
-                    <div class="form">
-                        <form id="pageVisitForm">
-                            <table>
-                                <tr><td><label for="pageReferer">Referer:</label></td><td><select id="pageReferer" name="referer"></select></td></tr>
-                                <tr><td><label for="page">Page:</label></td><td><input type="text" id="page" name="page" value="/home"></td></tr>
-                                <tr><td><label for="pageTimestamp">Timestamp:</label></td><td><input type="text" id="pageTimestamp" name="timestamp"></td></tr>
-                                <tr><td colspan="2"><button type="submit">Submit Page Visit</button></td></tr>
-                            </table>
-                        </form>
-                    </div>
-                </div>
-
-                <div id="order_test" class="section">
-                    <h2>Order Referral Test</h2>
-                    <div class="form">
-                        <form id="orderForm">
-                            <table>
-                                <tr><td><label for="orderReferer">Referer:</label></td><td><select id="orderReferer" name="referer"></select></td></tr>
-                                <tr><td><label for="orderId">Order ID:</label></td><td><input type="text" id="orderId" name="orderId" value="ORD12345"></td></tr>
-                                <tr><td><label for="buyer">Buyer Name:</label></td><td><input type="text" id="buyer" name="buyer" value="John Doe"></td></tr>
-                                <tr><td><label for="total">Total Amount (£):</label></td><td><input type="number" id="total" name="total" value="99.99" step="0.01"></td></tr>
-                                <tr><td><label for="orderTimestamp">Timestamp:</label></td><td><input type="text" id="orderTimestamp" name="timestamp"></td></tr>
-                                <tr><td colspan="2"><button type="submit">Submit Order</button></td></tr>
-                            </table>
-                        </form>
-                    </div>
-                </div>
-
-                <div id="myAccountIntro" class="section">
-                    <h2>My Account</h2>
-                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security.</p>
-                    <p>Use the options below to navigate to the desired section:</p>
-                </div>
-
-                <div id="contactDetails" class="section">
-                    <h2>Contact Details</h2>
-                    <div class="settings-form">
-                        <label><strong>User ID:</strong></label>
-                        <input type="text" id="userId" readonly>
-                        <label for="contactName">Contact Name:</label>
-                        <input type="text" id="contactName" placeholder="Enter contact name">
-                        <label for="websiteUrl">Website URL:</label>
-                        <input type="url" id="websiteUrl" placeholder="Enter website URL">
-                        <label for="emailAddress">Email Address:</label>
-                        <input type="email" id="emailAddress" placeholder="Enter email address">
-                        <label><strong>Phone Number:</strong></label>
-                        <span>{{ user.phone_number | default('N/A') }}</span>
-                        <button data-action="saveSettings"><i class="fas fa-save"></i> Save Settings</button>
-                    </div>
-                </div>
-
-                {% with user_type='admin' %}
-                    <div id="change-password" class="section" style="display: none;">
-                        {% include 'change_password.inc' %}
-                    </div>
-                {% endwith %}
-            </div>
-        </div>
+        </div>        
+        
+        {% block content %}{% endblock %}
+        
     </div>
 
-    <!-- Load scripts in the correct order with defer where appropriate -->
-    <script src="/static/js/site-auth.js" defer></script>
-    <script src="/static/js/site-navigation.js" defer></script>
-    <script src="/static/js/category-management.js" defer></script>
-    <script src="/static/js/site-request.js" defer></script>
-    <script src="/static/js/admin-page.js" defer></script>
-    <script src="/static/js/page-load.js" defer></script>
+    <!-- Local JS -->
+    <script src="{{ url_for('static', filename='js/site-auth.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/site-navigation.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/category-management.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/site-request.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/admin-page.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/page-load.js') }}" defer></script>
     <script>
-        // Wait for the initialize function to become available
-        function waitForInitialize(attempts = 50, delay = 100) {
-            if (typeof window.initialize === 'function') {
-                console.log('Initialize function found, calling initialize("admin")');
-                window.initialize('admin');
-            } else if (attempts > 0) {
-                console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
-                setTimeout(() => waitForInitialize(attempts - 1, delay), delay);
-            } else {
-                console.error('Initialize function not found after maximum retries');
+        document.addEventListener('DOMContentLoaded', function() {
+            const layoutWrapper = document.querySelector('.layout-wrapper');
+            layoutWrapper.style.display = 'none'; // Hide initially
+
+            function waitForInitialize(pageType, attempts = 100, delay = 1000) {
+                if (typeof window.initialize === 'function') {
+                    console.log(`Initialize function found, calling initialize("${pageType}")`);
+                    window.initialize(pageType);
+                    layoutWrapper.style.display = 'block'; // Show after initialization
+                } else if (attempts > 0) {
+                    console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
+                    setTimeout(() => waitForInitialize(pageType, attempts - 1, delay), delay);
+                } else {
+                    console.error('Initialize function not found after maximum retries');
+                    layoutWrapper.style.display = 'block'; // Show anyway to avoid blank page
+                }
             }
-        }
-        waitForInitialize();
+
+            // Pass page type from Flask
+            waitForInitialize('{{ page_type | default("default") }}');
+        });
     </script>
 </body>
 </html>
+change_password.inc
+<div class="settings-form">
+    <div class="password-container">
+        <label for="currentPassword">Current Password:</label>
+        <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+        <i class="fas fa-eye password-toggle" {% if user_type == "partner" %}data-field="currentPassword Ascending"{% else %}data-target="currentPassword"{% endif %}></i>
+    </div>
+    <div class="password-container">
+        <label for="newPassword">New Password:</label>
+        <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password">
+        <i class="fas fa-eye password-toggle" {% if user_type == "partner" %}data-field="newPassword"{% else %}data-target="newPassword"{% endif %}></i>
+    </div>
+    <div class="password-container">
+        <label for="confirmPassword">Confirm New Password:</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password">
+        <i class="fas fa-eye password-toggle" {% if user_type == "partner" %}data-field="confirmPassword"{% else %}data-target="confirmPassword"{% endif %}></i>
+    </div>
+    <button data-action="savePassword"><i class="fas fa-key"></i> Change Password</button>
+</div>
 community.html
 <!DOCTYPE html>
 <html lang="en">
@@ -488,11 +550,11 @@ community.html
         <div class="main-container">
             <div class="menu-container">
                 <div class="menu">
-                    <button data-submenu="my_website_intro" data-section="my_website_intro">
+                    <button data-submenu="my_website_submenu" data-section="my_website_intro_section">
                         <span class="button-content"><i class="fas fa-globe"></i> My Web Site</span>
                         <i class="fas fa-caret-right caret"></i>
                     </button>
-                    <div id="my_website_intro" class="submenu">
+                    <div id="my_website_submenu" class="submenu">
                         <button data-section="wix">
                             <span class="button-content"><span class="icon-wix menu-size"></span> Wix</span>
                         </button>
@@ -515,13 +577,13 @@ community.html
                     <button data-section="categories">
                         <span class="button-content"><i class="fas fa-list"></i> My Categories</span>
                     </button>
-                    <button data-submenu="referrals_intro" data-section="referrals_intro">
+                    <button data-submenu="referrals_submenu" data-section="referrals_intro_section">
                         <span class="button-content">
                             <span class="icon-community menu-size"></span> My Referrals
                         </span>
                         <i class="fas fa-caret-right caret"></i>
                     </button>
-                    <div id="referrals_intro" class="submenu">
+                    <div id="referrals_submenu" class="submenu">
                         <button data-section="visits">
                             <span class="button-content"><i class="fas fa-eye"></i> Visits</span>
                         </button>
@@ -529,15 +591,15 @@ community.html
                             <span class="button-content"><i class="fas fa-shopping-cart"></i> Orders</span>
                         </button>
                     </div>
-                    <button data-submenu="my-account-submenu" data-section="my-account">
+                    <button data-submenu="my_account_submenu" data-section="my_account_intro_section">
                         <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
                         <i class="fas fa-caret-right caret"></i>
                     </button>
-                    <div id="my-account-submenu" class="submenu">
-                        <button data-section="contact-details">
+                    <div id="my_account_submenu" class="submenu">
+                        <button data-section="contact_details">
                             <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
                         </button>
-                        <button data-section="change-password">
+                        <button data-section="change_password">
                             <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
                         </button>
                     </div>
@@ -566,7 +628,7 @@ community.html
                     {% include 'my_account.inc' %}
                 {% endwith %}
                 {% with user_type='community' %}
-                    <div id="change-password" class="section" style="display: none;">
+                    <div id="change_password" class="section" style="display: none;">
                         {% include 'change_password.inc' %}
                     </div>
                 {% endwith %}
@@ -575,7 +637,7 @@ community.html
                     <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
                     <div class="treeview" id="categoryTree"></div>
                 </div>
-                <div id="referrals_intro" class="section">
+                <div id="referrals_intro_section" class="section">
                     <h2>My Referrals</h2>
                     <p>This section allows you to track your referral activity.</p>
                     <p>Select from the submenu options:</p>
@@ -632,7 +694,7 @@ community.html
                         </table>
                     </div>
                 </div>
-                <div id="my_website_intro" class="section">
+                <div id="my_website_intro_section" class="section">
                     <h2>My Web Site</h2>
                     <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
                     <ul>
@@ -762,20 +824,11 @@ community.html
 </body>
 </html>
 login.html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>clubmadeira.io | Login</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/static/styles.css">
-    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
-</head>
-<body class="login-page">
-    <div id="loadingOverlay" style="display: none;">
+{% extends "auth.inc" %}
+{% block content %}
+<!-- Deployed 2025-03-29 v6 -->
+<div class="login-page">
+    <div id="loadingOverlay" class="hidden">
         <div class="multicircle-loader">
             <div class="circle circle1"></div>
             <div class="circle circle2"></div>
@@ -784,12 +837,12 @@ login.html
         </div>
     </div>
 
-    <div class="container" id="loginContainer">
+    <div class="container" id="loginContainer" style="display: block !important; visibility: visible !important; opacity: 1 !important;">
         <h2>Login</h2>
         <div class="custom-login-notice">
             <span class="highlight">Please log in</span> to access your account. If you don’t have an account, click "Sign Up" below.
         </div>
-        <form id="loginForm">
+        <form id="loginForm" class="form">
             <div class="form-group">
                 <label for="loginEmail">Email:</label>
                 <div class="input-container">
@@ -803,19 +856,17 @@ login.html
                     <span class="toggle-password"><i class="fas fa-eye"></i></span>
                 </div>
             </div>
-            <div class="button-container">
-                <button type="submit">Login</button>
-            </div>
+            <button type="submit">Login</button>
         </form>
         <div class="toggle-link">
-            <a href="/signup">Need an account? Sign Up</a><br>
+            <a href="{{ url_for('authentication_bp.signup') }}">Need an account? Sign Up</a><br>
             <a onclick="showForgotPassword()">Forgot Password?</a>
         </div>
     </div>
 
-    <div class="container" id="forgotPasswordContainer" style="display: none;">
+    <div class="container hidden" id="forgotPasswordContainer">
         <h2>Forgot Password</h2>
-        <form id="forgotPasswordForm">
+        <form id="forgotPasswordForm" class="form">
             <div class="form-group">
                 <label for="forgotEmail">Email:</label>
                 <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
@@ -827,9 +878,9 @@ login.html
         </div>
     </div>
 
-    <div class="container" id="verifyOtpContainer" style="display: none;">
+    <div class="container hidden" id="verifyOtpContainer">
         <h2>Verify OTP</h2>
-        <form id="verifyOtpForm">
+        <form id="verifyOtpForm" class="form">
             <div class="form-group">
                 <label for="verifyEmail">Email:</label>
                 <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required>
@@ -852,361 +903,304 @@ login.html
             <a onclick="showLogin()">Back to Login</a>
         </div>
     </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="/static/js/site-auth.js"></script>
-    <script>
-        const apiUrl = window.location.origin;
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Login script loaded - Version: Using plain fetch for /login - Timestamp:', new Date().toISOString());
 
-        // Override Toastr methods to log messages to the console
-        (function() {
-            // Store the original Toastr methods
-            const originalSuccess = toastr.success;
-            const originalError = toastr.error;
-            const originalInfo = toastr.info;
-            const originalWarning = toastr.warning;
-
-            // Override success method
-            toastr.success = function(message, title, options) {
-                console.log(`Toastr Success: ${title ? title + ' - ' : ''}${message}`);
-                return originalSuccess.call(toastr, message, title, options);
-            };
-
-            // Override error method
-            toastr.error = function(message, title, options) {
-                console.log(`Toastr Error: ${title ? title + ' - ' : ''}${message}`);
-                return originalError.call(toastr, message, title, options);
-            };
-
-            // Override info method
-            toastr.info = function(message, title, options) {
-                console.log(`Toastr Info: ${title ? title + ' - ' : ''}${message}`);
-                return originalInfo.call(toastr, message, title, options);
-            };
-
-            // Override warning method
-            toastr.warning = function(message, title, options) {
-                console.log(`Toastr Warning: ${title ? title + ' - ' : ''}${message}`);
-                return originalWarning.call(toastr, message, title, options);
-            };
-        })();
-
-        toastr.options = {
-            closeButton: true,
-            progressBar: true,
-            positionClass: 'toast-top-right',
-            timeOut: 5000,
-            showMethod: 'slideDown',
-            hideMethod: 'slideUp'
-        };
+        // Check for site-navigation.js after DOM load
+        if (!window.siteNavigation || !window.siteNavigation.fetchProtectedPage) {
+            console.error('site-navigation.js not loaded properly after DOMContentLoaded');
+            return; // Avoid throwing an error to allow partial functionality
+        }
 
         function showLoadingOverlay() {
             let overlay = document.getElementById('loadingOverlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'loadingOverlay';
-                overlay.innerHTML = `
-                    <div class="multicircle-loader">
-                        <div class="circle circle1"></div>
-                        <div class="circle circle2"></div>
-                        <div class="circle circle3"></div>
-                        <div class="circle circle4"></div>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                console.log('showLoadingOverlay - Overlay set to visible');
+            } else {
+                console.error('showLoadingOverlay - Overlay not found');
             }
-            overlay.style.display = 'flex';
-            return overlay;
         }
 
         function hideLoadingOverlay() {
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) overlay.style.display = 'none';
+            let overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                console.log('hideLoadingOverlay - Overlay hidden');
+            } else {
+                console.error('hideLoadingOverlay - Overlay not found');
+            }
         }
 
         function showLogin() {
             const loginContainer = document.getElementById('loginContainer');
+            const forgotContainer = document.getElementById('forgotPasswordContainer');
+            const verifyContainer = document.getElementById('verifyOtpContainer');
+            const loginPage = document.querySelector('.login-page');
+            
             if (loginContainer) {
+                loginContainer.classList.remove('hidden');
                 loginContainer.style.display = 'block';
-                document.getElementById('forgotPasswordContainer').style.display = 'none';
-                document.getElementById('verifyOtpContainer').style.display = 'none';
-                hideLoadingOverlay();
+                loginContainer.style.visibility = 'visible';
+                loginContainer.style.opacity = '1';
+                console.log('showLogin - Login container set to visible');
+            } else {
+                console.error('showLogin - Login container not found');
             }
+            
+            if (loginPage) {
+                loginPage.style.display = 'block';
+                loginPage.style.visibility = 'visible';
+                loginPage.style.opacity = '1';
+                console.log('showLogin - Login page set to visible');
+            } else {
+                console.error('showLogin - Login page not found');
+            }
+            
+            if (forgotContainer) forgotContainer.classList.add('hidden');
+            if (verifyContainer) verifyContainer.classList.add('hidden');
+            hideLoadingOverlay();
         }
 
         function showForgotPassword() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('forgotPasswordContainer').style.display = 'block';
-            document.getElementById('verifyOtpContainer').style.display = 'none';
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('forgotPasswordContainer').classList.remove('hidden');
+            document.getElementById('verifyOtpContainer').classList.add('hidden');
             hideLoadingOverlay();
         }
 
         function showVerifyOtp(email) {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('forgotPasswordContainer').style.display = 'none';
-            document.getElementById('verifyOtpContainer').style.display = 'block';
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('forgotPasswordContainer').classList.add('hidden');
+            document.getElementById('verifyOtpContainer').classList.remove('hidden');
             document.getElementById('verifyEmail').value = email;
             hideLoadingOverlay();
         }
 
-        document.querySelectorAll('.toggle-password').forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                const input = this.parentElement.querySelector('input');
-                const icon = this.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    input.type = 'password';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
+        console.log('DOMContentLoaded - Initializing login page');
+        try {
+            showLogin();
+            console.log('DOMContentLoaded - showLogin executed successfully');
+
+            document.querySelectorAll('.toggle-password').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
             });
-        });
 
-        async function fetchProtectedPage(url) {
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                toastr.error('No authentication token found. Please log in.');
-                showLogin();
-                return;
-            }
+            function redirectBasedOnPermissions() {
+                const token = localStorage.getItem('authToken');
+                if (!token) return false;
 
-            const overlay = showLoadingOverlay();
-            try {
-                const response = await fetch(`${apiUrl}${url}`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'text/html' }
-                });
-                if (!response.ok) throw new Error(`Server returned ${response.status}: ${await response.text()}`);
-                const html = await response.text();
-                document.documentElement.innerHTML = html;
-
-                if (!document.getElementById('loadingOverlay')) {
-                    const newOverlay = document.createElement('div');
-                    newOverlay.id = 'loadingOverlay';
-                    newOverlay.innerHTML = overlay.innerHTML;
-                    newOverlay.style.display = 'flex';
-                    document.body.prepend(newOverlay);
+                let decoded;
+                try { 
+                    decoded = decodeJWT(token); 
+                    console.log('redirectBasedOnPermissions - Token decoded:', decoded);
+                } catch (e) {
+                    toastr.error('Invalid token format. Please log in again.');
+                    localStorage.removeItem('authToken');
+                    return false;
                 }
 
-                const head = document.head;
-                const requiredStyles = [
-                    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
-                    'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css',
-                    '/static/styles.css'
-                ];
-                requiredStyles.forEach(href => {
-                    if (!head.querySelector(`link[href="${href}"]`)) {
-                        const link = document.createElement('link');
-                        link.rel = 'stylesheet';
-                        link.href = href;
-                        head.appendChild(link);
-                    }
-                });
+                const permissions = decoded.permissions;
+                let redirectPath;
+                if (permissions.includes('admin')) redirectPath = '/admin';
+                else if (permissions.includes('wixpro')) redirectPath = '/partner';
+                else if (permissions.includes('merchant')) redirectPath = '/merchant';
+                else if (permissions.includes('community')) redirectPath = '/community';
+                else redirectPath = '/';
 
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const scripts = doc.querySelectorAll('script');
-                const scriptPromises = [];
-                scripts.forEach(script => {
-                    if (script.src) {
-                        const newScript = document.createElement('script');
-                        newScript.src = script.src;
-                        newScript.async = false;
-                        scriptPromises.push(new Promise(resolve => {
-                            newScript.onload = resolve;
-                            newScript.onerror = () => console.error(`Failed to load script: ${script.src}`);
-                            document.head.appendChild(newScript);
-                        }));
-                    } else if (script.innerHTML.trim()) {
-                        try { (new Function(script.innerHTML))(); } catch (e) { console.error('Error executing inline script:', e); }
-                    }
-                });
-
-                await Promise.all(scriptPromises);
-                setTimeout(() => {
-                    const layoutWrapper = document.querySelector('.layout-wrapper');
-                    if (layoutWrapper) layoutWrapper.style.display = 'block';
-                    else toastr.error('Failed to load page content');
-                    hideLoadingOverlay();
-                }, 1000);
-            } catch (error) {
-                toastr.error(error.message || 'Failed to load protected page');
-                showLogin();
-                hideLoadingOverlay();
-            }
-        }
-
-        function redirectBasedOnPermissions() {
-            const token = localStorage.getItem('authToken');
-            if (!token) return false;
-
-            let decoded;
-            try { decoded = decodeJWT(token); } catch (e) {
-                toastr.error('Invalid token format. Please log in again.');
-                localStorage.removeItem('authToken');
+                if (window.location.pathname !== redirectPath) {
+                    console.log('redirectBasedOnPermissions - Redirecting to:', redirectPath);
+                    window.siteNavigation.fetchProtectedPage(redirectPath);
+                    return true;
+                }
+                console.log('redirectBasedOnPermissions - No redirect needed');
                 return false;
             }
 
-            if (!decoded || !decoded.permissions) {
-                localStorage.removeItem('authToken');
-                return false;
-            }
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                // Remove existing listeners to prevent overrides
+                const newForm = loginForm.cloneNode(true);
+                loginForm.parentNode.replaceChild(newForm, loginForm);
+                document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('loginEmail').value.trim();
+                    const password = document.getElementById('loginPassword').value;
 
-            const permissions = decoded.permissions;
-            let redirectPath;
-            if (permissions.includes('admin')) redirectPath = '/admin';
-            else if (permissions.includes('wixpro')) redirectPath = '/partner';
-            else if (permissions.includes('merchant')) redirectPath = '/merchant';
-            else if (permissions.includes('community')) redirectPath = '/community';
-            else redirectPath = '/';
+                    showLoadingOverlay();
+                    console.log('Attaching loginForm event listener - Using plain fetch - Timestamp:', new Date().toISOString());
+                    try {
+                        console.log('Submitting login request with plain fetch');
+                        const response = await fetch(`${window.apiUrl}/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify({ email, password })
+                        });
+                        if (!response) throw new Error('No response from server');
+                        if (!response.ok) throw new Error((await response.json()).message || `Login failed with status ${response.status}`);
 
-            if (window.location.pathname !== redirectPath) {
-                fetchProtectedPage(redirectPath);
-                return true;
-            }
-            return false;
-        }
+                        const data = await response.json();
+                        if (data.status !== 'success') throw new Error(data.message || 'Login failed');
 
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
+                        localStorage.setItem('authToken', data.token);
+                        if (data.userId) localStorage.setItem('userId', data.userId);
 
-            showLoadingOverlay();
-            try {
-                const response = await fetch(`${apiUrl}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                        const decoded = decodeJWT(data.token);
+                        const permissions = decoded.permissions || [];
+                        const needsVerification = (permissions.includes('merchant') || permissions.includes('community')) && !permissions.includes('verified');
+
+                        if (needsVerification) {
+                            console.log('Needs OTP verification');
+                            const otpResponse = await fetch(`${window.apiUrl}/reset-password`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email })
+                            });
+                            const otpData = await otpResponse.json();
+                            if (!otpResponse.ok) throw new Error(otpData.message || 'Failed to send OTP');
+
+                            toastr.success('OTP sent to your phone. Please enter it below.');
+                            const loginContainer = document.getElementById('loginContainer');
+                            loginContainer.innerHTML = `
+                                <h2>Verify OTP</h2>
+                                <form id="loginOtpForm" class="form">
+                                    <div class="form-group">
+                                        <label for="loginOtp">One-Time Password:</label>
+                                        <input type="text" id="loginOtp" name="otp" placeholder="Enter OTP" required>
+                                    </div>
+                                    <button type="submit">Verify OTP</button>
+                                </form>
+                            `;
+                            hideLoadingOverlay();
+
+                            document.getElementById('loginOtpForm').addEventListener('submit', async (e) => {
+                                e.preventDefault();
+                                const otp = document.getElementById('loginOtp').value.trim();
+                                if (!otp) {
+                                    toastr.error('Please enter the OTP.');
+                                    return;
+                                }
+
+                                showLoadingOverlay();
+                                const verifyResponse = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ email, code: otp, new_password: password })
+                                });
+                                const verifyData = await verifyResponse.json();
+                                if (!verifyResponse.ok) throw new Error(verifyData.message || 'OTP verification failed');
+
+                                localStorage.setItem('authToken', verifyData.token);
+                                toastr.success('Verification successful! Redirecting...');
+                                redirectBasedOnPermissions();
+                            });
+                        } else {
+                            console.log('Login successful, redirecting based on permissions');
+                            redirectBasedOnPermissions();
+                        }
+                    } catch (error) {
+                        toastr.error(error.message || 'Unable to connect to server.');
+                        hideLoadingOverlay();
+                    }
                 });
-                if (!response.ok) throw new Error((await response.json()).message || `Login failed with status ${response.status}`);
+            } else {
+                console.error('loginForm element not found');
+            }
 
-                const data = await response.json();
-                if (data.status !== 'success') throw new Error(data.message || 'Login failed');
+            document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('forgotEmail').value.trim();
 
-                localStorage.setItem('authToken', data.token);
-                if (data.userId) localStorage.setItem('userId', data.userId);
-
-                const decoded = decodeJWT(data.token);
-                const permissions = decoded.permissions || [];
-                const needsVerification = (permissions.includes('merchant') || permissions.includes('community')) && !permissions.includes('verified');
-
-                if (needsVerification) {
-                    const otpResponse = await fetch(`${apiUrl}/reset-password`, {
+                showLoadingOverlay();
+                try {
+                    const response = await fetch(`${window.apiUrl}/reset-password`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email })
                     });
-                    const otpData = await otpResponse.json();
-                    if (!otpResponse.ok) throw new Error(otpData.message || 'Failed to send OTP');
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || 'Reset request failed');
 
-                    toastr.success('OTP sent to your phone. Please enter it below.');
-                    const loginContainer = document.getElementById('loginContainer');
-                    loginContainer.innerHTML = `
-                        <h2>Verify OTP</h2>
-                        <form id="loginOtpForm">
-                            <div class="form-group">
-                                <label for="loginOtp">One-Time Password:</label>
-                                <input type="text" id="loginOtp" name="otp" placeholder="Enter OTP" required>
-                            </div>
-                            <button type="submit">Verify OTP</button>
-                        </form>
-                    `;
+                    toastr.success('A one-time password has been sent to your phone.');
+                    showVerifyOtp(email);
+                } catch (error) {
+                    toastr.error(error.message || 'Error sending OTP');
                     hideLoadingOverlay();
-
-                    document.getElementById('loginOtpForm').addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        const otp = document.getElementById('loginOtp').value.trim();
-                        if (!otp) {
-                            toastr.error('Please enter the OTP.');
-                            return;
-                        }
-
-                        showLoadingOverlay();
-                        const verifyResponse = await fetch(`${apiUrl}/verify-reset-code`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email, code: otp, new_password: password })
-                        });
-                        const verifyData = await verifyResponse.json();
-                        if (!verifyResponse.ok) throw new Error(verifyData.message || 'OTP verification failed');
-
-                        localStorage.setItem('authToken', verifyData.token);
-                        toastr.success('Verification successful! Redirecting...');
-                        redirectBasedOnPermissions();
-                    });
-                } else {                    
-                    redirectBasedOnPermissions();
                 }
-            } catch (error) {
-                toastr.error(error.message || 'Unable to connect to server.');
-                hideLoadingOverlay();
-            }
-        });
+            });
 
-        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('forgotEmail').value.trim();
+            document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('verifyEmail').value.trim();
+                const code = document.getElementById('otpCode').value.trim();
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
 
-            showLoadingOverlay();
-            try {
-                const response = await fetch(`${apiUrl}/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'Reset request failed');
+                const passwordRegex = /^(?=.*\d).{8,}$/;
+                if (!passwordRegex.test(newPassword)) {
+                    toastr.error('New password must be at least 8 characters long and include numbers');
+                    return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                    toastr.error('New password and confirmation do not match');
+                    return;
+                }
 
-                toastr.success('A one-time password has been sent to your phone.');
-                showVerifyOtp(email);
-            } catch (error) {
-                toastr.error(error.message || 'Error sending OTP');
-                hideLoadingOverlay();
-            }
-        });
+                showLoadingOverlay();
+                try {
+                    const response = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, code, new_password: newPassword })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || 'Verification failed');
 
-        document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('verifyEmail').value.trim();
-            const code = document.getElementById('otpCode').value.trim();
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+                    toastr.success('Password updated successfully!');
+                    showLogin();
+                } catch (error) {
+                    toastr.error(error.message || 'Error verifying OTP');
+                    hideLoadingOverlay();
+                }
+            });
 
-            const passwordRegex = /^(?=.*\d).{8,}$/;
-            if (!passwordRegex.test(newPassword)) {
-                toastr.error('New password must be at least 8 characters long and include numbers');
-                return;
-            }
-            if (newPassword !== confirmNewPassword) {
-                toastr.error('New password and confirmation do not match');
-                return;
-            }
-
-            showLoadingOverlay();
-            try {
-                const response = await fetch(`${apiUrl}/verify-reset-code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, code, new_password: newPassword })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'Verification failed');
-
-                toastr.success('Password updated successfully!');
-                showLogin();
-            } catch (error) {
-                toastr.error(error.message || 'Error verifying OTP');
-                hideLoadingOverlay();
-            }
-        });
-    </script>
-</body>
-</html>
+            setTimeout(() => {
+                const loginContainer = document.getElementById('loginContainer');
+                const loginPage = document.querySelector('.login-page');
+                if (loginContainer && window.getComputedStyle(loginContainer).display === 'none') {
+                    console.error('DOMContentLoaded - Login container still hidden after showLogin');
+                    loginContainer.style.display = 'block';
+                    loginContainer.style.visibility = 'visible';
+                    loginContainer.style.opacity = '1';
+                }
+                if (loginPage && window.getComputedStyle(loginPage).display === 'none') {
+                    console.error('DOMContentLoaded - Login page still hidden');
+                    loginPage.style.display = 'block';
+                    loginPage.style.visibility = 'visible';
+                    loginPage.style.opacity = '1';
+                }
+            }, 100);
+        } catch (e) {
+            console.error('DOMContentLoaded - Error in initialization:', e.message);
+        }
+    });
+</script>
+{% endblock %}
 merchant.html
 <!DOCTYPE html>
 <html lang="en">
@@ -1347,6 +1341,38 @@ merchant.html
     </script>
 </body>
 </html>
+my_account.inc
+<div id="contact-details" class="section" style="display: none;">
+    <h2>Contact Details</h2>
+    <div class="settings-form">
+        <label><strong>User ID:</strong></label>
+        <input type="text" id="userId" readonly>
+        <label for="contactName">Contact Name:</label>
+        <input type="text" id="contactName" placeholder="Enter contact name">
+        <label for="websiteUrl">Website URL:</label>
+        <input type="url" id="websiteUrl" placeholder="Enter website URL">
+        <label for="emailAddress">Email Address:</label>
+        <input type="email" id="emailAddress" placeholder="Enter email address">
+        <label><strong>Phone Number:</strong></label>
+        <span>{{ user.phone_number | default('N/A') }}</span>
+        <button data-action="saveSettings"><i class="fas fa-save"></i> Save Settings</button>
+    </div>
+</div>
+overlay.inc
+<div id="loadingOverlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 1); justify-content: center; align-items: center; z-index: 9999;">
+    <div style="position: relative; width: 200px; height: 200px;">
+        <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 120px; height: 120px; border-top-color: #ff6f61; top: 40px; left: 40px; animation-delay: 0s;"></div>
+        <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 90px; height: 90px; border-top-color: #6bff61; top: 55px; left: 55px; animation-delay: 0.3s;"></div>
+        <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 60px; height: 60px; border-top-color: #61cfff; top: 70px; left: 70px; animation-delay: 0.6s;"></div>
+        <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 30px; height: 30px; border-top-color: #ff61ff; top: 85px; left: 85px; animation-delay: 0.9s;"></div>
+    </div>
+</div>
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
 partner.html
 <!DOCTYPE html>
 <html lang="en">
@@ -1810,3 +1836,96 @@ signup.html
     </script>
 </body>
 </html>
+siterequest.inc
+<form id="siteRequestForm" class="settings-form">
+    <input type="hidden" id="userType" value="{{ user_type }}">
+
+    <label for="name">{{ 'Community Name' if user_type == 'community' else 'Store Name' }}:</label>
+    <input type="text" id="name" name="name" placeholder="Enter your {{ 'community' if user_type == 'community' else 'store' }} name" required>
+
+    <label for="about">{{ 'About Our Community' if user_type == 'community' else 'About Your Store' }}:</label>
+    <textarea id="about" name="about" placeholder="Tell us about your {{ 'community' if user_type == 'community' else 'store' }}"></textarea>
+
+    <label for="logos">{{ 'Community Logos' if user_type == 'community' else 'Store Logos' }}:</label>
+    <input type="file" id="logos" name="logos" accept="image/*" multiple>
+    <small>Upload up to 5 logos (e.g., main logo, secondary logos).</small>
+
+    <label for="colorPrefs">Color Preferences:</label>
+    <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
+
+    <label for="stylingDetails">Styling Details:</label>
+    <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., modern layout, bold fonts"></textarea>
+
+    <label for="preferredDomain">Preferred Domain Name:</label>
+    <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., my{{ 'community.org' if user_type == 'community' else 'store.uk' }}" oninput="updateEmailDomains()">
+    <button type="button" data-action="checkDomainAvailability"><i class="fas fa-search"></i> Check Availability</button>
+
+    <label>Email Addresses to Set Up (up to 5):</label>
+    <div id="emailsContainer">
+        <div class="email-section" data-email="1">
+            <label for="email1Name">Email Name:</label>
+            <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
+            <span id="email1Domain">@my{{ 'community.org' if user_type == 'community' else 'store.uk' }}</span>
+        </div>
+    </div>
+    <button type="button" data-action="addEmail"><i class="fas fa-plus"></i> Add Another Email</button>
+
+    <label>{{ 'Requested Pages (up to 5)' if user_type == 'community' else 'Required Pages' }}:</label>
+    <div id="pagesContainer">
+        {% if user_type == 'merchant' %}
+            <!-- Fixed Home page -->
+            <div class="page-section" data-page="1">
+                <label for="page1Name">Page Name:</label>
+                <input type="text" id="page1Name" name="page1Name" value="Home" readonly>
+                <br><br>
+                <label for="page1Content">Home Page Content:</label>
+                <textarea id="page1Content" name="page1Content" placeholder="Describe your home page (e.g., welcome message, featured products)"></textarea>
+                <label for="page1Images">Additional Images:</label>
+                <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+            </div>
+            <!-- Fixed Returns Policy page -->
+            <div class="page-section" data-page="2">
+                <label for="page2Name">Page Name:</label>
+                <input type="text" id="page2Name" name="page2Name" value="Returns Policy" readonly>
+                <br><br>
+                <label for="page2Content">Returns Policy Content:</label>
+                <textarea id="page2Content" name="page2Content" placeholder="Outline your returns policy"></textarea>
+                <label for="page2Images">Additional Images:</label>
+                <input type="file" id="page2Images" name="page2Images" accept="image/*" multiple>
+            </div>
+        {% else %}
+            <!-- Community starts with one customizable page -->
+            <div class="page-section" data-page="1">
+                <label for="page1Name">Page Name:</label>
+                <input type="text" id="page1Name" name="page1Name" value="Home">
+                <br><br>
+                <label for="page1Content">Page Content:</label>
+                <textarea id="page1Content" name="page1Content" placeholder="Describe this page"></textarea>
+                <label for="page1Images">Additional Images:</label>
+                <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+            </div>
+        {% endif %}
+    </div>
+    <button type="button" data-action="addPage"><i class="fas fa-plus"></i> Add Another Page</button>
+
+    <label>{{ 'Wix Widgets' if user_type == 'community' else 'Wix Store Widgets' }}:</label>
+    <div class="widget-checkboxes">
+        {% if user_type == 'community' %}
+            <div><label><input type="checkbox" name="widgets" value="events"> Events</label> - Add an events calendar.</div>
+            <div><label><input type="checkbox" name="widgets" value="socialMediaFeeds"> Social Media Feeds</label> - Display live social media feeds.</div>
+            <div><label><input type="checkbox" name="widgets" value="gallery"> Gallery</label> - Showcase photos.</div>
+            <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Simple contact form.</div>
+            <div><label><input type="checkbox" name="widgets" value="blog"> Blog</label> - Share updates and stories.</div>
+            <div><label><input type="checkbox" name="widgets" value="weather"> Weather</label> - Show real-time weather.</div>
+            <div><label><input type="checkbox" name="widgets" value="socialMediaLinks"> Social Media Links</label> - Quick links to profiles.</div>
+        {% else %}
+            <div><label><input type="checkbox" name="widgets" value="productCatalog"> Product Catalog</label> - Display your products.</div>
+            <div><label><input type="checkbox" name="widgets" value="checkout"> Checkout</label> - Enable direct purchases.</div>
+            <div><label><input type="checkbox" name="widgets" value="cart"> Shopping Cart</label> - Add a cart for customers.</div>
+            <div><label><input type="checkbox" name="widgets" value="promotions"> Promotions</label> - Highlight sales and discounts.</div>
+            <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Customer inquiries.</div>
+        {% endif %}
+    </div>
+
+    <button type="button" data-action="saveSiteRequest"><i class="fas fa-paper-plane"></i> Submit Request</button>
+</form>

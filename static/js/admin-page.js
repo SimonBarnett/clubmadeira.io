@@ -17,7 +17,7 @@ function initializeAdmin(pageType) {
     // Load initial content
     loadBranding(pageType, 'brandingContent');
     setupNavigation();
-    showSection('welcome');
+    window.siteNavigation.showSection('welcome');
 
     // Fetch and display contact_name in the welcome section
     if (typeof loadSettings === 'function') {

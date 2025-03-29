@@ -1047,7 +1047,8 @@ def admin():
         
         # Render the dashboard—stronger than a Wookiee’s grip!
         logging.debug(f"Rendering admin dashboard for user {user_id}")
-        return render_template('admin.html', user=user)
+        return render_template('admin.html', title='clubmadeira.io | Admin', page_type='admin', user=user)
+    # 
     except Exception as e:
         # Marvin: “I tried to render the admin page, and now I’m broken.”
         logging.error(f"UX Issue - Failed to render admin page: {str(e)}", exc_info=True)

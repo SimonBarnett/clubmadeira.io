@@ -51,7 +51,6 @@ def get_user(user_id):
             "phone_number": user.get("phone_number", ""),
             "permissions": user.get("permissions", []),
             "website_url": user.get("website_url", ""),
-            "wixClientId": user.get("wixClientId", ""),
             "referrals": user.get("referrals", {"visits": [], "orders": []})
         }
         # Redact sensitive data in logs—nobody expects the password!
@@ -159,50 +158,43 @@ def add_permission(user_id):
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 # endregion
 
-# region /config/<affiliate> PATCH - Tuning the Galactic Config
-@manager_bp.route('/config', methods=['GET']) 
-@login_required(["admin"], require_all=True) 
-def get_config(): 
-    config = load_config() 
-    return jsonify({"status": "success", "count": len(config), "config": config}), 200 
- 
-@manager_bp.route('/config/<affiliate>', methods=['PATCH'])
+# region /settings/affiliate_key GET - Retrieving Affiliate Key Settings
+@manager_bp.route('/settings/affiliate_key', methods=['GET'])
 @login_required(["admin"], require_all=True)
-def replace_config(affiliate):
+def get_affiliate_key_settings():
     """
-    Updates affiliate configuration, like Marvin tweaking the Heart of Gold’s circuits (grudgingly).
-    Purpose: Replaces an affiliate’s config settings—admin-only, because only the elite can adjust the galaxy’s dials!
-    Permissions: Restricted to "admin"—you’re the Messiah, not just a candle merchant!
-    Inputs: URL parameter:
-        - affiliate (str): The affiliate key to update, e.g., "wixpro".
-        JSON payload:
-        - <dict>: The new config data to replace the existing settings.
+    Retrieves all settings of type 'affiliate_key' from the configuration.
+    Purpose: Provides admins with a list of affiliate key settings for management.
+    Permissions: Restricted to "admin"—only the chosen can access this!
+    Inputs: None
     Outputs:
-        - Success: JSON {"status": "success", "message": "Updated <affiliate> config"}, status 200—config tuned!
+        - Success: JSON {"status": "success", "setting_type": "affiliate_key", "settings": [<list_of_settings>]}, status 200
         - Errors:
-            - 400: {"status": "error", "message": "Invalid data"}—no proper data, no four candles!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
+            - 404: {"status": "error", "message": "Setting type affiliate_key not found"} if no settings are found
+            - 500: {"status": "error", "message": "Server error: <reason>"}
     """
     try:
-        # Load the config—like the Guide, but with less towel advice.
         config = load_config()
-        data = request.get_json()
-        if not data or not isinstance(data, dict):
-            logging.warning(f"UX Issue - Invalid config update data for affiliate {affiliate}: {json.dumps(data)}")
-            return jsonify({"status": "error", "message": "Invalid data"}), 400
+        settings = []
+        for key, value in config.items():
+            if value.get('setting_type') == 'affiliate_key':
+                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link']}
+                setting = {
+                    'key_type': key,
+                    'fields': fields,
+                    'icon': value.get('icon', 'icon-favicon'),
+                    'doc_link': value.get('doc_link', ''),
+                    'comment': value.get('_comment', '')
+                }
+                settings.append(setting)
         
-        # Replace the config—Ronnie Barker would approve this swap!
-        config[affiliate] = data
-        save_config(config)
-        # Redact sensitive bits in logs—nobody expects the JWT secret!
-        log_config = config.copy()
-        if "jwt" in log_config and "SECRET_KEY" in log_config["jwt"]:
-            log_config["jwt"]["SECRET_KEY"] = "[REDACTED]"
-        logging.info(f"Updated config for affiliate {affiliate}: {json.dumps(log_config)}")
-        return jsonify({"status": "success", "message": f"Updated {affiliate} config"}), 200
+        if not settings:
+            logging.warning("No settings found for type 'affiliate_key'")
+            return jsonify({"status": "error", "message": "Setting type affiliate_key not found"}), 404
+        
+        logging.debug(f"Retrieved affiliate_key settings: {json.dumps(settings)}")
+        return jsonify({"status": "success", "setting_type": "affiliate_key", "settings": settings}), 200
     except Exception as e:
-        # Marvin sighs: “I updated the config, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to update config for affiliate {affiliate}: {str(e)}", exc_info=True)
+        logging.error(f"Failed to retrieve affiliate_key settings: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 # endregion
-

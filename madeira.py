@@ -131,7 +131,8 @@ def home():
             elif 'wixpro' in user['permissions']:
                 return redirect(url_for('role_pages.wixpro'))
             logging.warning(f"UX Issue - User {user.get('userId', 'unknown')} in session but no recognized permissions: {user.get('permissions', [])}")
-        return render_template('login.html')
+        return render_template('login.html', title='clubmadeira.io | Login', page_type='login', base_url=request.url_root.rstrip('/'))
+    
     except Exception as e:
         logging.error(f"UX Issue - Failed to render login page or redirect: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500

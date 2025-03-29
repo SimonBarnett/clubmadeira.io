@@ -1,0 +1,23 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0 !important; /* From original styles.css */
+    padding: 0 !important; /* From original styles.css */
+    background-color: #f4f4f4;
+    min-height: 100vh;
+    display: block !important; /* Default from original, overridden in signup-specific cases */
+    align-items: initial !important; /* Default from original */
+    justify-content: initial !important; /* Default from original */
+    text-align: initial !important; /* Default from original */
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}

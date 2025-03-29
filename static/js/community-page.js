@@ -44,7 +44,7 @@ function initializeCommunity() {
     // Load branding and initial data
     loadBranding('community', 'brandingContent');
     updateMenu();
-    showSection('welcome');
+    window.siteNavigation.showSection('welcome');
     waitForTinyMCE(() => initializeTinyMCE('#aboutCommunity, #stylingDetails, #page1Content'));
     loadVisits();
     loadOrders();

@@ -192,8 +192,6 @@ class AmazonApi:
         logging.debug(f"Amazon API call to get browse nodes: {browse_node_ids}")
         return []  # Stub for demo
 
-PSEUDO_CATEGORIES = [{"id": "1", "name": "Default Category"}]  # Placeholder
-
 def get_all_categories(parent_id=None):
     config = load_config()
     if parent_id and all(config.get("amazon_uk", {}).values()):

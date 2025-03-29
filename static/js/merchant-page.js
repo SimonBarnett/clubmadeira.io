@@ -37,7 +37,7 @@ function initializeMerchant() {
     setupNavigation(); // From site-navigation.js
     checkAdminPermission();
     loadBranding('merchant', 'brandingContent'); // Adjusted to match typical usage
-    showSection('info'); // Ensure the info section is shown on load
+    window.siteNavigation.showSection('welcome'); // Ensure the welcome section is shown on load
     loadProducts(); // Load merchant products
     loadStoreRequest(); // Load store request data
 

@@ -1,5 +1,18 @@
 + [static]
-+----icons.css
++----[css]
++------base.css
++------components.css
++------icons.css
++------layout.css
++------pages.css
++------signup.css
++------styles.css
++------utilities.css
++----[error]
++------200.md
++------403.md
++------404.md
++------500.md
 +----[js]
 +------admin-page.js
 +------category-management.js
@@ -12,11 +25,321 @@
 +------site-navigation.js
 +------site-request.js
 +------user-management.js
-+----signup.css
++----[md]
++------BigCommerce.md
++------Magento.md
++------WooCommerce.md
++------md_contents_text.txt
++------shopify.md
++------wix.md
 +----static_contents_css.txt
-+----styles.css
 
-icons.css
+css/base.css
+body {
+    font-family: Arial, sans-serif;
+    margin: 0 !important; /* From original styles.css */
+    padding: 0 !important; /* From original styles.css */
+    background-color: #f4f4f4;
+    min-height: 100vh;
+    display: block !important; /* Default from original, overridden in signup-specific cases */
+    align-items: initial !important; /* Default from original */
+    justify-content: initial !important; /* Default from original */
+    text-align: initial !important; /* Default from original */
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+css/components.css
+.menu {
+    padding-left: 5px;
+}
+
+.menu button {
+    padding: 10px 10px 10px 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    max-width: 200px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding-right: 30px;
+}
+
+.menu button:hover {
+    background-color: #0056b3;
+}
+
+.menu button[data-submenu][aria-expanded="true"] {
+    background-color: #0056b3;
+    border-left: 4px solid #fff;
+}
+
+.menu button i,
+.menu button .svg-icon,
+.menu button .icon-group {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.menu button i::before {
+    font-family: "Font Awesome 6 Free";
+}
+
+.menu button i.fas::before {
+    font-weight: 900;
+}
+
+.menu button .svg-icon {
+    display: inline-block;
+    height: 16px;
+    width: auto;
+}
+
+.menu button .svg-icon svg {
+    height: 100%;
+    width: auto;
+    fill: white;
+}
+
+.menu button .icon-group {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.menu button .icon-group .small-icon {
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+    right: -8px;
+    color: white;
+}
+
+.menu button .button-content {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.menu button .caret {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+.menu .btn-admin {
+    background-color: #dc3545;
+}
+
+.menu .btn-admin:hover {
+    background-color: #c82333;
+}
+
+.menu .btn-logoff {
+    background-color: #dc3545;
+}
+
+.menu .btn-logoff:hover {
+    background-color: #c82333;
+}
+
+.menu button[data-href="/admin"] {
+    background-color: #dc3545;
+}
+
+.menu button[data-href="/admin"]:hover {
+    background-color: #c82333;
+}
+
+.submenu {
+    display: none;
+    padding-left: 20px;
+    padding-bottom: 0;
+    overflow: visible;
+    max-height: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.submenu.open {
+    display: block;
+    max-height: 1000px;
+    height: auto;
+}
+
+.submenu button {
+    display: block !important;
+    min-height: 30px !important;
+    background-color: #6c757d !important;
+}
+
+.submenu button:hover {
+    background-color: #5a6268;
+}
+
+.submenu button.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.form label {
+    font-weight: bold;
+}
+
+.form input, .form select {
+    padding: 5px;
+}
+
+.form button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.form button:hover {
+    background-color: #0056b3;
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+}
+
+.settings-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.settings-form input, 
+.settings-form textarea {
+    padding: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.settings-form button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.settings-form button:hover {
+    background-color: #0056b3;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.deals-table th {
+    background-color: #f2f2f2;
+}
+
+.treeview {
+    max-height: 600px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.treeview, .treeview ul, .treeview li {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.treeview .node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+}
+
+.treeview .toggle {
+    cursor: pointer;
+    width: 20px;
+    text-align: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.treeview input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.treeview .subcategories {
+    display: none;
+    padding-left: 20px;
+}
+
+.treeview .subcategories.open {
+    display: block;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    max-width: 200px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+css/icons.css
 /* icons.css */
 
 /* Size classes for branding and menu icons */
@@ -95,11 +418,6 @@ icons.css
     vertical-align: middle;
 }
 
-/* icons.css */
-/* Purpose: Defines inline SVG icons for use in community.html "My Website" section */
-/* icons.css */
-/* Purpose: Defines inline SVG icons for use in community.html "My Website" section */
-
 /* Wix Icon */
 .icon-wix::before {
     content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path fill="white" d="M393.4 131.7c0 13 2.1 32.7-28.7 43.8-9.5 3.5-16 9.7-16 9.7 0-31 4.7-42.2 17.4-48.9 9.8-5.1 27.2-4.6 27.2-4.6zm-115.8 35.5l-34.2 132.7-28.5-108.6c-7.7-32-20.8-48.5-48.4-48.5-27.4 0-40.7 16.2-48.4 48.5L89.5 299.9 55.3 167.2C49.7 140.5 23.9 129 0 132l65.6 247.9s21.6 1.6 32.5-4c14.2-7.3 21-12.8 29.6-46.6 7.7-30.1 29.1-118.4 31.1-124.7 4.8-14.9 11.1-13.8 15.4 0 2 6.3 23.5 94.6 31.1 124.7 8.6 33.7 15.4 39.3 29.6 46.6 10.8 5.5 32.5 4 32.5 4l65.6-247.9c-24.4-3.1-49.8 8.9-55.3 35.3zm115.8 5.2s-4.1 6.3-13.5 11.6c-6 3.4-11.8 5.6-18 8.6-15.1 7.3-13.2 14-13.2 35.2v152.1s16.6 2.1 27.4-3.4c13.9-7.1 17.1-14 17.3-44.8V181.4l0 0v-9zm163.4 84.1L640 132.8s-35.1-6-52.5 9.9c-13.3 12.1-24.4 29.6-54.2 72.5-.5 .7-6.3 10.5-13.1 0-29.3-42.2-40.8-60.3-54.2-72.5-17.4-15.8-52.5-9.9-52.5-9.9l83.2 123.7-83 123.4s36.6 4.6 54-11.2c11.5-10.5 17.6-20.4 52.5-70.7 6.8-10.5 12.6-.8 13.1 0 29.4 42.4 39.2 58.1 53.1 70.7 17.4 15.8 53.3 11.2 53.3 11.2L556.8 256.5z"/></svg>');
@@ -138,7 +456,1867 @@ icons.css
     display: inline-block;
     object-fit: contain;
     vertical-align: middle;
+}
+
+/* bigcommerce Icon (House-like) */
+.icon-bigcommerce {
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NDggNTEyIj48cGF0aCBkPSJNNDU1LjcgMTI3LjlWMzg0bC02My40IDM2LjVWMjY0LjdsMjIzLjggNzMuMUwyMjMuOCA3My4xIDY1LjIgMTY0LjdsLjQgMjU1LjkgMi4zIDM4NFYxMjguMUwyMjQuMiAwbDIyMS41IDEyNy45ek0yNTUuNiA0MjAuNUwyMjQgNDM4LjktMzEuOC0xOC4ydi0yNTZsLTYzLjMgMzYuNi4xIDI1NS45IDk0LjkgNTQuOSA5NS4xLTU0Ljl2LTI1NmwtNjMuNC0zNi42djI1NS45eiIvPjwvc3ZnPg==");
+}
+
+/* WooCommerce Icon (Shopping Bag) */
+.icon-woocommerce {
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NDggNTEyIj48cGF0aCBkPSJNMzg4LjMgMTA0LjFhNC43IDQuNyAwIDAgMCAtNC40LTRjLTIgMC0zNy4yLS44LTM3LjItLjhzLTIxLjYtMjAuOC0yOS42LTI4LjhWNTAzLjJMNDQyLjggNDcyUzM4OC43IDEwNi41IDM4OC4zIDEwNC4xek0yODguNyA3MC41YTExNi43IDExNi43IDAgMCAwIC03LjItMTcuNkMyNzEgMzIuOSAyNTUuNCAyMiAyMzcgMjJhMTUgMTUgMCAwIDAgLTQgLjRjLS40LS44LTEuMi0xLjItMS42LTIgMjMuNC0xMS42IDIxMyA3LjYgMjAwLjYgOGMtMjQgLjgtNDggMTgtNjcuMyA0OC44LTEzLjYgMjEuNi0yNCA0OC44LTI2LjggNzAuMS0yNy42IDguNC00Ni44IDE0LjQtNDcuMiAxNC44LTE0IDQuNC0xNC40IDQuOC0xNiAxOC0xLjIgMTAtMzggMjkxLjgtMzggMjkxLjhMMzA3LjkgNTA0VjY1LjdhNDEuNyA0MS43IDAgMCAwIC00LjQuNHMtNC40IDQuNCAtNC40IDYuOHpNMjMzLjQgODcuN2MtMTYgNC44LTMzLjYgMTAuNC01MC44IDE1LjYgNC44LTE4LjggMTQuNC0zNy42IDI1LjYtNTAgNC40LTQuNCAxMC40LTkuNiAxNy4yLTEyLjhDMjMyLjIgNTQuOSAyMzMuOCA3NC41IDIzMy40IDg3Ljd6TTIwMC42IDI0LjRBMjcuNSAyNy41IDAgMCAxIDIxNSAyOGMtNi40IDMuMi0xMi44IDguNC0xOC44IDE0LjQtMTUuMiAxNi40LTI2LjggNDItMzEuNiA2Ni41LTE0LjQgNC40LTI4LjggOC44LTQyIDEyLjhDMzEuMyA4My4zIDE2My44IDI1LjIgMjAwLjYgMjQuNHpNMTU0LjIgMjQ0LjZjMS42IDI1LjYgNjkuMyAzMS4yIDczLjMgOTEuNyAyLjggNDcuNi0yNS4yIDgwLjEtNjUuNyA4Mi41LTQ4LjggMy12NS43LTI1LjYtNzUuNy0yNS42bDEwLjQtNDQgMjYuOCAyMC40IDQ4LjQgMTguOCAxNC0uOCAxOS4yLTEyLjQtMTguOC0yMC40LTIgMzMuNi01Ny4yLTMxLjYtNjAuOC04Ni45LTMuMi00Ni40IDI3LjItOTMuMyA5NC41LTk3LjcgMjYtMS42IDM5LjIgNC44IDM5LjIgNC44TDIyMS40IDIyNS40cy0xNy4yLTggLTM3LjYtNi40QzE1NC4yIDIyMSAxNTMuOCAyMzkuOCAxNTQuMiAyNDQuNnpNMjQ5LjQgODIuOWMwLTEyLTEuNi0yOS4yLTcuMi00My42IDE4LjQgMy42IDI3LjIgMjQgMzEuMiAzNi40UTYyLjYgNzguNyAyNDkuNCA4Mi45eiIvPjwvc3ZnPg==");
+}
+
+/* Shopify Icon (Stylized S/Arrow) */
+.icon-shopify {
+    background-image: url("data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDAwMDAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHJvbGU9ImltZyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNjQ1IDEzLjY2M2gzLjAyN2MuODYxIDAgMS40MDYtLjQ3NCAxLjQwNi0xLjIzNSAwLS43MTctLjU0NS0xLjIzNC0xLjQwNi0xLjIzNGgtMy4wMjdjLS4xIDAtLjE4Ny4wODYtLjE4Ny4xNzJ2Mi4xMjVjLjAxNS4xLjA4Ni4xNzIuMTg3LjE3MnptMCA0Ljg5NmgzLjEyOGMuOTYxIDAgMS41MzUtLjQ4OCAxLjUzNS0xLjM1IDAtLjc0Ni0uNTQ1LTEuMzUtMS41MzUtMS4zNWgtMy4xMjhjLS4xIDAtLjE4Ny4wODctLjE4Ny4xNzN2Mi4zNGMuMDE1LjExNS4wODYuMTg3LjE4Ny4xODd6TTIzLjcyLjA1M2wtOC45NTMgOC45M2gxLjQ2NGMyLjI4MSAwIDMuNjMgMS40MzUgMy42MyAzIDAgMS4yMzUtLjgzMiAyLjE0LTEuNzIyIDIuNTQxLS4xNDMuMDU4LS4xNDMuMjU5LjAxNC4zMTYgMS4wMzMuNDAyIDEuNzY1IDEuNDggMS43NjUgMi43NDIgMCAxLjc4LTEuMTkgMy4yMDItMy41IDMuMjAyaC02LjM0MmMtLjEgMC0uMTg3LS4wODYtLjE4Ny0uMTcyVjEzLjg1TC4wNjIgMjMuNjRjLS4xMy4xMy0uMDQzLjM1OS4xNDMuMzU5aDIzLjYzMWEuMTYuMTYgMCAwIDAgLjE1OC0uMTU4Vi4xODJjLjA0My0uMTU4LS4xNTgtLjI0NC0uMjczLS4xM3oiLz48L3N2Zz4=");
+}
+
+/* Magento Icon (Multi-shape) */
+.icon-magento {
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIC0yMDQgNTEyIDUxMiIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+PGcgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTU3LjI2NjUyLDAgTDE2LjA5NjI5NDIsMCBDNy4xNjIzNDczNCwwIC0wLjA2OTg3Nzg1MzgsNy4zMDMxMTM2MyAwLjAwMDUwOTQ1NzU1NywxNi4xNjYxNTA4IEwwLjAwMDUwOTQ1NzU1Nyw3MC4wNTMzODA1IEMwLjAwMDUwOTQ1NzU1Nyw3OC45ODcxMDA5IDcuMjMzMjU3MDcsODYuMjE5NDQwNyAxNi4xNjcyMDQsODYuMjE5NDQwNyBMODMuMDI5NjkxOCw4Ni4yMTk0NDA3IEwxMTMuNTg5NzQ4LDEwMy4yMzY0MTggTDEwNi42NDEwNDgsODYuMjE5NDQwNyBMMTU3LjI2NjUyLAg4Ni4yMTk0NDA3IEMxNjYuMjAwNjk0LDg2LjIxOTQ0MDcgMTczLjQzMjU4LDc4Ljk4NzEwMDkgMTczLjQzMjU4LDcwLjA1MzM4MDUgTDE3My40MzI1OCwxNi4xNjYxNTA4IEMxNzMuNDMyNTgsNy4yMzIyMDM4OSAxNjYuMjAwNjk0LDAgMTU3LjI2NjUyLDAgWiBNMTMuMTE4NjI5MSwxMi40NzkxMTY1IEMxMS4xMzMyOTI1LDEyLjYyMDkzNTkgOS42NDQyNzg2NiwxMy4zMjk5ODggOC42NTE2MzMsMTQuNjc3MTM3IEM3LjY1ODk4NzM0LDE1Ljk1MzQyMTYgNy4zMDQ0ODM5NywxNy41ODQyMDk2IDcuNTE3MTY3ODcsMTkuNDI3NzI2NyBDMTEuNzAwNTI1LDQ2LjAxNzAxOTUgMTUuNjAwMjQzMyw2My45NTU1OTY1IDE5LjIxNjM2NzksNzMuMjQ0MDkyIEMyMC42MzQ0NzE5LDc2LjY0NzMwNjIgMjIuMjY1MjU5OSw3OC4yNzg0NTY2IDI0LjE3OTY4NjgsNzguMTM2NjM3MiBDMjcuMTU3NjIzOCw3Ny45MjM2ODE0IDMwLjcwMjgzODcsNzMuODExMzY5OSAzNC44ODYxOTU4LDY1Ljc5OTI0OTYgQzM3LjA4NDIxNjQsNjEuMjYxMDI2NSAzMC40ODc2NTcxLDU0LjQ1NDU5ODIgNDUuMDk2NDI3Myw0NS4zNzg2MDUzIEM0OC45MjUwNTQ2LDU4Ljc3OTQxMjQgNTQuMTcxOTIxOCw2OC44NDgxNDE2IDYwLjc2NjMwMDYsNzUuNTgzODg2NyBDNjIuNjA5OTUzNyw3Ny41OTgyMjMgNjQuNTI0MjksNzguMzQ5MTM5OCA2Ni4zNjc0OSw3OC4yMDczMjA0IEM2Ny45OTg2NDA0LDc4LjA2NTUwMDkgNjkuMjc0NTYyNiw3Ny4yMTQ1ODQxIDcwLjEyNTQ3OTQsNzUuNjU0NTY5OSBDNzAuODM0NTc2Nyw3NC4zMDc1MTE1IDcxLjExODIxNTcsNzIuNzQ3NDk3MyA3MC45NzYzOTYyLDcwLjk3NDk4MDUgQzcwLjU1MDkzNzgsNjQuNTIyODc0MyA3MS4xODkzNTE5LDU1LjUxODAxNzcgNzIuOTYxODY4OCw0My45NjA1OTE5IEM3NC44MDUwNjg4LDMyLjA0ODcwOCA3Ny4wNzQxODAzLDIzLjQ2OTI2NDQgNzkuODM5NDMzNCwxOC4zNjQxNzEzIEM4MC40MDY3MTEyLDE3LjMwMDYxNTkgODAuNjE5MjEzOSwxNi4yMzcwMTUyIDgwLjU0ODUzMDcsMTQuOTYwNzc1OSBDODAuNDA2NzExMiwxMy4zMjk5NDI3IDc5Ljc5NzYxMzksMTEuOTgyNzkzNiA3OC4zNTA1NTU1LDEwLjkxOTIzODIgQzc3LjAwMzQ5NzEsOS44NTU2ODI4MyA3NS41MTQxNjYxLDkuMzU5MzYgNzMuODgzNDY4OCw5LjUwMTEzNDE2IEM3MS44MjczMTMsOS42NDI5NTM2MyA3MC4yNjcyOTg4LDEwLjYzNTU5MzMgNjkuMjAzODc5NCwxMi42MjA5MzU5IEM2NC44MDc5Mjg5LDIwLjYzMzEwMTYgNjEuNjg3OTAwNiwzMy42MDg1ODYyIDU5Ljg0NDcwMDYsNTEuNjE4MjA4OCBDNTcuMTUwMTMwNyw0NC44MTE0NjM0IDU0Ljg4MTAxOTIsMzYuNzk5MjUyNCA1My4xMDg1MDI0LDI3LjM2ODk4MjcgQzUyLjMyODcyMTgsMjMuMTg1NjcwOCA1MC40MTQzODU2LDIxLjIwMDMzNDIgNDcuMjk0MzU3MiwyMS40MTMwNjM0IEM0NS4xNjcyOTE4LDIxLjU1NDgzNzUgNDMuMzk0NzI5NiwyMi45NzI5NDE2IDQxLjk3NjYyNTYsMjUuNjY3Mjg1IEwyNi40NDg2MTcxLDU1LjIzNDM3ODggQzIzLjg5NjA0NzksNDQuOTUzMjM3NSAyMS40ODUyOTgxLDMyLjQwMzIxMTMgMTkuMjg3Mjc3NiwxNy41ODQyMDk2IEMxOC43OTA5NTQ4LDEzLjg5NzIyMDUgMTYuNzM0NzA4NCwxMi4xOTU0Nzc1IDEzLjExODYyOTEsMTIuNDc5MTE2NSBaIE0xNDkuNzUwOTk0LDE3LjU4NDQzNjEgQzE1NC43ODUzNTksMTguNjQ4MDM2OCAxNTguNTQzMzQ4LDIxLjM0MjM4MDIgMTYxLjA5NTY0NiwyNS44MDkzMzEgQzE2My4zNjQ3NTcsMjkuNjM4MTg0OCAxNjQuNDk4ODYsMzQuMjQ2OTU1IDE2NC40OTg4NiwzOS43Nzc0NjEyIEMxNjQuNDk4ODYsNDcuMDgwNDM4OSAxNjIuNjU1NjYsNTMuNzQ1NTAwOSAxNTguOTY4MzU0LDU5Ljg0MzI4NSBDMTU0LjcxNDIyMyw2Ni45MzM4MDUzIDE0OS4xODM3MTcsNzAuNDc4ODM4OSAxNDIuMzA2MTUyLDcwLjQ3ODgzODkgQzE0MS4xMDA5MTMsNzAuNDc4ODM4OSAxMzkuODI0NTM4LDcwLjMzNzAxOTUgMTM4LjQ3NzAyNiw3MC4wNTMzODA1IEMxMzMuNDQzMTE1LDY4Ljk4OTk2MTEgMTI5LjY4NTEyNSw2Ni4yOTU4NDQyIDEyNy4xMzIzNzUsNjEuODI4NzU3NSBDMTI0Ljg2MzcxNyw1Ny45Mjg5NDg3IDEyMy43MjkxNjEsNTMuMjQ5MzU5MyAxMjMuNzI5MTYxLDQ3Ljc4OTUzNjMgQzEyMy43MjkxNjEsNDcuNDg2NTEzMyAxMjUuNTcyODE0LDQzLjgyMTQ5NjYgMTI5LjI1OTY2NywyNy43OTQ2Njc2IEMxMzMuNTg0OTM0LDIwLjcwNDIzNzkgMTM5LjExNTQ0LDE3LjE1OTAyMyAxNDUuOTIyMzIyLDE3LjE1OTAyMyBDMTQ3LjEyNzU2MSwxNy4xNTkwMjMgMTQ4LjQwMzkzNiwxNy4zMDA4NDI1IDE0OS43NTA5OTQsMTcuNTg0NDM2MSBaIE0xNDYuNzcyMzksNTUuOTQzNDc2MSBDMTQ5LjM5NjY3Miw1My42MDM2ODE0IDE1MS4xNjkyODksNTAuMTI5MzMxIDE1Mi4xNjE5MjUsNDUuNDQ5NzQxNiBDMTUyLjQ0NTU2NCw0My44MTg5OTg5IDE1Mi42NTgwNjcsNDIuMDQ2MzkxNSAxNTIuNjU4MDY3LDQwLjIwMjg3NDMgQzE1Mi42NTgwNjcsMzguMTQ2NjczMyAxNTIuMjMyNjA5LDM1Ljk0ODY1MjcgMTUxLjM4MTY5MiwzMy43NTA1ODY5IEMxNTAuMzE4MjcyLDMwLjk4NTMzMzggMTQ4LjkwMDA3OCwyOS40OTYzNjUzIDE0Ny4xOTgyNDQsMjkuMTQxODE2NiBDMTQ0LjY0NTk0NywyOC42NDU0OTM4IDE0Mi4xNjQzMzIsMzAuMDYzNTk3OSAxMzkuODI0NTM4LDMzLjUzNzkwMyBDMTM3LjkxMDIwMSwzNi4yMzIyNDY0IDEzNi43MDQ1MDksMzkuMDY4NDA5MiAxMzYuMDY2NTQ4LDQxLjk3NTQ4MTggQzEzNi43MTE3NzMsNDMuNjA2MzE1IDEzNS41Njk5NTQsNDUuMzc5MDU4NCAxMzUuNTY5OTU0LDQ3LjE1MTU3NTIgQzEzNS41Njk5NTQsNDkuMjA3NzMxIDEzNS45OTU0MTIsNTEuNDA1NzA2MiAxMzYuODQ2MzI5LDUzLjYwMzY4MTQgQzEzNy45MTAyMDEsNTYuMzY4OTM0NSAxMzkuMzI3OTQzLDU3Ljg1NzgxMjQgMTQxLjAyOTc3Nyw1OC4yMTI1ODc2IEMxNDIuODAyMjk0LDU4LjU2NjkwOTcgMTQ0LjcxNjYzLDU3Ljc4NzEyOTIgMTQ2Ljc3MjM5LDU1Ljk0MzQ3NjEgWiBNMTE2LjYzODY0LDI1LjgwOTMzMSBDMTE0LjA4NTg5LDIxLjM0MjM4MDIgMTEwLjI1NzIxNywxOC42NDgwMzY4IDEwNS4yOTM5ODksMTcuNTg0NDM2MSBDMTAzLjk0NjQ3OCwxNy4zMDA4NDI1IDEwMi42NzA1NTUsMTcuMTU5MDIzIDkwMS40NjQ4NjMsMTcuMTU5MDIzIEM5NC42NTg0MzUxLDE3LjE1OTAyMyA4OS4xMjc5Mjg5LDIwLjcwNDIzNzkgODQuODAyNjYxNywyNy43OTQ2Njc2IEM4MS4xMTUzNTU1LDQzLjgyMTQ5NjYgNzkuMjcyMTU1NSw0MC40ODY1MTMzIDc5LjIyNzE1NTUsNDcuNzg5NTM2MyBDNzkuMjcyMTU1NSw1My4yNDkzNTkzIDgwLjQwNjcxMTIsNTcuOTI4OTQ4NyA4Mi42NzUzNjk2LDYxLjgzODc1NzUgQzg1LjIyODEyMDEsNjYuMjk1ODQ0MiA4OC45ODYxMDk1LDY4Ljk4OTk2MTEgOTQuMDIwMDIxLDcwLjA1MzM4MDUgQzk1LjM2NzA3OTQsNzAuMzM3MDE5NSA5Ni42NDM0NTQ2LDcwLjQ3ODgzODkgOTcuODQ5MTQ2Niw3MC40Nzg4Mzg5IEMxMDQuNzI2NzExLDcwLjQ3ODgzODkgMTEwLjI1NzIxNyw2Ni45MzM4MDUzIDExNC41MTEzNDgsNTkuODQzMjg1IEMxMTguMTk4NjU1LDUzLjc0NTUwMDkgMTIwLjA0MTg1NSw0Ny4wODA0Mzg5IDEyMC4wNDE4NTUsMzkuNzc3NDYxMiBDMTIwLjA0MTg1NSwzNC4yNDY5NTUgMTE4LjkwNzI5OSwyOS42MzgxODg4IDExNi42Mzg2NCwyNS44MDkzMzEgWiBNMTA3LjcwNDQ2Nyw0NS40NDk3NDE2IEMxMDYuNzEyMTg0LDUwLjEyOTMzMSAxMDQuOTM5MjE0LDUzLjYwMzY4MTQgMTAyLjMxNTc4LDU1Ljk0MzQ3NjEgQzEwMC4yNTk2MjUsNTcuNzg3MTI5MiA5OC4zNDUyODgyLDU4LjU2NjkwOTcgOTYuNTcyNzcxNCw1OC4yMTI1ODc2IEM5NC44NzA5Mzc4LDU3Ljg1NzgxMjQgOTMuNDUyNzQzMSw1Ni4zNjg5MzQ1IDkyLjM4OTMyMzYsNTMuNjAzNjg4NCBDOTEuNTM4NDA2OCw1MS40MDU3MDYyIDkxLjExMjk0ODQsNDkuMjA3NzMxIDkxLjExMjk0ODQsNDcuMTUxNTc1MiBDOTEuMTEyOTQ4NCw0NS4zNzkwNTg0IDkxLjI1NDc2NzksNDMuNjA2MzE1IDkxLjYwOTU0MzEsNDEuOTc1NDgxOCBDOTIuMjQ3NTA0MSwzOS4wNjg0MDkyIDkzLjQ1Mjc0MzEsMzYuMjMyNDY0IDk1LjM2NzA3OTQsMzMuNTM3OTAzIEM5Ny43MDczMjcyLDMwLjA2MzU5NzkgMTAwLjE4ODk0MSwyOC42NDU0OTM4IDEwMi43NDEyMzksMjkuMTQxODE2NiBDMTA0LjQ0Mjk3MiwyOS40OTYzNjUzIDEwNS44NjEyNjcsMzAuOTg1MzMzOCAxMDYuOTI0Njg2LDMzLjc1MDU4NjkgQzEwNy43NzU2MDMsMzUuOTg4NjUyNyAxMDguMjAxMDYyLDM4LjE0NjY3MzMgMTA4LjIwMTA2Miw0MC4yMDI4NzQzIEMxMDguMjAxMDYyLDQyLjA0NjM5MTUgMTA4LjA1OTI0Miw0My44MTg5OTg5IDEwNy43MDQ0NjcsNDUuNDQ5NzQxNiBaIiBmaWxsPSIjN0Y1NEIzIj48L3BhdGg+PHBhdGggZD0iTTk5MS4zNzE2MSwyNS4xNzA4MjYyIEMxODYuNjIwODg1LDI5Ljg1MDUwNjIgMTg0LjI4MTA5LDM1LjgwNjQyNTUgMTg0LjI4MTA5LDQzLjAzODY3NDcgQzE4NC4yODEwOSw1MC43NjcyOTIgMTg2LjYyMDg4NSw1Ny4wNzc1Nzg4IDE5MS4zMDA5MjcsNjEuODI4MzA0NCBDMTk1Ljk4MDUxNyw2Ni41NzkwMzAxIDIwMi4wNzgzMDEsNjguOTg5NTA4IDIwOS42NjQ5NjMsNjguOTg5NTA4IEMyMTEuODYyOTM4LDY4Ljk4OTUwOCAyMTQuMzQ0NTUyLDY4LjYzNTE4NTggMjE3LjAzOTEyMiw2Ny44NTQ5NTIyIEwyMTcuMDM5MTIyLDU2LjM2ODQ4MTQgQzIxNC41NTc1MDgsNTcuMDc3NTc4OCAyMTIuNDMwMjE2LDU3LjQzMjM1NCAyMTAuNTg2NTYzLDU3LjQzMjM1NCBDMjA2LjgyODU3Myw1Ny40MzIzNTQgMjAzLjg1MDgxNyw1Ni4xNTU5Nzg4IDIwMS41ODE3MDYsNTMuNjc0MzY0NiBDMTk5LjMxMzA0OCw1MS4xMjE2MTQyIDE5OC4xNzg0OTIsNDcuNzE4NCAxOTguMTc4NDkyLDQzLjM5MzE3ODEgQzE5OC4xNzg0OTIsMzkuMzUxNjQwNCAxOTkuMzEzMDQ4LDM2LjAxOTE1NDcgMjAxLjUxMTAyMywzMy40NjY1ODU1IEMyMDMuNzc5NjgxLDMwLjg0MzE1MTkgMjA2LjU0NDkzNCwyOS41NjY4NjczIDIwOS45NDg2MDEsMjOS41NjY4NjczIEMyMTIuMTQ2NTc3LDI5LjU2Njg2NzMgMjE0LjQ4NjM3MSwyOS45MjEzNzA2IDIxNy4wMzkxMjIsMzAuNjMwNDIyNyBMMjE3LjAzOTEyMiwxOS4xNDM5NTE5IEMyMTQuNjk5MzI3LDE4LjUwNTgwOTYgMjEyLjA3NTg5NCwxOC4yMjIxNzA2IDIwOS4zMTAxODcsMTguMjIyMTcwNiBDMjAyLjA3ODMwMSwxOC4xNTEyNjA5IDE5Ni4xMjIzMzYsMjAuNDkxMTQ2MiAxOTkxLjM3MTYxLDI1LjE3MDgyNjIgWiBNMjQwLjU3OTM0MSwxOC4xNTEyNjA5IEMyMzQuMDU2MDk5LDE4LjNDUxMjYwOSAyMjguOTUxMDUxLDIwLjM0OTMyNjcgMjI1LjI2Mzc0NSwyNC42NzQ0NTgxIEMyMjEuNTc2ODkyLDI4Ljk5OTYzNDcgMjE5LjgwNDM3NSwzNS4wOTc0MTg4IDIxOS44MDQzNzUsNDIuODk2ODU1MiBDMjE5LjgwNDM3NSw1MS4zMzQ1Njk5IDIyMS42NDc1NzUsNTcuNzg2Njc2MSAyMjUuMjYzNzQ1LDYyLjI1Mzc2MjggQzIyOC44Nzk5MTUsNjYuNzIwODQ5NiAyMzQuMTk3OTE4LDY4Ljk4OTUwOCAyNDEuMTQ2NjE5LDY4Ljk4OTUwOCBDMjQ3Ljg4MjM2NCw2OC45ODk1MDggMjUzLjA1ODA5NSw2Ni43MjA4NDk2IDI1Ni42NzQyNjUsNjIuMjUzNzYyOCBDMjYwLjI5MDQzNSw1Ny43ODY2NzYxIDI2Mi4xMzQwODgsNTEuNDc2Mzg5NCAyNjIuMTM0MDg4LDQzLjM5MzE3ODEgQzI2Mi4xMzQwODgsMzUuMzEwMTAyNyAyNjAuMjkwNDM1LDI5LjA3MDU0NDQgMjU2LjYwMzU4MiwyNC42NzQ0NTgxIEMyNTIuODQ1NTkzLDIwLjM0OTMyNjcgMjQ3LjUyNzU4OSwxOC4xNTEyNjA5IDI0MC41NzkzNDEsMTguMTUxMjYwOSBaIE0yNDYuMTgwNTMxLDU1LjAyMTQyMyBDMjQ0LjkwNDE1NSw1Ny4wMDY4OTU2IDI0Mi45ODk4MTksNTcuOTk5NjMxOSAyNDAuNTc5MzQxLDU3Ljk5OTYzMTkgQzIzOC4zMTAyMyw1Ny45OTk2MzE5IDIzNi42MDgzOTYSNTcuMDA2ODk1NiAyMzUuNDAzMTU3LDU1LjAyMTQyMyBDMjM0LjE5NzkxOCw1My4wMzU5NTA0IDIzMy42MzA2NCw0OS4wNjU0NTg0IDIzMy42MzA2NCw0My4wMzg2NzQ3IEMyMzMuNjMwNjQsMzMuNzUwMjI0NCAyMzUuOTcwNDM1LDI5LjE0MTQwODggMjQwLjcyMTE2MSwyOS4xNDE0MDg4IEMyNDUuNjg0Mzg5LDI5LjE0MTQwODggMjQ4LjIzNjY4Niw0My44MjExMzQyIDI0OC4yMzY2ODYsNDMuMjUxNDAzOSBDMjQ4LjE2NjAwMyw0OS4wNjU0NTg0IDI0Ny40NTY5MDYSNTMuMDM1OTUwNCAyNDYuMTgwNTMxLDU1LjAyMTQyMyBaIE0yOTcsMTYuMCw0NTUyIEwyOTQuNjA4MDI4LDMwLjM0NjgyOSBDMjkzLjk3MDA2NywzMy4xMTIwODIxIDI5My4zMzIxMDYSMzUuOTQ4MjQ1IDI5Mi43NjQ4MjgsMzguODU1MzE3NSBMMjkxLjM0NjYzMyw0Ni4zNzEzNDE2IEMyODkuOTk5NTc1LDM4Ljg1NTMxNzUgMjg4LjE1NTkyMiwyOS45MjEzNzA2IDI4NS44MTYxMjcsMTkuNDk4NDU1MiBMMjY5LjM2NjQyOCwxOS40OTg0NTUyIEwyNjMuMTk3NTA4LDY3Ljc4NDI2OSBMMjc1LjUzNDg5NSw2Ny43ODQyNjkgTDI3OC44Njc0MjYSMzQuNTMwMTQwOSBMMjg3LjMwNTAwNSw2Ny43ODQyNjkgTDI5Ni4wOTczNTksNjcuNzg0MjY5IEwzMDQuMTgwMTYzLDM0LjYwMTA1MDYgTDMwNy42NTQ1MTYSNjcuNzg0MjY5IEwzMjAuNTU5MTc4LDY3Ljc4NDI2OSBMMzE0LjAzNTkzNiwxOS40OTg0NTUyIEwyOTcuMTYwNzc4LDE5LjQ5ODg1NTIgWiBNMzU2LjIyMzgzLDE5LjQ5ODg1NTIgTDM1My42NzE1MzIsMzAuMzQ2ODI5IEMzNTMuMDMzMTE4LDMzLjExMjA4MjEgMzUyLjM5NTE1NywzNS45NDgyNDUgMzUxLjgyNzg3OSwzOC44NTUzMTc1IEwzNTAuNDA5Njg1LDQ2LjM3MTM0MTYgQzM0OS4wNjI2MjYSMzguODU1MzE3NSAzNDcuMjE4OTczLDI5LjkyMTM3MDYgMzQ0Ljg3OTk3OCwxOS40OTg0NTUyIEwzMjguNDI5NDc5LDE5LjQ5ODg1NTIgTDMyMi4yNjEwMTISNjcuNzg0MjY5IEwzMzQuNTk3OTQ3LDY3Ljc4NDI2OSBMMzM3LjkyODA3OCwzNC41MzAxNDA5IEwzNDYuMzY4MDU2LDY3Ljc4NDI2OSBMNDU1LjE2MDQxLDY3Ljc4NDI2OSBMNDYzLjE3MjUzMSwzNC42MDEwNTA2IEwzNjYuNjQ2ODgxLDY3Ljc4NDI2OSBMNDc5LjU1MTU0Nyw2Ny43ODQyNjkgTDM3My4wMjgzMDQSMTkuNDk4NDU1MiBMNDU2LjIyMzgzLDE5LjQ5ODg1NTIgWiBNMzk2LjM1NTU2OCw0OC43MTExMzYzIEw0MDcuOTEzMTc1LDQ4LjcxMTEzNjMgTDQwNy45MTMxNzUsMzguNzEzNDk4MSBMNzk2LjM1NTU2OCwzOC43MTM0OTgxIEw0OTYSMzU1NTY4LDI5Ljg1MDQ2MDkgTDQwOS42ODU2OTISMjkuODUwNDYwOSBMNDA5LjY4NTY5MiwxOS41NjkzNjUgTDM4My4zMDk1MzYSMTkuNTY5MzY1IEwzODMuMzA5NTM2LDY3Ljg1NDk1MjIgTDQwOS43NTY4MjgsNjcuODU0OTUyMiBMNDA5Ljc1NjgyOCw1Ny41NzQxNzM1IEw0OTYSMzU1NTY4LDU3LjU3NDE3MzUgTDM5Ni4zNTU1NjgsNDguNzExMTM2MyBaIE00NDYSNDg0ODk5LDQxLjA1MzMzODEgQzQ0Ny44MzI0MSwzOC44NTUzMTc1IDQ0OC41NDEwNTUsMzYuNTg2Mzg3MyA0NDguNTQxMDU1LDM0LjI0NjU0NzMgQzQ0OC41NDEwNTUsMjkuNzA4Njg2NyA0NDYuNzY4NTM4LDI2LjA5MjU2MjEgNDQzLjIyMzUwNCwyMy40NjkwODMyIEM0MzkuNjc4MDE3LDIwLjg0NTY0OTYSNDM0Ljc4NTkyNSwxOS40OTg4NTUyIEw0MjguNjg4MTQxLDE5LjQ5ODg1NTIgTDQxMy41MTQzNjQSMTkuNDk4NDU1MiBMNDEzLjUxNDM2NCw2Ny43ODQyNjkgTDQyNi41NjA4NDksNjcuNzg0MjY5IEw0MjYSNTYwODQ5LDQ1LjgwNDA2MzcgTDQyNi43NzM4MDUsNDUsODA0MDYzNyBMNDM3LjMzODIyMyw2Ny43ODQyNjkgTDQ1MS4wOTM4MDUsNjcuNzg0MjY5IEw0NDAuNjcwNzU0LDQ2LjAxNjU2NjQgQzQ0My4xNTIzNjgsNDQuODgyMTkxOSA0NDUuMTM3ODQSNDMuMjUxMzU4NiA0NDYSNDg0ODk5LDQxLjA1MzMzODEgWiBNNDI2LjQ5MDE2Niw0MC4yNzMzNzYzIEw0MjYSNDkwMTY2LDI4Ljc4NjkwNTUgQzQyOS42MDk3NDEsMjguODU3ODE1MiA0MzEuODA3NzE3LDI5LjM1NDEzODEgNDMzLjE1NTIyOCwzMC4zNDY4MjkgQzQzNC41MDIyODYsMzEuMzM5NDc0NyA0MzUuMTQwMjQ4LDMyLjg5OTM1MjkgNDM1LjE0MDI0OCwzNS4xNjgyODMyIEM0MzUuMTQwMjQ4LDM4LjUwMDc2ODggNDMyLjIzMzE3NSw0MC4yMDI1MTE5IDQyNi40OTAxNjYSNDAuMjczMzc2MyBaIE00NTYuMTk3MDQSNTUuMTcwODI2MiBDNDUxLjQ0ODEyNywyOS44NTA1MDYyIDQ0OS4xMDgzMzIsMzUuODA2NDI1NSA0NDkuMTA4MzMyLDQzLjAzODY3NDcgQzQ0OS4xMDgzMzIsNTAuNzY3MjkyIDQ1MS40NDgxMjcsNTcuMDc3NTc4OCA0NTYuMTI5MDcYSNjMS44MjgzMDQ0IEM0NjAuODA5NTcxLDY2LjU3OTAzMDEgNDY2LjkwMzczMSw2OC45ODk1MDggNDc0LjQ5MzExMSw2OC45ODk1MDggQzQ3Ni42OTA2MzMsNjguOTg5NTA4IDQ3OS4xNzM2MDcsNjguNjM1MTg1OCA0ODEuODY1MDA1LDY3Ljg1NDk1MjIgTDQ4MS44NjUwMDYSNTYuMzY4NDgxNCBDNDc5LjM4NjU2Myw1Ny4wNzc1Nzg4IDQ3Ny4yNTcwMDUsNTcuNDMyMzU0IDQ3NS40MTI4OTksNTcuNDMyMzU0IEM0NzEuNjU2NzIyLDU3LjQzMjM1NCA0NjguNjc5ODcyLDU2LjE1NTk3ODggNDY2LjQwOTg1NSw1My42NzQzNjY2IEM0NjQuMTM5ODM3LDUxLjEyMTYxNDIgNDYzLjAwNzA5NCw0Ny43MTg0IDQ2My4wMDcwOTQSNDMuMzkzMTc4MSBDNDYzLjAwNzA5NCwzOS4zNTIxNjA0IDQ2NC4xMzk4MzcsMzYuMDE5MTU0NyA0NjYuMzM3MzU5LDMzLjQ2NjU4NTUgQzQ2OC42MDczNzcsMzAuODQzMTUxOSA0NzEuMzcxMjcxLDI5LjU2Njg2NzMgNDc0Ljc3NDAzMiwyOS41NjY4NjczIEM0NzYuOTcxNTU0LDI5LjU2Njg2NzMgNDc5LjMxNDA2NywyOS45MjEzNzA2IDQ4MS44NjUwMDUsMzAuNjMwNDIyNyBMMjgxLjg2NTAwNSwxOS4xNDM5NTE5IEM0NzkuNTI3MDIzLDE4LjUwNTgwOTYgNDc2LjkwMzU4OSwxOC4yMjIxNzA2IDQ3NC4xMzk2OTYSMTguMjIyMTcwNiBDNDY2Ljk3NjIyNiwxOC4xNTEyNjA5IDQ2MC45NTAwMzISMjAuNDkxMTQ2MiA0NTYuMTk3MDQSNTUuMTcwODI2MiBaIE00OTguNTI5OTI1LDU3LjQzMjM1NCBMNDk4LjUyOTkyNSw0OC42NCBMNTEwLjA4MzkwOCw0OC42NCBMNTEwLjA4MzkwOCwzOC42NDI1ODgzIEw0OTguNTI5OTI1LDM4LjY0MjU4ODMgTDQ5OC41Mjk5MjUsMjOSNzc5NTk2NSBMNTExLjkyODAxNCwyOS43Nzk1OTY1IEw1MTEuOTI4MDE0LDE5LjQ5ODg1NTIgTDQ4NS41NTMyMTcsMTkuNDk4NDU1MiBMNDg1LjU1MzIxNyw2Ny43ODQyNjkgTDUxMi4wMDA1MDksNjcuNzg0MjY5IEw1MTIuMDAwNTA5LDU3LjUwMzAzNzIgTDQ5OC41Mjk5MjUsNTcuNTAzMDM3MiBMNDk4LjNTI5OTI1LDU3LjQzMjM1NCBaIiBmaWxsPSIjMDAwMDAwIj48L3BhdGg+PC9nPjwvc3ZnPg==");
+}
+
+css/layout.css
+.layout-wrapper {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    display: block !important;
+    align-items: initial !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+}
+
+.header {
+    width: 100%;
+    max-width: 1200px;
+    margin: 2 auto !important;
+    background-color: #f4f4f4;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.layout-wrapper .header .header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto !important;
+    padding: 12px 20px;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 8px;
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    box-sizing: border-box;
+    max-height: 80px;
+    overflow: hidden;
+}
+
+.layout-wrapper .header .header-content h1 {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+}
+
+.layout-wrapper .header .header-content p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.main-container {
+    max-width: 1020px;
+    margin: 0 auto !important;
+    display: flex;
+    gap: 20px;
+    padding: 0 20px 20px 0;
+    flex-direction: row;
+    align-items: flex-start;
+    margin-top: 5px;
+}
+
+.menu-container {
+    padding-left: 0;
+    width: 200px;
+}
+
+.content-wrapper {
+    text-align: left;
+    width: 800px;
+    margin-top: 0;
+    padding-top: 0;
 }
+css/pages.css
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+.signup-instructions {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.signup-instructions a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+.signup-instructions a:hover {
+    text-decoration: underline;
+}
+
+.login-page {
+    min-height: 100vh; /* Full viewport height */
+    display: flex; /* Center the login form */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Style the login container */
+#loginContainer {
+    width: 440px; /* Add 40px to account for the shift */
+    max-width: 440px; /* Update max-width accordingly */
+}
+
+
+.login-page h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.login-page .form-group {
+    margin-bottom: 15px;
+}
+
+.login-page .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0;
+    max-width: 70px;
+}
+
+.login-page input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.login-page button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.login-page button:hover {
+    background-color: #0056b3;
+}
+
+.login-page .toggle-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.login-page .toggle-link a {
+    color: #007BFF;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.login-page .toggle-link a:hover {
+    text-decoration: underline;
+}
+
+.login-page .custom-login-notice {
+    background-color: #f0e68c;
+    border: 2px dashed #4682b4;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+    font-family: 'Courier New', Courier, monospace;
+    color: #2f4f4f;
+    transition: transform 0.3s ease-in-out;
+    margin-bottom: 30px;
+}
+
+.login-page .custom-login-notice .highlight {
+    color: #007BFF;
+    font-weight: bold;
+}
+
+.login-page .custom-login-notice:hover {
+    transform: scale(1.02);
+}
+
+#my-store .settings-form {
+    max-width: 600px;
+}
+
+#my-store .email-section input[type="text"] {
+    width: 50%;
+}
+
+#my-store .widget-checkboxes input[type="checkbox"] {
+    width: 10px;
+}
+
+/* Signup-specific styles */
+.signup-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.signup-page .options {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.signup-page .option {
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+    transition: border 0.3s ease;
+}
+
+.signup-page .option.selected {
+    border: 3px solid #007BFF;
+    border-radius: 5px;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.signup-page .option img {
+    width: 150px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.signup-page .option span {
+    display: block;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.signup-page .option input[type="radio"] {
+    display: none;
+}
+
+.signup-page .form-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 400px;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    }
+}
+css/signup.css
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.options {
+    display: flex;
+    gap: 15px; /* Increased gap for better spacing */
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.option {
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+    transition: border 0.3s ease;
+}
+
+.option.selected {
+    border: 3px solid #007BFF;
+    border-radius: 5px;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.option img {
+    width: 150px; /* Fixed width for uniformity */
+    height: 200px; /* Fixed height for uniformity */
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.option span {
+    display: block;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.option input[type="radio"] {
+    display: none;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin: 0 auto; /* Center the form, removed margin-right */
+    width: 100%;
+    max-width: 400px; /* Match form-group max-width for alignment */
+}
+
+button {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    max-width: 200px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-group label {
+    font-weight: bold;
+    flex: 1;
+    text-align: right;
+    margin-bottom: 0;
+}
+
+.form-group .input-container {
+    position: relative;
+    width: 192px; /* 160px + 20% = 192px */
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    padding-right: 30px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-group .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Pulse animation keyframes */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    }
+}
+css/styles.css
+body {
+    font-family: Arial, sans-serif;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #f4f4f4;
+    min-height: 100vh;
+    display: block !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+    text-align: initial !important;
+}
+
+.layout-wrapper {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    display: block !important;
+    align-items: initial !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+.header {
+    width: 100%;
+    max-width: 1200px;
+    margin: 2 auto !important;
+    background-color: #f4f4f4;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    padding: 0 !important;
+    margin-top: 0 !important;
+}
+
+.layout-wrapper .header .header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto !important;
+    padding: 12px 20px;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 8px;
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    box-sizing: border-box;
+    max-height: 80px;
+    overflow: hidden;
+}
+
+.layout-wrapper .header .header-content h1 {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+}
+
+.layout-wrapper .header .header-content p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto !important;
+    display: flex;
+    gap: 20px;
+    padding: 0 20px 20px 0; /* Updated as per CREQ */
+    flex-direction: row;
+}
+
+/* /static/styles.css */
+
+/* Existing styles (assumed content; replace with actual if available) */
+/* ... */
+
+/* Menu container adjustments */
+.menu-container {
+    padding-left: 0; /* Remove left padding to align flush with the left edge */
+    /* Existing styles for .menu-container */
+}
+
+/* Menu adjustments */
+.menu {
+    padding-left: 5px; /* Shift buttons 5 pixels to the right */
+    /* Existing styles for .menu */
+}
+
+/* Content wrapper alignment */
+.content-wrapper {
+    text-align: left; /* Ensure content is left-aligned */
+    width: 800px; /* Set a fixed width to prevent layout issues with buttons */
+    /* If flexbox is used, you might need:
+    display: flex;
+    justify-content: flex-start;
+    */
+    /* Existing styles for .content-wrapper */
+}
+
+/* ... */
+/* Rest of the existing styles.css content */
+.menu button {
+    padding: 10px 10px 10px 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    max-width: 200px; /* Reverted to 200px from 160px */
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding-right: 30px;
+}
+
+.menu button:hover {
+    background-color: #0056b3;
+}
+
+.menu button[data-submenu][aria-expanded="true"] {
+    background-color: #0056b3;
+    border-left: 4px solid #fff;
+}
+
+.menu button i,
+.menu button .svg-icon,
+.menu button .icon-group {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.menu button i::before {
+    font-family: "Font Awesome 6 Free";
+}
+
+.menu button i.fas::before {
+    font-weight: 900;
+}
+
+.menu button .svg-icon {
+    display: inline-block;
+    height: 16px;
+    width: auto;
+}
+
+.menu button .svg-icon svg {
+    height: 100%;
+    width: auto;
+    fill: white;
+}
+
+.menu button .icon-group {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.menu button .icon-group .small-icon {
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+    right: -8px;
+    color: white;
+}
+
+.menu button .button-content {
+    display: flex;
+    align-items: center; /* Vertically centers the SVG and text */
+    justify-content: flex-start; /* Aligns content to the left */
+}
+
+.menu button .caret {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+.menu .btn-admin {
+    background-color: #dc3545;
+}
+
+.menu .btn-admin:hover {
+    background-color: #c82333;
+}
+
+.menu .btn-logoff {
+    background-color: #dc3545;
+}
+
+.menu .btn-logoff:hover {
+    background-color: #c82333;
+}
+
+.menu button[data-href="/admin"] {
+    background-color: #dc3545; /* Added per CREQ to match Log Off button color */
+}body {
+    font-family: Arial, sans-serif;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #f4f4f4;
+    min-height: 100vh;
+    display: block !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+    text-align: initial !important;
+}
+
+.layout-wrapper {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    display: block !important;
+    align-items: initial !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+.header {
+    width: 100%;
+    max-width: 1200px;
+    margin: 2 auto !important;
+    background-color: #f4f4f4;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important; /* Ensure no extra space below header */
+}
+
+.layout-wrapper .header .header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto !important;
+    padding: 12px 20px;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 8px;
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    box-sizing: border-box;
+    max-height: 80px;
+    overflow: hidden;
+}
+
+.layout-wrapper .header .header-content h1 {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+}
+
+.layout-wrapper .header .header-content p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.main-container {
+    max-width: 1020px; /* Adjusted to 200px (menu) + 20px (gap) + 800px (content) */
+    margin: 0 auto !important;
+    display: flex;
+    gap: 20px;
+    padding: 0 20px 20px 0;
+    flex-direction: row;
+    align-items: flex-start; /* Added to align content-wrapper with top of menu-container */
+    margin-top: 5px; /* Added to match the 5px gap between buttons */
+}
+
+/* Menu container adjustments */
+.menu-container {
+    padding-left: 0; /* Remove left padding to align flush with the left edge */
+    width: 200px; /* Added to ensure fixed width matching the buttons */
+}
+
+/* Menu adjustments */
+.menu {
+    padding-left: 5px; /* Shift buttons 5 pixels to the right */
+}
+
+/* Content wrapper alignment */
+.content-wrapper {
+    text-align: left; /* Ensure content is left-aligned */
+    width: 800px; /* Fixed width to prevent layout issues with buttons */
+    margin-top: 0; /* Added to remove any extra vertical gap */
+    padding-top: 0; /* Added to remove any extra vertical gap */
+}
+
+/* Rest of the existing styles.css content */
+.menu button {
+    padding: 10px 10px 10px 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    max-width: 200px; /* Already set to 200px */
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding-right: 30px;
+}
+
+.menu button:hover {
+    background-color: #0056b3;
+}
+
+.menu button[data-submenu][aria-expanded="true"] {
+    background-color: #0056b3;
+    border-left: 4px solid #fff;
+}
+
+.menu button i,
+.menu button .svg-icon,
+.menu button .icon-group {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.menu button i::before {
+    font-family: "Font Awesome 6 Free";
+}
+
+.menu button i.fas::before {
+    font-weight: 900;
+}
+
+.menu button .svg-icon {
+    display: inline-block;
+    height: 16px;
+    width: auto;
+}
+
+.menu button .svg-icon svg {
+    height: 100%;
+    width: auto;
+    fill: white;
+}
+
+.menu button .icon-group {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.menu button .icon-group .small-icon {
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+    right: -8px;
+    color: white;
+}
+
+.menu button .button-content {
+    display: flex;
+    align-items: center; /* Vertically centers the SVG and text */
+    justify-content: flex-start; /* Aligns content to the left */
+}
+
+.menu button .caret {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+.menu .btn-admin {
+    background-color: #dc3545;
+}
+
+.menu .btn-admin:hover {
+    background-color: #c82333;
+}
+
+.menu .btn-logoff {
+    background-color: #dc3545;
+}
+
+.menu .btn-logoff:hover {
+    background-color: #c82333;
+}
+
+.menu button[data-href="/admin"] {
+    background-color: #dc3545; /* Added per CREQ to match Log Off button color */
+}
+
+.menu button[data-href="/admin"]:hover {
+    background-color: #c82333; /* Added per CREQ to match Log Off hover color */
+}
+
+.submenu {
+    display: none;
+    padding-left: 20px;
+    padding-bottom: 0; /* Remove extra space at the bottom */
+    overflow: visible;
+    max-height: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.submenu.open {
+    display: block; /* Removed !important */
+    max-height: 1000px; /* Removed !important */
+    height: auto; /* Removed !important */
+}
+
+.submenu button {
+    display: block !important;
+    min-height: 30px !important;
+    background-color: #6c757d !important;
+}
+
+.submenu button:hover {
+    background-color: #5a6268;
+}
+
+.submenu button.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.section {
+    display: none;
+    margin-left: 210px; /* Reverted to 210px (200px + 10px gap) from 170px */
+}
+
+.section.active {
+    display: block;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.form label {
+    font-weight: bold;
+}
+
+.form input, .form select {
+    padding: 5px;
+}
+
+.form button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.form button:hover {
+    background-color: #0056b3;
+}
+
+.signup-instructions {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.signup-instructions a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+.signup-instructions a:hover {
+    text-decoration: underline;
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+}
+
+.settings-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.settings-form input, 
+.settings-form textarea {
+    padding: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.settings-form button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.settings-form button:hover {
+    background-color: #0056b3;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.deals-table th {
+    background-color: #f2f2f2;
+}
+
+.treeview {
+    max-height: 600px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.treeview, .treeview ul, .treeview li {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.treeview .node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+}
+
+.treeview .toggle {
+    cursor: pointer;
+    width: 20px;
+    text-align: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.treeview input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.treeview .subcategories {
+    display: none;
+    padding-left: 20px;
+}
+
+.treeview .subcategories.open {
+    display: block;
+}
+
+#toast-container > .toast-success {
+    background-color: #28a745;
+    border-color: #218838;
+}
+
+#toast-container > .toast-error {
+    background-color: #dc3545;
+    border-color: #c82333;
+}
+
+.action-cell {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-group label {
+    font-weight: bold;
+    flex: 1;
+    text-align: right;
+    margin-bottom: 0;
+}
+
+.form-group .input-container {
+    position: relative;
+    width: 200px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    padding-right: 30px;
+    font-size: 14px;
+}
+
+.form-group .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    max-width: 200px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.toggle-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.toggle-link a {
+    color: #007BFF;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.toggle-link a:hover {
+    text-decoration: underline;
+}
+
+.hidden {
+    display: none;
+}
+
+.toggle-section {
+    cursor: pointer;
+    font-weight: bold;
+    margin: 10px 0;
+    background-color: #e9ecef;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.toggle-content {
+    display: none;
+}
+
+.toggle-content.open {
+    display: block;
+}
+
+.page-section, .email-section {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.email-section {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.widget-checkboxes div {
+    margin-bottom: 10px;
+}
+
+.remove-page-btn, .remove-email-btn {
+    padding: 5px 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.remove-page-btn:hover, .remove-email-btn:hover {
+    background-color: #c82333;
+}
+
+.password-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.password-container input {
+    padding: 8px 30px 8px 8px;
+    width: 50%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 16px;
+}
+
+#my-store .settings-form {
+    max-width: 600px;
+}
+
+#my-store .email-section input[type="text"] {
+    width: 50%;
+}
+
+#my-store .widget-checkboxes input[type="checkbox"] {
+    width: 10px;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.options {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.option {
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+    transition: border 0.3s ease;
+}
+
+.option.selected {
+    border: 3px solid #007BFF;
+    border-radius: 5px;
+}
+
+.option img {
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.option span {
+    display: block;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.option input[type="radio"] {
+    display: none;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-right: 100px;
+}
+
+/* Loading Overlay */
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* Multicircle Loader Container */
+.multicircle-loader {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+/* Circle Styles */
+.multicircle-loader .circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    animation: spin 1.5s linear infinite;
+}
+
+/* Individual Circle Variations */
+.circle1 {
+    width: 60px;
+    height: 60px;
+    border-top-color: #ff6f61;
+    top: 20px;
+    left: 20px;
+    animation-delay: 0s;
+}
+
+.circle2 {
+    width: 45px;
+    height: 45px;
+    border-top-color: #6bff61;
+    top: 27.5px;
+    left: 27.5px;
+    animation-delay: 0.3s;
+}
+
+.circle3 {
+    width: 30px;
+    height: 30px;
+    border-top-color: #61cfff;
+    top: 35px;
+    left: 35px;
+    animation-delay: 0.6s;
+}
+
+.circle4 {
+    width: 15px;
+    height: 15px;
+    border-top-color: #ff61ff;
+    top: 42.5px;
+    left: 42.5px;
+    animation-delay: 0.9s;
+}
+
+/* Spin Animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Login page specific styles */
+.login-page {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 20px;
+}
+
+.login-page .container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-page h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.login-page .form-group {
+    margin-bottom: 15px;
+    transform: translateX(-40px);
+}
+
+.login-page .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0;
+    max-width: 70px;
+}
+
+.login-page input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.login-page button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.login-page button:hover {
+    background-color: #0056b3;
+}
+
+.login-page .toggle-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.login-page .toggle-link a {
+    color: #007BFF;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.login-page .toggle-link a:hover {
+    text-decoration: underline;
+}
+
+.login-page #toast-container > .toast-success {
+    background-color: #28a745;
+    border-color: #218838;
+}
+
+.login-page #toast-container > .toast-error {
+    background-color: #dc3545;
+    border-color: #c82333;
+}
+
+.login-page .custom-login-notice {
+    background-color: #f0e68c;
+    border: 2px dashed #4682b4;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+    font-family: 'Courier New', Courier, monospace;
+    color: #2f4f4f;
+    transition: transform 0.3s ease-in-out;
+    margin-bottom: 30px;
+}
+
+.login-page .custom-login-notice .highlight {
+    color: #007BFF;
+    font-weight: bold;
+}
+
+.login-page .custom-login-notice:hover {
+    transform: scale(1.02);
+}
+
+/* New styles for "My Account" section */
+.settings-form {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.settings-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.settings-form input[type="text"],
+.settings-form input[type="url"],
+.settings-form input[type="email"],
+.settings-form input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.settings-form button {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.settings-form button:hover {
+    background-color: #0056b3;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 16px;
+}
+
+.password-toggle:hover {
+    color: #007BFF;
+}
+
+.settings-form button i {
+    margin-right: 5px;
+}
+
+/* Fixed Headers for Orders and Visits Tables */
+#orders table thead, #visits table thead {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* Light background for visibility */
+    z-index: 1;
+}
+
+/* Style for Collapsible Toggle Sections */
+.toggle-section {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-section:hover {
+    background-color: #dee2e6;
+}
+
+/* Collapsible Content Styling */
+.toggle-content {
+    display: none;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    max-height: 0;
+    padding: 0 10px;
+}
+
+.toggle-content.open {
+    display: block;
+    max-height: 500px; /* Adjust based on content */
+    padding: 10px;
+}
+css/utilities.css
+.section {
+    display: none;
+    margin-left: 210px;
+}
+
+.section.active {
+    display: block;
+}
+
+.hidden {
+    display: none;
+}
+
+.toggle-section {
+    cursor: pointer;
+    font-weight: bold;
+    margin: 10px 0;
+    background-color: #e9ecef;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.toggle-content {
+    display: none;
+}
+
+.toggle-content.open {
+    display: block;
+}
+
+.toggle-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.toggle-link a {
+    color: #007BFF;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.toggle-link a:hover {
+    text-decoration: underline;
+}
+
+#toast-container > .toast-success {
+    background-color: #28a745;
+    border-color: #218838;
+}
+
+#toast-container > .toast-error {
+    background-color: #dc3545;
+    border-color: #c82333;
+}
+
+.action-cell {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-group label {
+    font-weight: bold;
+    flex: 1;
+    text-align: right;
+    margin-bottom: 0;
+}
+
+.form-group .input-container {
+    position: relative;
+    width: 200px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    padding-right: 30px;
+    font-size: 14px;
+}
+
+.form-group .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+}
+
+.password-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.password-container input {
+    padding: 8px 30px 8px 8px;
+    width: 50%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 16px;
+}
+
+.password-toggle:hover {
+    color: #007BFF;
+}
+
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.multicircle-loader {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.multicircle-loader .circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    animation: spin 1.5s linear infinite;
+}
+
+.circle1 {
+    width: 60px;
+    height: 60px;
+    border-top-color: #ff6f61;
+    top: 20px;
+    left: 20px;
+    animation-delay: 0s;
+}
+
+.circle2 {
+    width: 45px;
+    height: 45px;
+    border-top-color: #6bff61;
+    top: 27.5px;
+    left: 27.5px;
+    animation-delay: 0.3s;
+}
+
+.circle3 {
+    width: 30px;
+    height: 30px;
+    border-top-color: #61cfff;
+    top: 35px;
+    left: 35px;
+    animation-delay: 0.6s;
+}
+
+.circle4 {
+    width: 15px;
+    height: 15px;
+    border-top-color: #ff61ff;
+    top: 42.5px;
+    left: 42.5px;
+    animation-delay: 0.9s;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#orders table thead, #visits table thead {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 1;
+}
+
+.toggle-section {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-section:hover {
+    background-color: #dee2e6;
+}
+
+.toggle-content {
+    display: none;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    max-height: 0;
+    padding: 0 10px;
+}
+
+.toggle-content.open {
+    display: block;
+    max-height: 500px;
+    padding: 10px;
+}
+error/200.md
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rendered Markdown</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    {content}
+</body>
+</html>
+error/403.md
+# 403 - Forbidden
+
+We're sorry, but you do not have permission to access this resource.
+
+**Details:**
+- {error_message}
+
+Please contact support if you believe this is an error.
+error/404.md
+# 404 - Not Found
+
+We're sorry, but the requested resource could not be found.
+
+**Details:**
+- {error_message}
+
+Please check the URL or try again later.
+error/500.md
+# 500 - Internal Server Error
+
+We're sorry, but an unexpected error occurred while processing your request.
+
+**Details:**
+- {error_message}
+
+Our team has been notified. Please try again later.
 js/admin-page.js
 function initializeAdmin(pageType) {
     console.log('initializeAdmin - Initializing admin page with type: ' + pageType);
@@ -159,7 +2337,7 @@ function initializeAdmin(pageType) {
     // Load initial content
     loadBranding(pageType, 'brandingContent');
     setupNavigation();
-    showSection('welcome');
+    window.siteNavigation.showSection('welcome');
 
     // Fetch and display contact_name in the welcome section
     if (typeof loadSettings === 'function') {
@@ -519,29 +2697,67 @@ async function handleCategorySelection(categoryId, checkbox) {
 }
 js/common.js
 // common.js
-// Purpose: Provides core shared utilities for all pages, specifically Toastr configuration.
+// Purpose: Provides core shared utilities for all pages, including Toastr configuration.
 
-// Configures Toastr for consistent toast notifications across the application.
-function setupToastr() {
-    console.log('setupToastr - Initiating Toastr configuration');
-    if (typeof toastr === 'undefined') {
-        console.error('setupToastr - Toastr library not loaded');
-        return;
+// Guard against multiple inclusions
+if (!window.commonInitialized) {
+    window.commonInitialized = true;
+
+    // Configures Toastr for consistent toast notifications across the application
+    function setupToastr() {
+        console.log('setupToastr - Initiating Toastr configuration');
+        if (typeof toastr === 'undefined') {
+            console.error('setupToastr - Toastr library not loaded');
+            return;
+        }
+
+        // Override Toastr methods to log messages to the console
+        (function() {
+            const originalSuccess = toastr.success;
+            const originalError = toastr.error;
+            const originalInfo = toastr.info;
+            const originalWarning = toastr.warning;
+
+            toastr.success = function(message, title, options) {
+                console.log(`Toastr Success: ${title ? title + ' - ' : ''}${message}`);
+                return originalSuccess.call(toastr, message, title, options);
+            };
+            toastr.error = function(message, title, options) {
+                console.log(`Toastr Error: ${title ? title + ' - ' : ''}${message}`);
+                return originalError.call(toastr, message, title, options);
+            };
+            toastr.info = function(message, title, options) {
+                console.log(`Toastr Info: ${title ? title + ' - ' : ''}${message}`);
+                return originalInfo.call(toastr, message, title, options);
+            };
+            toastr.warning = function(message, title, options) {
+                console.log(`Toastr Warning: ${title ? title + ' - ' : ''}${message}`);
+                return originalWarning.call(toastr, message, title, options);
+            };
+        })();
+
+        // Set Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
+        };
+
+        console.log('setupToastr - Toastr options configured:', JSON.stringify(toastr.options));
+        console.log('setupToastr - Configuration completed');
     }
-    toastr.options = {
-        closeButton: true,
-        progressBar: true,
-        positionClass: 'toast-top-right',
-        timeOut: 5000,
-        showMethod: 'slideDown',
-        hideMethod: 'slideUp'
-    };
-    console.log('setupToastr - Toastr options configured:', JSON.stringify(toastr.options));
-    console.log('setupToastr - Configuration completed');
-}
 
-// Export for use in other scripts
-window.setupToastr = setupToastr;
+    // Initialize Toastr when the DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        setupToastr();
+    });
+
+    // Export for manual invocation if needed
+    window.setupToastr = setupToastr;
+}
 js/community-page.js
 // community-page.js
 // Purpose: Manages page-specific functionality for the /community page.
@@ -589,7 +2805,7 @@ function initializeCommunity() {
     // Load branding and initial data
     loadBranding('community', 'brandingContent');
     updateMenu();
-    showSection('welcome');
+    window.siteNavigation.showSection('welcome');
     waitForTinyMCE(() => initializeTinyMCE('#aboutCommunity, #stylingDetails, #page1Content'));
     loadVisits();
     loadOrders();
@@ -971,7 +3187,7 @@ function initializeMerchant() {
     setupNavigation(); // From site-navigation.js
     checkAdminPermission();
     loadBranding('merchant', 'brandingContent'); // Adjusted to match typical usage
-    showSection('info'); // Ensure the info section is shown on load
+    window.siteNavigation.showSection('welcome'); // Ensure the welcome section is shown on load
     loadProducts(); // Load merchant products
     loadStoreRequest(); // Load store request data
 
@@ -1571,7 +3787,7 @@ function initializePartner() {
     setupNavigation(); // From site-navigation.js
     checkAdminPermission();
     loadBranding('partner', 'brandingContent'); // Adjusted to match typical usage
-    showSection('welcome'); // Ensure the welcome section is shown on load
+    window.siteNavigation.showSection('welcome'); // Show the welcome section by default
     loadPartnerIntegrations(); // Load partner-specific integrations
 
     // Fetch and display contact_name in the welcome section
@@ -1666,141 +3882,206 @@ window.loadPartnerIntegrations = loadPartnerIntegrations;
 js/site-auth.js
 // site-auth.js
 // Purpose: Manages authentication-related functionality, including password visibility toggling, 
-// user logout, JWT token decoding, and password saving for user management.
+// user logout, JWT token decoding, authenticated fetching, and password saving.
 
-// Toggles the visibility of a password input field, updating associated icon.
-function togglePassword(fieldId) {
-    console.log('togglePassword - Initiating visibility toggle - Field ID:', fieldId);
-    const input = document.getElementById(fieldId);
-    const icon = input ? input.nextElementSibling : null;
-    console.log('togglePassword - Input element retrieved:', input, 'Icon element:', icon);
+// Guard against multiple inclusions
+if (!window.siteAuthInitialized) {
+    window.siteAuthInitialized = true;
 
-    if (!input) {
-        console.error('togglePassword - Password input not found - Field ID:', fieldId);
-        return;
-    }
-    if (!icon) {
-        console.error('togglePassword - Icon element not found for input - Field ID:', fieldId);
-        return;
+    // Configuration for logging (toggle based on environment, e.g., set to false in production)
+    const ENABLE_LOGGING = true;
+
+    // Helper function for consistent logging
+    function log(message, ...args) {
+        if (ENABLE_LOGGING) {
+            console.log(message, ...args);
+        }
     }
 
-    const isPassword = input.type === 'password';
-    console.log('togglePassword - Current input type:', input.type);
-    if (isPassword) {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-        console.log('togglePassword - Changed to text visibility - Field ID:', fieldId);
-    } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-        console.log('togglePassword - Changed to password visibility - Field ID:', fieldId);
-    }
-    console.log('togglePassword - Toggle completed - New type:', input.type);
-}
-
-// Logs the user out, clearing session data and redirecting to home.
-function logOff() {
-    console.log('logOff - Initiating logout process');
-    const confirmed = confirm('Are you sure you want to log off?');
-    console.log('logOff - User confirmation received:', confirmed);
-
-    if (confirmed) {
-        console.log('logOff - User confirmed logout - Clearing session data');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userId');
-        console.log('logOff - Auth token and userId removed from localStorage - Current localStorage:', JSON.stringify(localStorage));
-        toastr.success('Logged off successfully');
-        console.log('logOff - Success toast displayed');
-
-        setTimeout(() => {
-            console.log('logOff - Redirecting to / after 1-second delay');
-            window.location.href = '/';
-            console.log('logOff - Redirect executed');
-        }, 1000);
-    } else {
-        console.log('logOff - Logout cancelled by user');
-    }
-    console.log('logOff - Logout process completed');
-}
-
-// Decodes a JWT token to extract user data, such as permissions.
-function decodeJWT(token) {
-    console.log('decodeJWT - Starting JWT decoding - Input token:', token);
-    if (!token || typeof token !== 'string') {
-        console.warn('decodeJWT - Invalid token: null or not a string - Token:', token);
-        return null;
-    }
-    if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
-        console.warn('decodeJWT - Token does not match JWT format - Token:', token);
-        return null;
-    }
-    console.log('decodeJWT - Token format validated - Proceeding with decode');
-
-    const parts = token.split('.');
-    console.log('decodeJWT - Token split into parts:', parts);
-
-    try {
-        const base64Url = parts[1];
-        console.log('decodeJWT - Extracted base64Url from token:', base64Url);
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        console.log('decodeJWT - Converted to base64:', base64);
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-        console.log('decodeJWT - Decoded JSON payload:', jsonPayload);
-        const decoded = JSON.parse(jsonPayload);
-        console.log('decodeJWT - Parsed JWT payload:', JSON.stringify(decoded));
-        return decoded;
-    } catch (error) {
-        console.error('decodeJWT - Error decoding JWT - Error:', error.message, 'Stack:', error.stack, 'Token:', token);
-        return null;
-    }
-}
-
-// Saves an updated user password via an authenticated request.
-async function savePassword(newPassword) {
-    console.log('savePassword - Starting password save - New password length:', newPassword ? newPassword.length : 'None');
-    if (!newPassword || typeof newPassword !== 'string') {
-        console.error('savePassword - Invalid password provided - Password:', newPassword);
-        toastr.error('Invalid password provided');
-        return;
+    // Helper function for consistent error logging
+    function error(message, ...args) {
+        if (ENABLE_LOGGING) {
+            console.error(message, ...args);
+        }
     }
 
-    try {
-        console.log('savePassword - Sending password update via authenticatedFetch');
-        const startTime = Date.now();
-        const response = await authenticatedFetch('/update-password', { // Assumes endpoint exists
-            method: 'POST',
-            body: JSON.stringify({ password: newPassword })
-        });
-        const duration = Date.now() - startTime;
+    // Toggles the visibility of a password input field, updating associated icon.
+    function togglePassword(fieldId) {
+        log('togglePassword - Initiating visibility toggle - Field ID:', fieldId);
+        const input = document.getElementById(fieldId);
+        const icon = input ? input.nextElementSibling : null;
+        log('togglePassword - Input element retrieved:', input, 'Icon element:', icon);
 
-        if (!response) {
-            console.error('savePassword - No response from fetch');
-            toastr.error('Failed to save password: No server response');
+        if (!input) {
+            error('togglePassword - Password input not found - Field ID:', fieldId);
+            return;
+        }
+        if (!icon) {
+            error('togglePassword - Icon element not found for input - Field ID:', fieldId);
             return;
         }
 
-        console.log('savePassword - Response received - Status:', response.status, 'Duration:', `${duration}ms`);
-        const result = await response.json();
-        console.log('savePassword - Save response data:', JSON.stringify(result));
-
-        if (result.status === 'success') {
-            console.log('savePassword - Password saved successfully');
-            toastr.success('Password updated successfully');
+        const isPassword = input.type === 'password';
+        log('togglePassword - Current input type:', input.type);
+        if (isPassword) {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+            log('togglePassword - Changed to text visibility - Field ID:', fieldId);
         } else {
-            console.error('savePassword - Server reported failure - Message:', result.message);
-            toastr.error(result.message || 'Failed to save password');
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+            log('togglePassword - Changed to password visibility - Field ID:', fieldId);
         }
-    } catch (error) {
-        console.error('savePassword - Error saving password - Error:', error.message, 'Stack:', error.stack);
-        toastr.error('Failed to save password: ' + error.message);
+        log('togglePassword - Toggle completed - New type:', input.type);
     }
-    console.log('savePassword - Password save process completed');
+
+    // Logs the user out, clearing session data and redirecting to home.
+    function logOff() {
+        log('logOff - Initiating logout process');
+        const confirmed = confirm('Are you sure you want to log off?');
+        log('logOff - User confirmation received:', confirmed);
+
+        if (confirmed) {
+            log('logOff - User confirmed logout - Clearing session data');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            log('logOff - Auth token and userId removed from localStorage - Current localStorage:', JSON.stringify(localStorage));
+            toastr.success('Logged off successfully');
+            log('logOff - Success toast displayed');
+
+            setTimeout(() => {
+                log('logOff - Redirecting to / after 1-second delay');
+                window.location.href = '/';
+                log('logOff - Redirect executed');
+            }, 1000);
+        } else {
+            log('logOff - Logout cancelled by user');
+        }
+        log('logOff - Logout process completed');
+    }
+
+    // Decodes a JWT token to extract user data, such as permissions.
+    function decodeJWT(token) {
+        log('decodeJWT - Starting JWT decoding - Input token:', token);
+        if (!token || typeof token !== 'string') {
+            error('decodeJWT - Invalid token: null or not a string - Token:', token);
+            return null;
+        }
+        if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
+            error('decodeJWT - Token does not match JWT format - Token:', token);
+            return null;
+        }
+        log('decodeJWT - Token format validated - Proceeding with decode');
+
+        const parts = token.split('.');
+        log('decodeJWT - Token split into parts:', parts);
+
+        try {
+            const base64Url = parts[1];
+            log('decodeJWT - Extracted base64Url from token:', base64Url);
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            log('decodeJWT - Converted to base64:', base64);
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            log('decodeJWT - Decoded JSON payload:', jsonPayload);
+            const decoded = JSON.parse(jsonPayload);
+            log('decodeJWT - Parsed JWT payload:', JSON.stringify(decoded));
+            return decoded;
+        } catch (err) {
+            error('decodeJWT - Error decoding JWT - Error:', err.message, 'Stack:', err.stack, 'Token:', token);
+            return null;
+        }
+    }
+
+    // Authenticated fetch function to handle API requests with auth token
+    async function authenticatedFetch(url, options = {}) {
+        log('authenticatedFetch - Initiating fetch - URL:', url);
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            error('authenticatedFetch - No authentication token found - Redirecting to /');
+            window.location.href = '/';
+            return null;
+        }
+
+        const headers = new Headers(options.headers || {});
+        headers.set('Authorization', `Bearer ${token}`);
+        headers.set('Content-Type', 'application/json');
+
+        const fetchOptions = {
+            ...options,
+            headers: headers
+        };
+
+        try {
+            const response = await fetch(url, fetchOptions);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Request failed with status ${response.status}`);
+            }
+            log('authenticatedFetch - Response received - Status:', response.status);
+            return response;
+        } catch (err) {
+            error('authenticatedFetch - Error:', err.message);
+            throw err;
+        }
+    }
+
+    // Saves an updated user password via an authenticated request.
+    async function savePassword(newPassword) {
+        log('savePassword - Starting password save - New password length:', newPassword ? newPassword.length : 'None');
+        if (!newPassword || typeof newPassword !== 'string') {
+            error('savePassword - Invalid password provided - Password:', newPassword);
+            toastr.error('Invalid password provided');
+            return;
+        }
+
+        try {
+            log('savePassword - Sending password update via authenticatedFetch');
+            const startTime = Date.now();
+            const response = await authenticatedFetch('/update-password', { 
+                method: 'POST',
+                body: JSON.stringify({ password: newPassword })
+            });
+            const duration = Date.now() - startTime;
+
+            if (!response) {
+                error('savePassword - No response from fetch');
+                toastr.error('Failed to save password: No server response');
+                return;
+            }
+
+            log('savePassword - Response received - Status:', response.status, 'Duration:', `${duration}ms`);
+            const result = await response.json();
+            log('savePassword - Save response data:', JSON.stringify(result));
+
+            if (result.status === 'success') {
+                log('savePassword - Password saved successfully');
+                toastr.success('Password updated successfully');
+            } else {
+                error('savePassword - Server reported failure - Message:', result.message);
+                toastr.error(result.message || 'Failed to save password');
+            }
+        } catch (err) {
+            error('savePassword - Error saving password - Error:', err.message, 'Stack:', err.stack);
+            toastr.error('Failed to save password: ' + err.message);
+        }
+        log('savePassword - Password save process completed');
+    }
+
+    // Expose functions to window for global access
+    window.togglePassword = togglePassword;
+    window.logOff = logOff;
+    window.decodeJWT = decodeJWT;
+    window.authenticatedFetch = authenticatedFetch;
+    window.savePassword = savePassword;
+
+    // Signal that site-auth.js has finished loading
+    window.dispatchEvent(new Event('siteAuthReady'));
 }
 js/site-navigation.js
 // /static/js/site-navigation.js
-// Purpose: Handles navigation, content loading, branding, and section/submenu management across the site.
+// Purpose: Handles navigation, content loading, branding, section/submenu management, and logout across the site.
 
 // Guard against multiple inclusions
 if (window.siteNavigationInitialized) {
@@ -1808,392 +4089,329 @@ if (window.siteNavigationInitialized) {
 } else {
     window.siteNavigationInitialized = true;
 
-    // Check if window.apiUrl is defined, throw an error if not
+    // Check if window.apiUrl is defined
     if (!window.apiUrl) {
         console.error('site-navigation.js - window.apiUrl is not defined. Please set window.apiUrl before loading this script.');
         throw new Error('window.apiUrl is not defined');
     }
     console.log('site-navigation.js - Using apiUrl:', window.apiUrl);
 
-    // Performs authenticated fetch requests for protected resources
-    async function authenticatedFetch(url, options = {}) {
-        console.log('authenticatedFetch - Initiating fetch - URL:', url);
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            console.warn('authenticatedFetch - No authentication token found - Redirecting to /');
-            toastr.error('No authentication token found. Please log in.');
-            window.location.href = '/';
-            return null;
-        }
-        const headers = {
-            ...options.headers,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': options.body instanceof FormData ? undefined : 'application/json'
-        };
-        const fetchUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
-        try {
-            const response = await fetch(fetchUrl, { ...options, headers });
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('authenticatedFetch - Fetch failed - Status:', response.status, 'Error text:', errorText);
-                throw new Error(`Server returned ${response.status}: ${errorText}`);
+    // Wait for window.authenticatedFetch to be defined using a Promise
+    function waitForAuthFetch() {
+        return new Promise((resolve, reject) => {
+            const maxAttempts = 50;
+            const delay = 100;
+            let attempts = 0;
+
+            function check() {
+                if (typeof window.authenticatedFetch === 'function') {
+                    console.log('waitForAuthFetch - window.authenticatedFetch is now defined');
+                    resolve();
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    console.log(`waitForAuthFetch - Attempt ${attempts}: window.authenticatedFetch not defined yet, retrying in ${delay}ms`);
+                    setTimeout(check, delay);
+                } else {
+                    console.error('waitForAuthFetch - Max attempts reached, window.authenticatedFetch still not defined');
+                    reject(new Error('window.authenticatedFetch is not defined after maximum attempts'));
+                }
             }
-            if (response.status === 401) {
-                console.warn('authenticatedFetch - Unauthorized response (401) - Clearing token and redirecting to /');
-                toastr.error('Session expired. Please log in again.');
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('userId');
-                window.location.href = '/';
-                return null;
-            }
-            return response;
-        } catch (error) {
-            console.error('authenticatedFetch - Error during fetch:', error.message);
-            toastr.error(error.message || 'Failed to connect to server');
-            return null;
-        }
+            check();
+        });
     }
 
-    // Expose authenticatedFetch globally
-    window.authenticatedFetch = authenticatedFetch;
-
-    // Fetches protected page content for navigation
-    async function fetchProtectedPage(url, targetContainer = null) {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            toastr.error('No authentication token found. Please log in.');
-            showLogin(); // Assumes showLogin is defined elsewhere
-            return;
-        }
-        const overlay = showLoadingOverlay(); // Assumes showLoadingOverlay is defined
-        try {
-            const response = await authenticatedFetch(`${window.apiUrl}${url}`, {
-                method: 'GET',
-                headers: { 'Accept': 'text/html' }
-            });
-            if (!response) throw new Error('No response from server');
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const scripts = doc.querySelectorAll('script');
-
-            if (targetContainer) {
-                const container = document.querySelector(targetContainer);
-                if (!container) throw new Error(`Target container not found: ${targetContainer}`);
-                
-                // Clear existing content
-                container.innerHTML = '';
-
-                // Inject new content
-                const newContent = doc.querySelector('.content-wrapper');
-                if (!newContent) throw new Error('No .content-wrapper found in fetched content');
-                container.innerHTML = newContent.innerHTML;
-
-                // Update menu to match target page layout
-                const newMenu = doc.querySelector('.menu-container');
-                const currentMenu = document.querySelector('.menu-container');
-                if (newMenu && currentMenu) {
-                    currentMenu.innerHTML = newMenu.innerHTML;
+    // Initialize navigation once window.authenticatedFetch is available
+    waitForAuthFetch()
+        .then(() => {
+            // Fetch protected page content for navigation
+            async function fetchProtectedPage(url) {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    toastr.error('No authentication token found. Please log in.');
+                    showLogin();
+                    return;
                 }
+                showLoadingOverlay();
+                try {
+                    const response = await window.authenticatedFetch(`${window.apiUrl}${url}`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'text/html' }
+                    });
+                    if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+                    const html = await response.text();
+                    console.log('fetchProtectedPage - Response status:', response.status);
+                    console.log('fetchProtectedPage - Full HTML response:', html.substring(0, 200));
 
-                // Re-execute scripts selectively
-                await Promise.all([...scripts].map(script => {
-                    if (script.src && !script.src.includes('site-navigation.js')) {
-                        return new Promise(resolve => {
-                            const newScript = document.createElement('script');
-                            newScript.src = script.src;
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    document.documentElement.innerHTML = doc.documentElement.innerHTML;
+
+                    // Reattach scripts synchronously
+                    const scripts = doc.querySelectorAll('script');
+                    for (const oldScript of scripts) {
+                        const newScript = document.createElement('script');
+                        if (oldScript.src) {
+                            newScript.src = oldScript.src;
                             newScript.async = false;
-                            newScript.onload = resolve;
-                            newScript.onerror = () => console.error(`Failed to load script: ${script.src}`);
-                            document.head.appendChild(newScript);
+                            document.body.appendChild(newScript);
+                            await new Promise(resolve => {
+                                newScript.onload = () => {
+                                    console.log('fetchProtectedPage - Script loaded:', oldScript.src);
+                                    resolve();
+                                };
+                                newScript.onerror = () => {
+                                    console.error('fetchProtectedPage - Script load failed:', oldScript.src);
+                                    resolve();
+                                };
+                            });
+                        } else {
+                            newScript.textContent = oldScript.textContent;
+                            document.body.appendChild(newScript);
+                            console.log('fetchProtectedPage - Inline script executed');
+                        }
+                    }
+
+                    // Trigger page-specific initialization
+                    const pageType = url.split('/')[1] || 'admin';
+                    if (typeof window.initialize === 'function') {
+                        console.log('fetchProtectedPage - Triggering initialize for:', pageType);
+                        window.initialize(pageType);
+                    }
+                    setTimeout(() => hideLoadingOverlay(), 1000);
+                } catch (error) {
+                    console.error('fetchProtectedPage - Error:', error);
+                    toastr.error(error.message || 'Failed to load protected page');
+                    hideLoadingOverlay();
+                }
+            }
+
+            // Load page-specific branding content
+            async function loadBranding(brandingType, containerId = 'brandingContent') {
+                console.log('loadBranding - Starting branding load - Type:', brandingType, 'Container ID:', containerId);
+                const defaultContents = {
+                    'partner': '<h1>Partner Dashboard</h1>',
+                    'merchant': '<h1>Merchant Dashboard</h1>',
+                    'community': '<h1>Community Dashboard</h1>',
+                    'admin': '<h1>Admin Dashboard</h1>',
+                    'login': '<h1>Login</h1>',
+                    'signup': '<h1>Signup</h1>'
+                };
+                const defaultContent = defaultContents[brandingType] || '<h1>Dashboard</h1>';
+                const container = document.getElementById(containerId);
+                if (!container) {
+                    console.error('loadBranding - Container not found - ID:', containerId);
+                    return;
+                }
+                try {
+                    const response = await window.authenticatedFetch(`${window.apiUrl}/branding?type=${encodeURIComponent(brandingType)}`);
+                    if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+                    const data = await response.json();
+                    container.innerHTML = data.status === 'success' && data.branding ? data.branding : defaultContent;
+                    console.log('loadBranding - Branding loaded - Type:', brandingType);
+                } catch (error) {
+                    console.error('loadBranding - Error:', error.message);
+                    container.innerHTML = defaultContent;
+                }
+            }
+
+            // Load content for a specific section
+            async function loadSection(sectionId) {
+                console.log('loadSection - Starting section load - Section ID:', sectionId);
+                if (sectionId === 'deal_listings') {
+                    await loadCategories();
+                } else if (sectionId === 'merchants') {
+                    await loadMerchants();
+                } else {
+                    try {
+                        const response = await window.authenticatedFetch(`${window.apiUrl}/config`);
+                        if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+                        const data = await response.json();
+                        const config = data.config[sectionId] || {};
+                        const el = document.getElementById(`${sectionId}Field`);
+                        if (el) el.value = config.value || '';
+                    } catch (error) {
+                        console.error('loadSection - Error:', error.message);
+                        toastr.error(`Error loading ${sectionId}: ${error.message}`);
+                    }
+                }
+            }
+
+            // Show a section and hide others
+            function showSection(sectionId, onSectionLoad = null) {
+                console.log('showSection - Starting section display - Section ID:', sectionId);
+                const allSections = document.querySelectorAll('.section');
+                allSections.forEach(s => {
+                    s.classList.remove('active');
+                    s.style.display = 'none';
+                });
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.style.display = 'block';
+                    section.classList.add('active');
+                    if (typeof onSectionLoad === 'function') onSectionLoad(sectionId);
+                    else loadSection(sectionId);
+                } else {
+                    console.error('showSection - Section not found - ID:', sectionId);
+                }
+            }
+
+            // Toggle a submenu
+            function toggleSubmenu(submenuId, action = 'toggle') {
+                console.log(`toggleSubmenu - Starting ${action} - Submenu ID: ${submenuId}`);
+                const submenu = document.getElementById(submenuId);
+                const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
+                const caret = button?.querySelector('.caret');
+                if (submenu && button && caret) {
+                    let isOpen = submenu.classList.contains('open');
+                    if (action === 'toggle') isOpen = !isOpen;
+                    else if (action === 'close') isOpen = false;
+                    else if (action === 'open') isOpen = true;
+                    submenu.classList.toggle('open', isOpen);
+                    submenu.style.display = isOpen ? 'block' : 'none';
+                    caret.classList.toggle('fa-caret-down', isOpen);
+                    caret.classList.toggle('fa-caret-right', !isOpen);
+                    button.setAttribute('aria-expanded', isOpen);
+                    console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'open' : 'closed'}`);
+                } else {
+                    console.error(`toggleSubmenu - Submenu or button not found - Submenu ID: ${submenuId}`);
+                }
+            }
+
+            // Close all submenus
+            function closeAllSubmenus(container) {
+                const submenus = container.querySelectorAll('.submenu');
+                submenus.forEach(submenu => {
+                    const submenuId = submenu.id;
+                    if (submenuId) toggleSubmenu(submenuId, 'close');
+                });
+            }
+
+            // Handle section button clicks
+            function handleSectionClick(event) {
+                event.stopPropagation();
+                const button = event.currentTarget;
+                const sectionId = button.getAttribute('data-section');
+                const submenuId = button.getAttribute('data-submenu');
+                const href = button.getAttribute('data-href');
+
+                console.log(`handleSectionClick - Clicked:`, { sectionId, submenuId, href });
+
+                const topLevelSubmenuButtons = document.querySelectorAll('.menu > button[data-submenu]');
+                const isTopLevel = button.parentElement.classList.contains('menu');
+
+                if (submenuId) {
+                    toggleSubmenu(submenuId, 'toggle');
+                    if (isTopLevel) {
+                        topLevelSubmenuButtons.forEach(topButton => {
+                            const otherSubmenuId = topButton.getAttribute('data-submenu');
+                            if (otherSubmenuId && otherSubmenuId !== submenuId) {
+                                closeAllSubmenus(document.getElementById(otherSubmenuId));
+                                toggleSubmenu(otherSubmenuId, 'close');
+                            }
                         });
-                    } else if (script.innerHTML.trim()) {
-                        new Function(script.innerHTML)();
                     }
-                }));
-
-                // Reinitialize page with navigation flag
-                const pageType = url.split('/')[1] || 'admin';
-                if (typeof window.initialize === 'function') {
-                    window.isNavigating = true;
-                    window.initialize(pageType);
                 }
-                await new Promise(resolve => setTimeout(resolve, 100)); // Wait for DOM to settle
+
+                if (sectionId && !href) showSection(sectionId);
+                if (href) fetchProtectedPage(href);
+            }
+
+            // Initialize navigation and logout
+            function initializeNavigation() {
+                console.log('initializeNavigation - Starting navigation setup');
+                document.querySelectorAll('.menu button[data-section], .menu button[data-submenu], .menu button[data-href]').forEach(button => {
+                    button.removeEventListener('click', handleSectionClick);
+                });
+                document.querySelectorAll('.submenu').forEach(submenu => {
+                    submenu.style.display = 'none';
+                    submenu.classList.remove('open');
+                    const submenuId = submenu.id;
+                    const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
+                    if (button) {
+                        button.setAttribute('aria-expanded', 'false');
+                        const caret = button.querySelector('.caret');
+                        if (caret) {
+                            caret.classList.remove('fa-caret-down');
+                            caret.classList.add('fa-caret-right');
+                        }
+                    } else {
+                        console.warn(`initializeNavigation - No button found for submenu: ${submenuId}`);
+                    }
+                });
+                const buttons = document.querySelectorAll('.menu button[data-section], .menu button[data-submenu], .menu button[data-href]');
+                console.log('initializeNavigation - Found buttons to initialize:', buttons.length);
+                buttons.forEach(button => {
+                    button.addEventListener('click', handleSectionClick);
+                    console.log('initializeNavigation - Added click listener to button:', {
+                        section: button.dataset.section,
+                        submenu: button.dataset.submenu,
+                        href: button.dataset.href
+                    });
+                });
+
+                setTimeout(() => {
+                    const logOffBtn = document.getElementById('logOffBtn');
+                    if (logOffBtn) {
+                        console.log('initializeNavigation - Log Off button found, attaching listener');
+                        logOffBtn.removeEventListener('click', handleLogoutClick);
+                        logOffBtn.addEventListener('click', handleLogoutClick);
+                    } else {
+                        console.error('initializeNavigation - Log Off button not found in DOM');
+                    }
+                }, 100);
+            }
+
+            // Handle logout click
+            function handleLogoutClick(e) {
+                e.preventDefault();
+                console.log('handleLogoutClick - Log Off clicked');
+                localStorage.removeItem('authToken');
+                sessionStorage.clear();
+                window.location.href = '/';
+            }
+
+            // Attach branding header listener
+            function attachBrandingHeaderListener() {
+                if (!window.brandingHeaderListenerAttached) {
+                    const brandingContent = document.getElementById('brandingContent');
+                    if (brandingContent) {
+                        brandingContent.addEventListener('click', () => {
+                            const sectionToShow = window.currentPageType === 'merchant' ? 'info' : 'welcome';
+                            showSection(sectionToShow);
+                        });
+                        window.brandingHeaderListenerAttached = true;
+                        console.log('Branding header click listener attached');
+                    }
+                }
+            }
+
+            // Export navigation functions
+            window.siteNavigation = {
+                showSection,
+                toggleSubmenu,
+                initializeNavigation,
+                fetchProtectedPage,
+                loadBranding,
+                loadSection
+            };
+
+            // Initialize on document readiness
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    console.log('DOMContentLoaded - Initializing navigation');
+                    initializeNavigation();
+                    attachBrandingHeaderListener();
+                });
+            } else {
+                console.log('Document already loaded - Initializing navigation immediately');
                 initializeNavigation();
-                
-                // Update branding after DOM injection
-                console.log('fetchProtectedPage - Updating branding for:', pageType);
-                await loadBranding(pageType);
-                console.log('fetchProtectedPage - Branding update completed for:', pageType);
-
-                setTimeout(() => hideLoadingOverlay(), 500);
-                return html;
-            } else {
-                document.documentElement.innerHTML = doc.documentElement.innerHTML;
-                setTimeout(() => hideLoadingOverlay(), 1000);
-                return html;
+                attachBrandingHeaderListener();
             }
-        } catch (error) {
-            console.error('fetchProtectedPage - Error:', error);
-            toastr.error(error.message || 'Failed to load protected page');
-            hideLoadingOverlay();
-        }
-    }
-
-    // Loads page-specific branding content
-    async function loadBranding(brandingType, containerId = 'brandingContent') {
-        console.log('loadBranding - Starting branding load - Type:', brandingType, 'Container ID:', containerId);
-        const defaultContents = {
-            'partner': '<h1>Partner Dashboard</h1>',
-            'merchant': '<h1>Merchant Dashboard</h1>',
-            'community': '<h1>Community Dashboard</h1>',
-            'admin': '<h1>Admin Dashboard</h1>',
-            'login': '<h1>Login</h1>',
-            'signup': '<h1>Signup</h1>'
-        };
-        const defaultContent = defaultContents[brandingType] || '<h1>Dashboard</h1>';
-        const container = document.getElementById(containerId);
-        if (!container) {
-            console.error('loadBranding - Container not found - ID:', containerId);
-            return;
-        }
-        try {
-            const response = await window.authenticatedFetch(`${window.apiUrl}/branding?type=${encodeURIComponent(brandingType)}`);
-            if (!response) {
-                console.warn('loadBranding - No response, using default content');
-                container.innerHTML = defaultContent;
-                return;
-            }
-            const data = await response.json();
-            console.log('loadBranding - Fetched branding data:', data);
-            if (data.status === 'success' && data.branding) {
-                container.innerHTML = data.branding;
-                console.log('loadBranding - Branding loaded successfully - Type:', brandingType);
-            } else {
-                console.warn('loadBranding - Invalid response, using default content');
-                container.innerHTML = defaultContent;
-            }
-        } catch (error) {
-            console.error('loadBranding - Error fetching branding:', error.message);
-            container.innerHTML = defaultContent;
-            console.log('loadBranding - Fallback branding applied - Type:', brandingType);
-        }
-    }
-
-    // Loads content for a specific section
-    async function loadSection(sectionId) {
-        console.log('loadSection - Starting section load - Section ID:', sectionId);
-        if (sectionId === 'deal_listings') {
-            await loadCategories(); // Assumes loadCategories is defined elsewhere
-        } else if (sectionId === 'merchants') {
-            await loadMerchants(); // Assumes loadMerchants is defined elsewhere
-        } else {
-            try {
-                const response = await window.authenticatedFetch(`${window.apiUrl}/config`);
-                if (!response) throw new Error('No response from fetch');
-                const data = await response.json();
-                const config = data.config[sectionId] || {};
-                const el = document.getElementById(`${sectionId}Field`);
-                if (el) el.value = config.value || '';
-            } catch (error) {
-                console.error('loadSection - Error:', error.message);
-                toastr.error(`Error loading ${sectionId}: ${error.message}`);
-            }
-        }
-    }
-
-    // Function to show a section and hide others
-    function showSection(sectionId, onSectionLoad = null) {
-        console.log('showSection - Starting section display - Section ID:', sectionId);
-        const allSections = document.querySelectorAll('.section');
-        allSections.forEach(s => {
-            s.classList.remove('active');
-            s.style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Failed to initialize navigation due to:', error);
+            toastr.error('Navigation initialization failed. Please refresh the page.');
         });
-        const section = document.getElementById(sectionId);
-        if (section) {
-            section.style.display = 'block';
-            section.classList.add('active');
-            if (typeof onSectionLoad === 'function') {
-                console.log('showSection - Executing callback for:', sectionId);
-                onSectionLoad(sectionId);
-            } else {
-                loadSection(sectionId); // Default to loadSection if no callback
-            }
-        } else {
-            console.error('showSection - Section not found - ID:', sectionId);
-        }
-    }
-
-    // Function to toggle a submenu with explicit action control
-    function toggleSubmenu(submenuId, action = 'toggle') {
-        console.log(`toggleSubmenu - Starting ${action} - Submenu ID: ${submenuId}`);
-        const submenu = document.getElementById(submenuId);
-        const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
-        const caret = button ? button.querySelector('.caret') : null;
-        if (submenu && button && caret) {
-            let isOpen = submenu.classList.contains('open');
-            if (action === 'toggle') {
-                isOpen = !isOpen;
-            } else if (action === 'close') {
-                isOpen = false;
-            } else if (action === 'open') {
-                isOpen = true;
-            }
-            submenu.classList.toggle('open', isOpen);
-            submenu.style.display = isOpen ? 'block' : 'none';
-            caret.classList.toggle('fa-caret-down', isOpen);
-            caret.classList.toggle('fa-caret-right', !isOpen);
-            button.setAttribute('aria-expanded', isOpen);
-            console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'open' : 'closed'}`, {
-                inlineDisplay: submenu.style.display,
-                computedDisplay: window.getComputedStyle(submenu).display,
-                height: window.getComputedStyle(submenu).height,
-                maxHeight: window.getComputedStyle(submenu).maxHeight,
-                className: submenu.className
-            });
-        } else {
-            console.error(`toggleSubmenu - Submenu or button not found - Submenu ID: ${submenuId}`, {
-                submenuExists: !!submenu,
-                buttonExists: !!button,
-                caretExists: !!caret
-            });
-        }
-    }
-
-    // Function to close all submenus within a given container
-    function closeAllSubmenus(container) {
-        const submenus = container.querySelectorAll('.submenu');
-        submenus.forEach(submenu => {
-            const submenuId = submenu.id;
-            if (submenuId) {
-                toggleSubmenu(submenuId, 'close');
-            }
-        });
-    }
-
-    // Function to handle clicks on navigation buttons
-    function handleSectionClick(event) {
-        event.stopPropagation(); // Prevent bubbling to ensure isolated handling
-        const button = event.currentTarget;
-        const sectionId = button.getAttribute('data-section');
-        const submenuId = button.getAttribute('data-submenu');
-        const href = button.getAttribute('data-href');
-
-        console.log(`handleSectionClick - Clicked:`, { sectionId, submenuId, href });
-
-        // Find all top-level submenu buttons
-        const topLevelSubmenuButtons = document.querySelectorAll('.menu > button[data-submenu]');
-        console.log(`handleSectionClick - Found top-level submenu buttons:`, topLevelSubmenuButtons.length);
-
-        // Determine if this is a top-level button
-        const isTopLevel = button.parentElement.classList.contains('menu');
-
-        // Handle submenu toggling first
-        if (submenuId) {
-            console.log(`handleSectionClick - Toggling submenu: ${submenuId}`);
-            toggleSubmenu(submenuId, 'toggle');
-            if (isTopLevel) {
-                // Close other top-level submenus
-                topLevelSubmenuButtons.forEach(topButton => {
-                    const otherSubmenuId = topButton.getAttribute('data-submenu');
-                    if (otherSubmenuId && otherSubmenuId !== submenuId) {
-                        console.log(`handleSectionClick - Closing top-level submenu: ${otherSubmenuId}`);
-                        closeAllSubmenus(document.getElementById(otherSubmenuId));
-                        toggleSubmenu(otherSubmenuId, 'close');
-                    }
-                });
-            }
-        }
-
-        // Handle section display if no href
-        if (sectionId && !href) {
-            console.log(`handleSectionClick - Showing section: ${sectionId}`);
-            showSection(sectionId);
-        }
-
-        // Handle SPA navigation if href exists
-        if (href) {
-            console.log(`handleSectionClick - Navigating to: ${href}`);
-            fetchProtectedPage(href, '.content-wrapper');
-        }
-    }
-
-    // Main function to initialize navigation
-    function initializeNavigation() {
-        console.log('initializeNavigation - Starting navigation setup');
-        // Clean up existing listeners
-        document.querySelectorAll('.menu button[data-section], .menu button[data-submenu], .menu button[data-href]').forEach(button => {
-            button.removeEventListener('click', handleSectionClick);
-        });
-        document.querySelectorAll('.submenu').forEach(submenu => {
-            submenu.style.display = 'none';
-            submenu.classList.remove('open');
-            const submenuId = submenu.id;
-            const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
-            if (button) {
-                button.setAttribute('aria-expanded', 'false');
-                const caret = button.querySelector('.caret');
-                if (caret) {
-                    caret.classList.remove('fa-caret-down');
-                    caret.classList.add('fa-caret-right');
-                }
-            } else {
-                console.warn(`initializeNavigation - No button found for submenu: ${submenuId}`);
-            }
-        });
-        const buttons = document.querySelectorAll('.menu button[data-section], .menu button[data-submenu], .menu button[data-href]');
-        console.log('initializeNavigation - Found buttons to initialize:', buttons.length);
-        buttons.forEach(button => {
-            button.addEventListener('click', handleSectionClick);
-            console.log('initializeNavigation - Added click listener to button:', {
-                section: button.dataset.section,
-                submenu: button.dataset.submenu,
-                href: button.dataset.href
-            });
-        });
-    }
-
-    // Function to attach branding header click listener
-    function attachBrandingHeaderListener() {
-        if (!window.brandingHeaderListenerAttached) {
-            const brandingContent = document.getElementById('brandingContent');
-            if (brandingContent) {
-                brandingContent.addEventListener('click', function() {
-                    const sectionToShow = window.currentPageType === 'merchant' ? 'info' : 'welcome';
-                    showSection(sectionToShow);
-                });
-                window.brandingHeaderListenerAttached = true;
-                console.log('Branding header click listener attached');
-            } else {
-                console.warn('Branding header element not found');
-            }
-        }
-    }
-
-    // Export navigation functions under a namespace
-    window.siteNavigation = {
-        showSection,
-        toggleSubmenu,
-        initializeNavigation,
-        authenticatedFetch,
-        fetchProtectedPage,
-        loadBranding,
-        loadSection
-    };
-
-    // Initialize navigation and attach branding header listener based on document readiness
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOMContentLoaded - Initializing navigation');
-            initializeNavigation();
-            attachBrandingHeaderListener();
-        });
-    } else {
-        console.log('Document already loaded - Initializing navigation immediately');
-        initializeNavigation();
-        attachBrandingHeaderListener();
-    }
 }
 js/site-request.js
 // site-request.js
@@ -2951,154 +5169,274 @@ window.loadWixClientId = loadWixClientId;
 window.saveWixClientId = saveWixClientId;
 window.validatePassword = validatePassword;
 window.setupChangePassword = setupChangePassword;
-signup.css
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-}
+md/BigCommerce.md
+# BigCommerce API Integration for Categories and Products
 
-.signup-container {
-    background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    max-width: 800px;
-    width: 100%;
-    text-align: center;
-}
+This guide details how to programmatically retrieve category and product data from BigCommerce using the BigCommerce Catalog API.
 
-h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    color: #333;
-}
+## Prerequisites
+- A BigCommerce store with admin access.
+- An API token created in the store settings.
 
-.options {
-    display: flex;
-    gap: 15px; /* Increased gap for better spacing */
-    justify-content: center;
-    margin-bottom: 30px;
-}
+## Required Credentials
+- **API Token**: A single token for authentication.
+- **Client ID**: Used to generate the API Token.
+- **Store Hash**: Unique identifier for your store (e.g., `stores/{store_hash}`).
+- **Store URL**: Your BigCommerce store domain (e.g., `https://api.bigcommerce.com/stores/{store_hash}`).
 
-.option {
-    text-align: center;
-    cursor: pointer;
-    padding: 10px;
-    transition: border 0.3s ease;
-}
+To get credentials:
+1. Log in to your BigCommerce admin.
+2. Go to **Settings > API Accounts > Create API Account**.
+3. Select scopes `Products (read-only)` and `Categories (read-only)`.
+4. Save to get Client ID, API Token, and Store Hash.
 
-.option.selected {
-    border: 3px solid #007BFF;
-    border-radius: 5px;
-    animation: pulse 1.5s infinite ease-in-out;
-}
+## Authentication
+Use the API Token in the header:
 
-.option img {
-    width: 150px; /* Fixed width for uniformity */
-    height: 200px; /* Fixed height for uniformity */
-    object-fit: cover;
-    border-radius: 5px;
-}
+X-Auth-Token: {api_token}
 
-.option span {
-    display: block;
-    margin-top: 10px;
-    font-size: 16px;
-    color: #333;
-}
+## Retrieving Categories
+To list all categories:
 
-.option input[type="radio"] {
-    display: none;
-}
+@bash
+curl -X GET "https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/categories" \
+-H "X-Auth-Token: {api_token}" \
+-H "Accept: application/json"
+@
 
-.form-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    margin: 0 auto; /* Center the form, removed margin-right */
-    width: 100%;
-    max-width: 400px; /* Match form-group max-width for alignment */
-}
+- Endpoint: `GET /stores/{store_hash}/v3/catalog/categories`
+- Returns category IDs, names, and parent IDs.
 
-button {
-    background-color: #007BFF;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 100%;
-    max-width: 200px;
-}
+## Retrieving Products
+To fetch all products:
 
-button:hover {
-    background-color: #0056b3;
-}
+@bash
+curl -X GET "https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products" \
+-H "X-Auth-Token: {api_token}" \
+-H "Accept: application/json"
+@
 
-.form-group {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    max-width: 400px;
-}
+- Endpoint: `GET /stores/{store_hash}/v3/catalog/products`
+- Returns product IDs, names, prices, and categories.
+- Filter by category: `?categories:in={category_id}`.
 
-.form-group label {
-    font-weight: bold;
-    flex: 1;
-    text-align: right;
-    margin-bottom: 0;
-}
+## Notes
+- API version `v3` is recommended.
+- Rate limit: 20,000 requests/hour (varies by plan).
+- Use `?limit=250` for pagination.
 
-.form-group .input-container {
-    position: relative;
-    width: 192px; /* 160px + 20% = 192px */
-}
+Refer to [BigCommerce API Docs](https://developer.bigcommerce.com/api-reference) for full details.
 
-.form-group input {
-    width: 100%;
-    padding: 8px;
-    padding-right: 30px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    box-sizing: border-box;
-}
+
+md/Magento.md
+# Magento API Integration for Categories and Products
 
-.form-group .toggle-password {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #666;
-}
+This guide covers accessing category and product information from Magento using the Magento REST API.
 
-.hidden {
-    display: none;
-}
+## Prerequisites
+- A Magento 2 store (Open Source or Commerce).
+- Admin access to create integration credentials.
 
-/* Pulse animation keyframes */
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
-    }
-}
+## Required Credentials
+- **Access Token**: Generated via an integration or admin user.
+- **Store URL**: Your Magento store domain (e.g., `https://mystorename.com`).
+
+To get credentials:
+1. Log in to Magento Admin.
+2. Go to **System > Integrations > Add New Integration**.
+3. Name it, set permissions for `Catalog > Categories` and `Catalog > Products`.
+4. Save and activate to get an Access Token (OAuth-based).
+
+Alternatively, use admin username/password to request a token:
+
+@bash
+curl -X POST "https://{storename}.com/rest/V1/integration/admin/token" \
+-H "Content-Type: application/json" \
+-d '{"username":"admin","password":"yourpassword"}'
+@
+
+- Response provides the Access Token.
+
+## Authentication
+Use the Access Token in the header:
+
+Authorization: Bearer {access_token}
+
+## Retrieving Categories
+To get all categories:
+
+@bash
+curl -X GET "https://{storename}.com/rest/V1/categories" \
+-H "Authorization: Bearer {access_token}"
+@
+
+- Endpoint: `GET /rest/V1/categories`
+- Returns a category tree with IDs, names, and levels.
+
+## Retrieving Products
+To fetch all products:
+
+@bash
+curl -X GET "https://{storename}.com/rest/V1/products" \
+-H "Authorization: Bearer {access_token}"
+@
+
+- Endpoint: `GET /rest/V1/products`
+- Returns product SKUs, names, prices, and category IDs.
+- Filter by category: Use search criteria, e.g., `?searchCriteria[filter_groups][0][filters][0][field]=category_id&searchCriteria[filter_groups][0][filters][0][value]={category_id}`.
+
+## Notes
+- Magento uses a complex EAV model; expect nested JSON responses.
+- Rate limits depend on server setup (no strict default).
+- Use `?searchCriteria[pageSize]=100` for pagination.
+
+See [Magento API Docs](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html) for more.
+
+
+md/md_contents_text.txt
++ [md]
+
+
+md/shopify.md
+# Shopify API Integration for Categories and Products
+
+This guide explains how to integrate with Shopify to retrieve category and product information programmatically using the Shopify Admin API.
+
+Below is a simple shopping cart icon to visualize the process:
+
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTUuNTMgMi43M2wtMS4zOS0xLjM5Yy0uMzktLjM5LTEuMDMtLjM5LTEuNDIgMGwtMS4zOSAxLjM5IDQuMjMgNC4yM2gxMy42OHYtNS40NWgtMTMuN2MtLjI4IDAtLjU0LS4xMS0uNzUtLjMxeiIvPjxwYXRoIGQ9Ik0xOCAxOGMwIDEuMS0uOSAyLTIgMnMtMi0uOS0yLTItLjktMiAyLTJzMiAuOSAyIDJoNGMxLjEgMCAyLS45IDItMnMtLjktMi0yLTJ6Ii8+PHBhdGggZD0iTTcgMTguMWMwIDEuMS0uOSAyLTIgMnMtMi0uOS0yLTItLjktMiAyLTJzMiAuOSAyIDJoNGMxLjEgMCAyLS45IDItMnMtLjktMi0yLTJ6Ii8+PHBhdGggZD0iTTAgMjEuNDVsNy03LjI5IDExIDcuMjkiLz48L3N2Zz4=" alt="Shopping Cart Icon" width="24" height="24">
+
+## Prerequisites
+- A Shopify store with admin access.
+- An app created in the Shopify Partner Dashboard or store settings to generate API credentials.
+
+## Required Credentials
+- **API Key**: Generated when you create a custom app in your Shopify store.
+- **API Secret Key**: Paired with the API Key for authentication.
+- **Access Token**: Obtained via OAuth or directly for private/custom apps.
+- **Store URL**: Your Shopify store domain (e.g., `mystorename.myshopify.com`).
+
+To get credentials:
+1. Log in to your Shopify admin.
+2. Go to **Settings > Apps and sales channels > Develop apps**.
+3. Create a custom app, enable Admin API access with scopes `read_products` and `read_product_listings`.
+4. Save to generate API Key, Secret Key, and Access Token.
+
+## Authentication
+Shopify uses HTTP Basic Auth or OAuth. For simplicity, use the Access Token in the header:
+md/wix.md
+# Wix API Integration for Categories and Products
+
+This guide covers programmatic access to category and product information from Wix Stores using the Wix eCommerce API.
+
+## Prerequisites
+- A Wix account with a store enabled (Wix Stores app added).
+- Admin access to generate API credentials.
+
+## Required Credentials
+- **API Token**: A single token for authentication, generated in the Wix dashboard.
+- **Site ID**: Unique identifier for your Wix site (found in API calls or dashboard).
+
+To get credentials:
+1. Log in to your Wix account.
+2. Go to **Settings > Advanced Settings > API Tokens**.
+3. Generate a new token with scopes `STORE_READ_PRODUCTS` and `STORE_READ_CATEGORIES`.
+4. Copy the API Token. The Site ID is available in the dashboard or via API calls.
+
+## Authentication
+Use the API Token in the request header:
+
+Authorization: Bearer {api_token}
+
+## Retrieving Categories
+Wix calls categories "Collections." To list all collections:
+
+@bash
+curl -X GET "https://www.wixapis.com/stores/v1/collections" \
+-H "Authorization: Bearer {api_token}"
+@
+
+- Endpoint: `GET https://www.wixapis.com/stores/v1/collections`
+- Response includes collection IDs, names, and slugs.
+
+## Retrieving Products
+To fetch all products:
+
+@bash
+curl -X GET "https://www.wixapis.com/stores/v1/products" \
+-H "Authorization: Bearer {api_token}"
+@
+
+- Endpoint: `GET https://www.wixapis.com/stores/v1/products`
+- Returns product IDs, names, prices, and more.
+- Filter by collection: Add `?collectionId={collection_id}` to the query.
+
+## Notes
+- Wix APIs require HTTPS.
+- Rate limits are not publicly detailed but monitored per app.
+- Use pagination (`?paging.limit=100`) for large datasets.
+
+See [Wix eCommerce API Docs](https://dev.wix.com/api/rest/wix-stores) for more details.
+md/WooCommerce.md
+# WooCommerce API Integration for Categories and Products
+
+This guide explains how to access category and product data from a WooCommerce store using the WooCommerce REST API.
+
+## Prerequisites
+- A WordPress site with WooCommerce installed.
+- Admin access to generate API keys.
+
+## Required Credentials
+- **Consumer Key**: Generated in WooCommerce settings.
+- **Consumer Secret**: Paired with the Consumer Key for authentication.
+- **Store URL**: Your WordPress site URL (e.g., `https://mystorename.com`).
+
+To get credentials:
+1. Log in to WordPress admin.
+2. Go to **WooCommerce > Settings > Advanced > REST API**.
+3. Click "Add Key," set permissions to "Read," and generate.
+4. Copy the Consumer Key and Consumer Secret.
+
+## Authentication
+WooCommerce uses Basic Auth or OAuth. For Basic Auth:
+
+Authorization: Basic {base64(consumer_key:consumer_secret)}
+
+Or append keys to the URL:
+
+?consumer_key={consumer_key}&consumer_secret={consumer_secret}
+
+## Retrieving Categories
+To get all product categories:
+
+@bash
+curl -X GET "https://{storename}.com/wp-json/wc/v3/products/categories" \
+-H "Authorization: Basic {base64(consumer_key:consumer_secret)}"
+@
+
+- Endpoint: `GET /wp-json/wc/v3/products/categories`
+- Returns category IDs, names, and slugs.
+
+## Retrieving Products
+To fetch all products:
+
+@bash
+curl -X GET "https://{storename}.com/wp-json/wc/v3/products" \
+-H "Authorization: Basic {base64(consumer_key:consumer_secret)}"
+@
+
+- Endpoint: `GET /wp-json/wc/v3/products`
+- Returns product IDs, names, prices, categories, etc.
+- Filter by category: `?category={category_id}`.
+
+## Notes
+- Ensure the WooCommerce REST API is enabled in settings.
+- Rate limits depend on server hosting (typically 100 requests/minute).
+- Use `?per_page=100` for pagination.
+
+Check [WooCommerce REST API Docs](https://woocommerce.github.io/woocommerce-rest-api-docs/) for more info.
+
+
 static_contents_css.txt
 + [static]
 +----icons.css
@@ -16449,922 +18787,3 @@ h1 {
 }
 
 
-styles.css
-body {
-    font-family: Arial, sans-serif;
-    margin: 0 !important;
-    padding: 0 !important;
-    background-color: #f4f4f4;
-    min-height: 100vh;
-    display: block !important;
-    align-items: initial !important;
-    justify-content: initial !important;
-    text-align: initial !important;
-}
-
-.layout-wrapper {
-    max-width: 1200px;
-    width: 100%;
-    margin: 0 auto !important;
-    box-sizing: border-box;
-    display: block !important;
-    align-items: initial !important;
-    padding: 0 !important;
-    margin-top: 0 !important;
-}
-
-.container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-}
-
-.signup-container {
-    background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    max-width: 800px;
-    width: 100%;
-    text-align: center;
-}
-
-.header {
-    width: 100%;
-    max-width: 1200px;
-    margin: 2 auto !important;
-    background-color: #f4f4f4;
-    overflow: hidden;
-    position: relative;
-    box-sizing: border-box;
-    padding: 0 !important;
-    margin-top: 0 !important;
-}
-
-.layout-wrapper .header .header-content {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto !important;
-    padding: 12px 20px;
-    background-color: #007BFF;
-    color: white;
-    border-radius: 8px;
-    display: flex !important;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    box-sizing: border-box;
-    max-height: 80px;
-    overflow: hidden;
-}
-
-.layout-wrapper .header .header-content h1 {
-    margin: 0 0 5px 0;
-    font-size: 20px;
-}
-
-.layout-wrapper .header .header-content p {
-    margin: 0;
-    font-size: 14px;
-}
-
-.main-container {
-    max-width: 1200px;
-    margin: 0 auto !important;
-    display: flex;
-    gap: 20px;
-    padding: 0 20px 20px 0; /* Updated as per CREQ */
-    flex-direction: row;
-}
-
-/* /static/styles.css */
-
-/* Existing styles (assumed content; replace with actual if available) */
-/* ... */
-
-/* Menu container adjustments */
-.menu-container {
-    padding-left: 0; /* Remove left padding to align flush with the left edge */
-    /* Existing styles for .menu-container */
-}
-
-/* Menu adjustments */
-.menu {
-    padding-left: 5px; /* Shift buttons 5 pixels to the right */
-    /* Existing styles for .menu */
-}
-
-/* Content wrapper alignment */
-.content-wrapper {
-    text-align: left; /* Ensure content is left-aligned */
-    /* If flexbox is used, you might need:
-    display: flex;
-    justify-content: flex-start;
-    */
-    /* Existing styles for .content-wrapper */
-}
-
-/* ... */
-/* Rest of the existing styles.css content */
-.menu button {
-    padding: 10px 10px 10px 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    width: 100%;
-    max-width: 200px; /* Reverted to 200px from 160px */
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    position: relative;
-    padding-right: 30px;
-}
-
-.menu button:hover {
-    background-color: #0056b3;
-}
-
-.menu button[data-submenu][aria-expanded="true"] {
-    background-color: #0056b3;
-    border-left: 4px solid #fff;
-}
-
-.menu button i,
-.menu button .svg-icon,
-.menu button .icon-group {
-    margin-right: 8px;
-    vertical-align: middle;
-}
-
-.menu button i::before {
-    font-family: "Font Awesome 6 Free";
-}
-
-.menu button i.fas::before {
-    font-weight: 900;
-}
-
-.menu button .svg-icon {
-    display: inline-block;
-    height: 16px;
-    width: auto;
-}
-
-.menu button .svg-icon svg {
-    height: 100%;
-    width: auto;
-    fill: white;
-}
-
-.menu button .icon-group {
-    display: inline-flex;
-    align-items: center;
-    position: relative;
-}
-
-.menu button .icon-group .small-icon {
-    font-size: 10px;
-    position: absolute;
-    bottom: 0;
-    right: -8px;
-    color: white;
-}
-
-.menu button .button-content {
-    display: flex;
-    align-items: center; /* Vertically centers the SVG and text */
-    justify-content: flex-start; /* Aligns content to the left */
-}
-
-.menu button .caret {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: white;
-    font-size: 14px;
-}
-
-.menu .btn-admin {
-    background-color: #dc3545;
-}
-
-.menu .btn-admin:hover {
-    background-color: #c82333;
-}
-
-.menu .btn-logoff {
-    background-color: #dc3545;
-}
-
-.menu .btn-logoff:hover {
-    background-color: #c82333;
-}
-
-.menu button[data-href="/admin"] {
-    background-color: #dc3545; /* Added per CREQ to match Log Off button color */
-}
-
-.menu button[data-href="/admin"]:hover {
-    background-color: #c82333; /* Added per CREQ to match Log Off hover color */
-}
-
-.submenu {
-    display: none;
-    padding-left: 20px;
-    padding-bottom: 0; /* Remove extra space at the bottom */
-    overflow: visible;
-    max-height: 0;
-    transition: all 0.3s ease-in-out;
-}
-.submenu.open {
-    display: block !important;
-    max-height: 1000px !important;
-    height: auto !important;
-    /* Removed min-height since submenus are working */
-}
-
-.submenu button {
-    display: block !important;
-    min-height: 30px !important;
-    background-color: #6c757d !important;
-}
-
-.submenu button:hover {
-    background-color: #5a6268;
-}
-
-.submenu button.active {
-    background-color: #28a745;
-    color: white;
-}
-
-.section {
-    display: none;
-    margin-left: 210px; /* Reverted to 210px (200px + 10px gap) from 170px */
-}
-
-.section.active {
-    display: block;
-}
-
-.form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 400px;
-}
-
-.form label {
-    font-weight: bold;
-}
-
-.form input, .form select {
-    padding: 5px;
-}
-
-.form button {
-    padding: 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-.form button:hover {
-    background-color: #0056b3;
-}
-
-.signup-instructions {
-    margin-top: 15px;
-    font-size: 0.9em;
-    color: #555;
-}
-
-.signup-instructions a {
-    color: #007BFF;
-    text-decoration: none;
-}
-
-.signup-instructions a:hover {
-    text-decoration: underline;
-}
-
-.settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 600px;
-}
-
-.settings-form label {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.settings-form input, 
-.settings-form textarea {
-    padding: 8px;
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.settings-form button {
-    padding: 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-.settings-form button:hover {
-    background-color: #0056b3;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-.deals-table th {
-    background-color: #f2f2f2;
-}
-
-.treeview {
-    max-height: 600px;
-    overflow-y: auto;
-    margin-bottom: 10px;
-}
-
-.treeview, .treeview ul, .treeview li {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-.treeview .node {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 0;
-}
-
-.treeview .toggle {
-    cursor: pointer;
-    width: 20px;
-    text-align: center;
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
-.treeview input[type="checkbox"] {
-    width: 16px !important;
-    height: 16px !important;
-    margin: 0;
-    flex-shrink: 0;
-}
-
-.treeview .subcategories {
-    display: none;
-    padding-left: 20px;
-}
-
-.treeview .subcategories.open {
-    display: block;
-}
-
-#toast-container > .toast-success {
-    background-color: #28a745;
-    border-color: #218838;
-}
-
-#toast-container > .toast-error {
-    background-color: #dc3545;
-    border-color: #c82333;
-}
-
-.action-cell {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    max-width: 400px;
-}
-
-.form-group label {
-    font-weight: bold;
-    flex: 1;
-    text-align: right;
-    margin-bottom: 0;
-}
-
-.form-group .input-container {
-    position: relative;
-    width: 200px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-    padding-right: 30px;
-    font-size: 14px;
-}
-
-.form-group .toggle-password {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #666;
-}
-
-.button-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
-}
-
-button {
-    width: 100%;
-    padding: 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    max-width: 200px;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-.toggle-link {
-    text-align: center;
-    margin-top: 15px;
-}
-
-.toggle-link a {
-    color: #007BFF;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.toggle-link a:hover {
-    text-decoration: underline;
-}
-
-.hidden {
-    display: none;
-}
-
-.toggle-section {
-    cursor: pointer;
-    font-weight: bold;
-    margin: 10px 0;
-    background-color: #e9ecef;
-    padding: 5px;
-    border-radius: 4px;
-}
-
-.toggle-content {
-    display: none;
-}
-
-.toggle-content.open {
-    display: block;
-}
-
-.page-section, .email-section {
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.email-section {
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.widget-checkboxes div {
-    margin-bottom: 10px;
-}
-
-.remove-page-btn, .remove-email-btn {
-    padding: 5px 10px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-.remove-page-btn:hover, .remove-email-btn:hover {
-    background-color: #c82333;
-}
-
-.password-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.password-container input {
-    padding: 8px 30px 8px 8px;
-    width: 50%;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.password-toggle {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #666;
-    font-size: 16px;
-}
-
-#my-store .settings-form {
-    max-width: 600px;
-}
-
-#my-store .email-section input[type="text"] {
-    width: 50%;
-}
-
-#my-store .widget-checkboxes input[type="checkbox"] {
-    width: 10px;
-}
-
-h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    color: #333;
-}
-
-.options {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-    margin-bottom: 30px;
-}
-
-.option {
-    text-align: center;
-    cursor: pointer;
-    padding: 10px;
-    transition: border 0.3s ease;
-}
-
-.option.selected {
-    border: 3px solid #007BFF;
-    border-radius: 5px;
-}
-
-.option img {
-    object-fit: cover;
-    border-radius: 5px;
-}
-
-.option span {
-    display: block;
-    margin-top: 10px;
-    font-size: 16px;
-    color: #333;
-}
-
-.option input[type="radio"] {
-    display: none;
-}
-
-.form-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    margin-right: 100px;
-}
-
-/* Loading Overlay */
-#loadingOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 1);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-/* Multicircle Loader Container */
-.multicircle-loader {
-    position: relative;
-    width: 100px;
-    height: 100px;
-}
-
-/* Circle Styles */
-.multicircle-loader .circle {
-    position: absolute;
-    border-radius: 50%;
-    border: 4px solid transparent;
-    animation: spin 1.5s linear infinite;
-}
-
-/* Individual Circle Variations */
-.circle1 {
-    width: 60px;
-    height: 60px;
-    border-top-color: #ff6f61;
-    top: 20px;
-    left: 20px;
-    animation-delay: 0s;
-}
-
-.circle2 {
-    width: 45px;
-    height: 45px;
-    border-top-color: #6bff61;
-    top: 27.5px;
-    left: 27.5px;
-    animation-delay: 0.3s;
-}
-
-.circle3 {
-    width: 30px;
-    height: 30px;
-    border-top-color: #61cfff;
-    top: 35px;
-    left: 35px;
-    animation-delay: 0.6s;
-}
-
-.circle4 {
-    width: 15px;
-    height: 15px;
-    border-top-color: #ff61ff;
-    top: 42.5px;
-    left: 42.5px;
-    animation-delay: 0.9s;
-}
-
-/* Spin Animation */
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Login page specific styles */
-.login-page {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 20px;
-}
-
-.login-page .container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-}
-
-.login-page h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.login-page .form-group {
-    margin-bottom: 15px;
-    transform: translateX(-40px);
-}
-
-.login-page .form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 0;
-    max-width: 70px;
-}
-
-.login-page input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.login-page button {
-    width: 100%;
-    padding: 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-.login-page button:hover {
-    background-color: #0056b3;
-}
-
-.login-page .toggle-link {
-    text-align: center;
-    margin-top: 15px;
-}
-
-.login-page .toggle-link a {
-    color: #007BFF;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.login-page .toggle-link a:hover {
-    text-decoration: underline;
-}
-
-.login-page #toast-container > .toast-success {
-    background-color: #28a745;
-    border-color: #218838;
-}
-
-.login-page #toast-container > .toast-error {
-    background-color: #dc3545;
-    border-color: #c82333;
-}
-
-.login-page .custom-login-notice {
-    background-color: #f0e68c;
-    border: 2px dashed #4682b4;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
-    font-family: 'Courier New', Courier, monospace;
-    color: #2f4f4f;
-    transition: transform 0.3s ease-in-out;
-    margin-bottom: 30px;
-}
-
-.login-page .custom-login-notice .highlight {
-    color: #007BFF;
-    font-weight: bold;
-}
-
-.login-page .custom-login-notice:hover {
-    transform: scale(1.02);
-}
-
-/* New styles for "My Account" section */
-.settings-form {
-    max-width: 400px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.settings-form label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
-}
-
-.settings-form input[type="text"],
-.settings-form input[type="url"],
-.settings-form input[type="email"],
-.settings-form input[type="password"] {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.settings-form button {
-    background-color: #007BFF;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.settings-form button:hover {
-    background-color: #0056b3;
-}
-
-.password-container {
-    position: relative;
-}
-
-.password-toggle {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #666;
-    font-size: 16px;
-}
-
-.password-toggle:hover {
-    color: #007BFF;
-}
-
-.settings-form button i {
-    margin-right: 5px;
-}
-
-/* Fixed Headers for Orders and Visits Tables */
-#orders table thead, #visits table thead {
-    position: sticky;
-    top: 0;
-    background-color: #f8f9fa; /* Light background for visibility */
-    z-index: 1;
-}
-
-/* Style for Collapsible Toggle Sections */
-.toggle-section {
-    cursor: pointer;
-    padding: 10px;
-    background-color: #e9ecef;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    margin-bottom: 5px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-.toggle-section:hover {
-    background-color: #dee2e6;
-}
-
-/* Collapsible Content Styling */
-.toggle-content {
-    display: none;
-    overflow: hidden;
-    transition: max-height 0.3s ease, padding 0.3s ease;
-    max-height: 0;
-    padding: 0 10px;
-}
-
-.toggle-content.open {
-    display: block;
-    max-height: 500px; /* Adjust based on content */
-    padding: 10px;
-}

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from utils.auth import login_required
 from utils.users import load_users_settings
+from utils.config import load_config
 import logging
 import os
 import json
@@ -27,7 +28,6 @@ def load_branding_data():
             with open(branding_file, 'r') as f:
                 return json.load(f)
         else:
-            # No file? It’s like asking for four candles and getting fork handles!
             logging.warning("UX Issue - branding.json not found, using fallback data")
             return {
                 "admin": "<h1>Admin Dashboard</h1>",
@@ -38,7 +38,6 @@ def load_branding_data():
                 "signup": "<h1>Sign Up</h1>"
             }
     except Exception as e:
-        # Marvin: “I tried to load branding, and now I’m even more depressed.”
         logging.error(f"UX Issue - Failed to load branding data: {str(e)}", exc_info=True)
         return {
             "admin": "<h1>Admin Dashboard</h1>",
@@ -67,38 +66,23 @@ def admin():
             - 500: {"status": "error", "message": "Server error"}
     """
     try:
-        # Check user_id—like the Knights Who Say Ni demanding a shrubbery!
         user_id = request.user_id
         if not user_id:
             logging.error("Security Issue - Admin route accessed with no user_id")
             return jsonify({"status": "error", "message": "User ID not found in token"}), 401
         
-        # Load user settings—like the Guide, but less towel-focused.
         users_settings = load_users_settings()
         user = users_settings.get(user_id)
         if not user:
             logging.warning(f"UX Issue - Admin route - User not found: {user_id}")
             return jsonify({"status": "error", "message": "User not found"}), 404
         
-        # Render the dashboard—stronger than a Wookiee’s grip!
         logging.debug(f"Rendering admin dashboard for user {user_id}")
-        return render_template('admin.html', user=user)
+        return render_template('admin.html', title='clubmadeira.io | Admin', page_type='admin', user=user)
     except Exception as e:
-        # Marvin: “I tried to render the admin page, and now I’m broken.”
         logging.error(f"UX Issue - Failed to render admin page: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
 # endregion
-
-# ASCII Art 1: The Holy Hand Grenade
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "And Saint Attila raised the hand grenade up on high..."
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
 
 # region /community GET - Community Hub
 @role_pages_bp.route('/community', methods=['GET'])
@@ -115,18 +99,15 @@ def community():
             - 500: {"status": "error", "message": "Server error"}
     """
     try:
-        # Fetch user_id—like Zaphod checking his second head.
         user_id = request.user_id
         users_settings = load_users_settings()
         user = users_settings.get(user_id) if user_id else None
         if not user and user_id:
             logging.warning(f"UX Issue - Community route - User not found: {user_id}")
         
-        # Render the dashboard—neater than a Two Ronnies sketch.
         logging.debug(f"Rendering community dashboard for user {user_id}")
         return render_template('community.html', user=user)
     except Exception as e:
-        # Marvin: “I tried to render the community page, and now I’m depressed.”
         logging.error(f"UX Issue - Failed to render community page: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
 # endregion
@@ -146,18 +127,15 @@ def merchant():
             - 500: {"status": "error", "message": "Server error"}
     """
     try:
-        # Fetch user_id—like Zaphod checking his second head.
         user_id = request.user_id
         users_settings = load_users_settings()
         user = users_settings.get(user_id) if user_id else None
         if not user and user_id:
             logging.warning(f"UX Issue - Merchant route - User not found: {user_id}")
         
-        # Render the dashboard—stronger than a Wookiee’s grip!
         logging.debug(f"Rendering merchant dashboard for user {user_id}")
         return render_template('merchant.html', user=user)
     except Exception as e:
-        # Marvin: “I tried to render the merchant page, and now I’m broken.”
         logging.error(f"UX Issue - Failed to render merchant page: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
 # endregion
@@ -177,18 +155,15 @@ def partner():
             - 500: {"status": "error", "message": "Server error"}
     """
     try:
-        # Fetch user_id—like Zaphod checking his second head.
         user_id = request.user_id
         users_settings = load_users_settings()
         user = users_settings.get(user_id) if user_id else None
         if not user and user_id:
             logging.warning(f"UX Issue - Partner route - User not found: {user_id}")
         
-        # Render the dashboard—neater than a Two Ronnies sketch.
         logging.debug(f"Rendering partner dashboard for user {user_id}")
         return render_template('partner.html', user=user)
     except Exception as e:
-        # Marvin: “I tried to render the partner page, and now I’m depressed.”
         logging.error(f"UX Issue - Failed to render partner page: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
 # endregion
@@ -210,33 +185,94 @@ def get_branding():
             - 500: {"status": "error", "message": "Server error: <reason>"}
     """
     try:
-        # Check branding type—like the Knights Who Say Ni demanding a shrubbery!
         branding_type = request.args.get('type')
         if not branding_type:
             logging.warning("UX Issue - No branding type provided")
             return jsonify({"status": "error", "message": "Branding type not specified"}), 400
         
-        # Map "partner" to "wixpro"—Ronnie Barker would approve!
         if branding_type == 'partner':
             branding_type = 'wixpro'
 
-        # Fetch branding—like Arthur Dent flipping through the Guide.
         branding_data = load_branding_data()
         branding = branding_data.get(branding_type, '<h1>Dashboard</h1>')
         if branding == '<h1>Dashboard</h1>':
             logging.warning(f"UX Issue - No branding for type: {branding_type}")
         
-        # Assemble response—fit for the Life of Brian’s marketplace.
         response_data = {"status": "success", "branding": branding}
         logging.debug(f"Sending branding for {branding_type}: {json.dumps(response_data)}")
         return jsonify(response_data), 200
     except Exception as e:
-        # Marvin: “I tried to fetch branding, and now I’m broken.”
         logging.error(f"UX Issue - Failed to retrieve branding: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 # endregion
 
-# ASCII Art 2: The Towel (Hitchhiker’s Guide)
+# region /settings/api_key GET - Retrieve API Key Settings
+@role_pages_bp.route('/settings/api_key', methods=['GET'])
+@login_required(["allauth"], require_all=False)
+def get_api_key_settings():
+    """
+    Retrieves settings for 'api_key' type from the configuration.
+    Purpose: Provides API key settings for authenticated users.
+    Permissions: "allauth"—any authenticated user can access.
+    Outputs:
+        - Success: JSON {"status": "success", "setting_type": "api_key", "settings": [<list_of_settings>]}, 200
+        - Errors:
+            - 500: {"status": "error", "message": "Server error"}
+    """
+    try:
+        config = load_config()
+        settings = [
+            {
+                "key_type": key,
+                "fields": {k: "" for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment"]},
+                "icon": value.get("icon", "icon-favicon"),
+                "doc_link": value.get("doc_link", ""),
+                "comment": value.get("_comment", "")
+            }
+            for key, value in config.items()
+            if value.get("setting_type") == "api_key" and value.get("setting_type") != "setting_hidden"
+        ]
+        logging.debug(f"Listed settings for api_key: {json.dumps(settings)}")
+        return jsonify({"status": "success", "setting_type": "api_key", "settings": settings}), 200
+    except Exception as e:
+        logging.error(f"Failed to list api_key settings: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# region /settings/client_api GET - Retrieve Client API Settings
+@role_pages_bp.route('/settings/client_api', methods=['GET'])
+@login_required(["allauth"], require_all=False)
+def get_client_api_settings():
+    """
+    Retrieves settings for 'client_api' type from the configuration.
+    Purpose: Provides client API settings for authenticated users.
+    Permissions: "allauth"—any authenticated user can access.
+    Outputs:
+        - Success: JSON {"status": "success", "setting_type": "client_api", "settings": [<list_of_settings>]}, 200
+        - Errors:
+            - 500: {"status": "error", "message": "Server error"}
+    """
+    try:
+        config = load_config()
+        settings = [
+            {
+                "key_type": key,
+                "fields": {k: "" for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment"]},
+                "icon": value.get("icon", "icon-favicon"),
+                "doc_link": value.get("doc_link", ""),
+                "comment": value.get("_comment", "")
+            }
+            for key, value in config.items()
+            if value.get("setting_type") == "client_api" and value.get("setting_type") != "setting_hidden"
+        ]
+        logging.debug(f"Listed settings for client_api: {json.dumps(settings)}")
+        return jsonify({"status": "success", "setting_type": "client_api", "settings": settings}), 200
+    except Exception as e:
+        logging.error(f"Failed to list client_api settings: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+# endregion
+
+# ASCII Art: The Towel (Hitchhiker’s Guide)
 """
        ______
       /|_||_\`.__
