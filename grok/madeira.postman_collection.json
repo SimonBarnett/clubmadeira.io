@@ -1,0 +1,1807 @@
+{
+	"info": {
+		"_postman_id": "d71add74-f7c9-4ece-9cae-0cc85e6b1f8c",
+		"name": "madeira",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2549426",
+		"_collection_link": "https://winter-astronaut-294637.postman.co/workspace/My-Workspace~fe729375-464a-48bf-84f3-1efb9e74a931/collection/2549426-d71add74-f7c9-4ece-9cae-0cc85e6b1f8c?action=share&source=collection_link&creator=2549426"
+	},
+	"item": [
+		{
+			"name": "authentication_bp",
+			"item": [
+				{
+					"name": "Login",
+					"item": [
+						{
+							"name": "https://clubmadera.io/login",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const response = pm.response.json();\r",
+											"pm.environment.set(\"bearer_token\", response.token);\r",
+											"pm.environment.set(\"user_id\", response.user_id);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"email\": \"{{email}}\", \"password\": \"{{password}}\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/login",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"login"
+									]
+								},
+								"description": "Generated from cURL: curl -X POST https://clubmadera.io/login \\\r\n-H \"Content-Type: application/json\" \\\r\n-d '{\"email\": \"<your_email>\", \"password\": \"<your_password>\"}'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/signup",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://clubmadeira.io/signup",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"signup"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET https://clubmadera.io/signup"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/signup",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"signup_type\": \"<type>\", \"contact_name\": \"<name>\", \"signup_email\": \"<email>\", \"signup_password\": \"<password>\", \"signup_phone\": \"<phone>\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmaderia.io/signup",
+									"protocol": "https",
+									"host": [
+										"clubmaderia",
+										"io"
+									],
+									"path": [
+										"signup"
+									]
+								},
+								"description": "Generated from cURL: curl -X POST https://clubmadera.io/signup \\\r\n-H \"Content-Type: application/json\" \\\r\n-d '{\"signup_type\": \"<type>\", \"contact_name\": \"<name>\", \"signup_email\": \"<email>\", \"signup_password\": \"<password>\", \"signup_phone\": \"<phone>\"}'"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Password",
+					"item": [
+						{
+							"name": "https://clubmadera.io/verify-reset-code",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"email\": \"<your_email>\", \"code\": \"<otp_code>\", \"new_password\": \"<new_password>\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/verify-reset-code",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"verify-reset-code"
+									]
+								},
+								"description": "Generated from cURL: curl -X POST https://clubmadera.io/verify-reset-code \\\r\n-H \"Content-Type: application/json\" \\\r\n-d '{\"email\": \"<your_email>\", \"code\": \"<otp_code>\", \"new_password\": \"<new_password>\"}'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/update-password",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"email\": \"<your_email>\", \"password\": \"<new_password>\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/update-password",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"update-password"
+									]
+								},
+								"description": "Generated from cURL: curl -X POST https://clubmadera.io/update-password \\\r\n-H \"Content-Type: application/json\" \\\r\n-H \"Authorization: Bearer {{bearer_token}}\" \\\r\n-d '{\"email\": \"<your_email>\", \"password\": \"<new_password>\"}'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://madeira.io/reset-password",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"email\": \"user@example.com\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://madeira.io/reset-password",
+									"protocol": "https",
+									"host": [
+										"madeira",
+										"io"
+									],
+									"path": [
+										"reset-password"
+									]
+								},
+								"description": "Generated from cURL: curl -X POST https://madeira.io/reset-password \\\r\n-H \"Content-Type: application/json\" \\\r\n-d '{\"email\": \"user@example.com\"}'"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "content_bp",
+			"item": [
+				{
+					"name": "https://clubmadera.io/deals?category_id=<category_id>",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://clubmadeira.io/deals?category_id=<category_id>",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"deals"
+							],
+							"query": [
+								{
+									"key": "category_id",
+									"value": "<category_id>"
+								}
+							]
+						},
+						"description": "Generated from cURL: curl -X GET \"https://clubmadera.io/deals?category_id=<category_id>\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://clubmadera.io/categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://clubmadeira.io/categories",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"categories"
+							]
+						},
+						"description": "Generated from cURL: curl -X GET https://clubmadera.io/categories"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "manager_bp",
+			"item": [
+				{
+					"name": "Users",
+					"item": [
+						{
+							"name": "https://clubmadera.io/users",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/users",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"users"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET https://clubmadera.io/users -H \"Authorization: Bearer {{bearer_token}}\""
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/users/{{user_id}}",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/users/{{user_id}}",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"users",
+										"{{user_id}}"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET https://clubmadera.io/users/{{user_id}} \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Permissions",
+					"item": [
+						{
+							"name": "https://clubmadera.io/permissions/{{user_id}}",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/permissions/{{user_id}}",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"permissions",
+										"{{user_id}}"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET https://clubmadera.io/permissions/{{user_id}} \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/permissions/{{user_id}}",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"permission\": \"<new_permission>\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/permissions/{{user_id}}",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"permissions",
+										"{{user_id}}"
+									]
+								},
+								"description": "Generated from cURL: curl -X POST https://clubmadera.io/permissions/{{user_id}} \\\r\n-H \"Content-Type: application/json\" \\\r\n-H \"Authorization: Bearer {{bearer_token}}\" \\\r\n-d '{\"permission\": \"<new_permission>\"}'"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Config",
+					"item": [
+						{
+							"name": "Affiliate",
+							"item": [
+								{
+									"name": "https://clubmadeira.io/settings/affiliate_key",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{bearer_token}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer admin_jwt_token"
+											}
+										],
+										"url": {
+											"raw": "https://clubmadeira.io/settings/affiliate_key",
+											"protocol": "https",
+											"host": [
+												"clubmadeira",
+												"io"
+											],
+											"path": [
+												"settings",
+												"affiliate_key"
+											]
+										},
+										"description": "Generated from cURL: curl -X GET \"https://clubmadeira.io/settings/affiliate_key\" \\\r\n-H \"Authorization: Bearer admin_jwt_token\""
+									},
+									"response": []
+								},
+								{
+									"name": "https://clubmadeira.io/settings/affiliate_key/awin",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{bearer_token}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer YOUR_AUTH_TOKEN"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n        \"affiliate_id\": \"new_id\",\r\n        \"tracking_code\": \"new_code\"\r\n      }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://clubmadeira.io/settings/affiliate_key/awin",
+											"protocol": "https",
+											"host": [
+												"clubmadeira",
+												"io"
+											],
+											"path": [
+												"settings",
+												"affiliate_key",
+												"awin"
+											]
+										},
+										"description": "Generated from cURL: curl -X PUT \\\r\n  https://clubmadeira.io/settings/affiliate_key/<affiliate> \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"affiliate_id\": \"new_id\",\r\n        \"tracking_code\": \"new_code\"\r\n      }'"
+									},
+									"response": []
+								},
+								{
+									"name": "https://clubmadeira.io/settings/affiliate_key/awin",
+									"request": {
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer YOUR_AUTH_TOKEN"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n        \"tracking_code\": \"updated_code\"\r\n      }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://clubmadeira.io/settings/affiliate_key/awin",
+											"protocol": "https",
+											"host": [
+												"clubmadeira",
+												"io"
+											],
+											"path": [
+												"settings",
+												"affiliate_key",
+												"awin"
+											]
+										},
+										"description": "Generated from cURL: curl -X PATCH \\\r\n  https://clubmadeira.io/settings/affiliate_key/<affiliate> \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"tracking_code\": \"updated_code\"\r\n      }'"
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Settings",
+							"item": [
+								{
+									"name": "https://clubmadeira.io/settings/settings_key",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{bearer_token}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer admin_jwt_token"
+											}
+										],
+										"url": {
+											"raw": "https://clubmadeira.io/settings/settings_key",
+											"protocol": "https",
+											"host": [
+												"clubmadeira",
+												"io"
+											],
+											"path": [
+												"settings",
+												"settings_key"
+											]
+										},
+										"description": "Generated from cURL: curl -X GET \"https://clubmadeira.io/settings/affiliate_key\" \\\r\n-H \"Authorization: Bearer admin_jwt_token\""
+									},
+									"response": []
+								},
+								{
+									"name": "https://clubmadeira.io/settings/settings_key/tiny",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{bearer_token}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer YOUR_AUTH_TOKEN"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n        \"setting_type\": \"settings_key\",\r\n        \"API_KEY\": \"replaced_api_key\",\r\n        \"icon\": \"icon-favicon\",\r\n        \"doc_link\": \"https://example.com/docs\",\r\n        \"_comment\": \"Replaced settings_key\"\r\n      }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://clubmadeira.io/settings/settings_key/tiny",
+											"protocol": "https",
+											"host": [
+												"clubmadeira",
+												"io"
+											],
+											"path": [
+												"settings",
+												"settings_key",
+												"tiny"
+											]
+										},
+										"description": "Generated from cURL: curl -X PUT \\\r\n  https://clubmadeira.io/settings/settings_key/existing_key \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"setting_type\": \"settings_key\",\r\n        \"API_KEY\": \"replaced_api_key\",\r\n        \"icon\": \"icon-favicon\",\r\n        \"doc_link\": \"https://example.com/docs\",\r\n        \"_comment\": \"Replaced settings_key\"\r\n      }'"
+									},
+									"response": []
+								},
+								{
+									"name": "https://clubmadeira.io/settings/settings_key/tiny",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{bearer_token}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer YOUR_AUTH_TOKEN"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n        \"icon\": \"hello\"\r\n      }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://clubmadeira.io/settings/settings_key/tiny",
+											"protocol": "https",
+											"host": [
+												"clubmadeira",
+												"io"
+											],
+											"path": [
+												"settings",
+												"settings_key",
+												"tiny"
+											]
+										},
+										"description": "Generated from cURL: curl -X PATCH \\\r\n  https://clubmadeira.io/settings/settings_key/<setting_name> \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"enabled\": false\r\n      }'"
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "referral_bp",
+			"item": [
+				{
+					"name": "post",
+					"item": [
+						{
+							"name": "https://clubmadera.io/referral",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"timestamp\": \"<timestamp>\", \"referer\": \"<referer>\", \"page\": \"<page>\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/referral",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"referral"
+									]
+								},
+								"description": "Generated from cURL: curl -X POST https://clubmadera.io/referral \\\r\n-H \"Content-Type: application/json\" \\\r\n-d '{\"timestamp\": \"<timestamp>\", \"referer\": \"<referer>\", \"page\": \"<page>\"}'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/referral",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"timestamp\": \"<timestamp>\", \"referer\": \"<referer>\", \"orderId\": \"<orderId>\", \"buyer\": \"<buyer>\", \"total\": <total>}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/referral",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"referral"
+									]
+								},
+								"description": "Generated from cURL: curl -X POST https://clubmadera.io/referral \\\r\n-H \"Content-Type: application/json\" \\\r\n-d '{\"timestamp\": \"<timestamp>\", \"referer\": \"<referer>\", \"orderId\": \"<orderId>\", \"buyer\": \"<buyer>\", \"total\": <total>}'"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "get",
+					"item": [
+						{
+							"name": "https://clubmadera.io/{{user_id}}/visits",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/{{user_id}}/visits",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"{{user_id}}",
+										"visits"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET https://clubmadera.io/{{user_id}}/visits \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/{{user_id}}/orders",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/{{user_id}}/orders",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"{{user_id}}",
+										"orders"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET https://clubmadera.io/{{user_id}}/orders \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "role_pages_bp",
+			"item": [
+				{
+					"name": "https://clubmadera.io/admin",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"url": {
+							"raw": "https://clubmadeira.io/admin",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"admin"
+							]
+						},
+						"description": "Generated from cURL: curl -X GET https://clubmadera.io/admin \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://clubmadera.io/community",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"url": {
+							"raw": "https://clubmadeira.io/community",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"community"
+							]
+						},
+						"description": "Generated from cURL: curl -X GET https://clubmadera.io/community \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://clubmadera.io/merchant",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"url": {
+							"raw": "https://clubmadeira.io/merchant",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"merchant"
+							]
+						},
+						"description": "Generated from cURL: curl -X GET https://clubmadera.io/merchant \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://clubmadera.io/partner",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"url": {
+							"raw": "https://clubmadeira.io/partner",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"partner"
+							]
+						},
+						"description": "Generated from cURL: curl -X GET https://clubmadera.io/partner \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://clubmadera.io/branding?type=<type>",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"url": {
+							"raw": "https://clubmadeira.io/branding?type=<type>",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"branding"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "<type>"
+								}
+							]
+						},
+						"description": "Generated from cURL: curl -X GET \"https://clubmadera.io/branding?type=<type>\" \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "site_request_bp",
+			"item": [
+				{
+					"name": "https://clubmadera.io/siterequests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"url": {
+							"raw": "https://clubmadeira.io/siterequests",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"siterequests"
+							]
+						},
+						"description": "Generated from cURL: curl -X GET https://clubmadera.io/siterequests \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://clubmadera.io/siterequests (community)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\": \"{{user_id}}\",\r\n    \"type\": \"<request_type>\",\r\n    \"communityName\": \"<community_name>\",\r\n    \"aboutCommunity\": \"<description>\",\r\n    \"communityLogos\": [\"<logo_url1>\", \"<logo_url2>\"],\r\n    \"colorPrefs\": \"<color_preference>\",\r\n    \"stylingDetails\": \"<styling_details>\",\r\n    \"preferredDomain\": \"<domain_name>\",\r\n    \"emails\": [\"<email1>\", \"<email2>\"],\r\n    \"pages\": [{\"title\": \"<page_title>\", \"content\": \"<page_content>\"}],\r\n    \"widgets\": [\"<widget1>\", \"<widget2>\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://clubmadeira.io/siterequests",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"siterequests"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST https://clubmadera.io/siterequests \\\r\n-H \"Content-Type: application/json\" \\\r\n-H \"Authorization: Bearer {{bearer_token}}\" \\\r\n-d '{\r\n    \"userId\": \"{{user_id}}\",\r\n    \"type\": \"<request_type>\",\r\n    \"communityName\": \"<community_name>\",\r\n    \"aboutCommunity\": \"<description>\",\r\n    \"communityLogos\": [\"<logo_url1>\", \"<logo_url2>\"],\r\n    \"colorPrefs\": \"<color_preference>\",\r\n    \"stylingDetails\": \"<styling_details>\",\r\n    \"preferredDomain\": \"<domain_name>\",\r\n    \"emails\": [\"<email1>\", \"<email2>\"],\r\n    \"pages\": [{\"title\": \"<page_title>\", \"content\": \"<page_content>\"}],\r\n    \"widgets\": [\"<widget1>\", \"<widget2>\"]\r\n}'"
+					},
+					"response": []
+				},
+				{
+					"name": "https://clubmadera.io/siterequests (merchant)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\": \"{{user_id}}\",\r\n    \"type\": \"<type>\",\r\n    \"communityName\": \"<name>\",\r\n    \"aboutCommunity\": \"<description>\",\r\n    \"communityLogos\": [],\r\n    \"colorPrefs\": \"<color>\",\r\n    \"stylingDetails\": \"<details>\",\r\n    \"preferredDomain\": \"<domain>\",\r\n    \"emails\": [],\r\n    \"pages\": [],\r\n    \"widgets\": []\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://clubmadeira.io/siterequests",
+							"protocol": "https",
+							"host": [
+								"clubmadeira",
+								"io"
+							],
+							"path": [
+								"siterequests"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST https://clubmadera.io/siterequests \\\r\n-H \"Content-Type: application/json\" \\\r\n-H \"Authorization: Bearer {{bearer_token}}\" \\\r\n-d '{\"userId\": \"{{user_id}}\", \"type\": \"<type>\", \"communityName\": \"<name>\", \"aboutCommunity\": \"<description>\", \"communityLogos\": [], \"colorPrefs\": \"<color>\", \"stylingDetails\": \"<details>\", \"preferredDomain\": \"<domain>\", \"emails\": [], \"pages\": [], \"widgets\": []}'"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "user_settings_bp",
+			"item": [
+				{
+					"name": "Client API",
+					"item": [
+						{
+							"name": "https://clubmadeira.io/settings/client_api",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearer_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/settings/client_api",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"client_api"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET \\\r\n  https://clubmadeira.io/settings/client_api \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadeira.io/settings/client_api/wix",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearer_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n        \"api_key\": \"new_key\",\r\n        \"site_id\": \"new_id\",\r\n        \"other_field\": \"new_value\"\r\n      }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/settings/client_api/wix",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"client_api",
+										"wix"
+									]
+								},
+								"description": "Generated from cURL: curl -X PUT \\\r\n  https://clubmadeira.io/settings/client_api/wix \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"api_key\": \"new_key\",\r\n        \"site_id\": \"new_id\",\r\n        \"other_field\": \"new_value\"\r\n      }'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadeira.io/settings/client_api/wix",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearer_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n        \"api_key\": \"updated_key\"\r\n      }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/settings/client_api/wix",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"client_api",
+										"wix"
+									]
+								},
+								"description": "Generated from cURL: curl -X PATCH \\\r\n  https://clubmadeira.io/settings/client_api/wix \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"api_key\": \"updated_key\"\r\n      }'"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "API Key",
+					"item": [
+						{
+							"name": "https://clubmadeira.io/settings/api_key",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearer_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/settings/api_key",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"api_key"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET \\\r\n  https://clubmadeira.io/settings/api_key \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadeira.io/settings/api_key/woocommerce",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearer_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n        \"api_key\": \"new_api_key\",\r\n        \"api_secret\": \"new_api_secret\"\r\n      }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/settings/api_key/woocommerce",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"api_key",
+										"woocommerce"
+									]
+								},
+								"description": "Generated from cURL: curl -X PUT \\\r\n  https://clubmadeira.io/settings/api_key/<key_type> \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"api_key\": \"new_api_key\",\r\n        \"api_secret\": \"new_api_secret\"\r\n      }'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadeira.io/settings/api_key/woocommerce",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearer_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n        \"api_key\": \"updated_api_key\"\r\n      }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/settings/api_key/woocommerce",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"api_key",
+										"woocommerce"
+									]
+								},
+								"description": "Generated from cURL: curl -X PATCH \\\r\n  https://clubmadeira.io/settings/api_key/<key_type> \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"api_key\": \"updated_api_key\"\r\n      }'"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "User Settings",
+					"item": [
+						{
+							"name": "https://clubmadeira.io/settings/user",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearer_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/settings/user",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"user"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET \\\r\n  https://clubmadeira.io/settings/user \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadeira.io/settings/user",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n        \"email\": \"new_email@example.com\",\r\n        \"notifications\": false,\r\n        \"theme\": \"light\"\r\n      }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/settings/user",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"user"
+									]
+								},
+								"description": "Generated from cURL: curl -X PUT \\\r\n  https://clubmadeira.io/settings/user \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"email\": \"new_email@example.com\",\r\n        \"notifications\": false,\r\n        \"theme\": \"light\"\r\n      }'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadeira.io/settings/user",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearer_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_AUTH_TOKEN"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n        \"contact_name\": \"Simon\"\r\n      }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/settings/user",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"settings",
+										"user"
+									]
+								},
+								"description": "Generated from cURL: curl -X PATCH \\\r\n  https://clubmadeira.io/settings/user \\\r\n  -H 'Authorization: Bearer YOUR_AUTH_TOKEN' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n        \"notifications\": true\r\n      }'"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Categories",
+					"item": [
+						{
+							"name": "https://clubmadera.io/{{user_id}}/categories",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/{{user_id}}/categories",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"{{user_id}}",
+										"categories"
+									]
+								},
+								"description": "Generated from cURL: curl -X GET https://clubmadera.io/{{user_id}}/categories \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/{{user_id}}/categories",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"categories\": [\"category1\", \"category2\"]}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/{{user_id}}/categories",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"{{user_id}}",
+										"categories"
+									]
+								},
+								"description": "Generated from cURL: curl -X PUT https://clubmadera.io/{{user_id}}/categories \\\r\n-H \"Content-Type: application/json\" \\\r\n-H \"Authorization: Bearer {{bearer_token}}\" \\\r\n-d '{\"categories\": [\"category1\", \"category2\"]}'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/{{user_id}}/categories",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"categories\": [\"new_category\"]}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://clubmadeira.io/{{user_id}}/categories",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"{{user_id}}",
+										"categories"
+									]
+								},
+								"description": "Generated from cURL: curl -X PATCH https://clubmadera.io/{{user_id}}/categories \\\r\n-H \"Content-Type: application/json\" \\\r\n-H \"Authorization: Bearer {{bearer_token}}\" \\\r\n-d '{\"categories\": [\"new_category\"]}'"
+							},
+							"response": []
+						},
+						{
+							"name": "https://clubmadera.io/{{user_id}}/categories",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearer_token}}"
+									}
+								],
+								"url": {
+									"raw": "https://clubmadeira.io/{{user_id}}/categories",
+									"protocol": "https",
+									"host": [
+										"clubmadeira",
+										"io"
+									],
+									"path": [
+										"{{user_id}}",
+										"categories"
+									]
+								},
+								"description": "Generated from cURL: curl -X DELETE https://clubmadera.io/{{user_id}}/categories \\\r\n-H \"Authorization: Bearer {{bearer_token}}\""
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "utility_bp",
+			"item": [
+				{
+					"name": "https://madeira.io/system/stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <jwt_token>"
+							}
+						],
+						"url": {
+							"raw": "https://madeira.io/system/stats",
+							"protocol": "https",
+							"host": [
+								"madeira",
+								"io"
+							],
+							"path": [
+								"system",
+								"stats"
+							]
+						},
+						"description": "Generated from cURL: curl -X GET https://madeira.io/system/stats \\\r\n-H \"Authorization: Bearer <jwt_token>\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://madeira.io/ping",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <jwt_token>"
+							}
+						],
+						"url": {
+							"raw": "https://madeira.io/ping",
+							"protocol": "https",
+							"host": [
+								"madeira",
+								"io"
+							],
+							"path": [
+								"ping"
+							]
+						},
+						"description": "Generated from cURL: curl -X GET https://madeira.io/ping \\\r\n-H \"Authorization: Bearer <jwt_token>\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://madeira.io/send-sms",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"user@example.com\", \"message\": \"Your OTP is 123456\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://madeira.io/send-sms",
+							"protocol": "https",
+							"host": [
+								"madeira",
+								"io"
+							],
+							"path": [
+								"send-sms"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST https://madeira.io/send-sms \\\r\n-H \"Content-Type: application/json\" \\\r\n-d '{\"email\": \"user@example.com\", \"message\": \"Your OTP is 123456\"}'"
+					},
+					"response": []
+				},
+				{
+					"name": "https://madeira.io/check-domain?domain=example.com",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <jwt_token>"
+							}
+						],
+						"url": {
+							"raw": "https://madeira.io/check-domain?domain=example.com",
+							"protocol": "https",
+							"host": [
+								"madeira",
+								"io"
+							],
+							"path": [
+								"check-domain"
+							],
+							"query": [
+								{
+									"key": "domain",
+									"value": "example.com"
+								}
+							]
+						},
+						"description": "Generated from cURL: curl -X GET \"https://madeira.io/check-domain?domain=example.com\" \\\r\n-H \"Authorization: Bearer <jwt_token>\""
+					},
+					"response": []
+				},
+				{
+					"name": "https://madeira.io/activity/log",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"user_id\": \"<user_id>\", \"action\": \"<action>\", \"details\": {}}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://madeira.io/activity/log",
+							"protocol": "https",
+							"host": [
+								"madeira",
+								"io"
+							],
+							"path": [
+								"activity",
+								"log"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST https://madeira.io/activity/log -H \"Authorization: Bearer {{bearer_token}}\" -H \"Content-Type: application/json\" -d '{\"user_id\": \"<user_id>\", \"action\": \"<action>\", \"details\": {}}'\r\n\r\n"
+					},
+					"response": []
+				},
+				{
+					"name": "https://madeira.io/render-md/<path:full_path>",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearer_token}}"
+							}
+						],
+						"url": {
+							"raw": "https://madeira.io/render-md/<path:full_path>",
+							"protocol": "https",
+							"host": [
+								"madeira",
+								"io"
+							],
+							"path": [
+								"render-md",
+								"<path:full_path>"
+							]
+						},
+						"description": "Generated from cURL: \r\n\r\ncurl -X GET https://madeira.io/render-md/<path:full_path> -H \"Authorization: Bearer {{bearer_token}}\"\r\n\r"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -1,4 +1,3 @@
-// merchant-page.js
 // Purpose: Manages page-specific functionality for the /merchant page.
 
 try {
@@ -36,10 +35,16 @@ try {
 
         // Set up navigation and event listeners
         setupNavigation(); // From site-navigation.js
-        checkAdminPermission();
-        loadBranding('merchant', 'brandingContent'); // Adjusted to match typical usage
+        checkAdminPermission();        
         window.siteNavigation.showSection('info'); // Updated to match actual section ID
-        loadProducts(); // Load merchant products
+
+        // Ensure DOM is loaded before calling loadProducts
+        if (document.readyState === 'complete') {
+            loadProducts(); // Load merchant products immediately if DOM is ready
+        } else {
+            document.addEventListener('DOMContentLoaded', loadProducts); // Wait for DOM to load
+        }
+
         loadStoreRequest(); // Load store request data
         loadApiKeys(); // Load API keys
         loadDocumentationMenu(); // Load documentation submenu items
@@ -114,48 +119,51 @@ try {
 
     // Loads and displays merchant products.
     async function loadProducts() {
-        console.log('loadProducts - Loading products');
-        const userId = document.getElementById('userId') ? document.getElementById('userId').value : '';
-        if (!userId) {
-            console.error('loadProducts - User ID not found in session');
-            toastr.error('User ID not found in session');
-            return;
-        }
+        console.log('loadProducts - Starting product load process');
         try {
-            console.log('loadProducts - Fetching products - URL:', `${window.apiUrl}/${userId}/products`);
+            console.log('loadProducts - Fetching from URL:', `${window.apiUrl}/settings/products`);
             const response = await authenticatedFetch(`${window.apiUrl}/settings/products`);
             if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
             const data = await response.json();
-            console.log('loadProducts - Products fetched - Data:', JSON.stringify(data));
-            
+            console.log('loadProducts - Fetched data:', JSON.stringify(data));
+
             const tbody = document.getElementById('productList');
             if (tbody) {
-                tbody.innerHTML = '';
-                data.products.forEach(product => tbody.appendChild(createProductRow(product)));
-                console.log('loadProducts - Product table updated - Count:', data.products.length);
+                console.log('loadProducts - Successfully found tbody:', tbody);
+                tbody.innerHTML = ''; // Clear existing content
+                console.log('loadProducts - Cleared tbody content');
+                data.products.forEach((product, index) => {
+                    console.log(`loadProducts - Processing product ${index + 1}:`, JSON.stringify(product));
+                    const row = createProductRow(product);
+                    console.log(`loadProducts - Generated row ${index + 1} HTML:`, row.outerHTML);
+                    tbody.appendChild(row);
+                    console.log(`loadProducts - Appended row ${index + 1} to tbody`);
+                });
+                console.log('loadProducts - Finished updating table with', data.products.length, 'products');
             } else {
-                console.warn('loadProducts - Product list element not found');
+                console.warn('loadProducts - tbody element #productList not found in DOM');
             }
         } catch (error) {
-            console.error('loadProducts - Error loading products - Error:', error.message, 'Stack:', error.stack);
+            console.error('loadProducts - Error occurred:', error.message);
             toastr.error(`Error loading products: ${error.message}`);
         }
     }
 
     // Creates a table row for a product.
     function createProductRow(product) {
-        console.log('createProductRow - Creating row - Product:', JSON.stringify(product));
+        console.log('createProductRow - Building row for product:', JSON.stringify(product));
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="hidden">${product.id || ''}</td>
             <td>${product.category || 'N/A'}</td>
             <td>${product.title || 'N/A'}</td>
             <td><a href="${product.product_url || '#'}" target="_blank">${product.product_url ? 'Link' : 'N/A'}</a></td>
-            <td>${product.current_price || 'N/A'}</td>
-            <td>${product.original_price || 'N/A'}</td>
+            <td>${product.current_price !== undefined ? product.current_price : 'N/A'}</td>
+            <td>${product.original_price !== undefined ? product.original_price : 'N/A'}</td>
             <td><img src="${product.image_url || ''}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
-            <td>${product.qty || 'N/A'}</td>
+            <td>${product.qty !== undefined ? product.qty : 'N/A'}</td>
         `;
+        console.log('createProductRow - Row HTML created:', tr.outerHTML);
         return tr;
     }
 
@@ -383,10 +391,17 @@ try {
                     const button = document.createElement('button');
                     button.setAttribute('data-section', 'documentation-content');
                     button.setAttribute('data-md-path', item.doc_link);
+            
+                    // Determine icon class and size
                     const iconClass = item.icon || 'fas fa-file-alt'; // Default icon if missing
-                    button.innerHTML = `<span class="button-content"><i class="${iconClass}"></i> ${item.comment}</span>`;
+                    const iconSize = item.size || 16; // Default to 16px if no size provided
+            
+                    // Create the button content with inline style for the icon size
+                    const iconElement = `<i class="${iconClass}" style="height: ${iconSize}px; width: auto;"></i>`;
+                    button.innerHTML = `<span class="button-content">${iconElement} ${item.comment}</span>`;
+            
                     submenu.appendChild(button);
-                    console.log('loadDocumentationMenu - Added button:', item.comment);
+                    console.log('loadDocumentationMenu - Added button:', item.comment, 'with size:', iconSize);
                 }
             });
 

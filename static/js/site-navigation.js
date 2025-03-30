@@ -90,9 +90,6 @@ if (window.siteNavigationInitialized) {
                     // Reinitialize navigation to attach event listeners to new buttons
                     console.log('fetchProtectedPage - Reinitializing navigation after content load');
                     initializeNavigation();
-
-                    // Reattach branding header listener
-                    attachBrandingHeaderListener();
                 } catch (error) {
                     console.error('fetchProtectedPage - Error:', error);
                     toastr.error(error.message || 'Failed to load page');
@@ -105,32 +102,93 @@ if (window.siteNavigationInitialized) {
             // Load content for a specific section
             async function loadSection(sectionId) {
                 console.log('loadSection - Starting section load - Section ID:', sectionId);
-                if (['api-keys', 'my-products', 'create-store', 'my-store-info'].includes(sectionId)) {
-                    console.log('loadSection - Skipping fetch for custom section:', sectionId);
-                    return;
-                }
-                if (sectionId === 'deal_listings') {
-                    await loadCategories();
-                } else if (sectionId === 'merchants') {
-                    await loadMerchants();
-                } else {
+                if (sectionId === 'my-products') {
                     try {
-                        const response = await window.authenticatedFetch(`${window.apiUrl}/settings/user`);
-                        if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+                        const response = await window.authenticatedFetch(`${window.apiUrl}/settings/products`);
+                        if (!response.ok) {
+                            throw new Error(`Server responded with status: ${response.status}`);
+                        }
                         const data = await response.json();
-                        console.log('loadSection - User settings fetched:', JSON.stringify(data));
-                        const settings = {};
-                        data.settings.forEach(item => settings[item.field] = item.value);
-                        const el = document.getElementById(`${sectionId}Field`);
-                        if (el && settings[sectionId]) {
-                            el.value = settings[sectionId];
-                            console.log(`loadSection - Updated ${sectionId}Field with value:`, settings[sectionId]);
+                        console.log('loadSection - Products fetched:', JSON.stringify(data));
+            
+                        // Check if data.products exists and is an array
+                        if (data.products && Array.isArray(data.products)) {
+                            const tbody = document.getElementById('productList');
+                            if (!tbody) {
+                                console.error('Table body with id "productList" not found');
+                                toastr.error('Error: Product table not found in the page');
+                                return;
+                            }
+            
+                            // Clear existing rows
+                            tbody.innerHTML = '';
+            
+                            // Iterate over the products array
+                            data.products.forEach(product => {
+                                const tr = document.createElement('tr');
+            
+                                // Product ID (hidden)
+                                const idTd = document.createElement('td');
+                                idTd.className = 'hidden';
+                                idTd.textContent = product.id || 'N/A';
+                                tr.appendChild(idTd);
+            
+                                // Category
+                                const categoryTd = document.createElement('td');
+                                categoryTd.textContent = product.category || 'N/A';
+                                tr.appendChild(categoryTd);
+            
+                                // Title
+                                const titleTd = document.createElement('td');
+                                titleTd.textContent = product.title || 'N/A';
+                                tr.appendChild(titleTd);
+            
+                                // Product URL
+                                const urlTd = document.createElement('td');
+                                const urlLink = document.createElement('a');
+                                urlLink.href = product.product_url || '#';
+                                urlLink.textContent = product.product_url ? 'Link' : 'N/A';
+                                urlLink.target = '_blank';
+                                urlTd.appendChild(urlLink);
+                                tr.appendChild(urlTd);
+            
+                                // Current Price
+                                const priceTd = document.createElement('td');
+                                priceTd.textContent = product.current_price !== undefined ? product.current_price : 'N/A';
+                                tr.appendChild(priceTd);
+            
+                                // Original Price
+                                const originalPriceTd = document.createElement('td');
+                                originalPriceTd.textContent = product.original_price !== undefined ? product.original_price : 'N/A';
+                                tr.appendChild(originalPriceTd);
+            
+                                // Image
+                                const imageTd = document.createElement('td');
+                                const img = document.createElement('img');
+                                img.src = product.image_url || '';
+                                img.width = 50;
+                                img.onerror = function() { this.src = 'https://via.placeholder.com/50'; }; // Fallback image
+                                imageTd.appendChild(img);
+                                tr.appendChild(imageTd);
+            
+                                // Quantity
+                                const qtyTd = document.createElement('td');
+                                qtyTd.textContent = product.qty !== undefined ? product.qty : 'N/A';
+                                tr.appendChild(qtyTd);
+            
+                                // Add row to table
+                                tbody.appendChild(tr);
+                            });
+                        } else {
+                            console.error('Expected an array of products but got:', data.products);
+                            toastr.error('Error loading products: Invalid data format from server');
                         }
                     } catch (error) {
-                        console.error('loadSection - Error:', error.message);
-                        toastr.error(`Error loading ${sectionId}: ${error.message}`);
+                        console.error('loadSection - Error fetching products:', error.message);
+                        toastr.error(`Error loading products: ${error.message}`);
                     }
                 }
+                // Additional logic for other sectionIds can go here
             }
 
             // Show a section and hide others
@@ -256,7 +314,7 @@ if (window.siteNavigationInitialized) {
                 });
 
                 // Handle Log Off button
-                const logOffBtn = document.getElementById('logOffBtn'); // Corrected ID to match templates
+                const logOffBtn = document.getElementById('logOffBtn');
                 if (logOffBtn) {
                     console.log('initializeNavigation - Log Off button found, attaching listener');
                     logOffBtn.removeEventListener('click', handleLogoutClick);
@@ -283,30 +341,6 @@ if (window.siteNavigationInitialized) {
                 window.location.href = '/';
             }
 
-            // Attach branding header listener
-            function attachBrandingHeaderListener() {
-                const header = document.querySelector('.header');
-                if (header) {
-                    // Remove any existing listeners to prevent duplicates
-                    header.removeEventListener('click', handleHeaderClick);
-                    header.addEventListener('click', handleHeaderClick);
-                    console.log('attachBrandingHeaderListener - Header click listener attached');
-                } else {
-                    console.error('attachBrandingHeaderListener - Header element not found');
-                }
-            }
-
-            // Handle header click to show #info section
-            function handleHeaderClick(event) {
-                const sectionId = event.currentTarget.getAttribute('data-section');
-                if (sectionId) {
-                    console.log('handleHeaderClick - Header clicked, showing section:', sectionId);
-                    showSection(sectionId);
-                } else {
-                    console.error('handleHeaderClick - No data-section attribute found on header');
-                }
-            }
-
             // Export navigation functions
             window.siteNavigation = {
                 showSection,
@@ -321,12 +355,10 @@ if (window.siteNavigationInitialized) {
                 document.addEventListener('DOMContentLoaded', () => {
                     console.log('DOMContentLoaded - Initializing navigation');
                     initializeNavigation();
-                    attachBrandingHeaderListener();
                 });
             } else {
                 console.log('Document already loaded - Initializing navigation immediately');
                 initializeNavigation();
-                attachBrandingHeaderListener();
             }
         })
         .catch(error => {

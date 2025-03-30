@@ -2,7 +2,7 @@ config.json
 users_settings.json
 logs/
 old/
-grok/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

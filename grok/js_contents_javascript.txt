@@ -1,0 +1,3143 @@
++ [js]
++----admin-page.js
++----category-management.js
++----common.js
++----community-page.js
++----marked.min.js
++----merchant-page.js
++----page-load.js
++----partner-page.js
++----site-auth.js
++----site-navigation.js
++----site-request.js
++----user-management.js
+
+admin-page.js
+// admin-page.js
+function initializeAdmin(pageType) {
+    console.log('initializeAdmin - Initializing admin page with type: ' + pageType);
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        console.error('initializeAdmin - No token found, redirecting to /');
+        window.location.href = '/';
+        return;
+    }
+    const decoded = decodeJWT(token); // Add permission check for robustness
+    if (!decoded || !decoded.permissions || !decoded.permissions.includes('admin')) {
+        console.error('initializeAdmin - Invalid token or no admin permission, redirecting to /');
+        toastr.error('Permission denied: Admin access required');
+        window.location.href = '/';
+        return;
+    }
+
+    // Load initial content
+    setupNavigation();
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings?.contact_name || 'User'; // Use optional chaining and fallback
+            const userContactNameSpan = document.getElementById('user-contact-name');
+            if (userContactNameSpan) {
+                userContactNameSpan.textContent = contactName;
+                console.log('initializeAdmin - Updated contact name in welcome section:', contactName);
+            } else {
+                console.warn('initializeAdmin - user-contact-name span not found');
+            }
+        }).catch(error => {
+            console.error('initializeAdmin - Error loading settings:', error.message);
+            toastr.error('Failed to load user settings');
+            // Set default name on error
+            const userContactNameSpan = document.getElementById('user-contact-name');
+            if (userContactNameSpan) {
+                userContactNameSpan.textContent = 'User';
+            }
+        });
+    } else {
+        console.error('initializeAdmin - loadSettings function not found');
+        toastr.error('Settings loader unavailable');
+        // Set default name if loadSettings is missing
+        const userContactNameSpan = document.getElementById('user-contact-name');
+        if (userContactNameSpan) {
+            userContactNameSpan.textContent = 'User';
+        }
+    }
+
+    loadInitialData();
+    setupEventListeners();
+
+    // Ensure loading overlay is hidden
+    hideLoadingOverlay();
+    console.log('Admin page initialized');
+}
+
+function setupNavigation() {
+    console.log('setupNavigation - Setting up navigation');
+    // Delegate to site-navigation.js's initializeNavigation
+    if (typeof window.siteNavigation?.initializeNavigation === 'function') {
+        window.siteNavigation.initializeNavigation();
+    } else {
+        console.warn('setupNavigation - window.siteNavigation.initializeNavigation not found, using fallback');
+        // Fallback logic
+        document.querySelectorAll('.menu button[data-section]').forEach(button => {
+            button.addEventListener('click', function() {
+                const sectionId = this.getAttribute('data-section');
+                const submenuId = this.getAttribute('data-submenu');
+                if (submenuId) {
+                    const submenu = document.getElementById(submenuId);
+                    const caret = this.querySelector('.caret');
+                    if (submenu && caret) {
+                        if (submenu.style.display === 'block') {
+                            submenu.style.display = 'none';
+                            caret.classList.remove('fa-caret-down');
+                            caret.classList.add('fa-caret-right');
+                        } else {
+                            submenu.style.display = 'block';
+                            caret.classList.remove('fa-caret-right');
+                            caret.classList.add('fa-caret-down');
+                        }
+                    }
+                }
+            });
+        });
+    }
+}
+
+function loadInitialData() {
+    console.log('loadInitialData - Loading initial data');
+    // First, fetch categories to get a valid category_id
+    authenticatedFetch(`${window.apiUrl}/categories`)
+        .then(response => response.json())
+        .then(categories => {
+            const categoryId = categories[0]?.id || 'default'; // Use the first category or a default
+            return authenticatedFetch(`${window.apiUrl}/deals?category_id=${categoryId}`);
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('loadInitialData - Deals fetched:', data);
+            const dealList = document.getElementById('dealList');
+            if (dealList) {
+                dealList.innerHTML = data.map(deal => `
+                    <tr>
+                        <td>${deal.category}</td>
+                        <td>${deal.title}</td>
+                        <td><a href="${deal.url}" target="_blank">Link</a></td>
+                        <td>${deal.price}</td>
+                        <td>${deal.original}</td>
+                        <td>${deal.discount}</td>
+                        <td><img src="${deal.image}" alt="Product Image" style="width: 50px;"></td>
+                        <td>${deal.quantity}</td>
+                    </tr>
+                `).join('');
+            }
+        })
+        .catch(error => {
+            console.error('loadInitialData - Failed to load deal listings:', error);
+            toastr.error('Failed to load deal listings');
+        });
+}
+
+function setupEventListeners() {
+    const saveSettingsButton = document.querySelector('button[data-action="saveSettings"]');
+    if (saveSettingsButton) {
+        saveSettingsButton.addEventListener('click', function() {
+            const userId = document.getElementById('userId')?.value || '';
+            const contactName = document.getElementById('contactName')?.value || '';
+            const websiteUrl = document.getElementById('websiteUrl')?.value || '';
+            const emailAddress = document.getElementById('emailAddress')?.value || '';
+
+            console.log('setupEventListeners - Saving settings for user:', userId);
+            authenticatedFetch(`${window.apiUrl}/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, contactName, websiteUrl, emailAddress })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to save settings');
+                return response.json();
+            })
+            .then(data => {
+                console.log('setupEventListeners - Settings saved:', data);
+                toastr.success('Settings updated successfully');
+            })
+            .catch(error => {
+                console.error('setupEventListeners - Error saving settings:', error);
+                toastr.error('Failed to save settings');
+            });
+        });
+    } else {
+        console.warn('setupEventListeners - Save settings button not found');
+    }
+}
+
+// Export for use in other scripts
+window.initializeAdmin = initializeAdmin;
+window.loadInitialData = loadInitialData;
+window.setupEventListeners = setupEventListeners;
+category-management.js
+// category-management.js
+// Purpose: Manages treeview functionality for displaying and editing nested category information (used in community.html and admin.html).
+
+// Creates a treeview node for category display with configurable behavior.
+function createTreeNode(category, level = 0, isAdmin = false, savedCategories = []) {
+    console.log('createTreeNode - Creating node - Category:', JSON.stringify(category), 'Level:', level, 'IsAdmin:', isAdmin);
+    const li = document.createElement('li');
+    const nodeDiv = document.createElement('div');
+    nodeDiv.className = 'node';
+
+    const toggle = document.createElement('span');
+    toggle.className = 'toggle';
+    toggle.setAttribute('data-id', category.id);
+    toggle.textContent = '+'; // Default to '+' assuming subcategories may exist
+    toggle.addEventListener('click', () => toggleSubcategories(category.id, toggle));
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = category.id;
+    if (isAdmin) {
+        checkbox.addEventListener('change', () => handleCategorySelection(category.id, checkbox));
+    } else {
+        checkbox.checked = savedCategories.includes(category.id.toString());
+        checkbox.addEventListener('change', () => saveCategories(localStorage.getItem('userId'))); // Added save listener
+    }
+
+    const span = document.createElement('span');
+    span.textContent = `${category.name} (${category.id})`;
+
+    nodeDiv.appendChild(toggle);
+    nodeDiv.appendChild(checkbox);
+    nodeDiv.appendChild(span);
+    li.appendChild(nodeDiv);
+
+    const subUl = document.createElement('ul');
+    subUl.className = 'subcategories';
+    li.appendChild(subUl);
+
+    console.log('createTreeNode - Node created - Category ID:', category.id);
+    return li;
+}
+
+// Loads category data for treeview rendering, with options for admin or community context.
+async function loadCategories(userId = null, isAdmin = false) {
+    console.log('loadCategories - Starting category load - UserID:', userId, 'IsAdmin:', isAdmin);
+    let savedCategories = [];
+    try {
+        console.log('loadCategories - Fetching categories via authenticatedFetch');
+        const startTime = Date.now();
+
+        // Load user's saved categories if not admin
+        if (!isAdmin && userId) {
+            const userResponse = await authenticatedFetch(`${window.apiUrl}/${userId}/categories`);
+            if (!userResponse.ok) throw new Error(`Failed to fetch user categories: ${userResponse.status}`);
+            const userData = await userResponse.json();
+            savedCategories = userData.categories || [];
+            console.log('loadCategories - Saved categories fetched - Count:', savedCategories.length);
+        }
+
+        // Load all categories
+        const response = await authenticatedFetch(`${window.apiUrl}/categories`);
+        if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
+        const data = await response.json();
+        const duration = Date.now() - startTime;
+        console.log('loadCategories - Categories fetched - Count:', data.categories?.length, 'Duration:', `${duration}ms`);
+
+        const treeElement = document.getElementById('categoryTree');
+        if (!treeElement) {
+            console.error('loadCategories - Tree element not found - ID: categoryTree');
+            return;
+        }
+        treeElement.innerHTML = '';
+        const ul = document.createElement('ul');
+
+        // Filter top-level categories for community, show all for admin
+        const categoriesToRender = isAdmin ? data.categories : data.categories.filter(cat => !cat.parent_id);
+        console.log('loadCategories - Categories to render - Count:', categoriesToRender.length);
+
+        categoriesToRender.forEach(category => {
+            const node = createTreeNode(category, 0, isAdmin, savedCategories);
+            ul.appendChild(node);
+        });
+        treeElement.appendChild(ul);
+
+        // Reattach listeners for community context - Removed as now handled in createTreeNode
+        console.log('loadCategories - Treeview rendered successfully');
+        toastr.success('Categories loaded successfully');
+    } catch (error) {
+        console.error('loadCategories - Error loading categories - Error:', error.message, 'Stack:', error.stack);
+        toastr.error('Failed to load categories');
+    }
+    console.log('loadCategories - Category load completed');
+}
+
+// Toggles visibility of subcategories in treeview and loads them dynamically if needed.
+async function toggleSubcategories(categoryId, toggle) {
+    console.log('toggleSubcategories - Toggling subcategories - Category ID:', categoryId);
+    const li = toggle.closest('li');
+    const subUl = li.querySelector('.subcategories');
+
+    if (!subUl) {
+        console.error('toggleSubcategories - Subcategories element not found - Category ID:', categoryId);
+        return;
+    }
+
+    if (subUl.classList.contains('open')) {
+        subUl.classList.remove('open');
+        toggle.textContent = '+';
+        console.log('toggleSubcategories - Subcategories closed - ID:', categoryId);
+    } else {
+        if (subUl.children.length === 0) {
+            try {
+                console.log('toggleSubcategories - Fetching subcategories - Parent ID:', categoryId);
+                const response = await authenticatedFetch(`${window.apiUrl}/categories?parent_id=${categoryId}`);
+                if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
+                const data = await response.json();
+
+                if (data.categories && data.categories.length > 0) {
+                    data.categories.forEach(cat => {
+                        const node = createTreeNode(cat, 1); // Level 1 for subcategories
+                        subUl.appendChild(node);
+                    });
+                    console.log('toggleSubcategories - Subcategories loaded - Count:', data.categories.length, 'Parent ID:', categoryId);
+                    toastr.success(`Subcategories for ${categoryId} loaded successfully`);
+                } else {
+                    toggle.textContent = ' '; // No subcategories
+                    console.log('toggleSubcategories - No subcategories found - Parent ID:', categoryId);
+                    toastr.info(`No subcategories for ${categoryId}`);
+                    return;
+                }
+            } catch (error) {
+                console.error('toggleSubcategories - Error loading subcategories - Error:', error.message, 'Stack:', error.stack);
+                toastr.error(`Error loading subcategories: ${error.message}`);
+                toggle.textContent = ' ';
+                return;
+            }
+        }
+        subUl.classList.add('open');
+        toggle.textContent = '-';
+        console.log('toggleSubcategories - Subcategories opened - ID:', categoryId);
+    }
+    console.log('toggleSubcategories - Toggle completed');
+}
+
+// Saves updated category structure from treeview (community context).
+async function saveCategories(userId) {
+    console.log('saveCategories - Starting category save - UserID:', userId);
+    if (!userId) {
+        console.error('saveCategories - User ID not provided');
+        toastr.error('User ID not found in session');
+        return;
+    }
+
+    const checkedCategories = Array.from(document.querySelectorAll('#categoryTree input[type="checkbox"]:checked')).map(cb => cb.value);
+    console.log('saveCategories - Checked categories - Count:', checkedCategories.length, 'Values:', checkedCategories);
+
+    try {
+        console.log('saveCategories - Sending categories via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/categories`);
+        const startTime = Date.now();
+        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/categories`, {
+            method: 'PUT',
+            body: JSON.stringify({ categories: checkedCategories })
+        });
+        const duration = Date.now() - startTime;
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('saveCategories - Fetch failed - Status:', response.status, 'Error:', errorText);
+            throw new Error(`Failed to save categories: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('saveCategories - Save response received - Result:', JSON.stringify(result), 'Duration:', `${duration}ms`);
+        toastr.success('Categories saved successfully');
+    } catch (error) {
+        console.error('saveCategories - Error saving categories - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Failed to save categories: ${error.message}`);
+    }
+    console.log('saveCategories - Save process completed');
+}
+
+// Handles category selection in admin context to load discounted products.
+async function handleCategorySelection(categoryId, checkbox) {
+    console.log('handleCategorySelection - Handling selection - Category ID:', categoryId, 'Checked:', checkbox.checked);
+    document.querySelectorAll('#categoryTree input[type="checkbox"]').forEach(cb => {
+        if (cb !== checkbox) cb.checked = false;
+    });
+
+    const tbody = document.getElementById('dealList');
+    if (!tbody) {
+        console.error('handleCategorySelection - Deal list element not found - ID: dealList');
+        return;
+    }
+
+    if (checkbox.checked) {
+        try {
+            console.log('handleCategorySelection - Fetching discounted products - Category ID:', categoryId);
+            const response = await authenticatedFetch(`${window.apiUrl}/discounted-products?category_id=${categoryId}&min_discount=20`);
+            if (!response.ok) throw new Error(`Failed to fetch discounted products: ${response.status}`);
+            const data = await response.json();
+
+            tbody.innerHTML = '';
+            data.products.forEach(product => {
+                const tr = document.createElement('tr');
+                const discountPercent = product.discount_percent || 
+                    (product.original_price > product.current_price 
+                        ? ((product.original_price - product.current_price) / product.original_price * 100).toFixed(2) 
+                        : 'N/A');
+                tr.innerHTML = `
+                    <td>${product.category || 'N/A'}</td>
+                    <td>${product.title}</td>
+                    <td><a href="${product.product_url}" target="_blank">Link</a></td>
+                    <td>${product.current_price}</td>
+                    <td>${product.original_price}</td>
+                    <td>${discountPercent}</td>
+                    <td><img src="${product.image_url}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
+                    <td>${product.QTY || 'N/A'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            console.log('handleCategorySelection - Products loaded - Count:', data.products.length);
+            toastr.success(`Loaded ${data.products.length} discounted products for category ${categoryId}`);
+        } catch (error) {
+            console.error('handleCategorySelection - Error loading products - Error:', error.message, 'Stack:', error.stack);
+            toastr.error(`Error loading discounted products: ${error.message}`);
+            checkbox.checked = false;
+            tbody.innerHTML = '';
+        }
+    } else {
+        tbody.innerHTML = '';
+        console.log('handleCategorySelection - Cleared deal list - Category deselected');
+    }
+    console.log('handleCategorySelection - Selection handling completed');
+}
+common.js
+// common.js
+// Purpose: Provides core shared utilities for all pages, including Toastr configuration and Markdown rendering.
+
+// Guard against multiple inclusions
+if (!window.commonInitialized) {
+    window.commonInitialized = true;
+
+    // Configures Toastr for consistent toast notifications across the application
+    function setupToastr() {
+        console.log('setupToastr - Initiating Toastr configuration');
+        if (typeof toastr === 'undefined') {
+            console.error('setupToastr - Toastr library not loaded');
+            return;
+        }
+
+        // Override Toastr methods to log messages to the console
+        (function() {
+            const originalSuccess = toastr.success;
+            const originalError = toastr.error;
+            const originalInfo = toastr.info;
+            const originalWarning = toastr.warning;
+
+            toastr.success = function(message, title, options) {
+                console.log(`Toastr Success: ${title ? title + ' - ' : ''}${message}`);
+                return originalSuccess.call(toastr, message, title, options);
+            };
+            toastr.error = function(message, title, options) {
+                console.log(`Toastr Error: ${title ? title + ' - ' : ''}${message}`);
+                return originalError.call(toastr, message, title, options);
+            };
+            toastr.info = function(message, title, options) {
+                console.log(`Toastr Info: ${title ? title + ' - ' : ''}${message}`);
+                return originalInfo.call(toastr, message, title, options);
+            };
+            toastr.warning = function(message, title, options) {
+                console.log(`Toastr Warning: ${title ? title + ' - ' : ''}${message}`);
+                return originalWarning.call(toastr, message, title, options);
+            };
+        })();
+
+        // Set Toastr options
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp'
+        };
+
+        console.log('setupToastr - Toastr options configured:', JSON.stringify(toastr.options));
+        console.log('setupToastr - Configuration completed');
+    }
+
+    // Function to wait for marked library to load
+    function waitForMarked() {
+        return new Promise((resolve, reject) => {
+            const maxAttempts = 50;
+            const delay = 100;
+            let attempts = 0;
+
+            function check() {
+                if (typeof marked !== 'undefined') {
+                    console.log('waitForMarked - marked library is now loaded');
+                    resolve();
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    console.log(`waitForMarked - Attempt ${attempts}: marked not loaded yet, retrying in ${delay}ms`);
+                    setTimeout(check, delay);
+                } else {
+                    console.error('waitForMarked - Max attempts reached, marked still not loaded');
+                    reject(new Error('marked library not loaded after maximum attempts'));
+                }
+            }
+            check();
+        });
+    }
+
+    // Function to fetch and render Markdown content from local server
+    async function renderMdPage(mdPath, targetElementId) {
+        try {
+            // Wait for marked to be loaded
+            await waitForMarked();
+
+            // Construct the URL to fetch the Markdown content from clubmadeira.io
+            const renderUrl = `https://clubmadeira.io${mdPath}`;
+            console.log(`renderMdPage - Fetching Markdown from: ${renderUrl}`);
+            
+            // Fetch the raw Markdown content
+            const response = await fetch(renderUrl);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch MD content: ${response.status}`);
+            }
+            const mdContent = await response.text();
+            console.log(`renderMdPage - Markdown content fetched: ${mdContent.substring(0, 100)}...`);
+
+            // Convert Markdown to HTML using marked.js
+            let htmlContent;
+            try {
+                // Handle different versions of marked
+                if (typeof marked.parse === 'function') {
+                    htmlContent = marked.parse(mdContent);
+                } else {
+                    htmlContent = marked(mdContent); // Fallback for older versions
+                }
+            } catch (parseError) {
+                throw new Error(`Failed to parse Markdown: ${parseError.message}`);
+            }
+            
+            // Insert the HTML into the specified DOM element
+            const targetElement = document.getElementById(targetElementId);
+            if (targetElement) {
+                targetElement.innerHTML = htmlContent;
+                console.log('renderMdPage - Markdown rendered successfully');
+            } else {
+                console.error(`renderMdPage - Target element with ID "${targetElementId}" not found`);
+            }
+        } catch (error) {
+            console.error('renderMdPage - Error rendering MD page:', error.message);
+            // Display a fallback message if the target element exists
+            const targetElement = document.getElementById(targetElementId);
+            if (targetElement) {
+                targetElement.innerHTML = '<p>Sorry, the content could not be loaded: ' + error.message + '</p>';
+            }
+        }
+    }
+
+    // Initialize Toastr when the DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        setupToastr();
+    });
+
+    // Expose functions globally for manual invocation
+    window.setupToastr = setupToastr;
+    window.renderMdPage = renderMdPage;  // Make renderMdPage globally accessible
+}
+community-page.js
+// community-page.js
+// Purpose: Manages page-specific functionality for the /community page.
+
+// Initializes the community page with permission checks.
+function initializeCommunity() {
+    console.log('initializeCommunity - Initializing community page');
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        console.error('initializeCommunity - No token found, redirecting to /');
+        window.location.href = '/';
+        return;
+    }
+    const decoded = decodeJWT(token);
+    if (!decoded) {
+        console.error('initializeCommunity - Invalid token, redirecting to /');
+        window.location.href = '/';
+        return;
+    }
+    window.userPermissions = decoded.permissions || [];
+    // Allow 'community' or 'admin' permissions, matching page-load.js config
+    if (!window.userPermissions.some(perm => ['community', 'admin'].includes(perm))) {
+        toastr.error('Permission denied: Community or Admin permission required');
+        console.error('initializeCommunity - No community or admin permission, redirecting to /');
+        window.location.href = '/';
+        return;
+    }
+    // Use userId from token if not in localStorage
+    let userId = localStorage.getItem('userId') || decoded.userId;
+    if (!userId) {
+        toastr.error('User ID not found in session or token, redirecting to login');
+        console.error('initializeCommunity - No userId found in localStorage or token');
+        window.location.href = '/';
+        return;
+    }
+    // Ensure userId is stored in localStorage for consistency
+    localStorage.setItem('userId', userId);
+    const userIdInput = document.getElementById('userId');
+    if (userIdInput) {
+        userIdInput.value = userId;
+    } else {
+        console.warn('initializeCommunity - userId input not found');
+    }
+
+    // Set up navigation and event listeners to fix button functionality
+    setupNavigation(); // From site-navigation.js
+    attachEventListeners(); // From page-load.js
+
+    // Load initial data
+    waitForTinyMCE(() => initializeTinyMCE('#aboutCommunity, #stylingDetails, #page1Content'));
+    loadVisits();
+    loadOrders();
+    loadCategories(userId, false); // Added for treeview
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializeCommunity - Updated contact name in welcome section:', contactName);
+                } else {
+                    console.warn('initializeCommunity - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializeCommunity - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializeCommunity - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+    } else {
+        console.error('initializeCommunity - loadSettings function not found');
+    }
+
+    // Set up collapsible sections for Orders and Visits
+    setupCollapsibleSections();
+
+    // Set up shared "Change Password" logic
+    if (typeof setupChangePassword === 'function') {
+        setupChangePassword(); // From user-management.js
+        console.log('initializeCommunity - Change Password logic initialized');
+    } else {
+        console.error('initializeCommunity - setupChangePassword function not found');
+    }
+
+    // Hide loading overlay after initialization
+    hideLoadingOverlay(); // From page-load.js
+    console.log('initializeCommunity - Community page initialized successfully');
+}
+
+// Updates the menu dynamically based on permissions.
+function updateMenu() {
+    console.log('updateMenu - Updating menu');
+    const menu = document.getElementById('menu');
+    const userId = document.getElementById('userId') ? document.getElementById('userId').value : '';
+    if (menu) {
+        menu.innerHTML = `<input type="text" id="userId" style="display: none;" value="${userId || ''}">`;
+        menu.innerHTML += `
+            <button data-section="info">
+                <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
+            </button>
+            <button data-submenu="my_website_submenu" data-section="my_website_intro_section">
+                <span class="button-content"><i class="fas fa-globe"></i> My Web Site</span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="my_website_submenu" class="submenu">
+                <button data-section="wix">
+                    <span class="button-content"><span class="icon-wix menu-size"></span> Wix</span>
+                </button>
+                <button data-section="wordpress">
+                    <span class="button-content"><span class="icon-wordpress menu-size"></span> WordPress</span>
+                </button>
+                <button data-section="squarespace">
+                    <span class="button-content"><span class="icon-squarespace menu-size"></span> Squarespace</span>
+                </button>
+                <button data-section="weebly">
+                    <span class="button-content"><span class="icon-weebly menu-size"></span> Weebly</span>
+                </button>
+                <button data-section="joomla">
+                    <span class="button-content"><span class="icon-joomla menu-size"></span> Joomla</span>
+                </button>
+                <button data-section="no_website">
+                    <span class="button-content"><i class="fas fa-question-circle menu-size"></i> I Don’t Have a Website Yet</span>
+                </button>
+            </div>
+            <button data-section="categories">
+                <span class="button-content"><i class="fas fa-list"></i> My Categories</span>
+            </button>
+            <button data-submenu="referrals_submenu" data-section="referrals_intro_section">
+                <span class="button-content">
+                    <span class="icon-community menu-size"></span> My Referrals
+                </span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="referrals_submenu" class="submenu">
+                <button data-section="visits">
+                    <span class="button-content"><i class="fas fa-eye"></i> Visits</span>
+                </button>
+                <button data-section="orders">
+                    <span class="button-content"><i class="fas fa-shopping-cart"></i> Orders</span>
+                </button>
+            </div>
+            <button data-submenu="my-account-submenu" data-section="my-account">
+                <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="my-account-submenu" class="submenu">
+                <button data-section="contact_details">
+                    <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
+                </button>
+                <button data-section="change-password">
+                    <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
+                </button>
+            </div>
+        `;
+        if (window.userPermissions.includes('admin')) {
+            menu.innerHTML += `
+                <button data-href="/admin" style="background-color: #dc3545;">
+                    <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
+                </button>
+            `;
+        }
+        menu.innerHTML += `
+            <button id="logOffBtn" style="background-color: #dc3545;">
+                <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
+            </button>
+        `;
+        console.log('updateMenu - Menu updated');
+
+        // Ensure submenu visibility is handled correctly
+        if (typeof window.siteNavigation?.initializeNavigation === 'function') {
+            window.siteNavigation.initializeNavigation(); // From site-navigation.js to fix submenu hiding
+            console.log('updateMenu - initializeNavigation called to fix submenu hiding');
+        } else {
+            console.error('updateMenu - initializeNavigation function not found');
+        }
+    } else {
+        console.error('updateMenu - Menu element not found');
+    }
+}
+
+function updateIntegrationCode(section) {
+    console.log('updateIntegrationCode - Updating integration code - Section:', section);
+    const codeElements = {
+        'wix': 'wixCode',
+        'wordpress': 'wordpressCode',
+        'squarespace': 'squarespaceCode',
+        'weebly': 'weeblyCode',
+        'joomla': 'joomlaCode'
+    };
+    const codeId = codeElements[section];
+    const userId = document.getElementById('userId')?.value || 'unknown'; // Null-safe
+    if (codeId) {
+        const codeElement = document.getElementById(codeId);
+        if (codeElement) {
+            codeElement.textContent = `<iframe src="https://clubmadeira.io/discounts?referrer=${userId}" width="100%" height="600"></iframe>`;
+            console.log('updateIntegrationCode - Code updated - ID:', codeId);
+        } else {
+            console.warn('updateIntegrationCode - Code element not found - ID:', codeId);
+        }
+    }
+}
+
+async function loadVisits() {
+    console.log('loadVisits - Loading visits');
+    const userId = document.getElementById('userId')?.value || '';
+    if (!userId) {
+        console.error('loadVisits - User ID not found in session');
+        toastr.error('User ID not found in session');
+        return;
+    }
+    try {
+        console.log('loadVisits - Fetching visits - URL:', `${window.apiUrl}/${userId}/visits`);
+        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/visits`);
+        if (!response.ok) throw new Error(`Failed to fetch visits: ${response.status}`);
+        const data = await response.json();
+        console.log('loadVisits - Visits fetched - Data:', JSON.stringify(data));
+        if (data.status === 'success') {
+            const now = new Date();
+            const thisMonth = now.getMonth();
+            const thisYear = now.getFullYear();
+            const visitsThisMonth = [];
+            const visitsLastMonth = [];
+            const visitsEarlier = [];
+            data.visits.forEach(visit => {
+                const visitDate = new Date(visit.timestamp);
+                if (visitDate.getFullYear() === thisYear && visitDate.getMonth() === thisMonth) {
+                    visitsThisMonth.push(visit);
+                } else if ((visitDate.getFullYear() === thisYear && visitDate.getMonth() === thisMonth - 1) ||
+                          (visitDate.getFullYear() === thisYear - 1 && thisMonth === 0 && visitDate.getMonth() === 11)) {
+                    visitsLastMonth.push(visit);
+                } else {
+                    visitsEarlier.push(visit);
+                }
+            });
+            updateVisitsTable('visitsListThisMonth', visitsThisMonth);
+            updateVisitsTable('visitsListLastMonth', visitsLastMonth);
+            updateVisitsTable('visitsListEarlier', visitsEarlier);
+            console.log('loadVisits - Visits loaded - Counts:', { 
+                thisMonth: visitsThisMonth.length, 
+                lastMonth: visitsLastMonth.length, 
+                earlier: visitsEarlier.length 
+            });
+        }
+    } catch (error) {
+        console.error('loadVisits - Error loading visits:', error.message, error.stack);
+        toastr.error(`Error loading visits: ${error.message}`);
+    }
+}
+
+function updateVisitsTable(tableId, visits) {
+    console.log('updateVisitsTable - Updating table - Table ID:', tableId, 'Visits:', visits.length);
+    const tbody = document.getElementById(tableId);
+    if (tbody) {
+        tbody.innerHTML = visits.length === 0 ? '<tr><td colspan="2">No visits found</td></tr>' : '';
+        visits.forEach(visit => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${visit.page || 'N/A'}</td><td>${visit.timestamp || 'N/A'}</td>`;
+            tbody.appendChild(row);
+        });
+        console.log('updateVisitsTable - Table updated - ID:', tableId);
+    } else {
+        console.warn('updateVisitsTable - Table element not found - ID:', tableId);
+    }
+}
+
+async function loadOrders() {
+    console.log('loadOrders - Loading orders');
+    const userId = document.getElementById('userId')?.value || '';
+    if (!userId) {
+        console.error('loadOrders - User ID not found in session');
+        toastr.error('User ID not found in session');
+        return;
+    }
+    try {
+        console.log('loadOrders - Fetching orders - URL:', `${window.apiUrl}/${userId}/orders`);
+        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/orders`);
+        if (!response.ok) throw new Error(`Failed to fetch orders: ${response.status}`);
+        const data = await response.json();
+        console.log('loadOrders - Orders fetched - Data:', JSON.stringify(data));
+        if (data.status === 'success') {
+            const now = new Date();
+            const thisMonth = now.getMonth();
+            const thisYear = now.getFullYear();
+            const ordersThisMonth = [];
+            const ordersLastMonth = [];
+            const ordersEarlier = [];
+            data.orders.forEach(order => {
+                const orderDate = new Date(order.timestamp);
+                if (orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth) {
+                    ordersThisMonth.push(order);
+                } else if ((orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth - 1) ||
+                          (orderDate.getFullYear() === thisYear - 1 && thisMonth === 0 && orderDate.getMonth() === 11)) {
+                    ordersLastMonth.push(order);
+                } else {
+                    ordersEarlier.push(order);
+                }
+            });
+            updateOrdersTable('ordersListThisMonth', ordersThisMonth);
+            updateOrdersTable('ordersListLastMonth', ordersLastMonth);
+            updateOrdersTable('ordersListEarlier', ordersEarlier);
+            console.log('loadOrders - Orders loaded - Counts:', { 
+                thisMonth: ordersThisMonth.length, 
+                lastMonth: ordersLastMonth.length, 
+                earlier: ordersEarlier.length 
+            });
+        }
+    } catch (error) {
+        console.error('loadOrders - Error loading orders:', error.message, error.stack);
+        toastr.error(`Error loading orders: ${error.message}`);
+    }
+}
+
+function updateOrdersTable(tableId, orders) {
+    console.log('updateOrdersTable - Updating table - Table ID:', tableId, 'Orders:', orders.length);
+    const tbody = document.getElementById(tableId);
+    if (tbody) {
+        tbody.innerHTML = orders.length === 0 ? '<tr><td colspan="4">No orders found</td></tr>' : '';
+        orders.forEach(order => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${order.orderId || 'N/A'}</td><td>${order.buyer || 'N/A'}</td><td>$${order.total || '0.00'}</td><td>${order.timestamp || 'N/A'}</td>`;
+            tbody.appendChild(row);
+        });
+        console.log('updateOrdersTable - Table updated - ID:', tableId);
+    } else {
+        console.warn('updateOrdersTable - Table element not found - ID:', tableId);
+    }
+}
+
+function setupCollapsibleSections() {
+    console.log('setupCollapsibleSections - Setting up collapsible sections');
+    const toggleSections = document.querySelectorAll('.toggle-section');
+    toggleSections.forEach(section => {
+        section.addEventListener('click', () => {
+            const targetId = section.getAttribute('data-toggle');
+            const targetContent = document.getElementById(targetId);
+            if (targetContent) {
+                const isOpen = targetContent.classList.contains('open');
+                // Close all sections in the same group
+                const parentSection = section.closest('.section');
+                if (parentSection) {
+                    parentSection.querySelectorAll('.toggle-content.open').forEach(content => {
+                        content.classList.remove('open');
+                        content.style.display = 'none';
+                    });
+                }
+                // Toggle the clicked section
+                if (!isOpen) {
+                    targetContent.classList.add('open');
+                    targetContent.style.display = 'block';
+                }
+                console.log('setupCollapsibleSections - Toggled section:', targetId, 'Is open:', !isOpen);
+            } else {
+                console.warn('setupCollapsibleSections - Target content not found for ID:', targetId);
+            }
+        });
+    });
+}
+
+function waitForTinyMCE(callback) {
+    console.log('waitForTinyMCE - Checking if TinyMCE is loaded');
+    if (typeof tinymce !== 'undefined' && tinymce.init) {
+        console.log('waitForTinyMCE - TinyMCE is loaded, executing callback');
+        callback();
+    } else {
+        console.log('waitForTinyMCE - Waiting for TinyMCE to load...');
+        const script = document.querySelector('script[src*="tinymce.min.js"]');
+        if (script) {
+            script.onload = () => {
+                console.log('waitForTinyMCE - TinyMCE script loaded');
+                callback();
+            };
+            script.onerror = () => console.error('waitForTinyMCE - TinyMCE failed to load');
+        } else {
+            setTimeout(() => waitForTinyMCE(callback), 100);
+        }
+    }
+}
+
+// Export for use in other scripts
+window.initializeCommunity = initializeCommunity;
+window.updateMenu = updateMenu;
+window.updateIntegrationCode = updateIntegrationCode;
+window.loadVisits = loadVisits;
+window.updateVisitsTable = updateVisitsTable;
+window.loadOrders = loadOrders;
+window.updateOrdersTable = updateOrdersTable;
+window.setupCollapsibleSections = setupCollapsibleSections;
+window.waitForTinyMCE = waitForTinyMCE;
+marked.min.js
+/**
+ * marked v15.0.7 - a markdown parser
+ * Copyright (c) 2011-2025, Christopher Jeffrey. (MIT Licensed)
+ * https://github.com/markedjs/marked
+ */
+!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).marked={})}(this,(function(e){"use strict";function t(){return{async:!1,breaks:!1,extensions:null,gfm:!0,hooks:null,pedantic:!1,renderer:null,silent:!1,tokenizer:null,walkTokens:null}}function n(t){e.defaults=t}e.defaults={async:!1,breaks:!1,extensions:null,gfm:!0,hooks:null,pedantic:!1,renderer:null,silent:!1,tokenizer:null,walkTokens:null};const s={exec:()=>null};function r(e,t=""){let n="string"==typeof e?e:e.source;const s={replace:(e,t)=>{let r="string"==typeof t?t:t.source;return r=r.replace(i.caret,"$1"),n=n.replace(e,r),s},getRegex:()=>new RegExp(n,t)};return s}const i={codeRemoveIndent:/^(?: {1,4}| {0,3}\t)/gm,outputLinkReplace:/\\([\[\]])/g,indentCodeCompensation:/^(\s+)(?:```)/,beginningSpace:/^\s+/,endingHash:/#$/,startingSpaceChar:/^ /,endingSpaceChar:/ $/,nonSpaceChar:/[^ ]/,newLineCharGlobal:/\n/g,tabCharGlobal:/\t/g,multipleSpaceGlobal:/\s+/g,blankLine:/^[ \t]*$/,doubleBlankLine:/\n[ \t]*\n[ \t]*$/,blockquoteStart:/^ {0,3}>/,blockquoteSetextReplace:/\n {0,3}((?:=+|-+) *)(?=\n|$)/g,blockquoteSetextReplace2:/^ {0,3}>[ \t]?/gm,listReplaceTabs:/^\t+/,listReplaceNesting:/^ {1,4}(?=( {4})*[^ ])/g,listIsTask:/^\[[ xX]\] /,listReplaceTask:/^\[[ xX]\] +/,anyLine:/\n.*\n/,hrefBrackets:/^<(.*)>$/,tableDelimiter:/[:|]/,tableAlignChars:/^\||\| *$/g,tableRowBlankLine:/\n[ \t]*$/,tableAlignRight:/^ *-+: *$/,tableAlignCenter:/^ *:-+: *$/,tableAlignLeft:/^ *:-+ *$/,startATag:/^<a /i,endATag:/^<\/a>/i,startPreScriptTag:/^<(pre|code|kbd|script)(\s|>)/i,endPreScriptTag:/^<\/(pre|code|kbd|script)(\s|>)/i,startAngleBracket:/^</,endAngleBracket:/>$/,pedanticHrefTitle:/^([^'"]*[^\s])\s+(['"])(.*)\2/,unicodeAlphaNumeric:/[\p{L}\p{N}]/u,escapeTest:/[&<>"']/,escapeReplace:/[&<>"']/g,escapeTestNoEncode:/[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/,escapeReplaceNoEncode:/[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g,unescapeTest:/&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/gi,caret:/(^|[^\[])\^/g,percentDecode:/%25/g,findPipe:/\|/g,splitPipe:/ \|/,slashPipe:/\\\|/g,carriageReturn:/\r\n|\r/g,spaceLine:/^ +$/gm,notSpaceStart:/^\S*/,endingNewline:/\n$/,listItemRegex:e=>new RegExp(`^( {0,3}${e})((?:[\t ][^\\n]*)?(?:\\n|$))`),nextBulletRegex:e=>new RegExp(`^ {0,${Math.min(3,e-1)}}(?:[*+-]|\\d{1,9}[.)])((?:[ \t][^\\n]*)?(?:\\n|$))`),hrRegex:e=>new RegExp(`^ {0,${Math.min(3,e-1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$)`),fencesBeginRegex:e=>new RegExp(`^ {0,${Math.min(3,e-1)}}(?:\`\`\`|~~~)`),headingBeginRegex:e=>new RegExp(`^ {0,${Math.min(3,e-1)}}#`),htmlBeginRegex:e=>new RegExp(`^ {0,${Math.min(3,e-1)}}<(?:[a-z].*>|!--)`,"i")},l=/^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/,o=/(?:[*+-]|\d{1,9}[.)])/,a=/^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html|table))+?)\n {0,3}(=+|-+) *(?:\n+|$)/,c=r(a).replace(/bull/g,o).replace(/blockCode/g,/(?: {4}| {0,3}\t)/).replace(/fences/g,/ {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g,/ {0,3}>/).replace(/heading/g,/ {0,3}#{1,6}/).replace(/html/g,/ {0,3}<[^\n>]+>\n/).replace(/\|table/g,"").getRegex(),h=r(a).replace(/bull/g,o).replace(/blockCode/g,/(?: {4}| {0,3}\t)/).replace(/fences/g,/ {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g,/ {0,3}>/).replace(/heading/g,/ {0,3}#{1,6}/).replace(/html/g,/ {0,3}<[^\n>]+>\n/).replace(/table/g,/ {0,3}\|?(?:[:\- ]*\|)+[\:\- ]*\n/).getRegex(),p=/^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/,u=/(?!\s*\])(?:\\.|[^\[\]\\])+/,g=r(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/).replace("label",u).replace("title",/(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex(),k=r(/^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/).replace(/bull/g,o).getRegex(),d="address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul",f=/<!--(?:-?>|[\s\S]*?(?:-->|$))/,x=r("^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>\\n*|$)|<![A-Z][\\s\\S]*?(?:>\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$)|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$)|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$))","i").replace("comment",f).replace("tag",d).replace("attribute",/ +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex(),b=r(p).replace("hr",l).replace("heading"," {0,3}#{1,6}(?:\\s|$)").replace("|lheading","").replace("|table","").replace("blockquote"," {0,3}>").replace("fences"," {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list"," {0,3}(?:[*+-]|1[.)]) ").replace("html","</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag",d).getRegex(),w={blockquote:r(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/).replace("paragraph",b).getRegex(),code:/^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/,def:g,fences:/^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/,heading:/^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/,hr:l,html:x,lheading:c,list:k,newline:/^(?:[ \t]*(?:\n|$))+/,paragraph:b,table:s,text:/^[^\n]+/},m=r("^ *([^\\n ].*)\\n {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)").replace("hr",l).replace("heading"," {0,3}#{1,6}(?:\\s|$)").replace("blockquote"," {0,3}>").replace("code","(?: {4}| {0,3}\t)[^\\n]").replace("fences"," {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list"," {0,3}(?:[*+-]|1[.)]) ").replace("html","</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag",d).getRegex(),y={...w,lheading:h,table:m,paragraph:r(p).replace("hr",l).replace("heading"," {0,3}#{1,6}(?:\\s|$)").replace("|lheading","").replace("table",m).replace("blockquote"," {0,3}>").replace("fences"," {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list"," {0,3}(?:[*+-]|1[.)]) ").replace("html","</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag",d).getRegex()},$={...w,html:r("^ *(?:comment *(?:\\n|\\s*$)|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)|<tag(?:\"[^\"]*\"|'[^']*'|\\s[^'\"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))").replace("comment",f).replace(/tag/g,"(?!(?:a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)\\b)\\w+(?!:|[^\\w\\s@]*@)\\b").getRegex(),def:/^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/,heading:/^(#{1,6})(.*)(?:\n+|$)/,fences:s,lheading:/^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/,paragraph:r(p).replace("hr",l).replace("heading"," *#{1,6} *[^\n]").replace("lheading",c).replace("|table","").replace("blockquote"," {0,3}>").replace("|fences","").replace("|list","").replace("|html","").replace("|tag","").getRegex()},R=/^( {2,}|\\)\n(?!\s*$)/,S=/[\p{P}\p{S}]/u,T=/[\s\p{P}\p{S}]/u,z=/[^\s\p{P}\p{S}]/u,A=r(/^((?![*_])punctSpace)/,"u").replace(/punctSpace/g,T).getRegex(),_=/(?!~)[\p{P}\p{S}]/u,P=/^(?:\*+(?:((?!\*)punct)|[^\s*]))|^_+(?:((?!_)punct)|([^\s_]))/,I=r(P,"u").replace(/punct/g,S).getRegex(),L=r(P,"u").replace(/punct/g,_).getRegex(),B="^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)",C=r(B,"gu").replace(/notPunctSpace/g,z).replace(/punctSpace/g,T).replace(/punct/g,S).getRegex(),q=r(B,"gu").replace(/notPunctSpace/g,/(?:[^\s\p{P}\p{S}]|~)/u).replace(/punctSpace/g,/(?!~)[\s\p{P}\p{S}]/u).replace(/punct/g,_).getRegex(),E=r("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)","gu").replace(/notPunctSpace/g,z).replace(/punctSpace/g,T).replace(/punct/g,S).getRegex(),Z=r(/\\(punct)/,"gu").replace(/punct/g,S).getRegex(),v=r(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme",/[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email",/[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex(),D=r(f).replace("(?:--\x3e|$)","--\x3e").getRegex(),M=r("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment",D).replace("attribute",/\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex(),O=/(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?/,Q=r(/^!?\[(label)\]\(\s*(href)(?:\s+(title))?\s*\)/).replace("label",O).replace("href",/<(?:\\.|[^\n<>\\])+>|[^\s\x00-\x1f]*/).replace("title",/"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex(),j=r(/^!?\[(label)\]\[(ref)\]/).replace("label",O).replace("ref",u).getRegex(),N=r(/^!?\[(ref)\](?:\[\])?/).replace("ref",u).getRegex(),G={_backpedal:s,anyPunctuation:Z,autolink:v,blockSkip:/\[[^[\]]*?\]\((?:\\.|[^\\\(\)]|\((?:\\.|[^\\\(\)])*\))*\)|`[^`]*?`|<[^<>]*?>/g,br:R,code:/^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/,del:s,emStrongLDelim:I,emStrongRDelimAst:C,emStrongRDelimUnd:E,escape:/^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/,link:Q,nolink:N,punctuation:A,reflink:j,reflinkSearch:r("reflink|nolink(?!\\()","g").replace("reflink",j).replace("nolink",N).getRegex(),tag:M,text:/^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/,url:s},H={...G,link:r(/^!?\[(label)\]\((.*?)\)/).replace("label",O).getRegex(),reflink:r(/^!?\[(label)\]\s*\[([^\]]*)\]/).replace("label",O).getRegex()},X={...G,emStrongRDelimAst:q,emStrongLDelim:L,url:r(/^((?:ftp|https?):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/,"i").replace("email",/[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/).getRegex(),_backpedal:/(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/,del:/^(~~?)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)/,text:/^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))/},F={...X,br:r(R).replace("{2,}","*").getRegex(),text:r(X.text).replace("\\b_","\\b_| {2,}\\n").replace(/\{2,\}/g,"*").getRegex()},U={normal:w,gfm:y,pedantic:$},J={normal:G,gfm:X,breaks:F,pedantic:H},K={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"},V=e=>K[e];function W(e,t){if(t){if(i.escapeTest.test(e))return e.replace(i.escapeReplace,V)}else if(i.escapeTestNoEncode.test(e))return e.replace(i.escapeReplaceNoEncode,V);return e}function Y(e){try{e=encodeURI(e).replace(i.percentDecode,"%")}catch{return null}return e}function ee(e,t){const n=e.replace(i.findPipe,((e,t,n)=>{let s=!1,r=t;for(;--r>=0&&"\\"===n[r];)s=!s;return s?"|":" |"})).split(i.splitPipe);let s=0;if(n[0].trim()||n.shift(),n.length>0&&!n.at(-1)?.trim()&&n.pop(),t)if(n.length>t)n.splice(t);else for(;n.length<t;)n.push("");for(;s<n.length;s++)n[s]=n[s].trim().replace(i.slashPipe,"|");return n}function te(e,t,n){const s=e.length;if(0===s)return"";let r=0;for(;r<s;){if(e.charAt(s-r-1)!==t)break;r++}return e.slice(0,s-r)}function ne(e,t,n,s,r){const i=t.href,l=t.title||null,o=e[1].replace(r.other.outputLinkReplace,"$1");if("!"!==e[0].charAt(0)){s.state.inLink=!0;const e={type:"link",raw:n,href:i,title:l,text:o,tokens:s.inlineTokens(o)};return s.state.inLink=!1,e}return{type:"image",raw:n,href:i,title:l,text:o}}class se{options;rules;lexer;constructor(t){this.options=t||e.defaults}space(e){const t=this.rules.block.newline.exec(e);if(t&&t[0].length>0)return{type:"space",raw:t[0]}}code(e){const t=this.rules.block.code.exec(e);if(t){const e=t[0].replace(this.rules.other.codeRemoveIndent,"");return{type:"code",raw:t[0],codeBlockStyle:"indented",text:this.options.pedantic?e:te(e,"\n")}}}fences(e){const t=this.rules.block.fences.exec(e);if(t){const e=t[0],n=function(e,t,n){const s=e.match(n.other.indentCodeCompensation);if(null===s)return t;const r=s[1];return t.split("\n").map((e=>{const t=e.match(n.other.beginningSpace);if(null===t)return e;const[s]=t;return s.length>=r.length?e.slice(r.length):e})).join("\n")}(e,t[3]||"",this.rules);return{type:"code",raw:e,lang:t[2]?t[2].trim().replace(this.rules.inline.anyPunctuation,"$1"):t[2],text:n}}}heading(e){const t=this.rules.block.heading.exec(e);if(t){let e=t[2].trim();if(this.rules.other.endingHash.test(e)){const t=te(e,"#");this.options.pedantic?e=t.trim():t&&!this.rules.other.endingSpaceChar.test(t)||(e=t.trim())}return{type:"heading",raw:t[0],depth:t[1].length,text:e,tokens:this.lexer.inline(e)}}}hr(e){const t=this.rules.block.hr.exec(e);if(t)return{type:"hr",raw:te(t[0],"\n")}}blockquote(e){const t=this.rules.block.blockquote.exec(e);if(t){let e=te(t[0],"\n").split("\n"),n="",s="";const r=[];for(;e.length>0;){let t=!1;const i=[];let l;for(l=0;l<e.length;l++)if(this.rules.other.blockquoteStart.test(e[l]))i.push(e[l]),t=!0;else{if(t)break;i.push(e[l])}e=e.slice(l);const o=i.join("\n"),a=o.replace(this.rules.other.blockquoteSetextReplace,"\n    $1").replace(this.rules.other.blockquoteSetextReplace2,"");n=n?`${n}\n${o}`:o,s=s?`${s}\n${a}`:a;const c=this.lexer.state.top;if(this.lexer.state.top=!0,this.lexer.blockTokens(a,r,!0),this.lexer.state.top=c,0===e.length)break;const h=r.at(-1);if("code"===h?.type)break;if("blockquote"===h?.type){const t=h,i=t.raw+"\n"+e.join("\n"),l=this.blockquote(i);r[r.length-1]=l,n=n.substring(0,n.length-t.raw.length)+l.raw,s=s.substring(0,s.length-t.text.length)+l.text;break}if("list"!==h?.type);else{const t=h,i=t.raw+"\n"+e.join("\n"),l=this.list(i);r[r.length-1]=l,n=n.substring(0,n.length-h.raw.length)+l.raw,s=s.substring(0,s.length-t.raw.length)+l.raw,e=i.substring(r.at(-1).raw.length).split("\n")}}return{type:"blockquote",raw:n,tokens:r,text:s}}}list(e){let t=this.rules.block.list.exec(e);if(t){let n=t[1].trim();const s=n.length>1,r={type:"list",raw:"",ordered:s,start:s?+n.slice(0,-1):"",loose:!1,items:[]};n=s?`\\d{1,9}\\${n.slice(-1)}`:`\\${n}`,this.options.pedantic&&(n=s?n:"[*+-]");const i=this.rules.other.listItemRegex(n);let l=!1;for(;e;){let n=!1,s="",o="";if(!(t=i.exec(e)))break;if(this.rules.block.hr.test(e))break;s=t[0],e=e.substring(s.length);let a=t[2].split("\n",1)[0].replace(this.rules.other.listReplaceTabs,(e=>" ".repeat(3*e.length))),c=e.split("\n",1)[0],h=!a.trim(),p=0;if(this.options.pedantic?(p=2,o=a.trimStart()):h?p=t[1].length+1:(p=t[2].search(this.rules.other.nonSpaceChar),p=p>4?1:p,o=a.slice(p),p+=t[1].length),h&&this.rules.other.blankLine.test(c)&&(s+=c+"\n",e=e.substring(c.length+1),n=!0),!n){const t=this.rules.other.nextBulletRegex(p),n=this.rules.other.hrRegex(p),r=this.rules.other.fencesBeginRegex(p),i=this.rules.other.headingBeginRegex(p),l=this.rules.other.htmlBeginRegex(p);for(;e;){const u=e.split("\n",1)[0];let g;if(c=u,this.options.pedantic?(c=c.replace(this.rules.other.listReplaceNesting,"  "),g=c):g=c.replace(this.rules.other.tabCharGlobal,"    "),r.test(c))break;if(i.test(c))break;if(l.test(c))break;if(t.test(c))break;if(n.test(c))break;if(g.search(this.rules.other.nonSpaceChar)>=p||!c.trim())o+="\n"+g.slice(p);else{if(h)break;if(a.replace(this.rules.other.tabCharGlobal,"    ").search(this.rules.other.nonSpaceChar)>=4)break;if(r.test(a))break;if(i.test(a))break;if(n.test(a))break;o+="\n"+c}h||c.trim()||(h=!0),s+=u+"\n",e=e.substring(u.length+1),a=g.slice(p)}}r.loose||(l?r.loose=!0:this.rules.other.doubleBlankLine.test(s)&&(l=!0));let u,g=null;this.options.gfm&&(g=this.rules.other.listIsTask.exec(o),g&&(u="[ ] "!==g[0],o=o.replace(this.rules.other.listReplaceTask,""))),r.items.push({type:"list_item",raw:s,task:!!g,checked:u,loose:!1,text:o,tokens:[]}),r.raw+=s}const o=r.items.at(-1);if(!o)return;o.raw=o.raw.trimEnd(),o.text=o.text.trimEnd(),r.raw=r.raw.trimEnd();for(let e=0;e<r.items.length;e++)if(this.lexer.state.top=!1,r.items[e].tokens=this.lexer.blockTokens(r.items[e].text,[]),!r.loose){const t=r.items[e].tokens.filter((e=>"space"===e.type)),n=t.length>0&&t.some((e=>this.rules.other.anyLine.test(e.raw)));r.loose=n}if(r.loose)for(let e=0;e<r.items.length;e++)r.items[e].loose=!0;return r}}html(e){const t=this.rules.block.html.exec(e);if(t){return{type:"html",block:!0,raw:t[0],pre:"pre"===t[1]||"script"===t[1]||"style"===t[1],text:t[0]}}}def(e){const t=this.rules.block.def.exec(e);if(t){const e=t[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal," "),n=t[2]?t[2].replace(this.rules.other.hrefBrackets,"$1").replace(this.rules.inline.anyPunctuation,"$1"):"",s=t[3]?t[3].substring(1,t[3].length-1).replace(this.rules.inline.anyPunctuation,"$1"):t[3];return{type:"def",tag:e,raw:t[0],href:n,title:s}}}table(e){const t=this.rules.block.table.exec(e);if(!t)return;if(!this.rules.other.tableDelimiter.test(t[2]))return;const n=ee(t[1]),s=t[2].replace(this.rules.other.tableAlignChars,"").split("|"),r=t[3]?.trim()?t[3].replace(this.rules.other.tableRowBlankLine,"").split("\n"):[],i={type:"table",raw:t[0],header:[],align:[],rows:[]};if(n.length===s.length){for(const e of s)this.rules.other.tableAlignRight.test(e)?i.align.push("right"):this.rules.other.tableAlignCenter.test(e)?i.align.push("center"):this.rules.other.tableAlignLeft.test(e)?i.align.push("left"):i.align.push(null);for(let e=0;e<n.length;e++)i.header.push({text:n[e],tokens:this.lexer.inline(n[e]),header:!0,align:i.align[e]});for(const e of r)i.rows.push(ee(e,i.header.length).map(((e,t)=>({text:e,tokens:this.lexer.inline(e),header:!1,align:i.align[t]}))));return i}}lheading(e){const t=this.rules.block.lheading.exec(e);if(t)return{type:"heading",raw:t[0],depth:"="===t[2].charAt(0)?1:2,text:t[1],tokens:this.lexer.inline(t[1])}}paragraph(e){const t=this.rules.block.paragraph.exec(e);if(t){const e="\n"===t[1].charAt(t[1].length-1)?t[1].slice(0,-1):t[1];return{type:"paragraph",raw:t[0],text:e,tokens:this.lexer.inline(e)}}}text(e){const t=this.rules.block.text.exec(e);if(t)return{type:"text",raw:t[0],text:t[0],tokens:this.lexer.inline(t[0])}}escape(e){const t=this.rules.inline.escape.exec(e);if(t)return{type:"escape",raw:t[0],text:t[1]}}tag(e){const t=this.rules.inline.tag.exec(e);if(t)return!this.lexer.state.inLink&&this.rules.other.startATag.test(t[0])?this.lexer.state.inLink=!0:this.lexer.state.inLink&&this.rules.other.endATag.test(t[0])&&(this.lexer.state.inLink=!1),!this.lexer.state.inRawBlock&&this.rules.other.startPreScriptTag.test(t[0])?this.lexer.state.inRawBlock=!0:this.lexer.state.inRawBlock&&this.rules.other.endPreScriptTag.test(t[0])&&(this.lexer.state.inRawBlock=!1),{type:"html",raw:t[0],inLink:this.lexer.state.inLink,inRawBlock:this.lexer.state.inRawBlock,block:!1,text:t[0]}}link(e){const t=this.rules.inline.link.exec(e);if(t){const e=t[2].trim();if(!this.options.pedantic&&this.rules.other.startAngleBracket.test(e)){if(!this.rules.other.endAngleBracket.test(e))return;const t=te(e.slice(0,-1),"\\");if((e.length-t.length)%2==0)return}else{const e=function(e,t){if(-1===e.indexOf(t[1]))return-1;let n=0;for(let s=0;s<e.length;s++)if("\\"===e[s])s++;else if(e[s]===t[0])n++;else if(e[s]===t[1]&&(n--,n<0))return s;return-1}(t[2],"()");if(e>-1){const n=(0===t[0].indexOf("!")?5:4)+t[1].length+e;t[2]=t[2].substring(0,e),t[0]=t[0].substring(0,n).trim(),t[3]=""}}let n=t[2],s="";if(this.options.pedantic){const e=this.rules.other.pedanticHrefTitle.exec(n);e&&(n=e[1],s=e[3])}else s=t[3]?t[3].slice(1,-1):"";return n=n.trim(),this.rules.other.startAngleBracket.test(n)&&(n=this.options.pedantic&&!this.rules.other.endAngleBracket.test(e)?n.slice(1):n.slice(1,-1)),ne(t,{href:n?n.replace(this.rules.inline.anyPunctuation,"$1"):n,title:s?s.replace(this.rules.inline.anyPunctuation,"$1"):s},t[0],this.lexer,this.rules)}}reflink(e,t){let n;if((n=this.rules.inline.reflink.exec(e))||(n=this.rules.inline.nolink.exec(e))){const e=t[(n[2]||n[1]).replace(this.rules.other.multipleSpaceGlobal," ").toLowerCase()];if(!e){const e=n[0].charAt(0);return{type:"text",raw:e,text:e}}return ne(n,e,n[0],this.lexer,this.rules)}}emStrong(e,t,n=""){let s=this.rules.inline.emStrongLDelim.exec(e);if(!s)return;if(s[3]&&n.match(this.rules.other.unicodeAlphaNumeric))return;if(!(s[1]||s[2]||"")||!n||this.rules.inline.punctuation.exec(n)){const n=[...s[0]].length-1;let r,i,l=n,o=0;const a="*"===s[0][0]?this.rules.inline.emStrongRDelimAst:this.rules.inline.emStrongRDelimUnd;for(a.lastIndex=0,t=t.slice(-1*e.length+n);null!=(s=a.exec(t));){if(r=s[1]||s[2]||s[3]||s[4]||s[5]||s[6],!r)continue;if(i=[...r].length,s[3]||s[4]){l+=i;continue}if((s[5]||s[6])&&n%3&&!((n+i)%3)){o+=i;continue}if(l-=i,l>0)continue;i=Math.min(i,i+l+o);const t=[...s[0]][0].length,a=e.slice(0,n+s.index+t+i);if(Math.min(n,i)%2){const e=a.slice(1,-1);return{type:"em",raw:a,text:e,tokens:this.lexer.inlineTokens(e)}}const c=a.slice(2,-2);return{type:"strong",raw:a,text:c,tokens:this.lexer.inlineTokens(c)}}}}codespan(e){const t=this.rules.inline.code.exec(e);if(t){let e=t[2].replace(this.rules.other.newLineCharGlobal," ");const n=this.rules.other.nonSpaceChar.test(e),s=this.rules.other.startingSpaceChar.test(e)&&this.rules.other.endingSpaceChar.test(e);return n&&s&&(e=e.substring(1,e.length-1)),{type:"codespan",raw:t[0],text:e}}}br(e){const t=this.rules.inline.br.exec(e);if(t)return{type:"br",raw:t[0]}}del(e){const t=this.rules.inline.del.exec(e);if(t)return{type:"del",raw:t[0],text:t[2],tokens:this.lexer.inlineTokens(t[2])}}autolink(e){const t=this.rules.inline.autolink.exec(e);if(t){let e,n;return"@"===t[2]?(e=t[1],n="mailto:"+e):(e=t[1],n=e),{type:"link",raw:t[0],text:e,href:n,tokens:[{type:"text",raw:e,text:e}]}}}url(e){let t;if(t=this.rules.inline.url.exec(e)){let e,n;if("@"===t[2])e=t[0],n="mailto:"+e;else{let s;do{s=t[0],t[0]=this.rules.inline._backpedal.exec(t[0])?.[0]??""}while(s!==t[0]);e=t[0],n="www."===t[1]?"http://"+t[0]:t[0]}return{type:"link",raw:t[0],text:e,href:n,tokens:[{type:"text",raw:e,text:e}]}}}inlineText(e){const t=this.rules.inline.text.exec(e);if(t){const e=this.lexer.state.inRawBlock;return{type:"text",raw:t[0],text:t[0],escaped:e}}}}class re{tokens;options;state;tokenizer;inlineQueue;constructor(t){this.tokens=[],this.tokens.links=Object.create(null),this.options=t||e.defaults,this.options.tokenizer=this.options.tokenizer||new se,this.tokenizer=this.options.tokenizer,this.tokenizer.options=this.options,this.tokenizer.lexer=this,this.inlineQueue=[],this.state={inLink:!1,inRawBlock:!1,top:!0};const n={other:i,block:U.normal,inline:J.normal};this.options.pedantic?(n.block=U.pedantic,n.inline=J.pedantic):this.options.gfm&&(n.block=U.gfm,this.options.breaks?n.inline=J.breaks:n.inline=J.gfm),this.tokenizer.rules=n}static get rules(){return{block:U,inline:J}}static lex(e,t){return new re(t).lex(e)}static lexInline(e,t){return new re(t).inlineTokens(e)}lex(e){e=e.replace(i.carriageReturn,"\n"),this.blockTokens(e,this.tokens);for(let e=0;e<this.inlineQueue.length;e++){const t=this.inlineQueue[e];this.inlineTokens(t.src,t.tokens)}return this.inlineQueue=[],this.tokens}blockTokens(e,t=[],n=!1){for(this.options.pedantic&&(e=e.replace(i.tabCharGlobal,"    ").replace(i.spaceLine,""));e;){let s;if(this.options.extensions?.block?.some((n=>!!(s=n.call({lexer:this},e,t))&&(e=e.substring(s.raw.length),t.push(s),!0))))continue;if(s=this.tokenizer.space(e)){e=e.substring(s.raw.length);const n=t.at(-1);1===s.raw.length&&void 0!==n?n.raw+="\n":t.push(s);continue}if(s=this.tokenizer.code(e)){e=e.substring(s.raw.length);const n=t.at(-1);"paragraph"===n?.type||"text"===n?.type?(n.raw+="\n"+s.raw,n.text+="\n"+s.text,this.inlineQueue.at(-1).src=n.text):t.push(s);continue}if(s=this.tokenizer.fences(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.heading(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.hr(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.blockquote(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.list(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.html(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.def(e)){e=e.substring(s.raw.length);const n=t.at(-1);"paragraph"===n?.type||"text"===n?.type?(n.raw+="\n"+s.raw,n.text+="\n"+s.raw,this.inlineQueue.at(-1).src=n.text):this.tokens.links[s.tag]||(this.tokens.links[s.tag]={href:s.href,title:s.title});continue}if(s=this.tokenizer.table(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.lheading(e)){e=e.substring(s.raw.length),t.push(s);continue}let r=e;if(this.options.extensions?.startBlock){let t=1/0;const n=e.slice(1);let s;this.options.extensions.startBlock.forEach((e=>{s=e.call({lexer:this},n),"number"==typeof s&&s>=0&&(t=Math.min(t,s))})),t<1/0&&t>=0&&(r=e.substring(0,t+1))}if(this.state.top&&(s=this.tokenizer.paragraph(r))){const i=t.at(-1);n&&"paragraph"===i?.type?(i.raw+="\n"+s.raw,i.text+="\n"+s.text,this.inlineQueue.pop(),this.inlineQueue.at(-1).src=i.text):t.push(s),n=r.length!==e.length,e=e.substring(s.raw.length)}else if(s=this.tokenizer.text(e)){e=e.substring(s.raw.length);const n=t.at(-1);"text"===n?.type?(n.raw+="\n"+s.raw,n.text+="\n"+s.text,this.inlineQueue.pop(),this.inlineQueue.at(-1).src=n.text):t.push(s)}else if(e){const t="Infinite loop on byte: "+e.charCodeAt(0);if(this.options.silent){console.error(t);break}throw new Error(t)}}return this.state.top=!0,t}inline(e,t=[]){return this.inlineQueue.push({src:e,tokens:t}),t}inlineTokens(e,t=[]){let n=e,s=null;if(this.tokens.links){const e=Object.keys(this.tokens.links);if(e.length>0)for(;null!=(s=this.tokenizer.rules.inline.reflinkSearch.exec(n));)e.includes(s[0].slice(s[0].lastIndexOf("[")+1,-1))&&(n=n.slice(0,s.index)+"["+"a".repeat(s[0].length-2)+"]"+n.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex))}for(;null!=(s=this.tokenizer.rules.inline.blockSkip.exec(n));)n=n.slice(0,s.index)+"["+"a".repeat(s[0].length-2)+"]"+n.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);for(;null!=(s=this.tokenizer.rules.inline.anyPunctuation.exec(n));)n=n.slice(0,s.index)+"++"+n.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);let r=!1,i="";for(;e;){let s;if(r||(i=""),r=!1,this.options.extensions?.inline?.some((n=>!!(s=n.call({lexer:this},e,t))&&(e=e.substring(s.raw.length),t.push(s),!0))))continue;if(s=this.tokenizer.escape(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.tag(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.link(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.reflink(e,this.tokens.links)){e=e.substring(s.raw.length);const n=t.at(-1);"text"===s.type&&"text"===n?.type?(n.raw+=s.raw,n.text+=s.text):t.push(s);continue}if(s=this.tokenizer.emStrong(e,n,i)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.codespan(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.br(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.del(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.autolink(e)){e=e.substring(s.raw.length),t.push(s);continue}if(!this.state.inLink&&(s=this.tokenizer.url(e))){e=e.substring(s.raw.length),t.push(s);continue}let l=e;if(this.options.extensions?.startInline){let t=1/0;const n=e.slice(1);let s;this.options.extensions.startInline.forEach((e=>{s=e.call({lexer:this},n),"number"==typeof s&&s>=0&&(t=Math.min(t,s))})),t<1/0&&t>=0&&(l=e.substring(0,t+1))}if(s=this.tokenizer.inlineText(l)){e=e.substring(s.raw.length),"_"!==s.raw.slice(-1)&&(i=s.raw.slice(-1)),r=!0;const n=t.at(-1);"text"===n?.type?(n.raw+=s.raw,n.text+=s.text):t.push(s)}else if(e){const t="Infinite loop on byte: "+e.charCodeAt(0);if(this.options.silent){console.error(t);break}throw new Error(t)}}return t}}class ie{options;parser;constructor(t){this.options=t||e.defaults}space(e){return""}code({text:e,lang:t,escaped:n}){const s=(t||"").match(i.notSpaceStart)?.[0],r=e.replace(i.endingNewline,"")+"\n";return s?'<pre><code class="language-'+W(s)+'">'+(n?r:W(r,!0))+"</code></pre>\n":"<pre><code>"+(n?r:W(r,!0))+"</code></pre>\n"}blockquote({tokens:e}){return`<blockquote>\n${this.parser.parse(e)}</blockquote>\n`}html({text:e}){return e}heading({tokens:e,depth:t}){return`<h${t}>${this.parser.parseInline(e)}</h${t}>\n`}hr(e){return"<hr>\n"}list(e){const t=e.ordered,n=e.start;let s="";for(let t=0;t<e.items.length;t++){const n=e.items[t];s+=this.listitem(n)}const r=t?"ol":"ul";return"<"+r+(t&&1!==n?' start="'+n+'"':"")+">\n"+s+"</"+r+">\n"}listitem(e){let t="";if(e.task){const n=this.checkbox({checked:!!e.checked});e.loose?"paragraph"===e.tokens[0]?.type?(e.tokens[0].text=n+" "+e.tokens[0].text,e.tokens[0].tokens&&e.tokens[0].tokens.length>0&&"text"===e.tokens[0].tokens[0].type&&(e.tokens[0].tokens[0].text=n+" "+W(e.tokens[0].tokens[0].text),e.tokens[0].tokens[0].escaped=!0)):e.tokens.unshift({type:"text",raw:n+" ",text:n+" ",escaped:!0}):t+=n+" "}return t+=this.parser.parse(e.tokens,!!e.loose),`<li>${t}</li>\n`}checkbox({checked:e}){return"<input "+(e?'checked="" ':"")+'disabled="" type="checkbox">'}paragraph({tokens:e}){return`<p>${this.parser.parseInline(e)}</p>\n`}table(e){let t="",n="";for(let t=0;t<e.header.length;t++)n+=this.tablecell(e.header[t]);t+=this.tablerow({text:n});let s="";for(let t=0;t<e.rows.length;t++){const r=e.rows[t];n="";for(let e=0;e<r.length;e++)n+=this.tablecell(r[e]);s+=this.tablerow({text:n})}return s&&(s=`<tbody>${s}</tbody>`),"<table>\n<thead>\n"+t+"</thead>\n"+s+"</table>\n"}tablerow({text:e}){return`<tr>\n${e}</tr>\n`}tablecell(e){const t=this.parser.parseInline(e.tokens),n=e.header?"th":"td";return(e.align?`<${n} align="${e.align}">`:`<${n}>`)+t+`</${n}>\n`}strong({tokens:e}){return`<strong>${this.parser.parseInline(e)}</strong>`}em({tokens:e}){return`<em>${this.parser.parseInline(e)}</em>`}codespan({text:e}){return`<code>${W(e,!0)}</code>`}br(e){return"<br>"}del({tokens:e}){return`<del>${this.parser.parseInline(e)}</del>`}link({href:e,title:t,tokens:n}){const s=this.parser.parseInline(n),r=Y(e);if(null===r)return s;let i='<a href="'+(e=r)+'"';return t&&(i+=' title="'+W(t)+'"'),i+=">"+s+"</a>",i}image({href:e,title:t,text:n}){const s=Y(e);if(null===s)return W(n);let r=`<img src="${e=s}" alt="${n}"`;return t&&(r+=` title="${W(t)}"`),r+=">",r}text(e){return"tokens"in e&&e.tokens?this.parser.parseInline(e.tokens):"escaped"in e&&e.escaped?e.text:W(e.text)}}class le{strong({text:e}){return e}em({text:e}){return e}codespan({text:e}){return e}del({text:e}){return e}html({text:e}){return e}text({text:e}){return e}link({text:e}){return""+e}image({text:e}){return""+e}br(){return""}}class oe{options;renderer;textRenderer;constructor(t){this.options=t||e.defaults,this.options.renderer=this.options.renderer||new ie,this.renderer=this.options.renderer,this.renderer.options=this.options,this.renderer.parser=this,this.textRenderer=new le}static parse(e,t){return new oe(t).parse(e)}static parseInline(e,t){return new oe(t).parseInline(e)}parse(e,t=!0){let n="";for(let s=0;s<e.length;s++){const r=e[s];if(this.options.extensions?.renderers?.[r.type]){const e=r,t=this.options.extensions.renderers[e.type].call({parser:this},e);if(!1!==t||!["space","hr","heading","code","table","blockquote","list","html","paragraph","text"].includes(e.type)){n+=t||"";continue}}const i=r;switch(i.type){case"space":n+=this.renderer.space(i);continue;case"hr":n+=this.renderer.hr(i);continue;case"heading":n+=this.renderer.heading(i);continue;case"code":n+=this.renderer.code(i);continue;case"table":n+=this.renderer.table(i);continue;case"blockquote":n+=this.renderer.blockquote(i);continue;case"list":n+=this.renderer.list(i);continue;case"html":n+=this.renderer.html(i);continue;case"paragraph":n+=this.renderer.paragraph(i);continue;case"text":{let r=i,l=this.renderer.text(r);for(;s+1<e.length&&"text"===e[s+1].type;)r=e[++s],l+="\n"+this.renderer.text(r);n+=t?this.renderer.paragraph({type:"paragraph",raw:l,text:l,tokens:[{type:"text",raw:l,text:l,escaped:!0}]}):l;continue}default:{const e='Token with "'+i.type+'" type was not found.';if(this.options.silent)return console.error(e),"";throw new Error(e)}}}return n}parseInline(e,t=this.renderer){let n="";for(let s=0;s<e.length;s++){const r=e[s];if(this.options.extensions?.renderers?.[r.type]){const e=this.options.extensions.renderers[r.type].call({parser:this},r);if(!1!==e||!["escape","html","link","image","strong","em","codespan","br","del","text"].includes(r.type)){n+=e||"";continue}}const i=r;switch(i.type){case"escape":case"text":n+=t.text(i);break;case"html":n+=t.html(i);break;case"link":n+=t.link(i);break;case"image":n+=t.image(i);break;case"strong":n+=t.strong(i);break;case"em":n+=t.em(i);break;case"codespan":n+=t.codespan(i);break;case"br":n+=t.br(i);break;case"del":n+=t.del(i);break;default:{const e='Token with "'+i.type+'" type was not found.';if(this.options.silent)return console.error(e),"";throw new Error(e)}}}return n}}class ae{options;block;constructor(t){this.options=t||e.defaults}static passThroughHooks=new Set(["preprocess","postprocess","processAllTokens"]);preprocess(e){return e}postprocess(e){return e}processAllTokens(e){return e}provideLexer(){return this.block?re.lex:re.lexInline}provideParser(){return this.block?oe.parse:oe.parseInline}}class ce{defaults={async:!1,breaks:!1,extensions:null,gfm:!0,hooks:null,pedantic:!1,renderer:null,silent:!1,tokenizer:null,walkTokens:null};options=this.setOptions;parse=this.parseMarkdown(!0);parseInline=this.parseMarkdown(!1);Parser=oe;Renderer=ie;TextRenderer=le;Lexer=re;Tokenizer=se;Hooks=ae;constructor(...e){this.use(...e)}walkTokens(e,t){let n=[];for(const s of e)switch(n=n.concat(t.call(this,s)),s.type){case"table":{const e=s;for(const s of e.header)n=n.concat(this.walkTokens(s.tokens,t));for(const s of e.rows)for(const e of s)n=n.concat(this.walkTokens(e.tokens,t));break}case"list":{const e=s;n=n.concat(this.walkTokens(e.items,t));break}default:{const e=s;this.defaults.extensions?.childTokens?.[e.type]?this.defaults.extensions.childTokens[e.type].forEach((s=>{const r=e[s].flat(1/0);n=n.concat(this.walkTokens(r,t))})):e.tokens&&(n=n.concat(this.walkTokens(e.tokens,t)))}}return n}use(...e){const t=this.defaults.extensions||{renderers:{},childTokens:{}};return e.forEach((e=>{const n={...e};if(n.async=this.defaults.async||n.async||!1,e.extensions&&(e.extensions.forEach((e=>{if(!e.name)throw new Error("extension name required");if("renderer"in e){const n=t.renderers[e.name];t.renderers[e.name]=n?function(...t){let s=e.renderer.apply(this,t);return!1===s&&(s=n.apply(this,t)),s}:e.renderer}if("tokenizer"in e){if(!e.level||"block"!==e.level&&"inline"!==e.level)throw new Error("extension level must be 'block' or 'inline'");const n=t[e.level];n?n.unshift(e.tokenizer):t[e.level]=[e.tokenizer],e.start&&("block"===e.level?t.startBlock?t.startBlock.push(e.start):t.startBlock=[e.start]:"inline"===e.level&&(t.startInline?t.startInline.push(e.start):t.startInline=[e.start]))}"childTokens"in e&&e.childTokens&&(t.childTokens[e.name]=e.childTokens)})),n.extensions=t),e.renderer){const t=this.defaults.renderer||new ie(this.defaults);for(const n in e.renderer){if(!(n in t))throw new Error(`renderer '${n}' does not exist`);if(["options","parser"].includes(n))continue;const s=n,r=e.renderer[s],i=t[s];t[s]=(...e)=>{let n=r.apply(t,e);return!1===n&&(n=i.apply(t,e)),n||""}}n.renderer=t}if(e.tokenizer){const t=this.defaults.tokenizer||new se(this.defaults);for(const n in e.tokenizer){if(!(n in t))throw new Error(`tokenizer '${n}' does not exist`);if(["options","rules","lexer"].includes(n))continue;const s=n,r=e.tokenizer[s],i=t[s];t[s]=(...e)=>{let n=r.apply(t,e);return!1===n&&(n=i.apply(t,e)),n}}n.tokenizer=t}if(e.hooks){const t=this.defaults.hooks||new ae;for(const n in e.hooks){if(!(n in t))throw new Error(`hook '${n}' does not exist`);if(["options","block"].includes(n))continue;const s=n,r=e.hooks[s],i=t[s];ae.passThroughHooks.has(n)?t[s]=e=>{if(this.defaults.async)return Promise.resolve(r.call(t,e)).then((e=>i.call(t,e)));const n=r.call(t,e);return i.call(t,n)}:t[s]=(...e)=>{let n=r.apply(t,e);return!1===n&&(n=i.apply(t,e)),n}}n.hooks=t}if(e.walkTokens){const t=this.defaults.walkTokens,s=e.walkTokens;n.walkTokens=function(e){let n=[];return n.push(s.call(this,e)),t&&(n=n.concat(t.call(this,e))),n}}this.defaults={...this.defaults,...n}})),this}setOptions(e){return this.defaults={...this.defaults,...e},this}lexer(e,t){return re.lex(e,t??this.defaults)}parser(e,t){return oe.parse(e,t??this.defaults)}parseMarkdown(e){return(t,n)=>{const s={...n},r={...this.defaults,...s},i=this.onError(!!r.silent,!!r.async);if(!0===this.defaults.async&&!1===s.async)return i(new Error("marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise."));if(null==t)return i(new Error("marked(): input parameter is undefined or null"));if("string"!=typeof t)return i(new Error("marked(): input parameter is of type "+Object.prototype.toString.call(t)+", string expected"));r.hooks&&(r.hooks.options=r,r.hooks.block=e);const l=r.hooks?r.hooks.provideLexer():e?re.lex:re.lexInline,o=r.hooks?r.hooks.provideParser():e?oe.parse:oe.parseInline;if(r.async)return Promise.resolve(r.hooks?r.hooks.preprocess(t):t).then((e=>l(e,r))).then((e=>r.hooks?r.hooks.processAllTokens(e):e)).then((e=>r.walkTokens?Promise.all(this.walkTokens(e,r.walkTokens)).then((()=>e)):e)).then((e=>o(e,r))).then((e=>r.hooks?r.hooks.postprocess(e):e)).catch(i);try{r.hooks&&(t=r.hooks.preprocess(t));let e=l(t,r);r.hooks&&(e=r.hooks.processAllTokens(e)),r.walkTokens&&this.walkTokens(e,r.walkTokens);let n=o(e,r);return r.hooks&&(n=r.hooks.postprocess(n)),n}catch(e){return i(e)}}}onError(e,t){return n=>{if(n.message+="\nPlease report this to https://github.com/markedjs/marked.",e){const e="<p>An error occurred:</p><pre>"+W(n.message+"",!0)+"</pre>";return t?Promise.resolve(e):e}if(t)return Promise.reject(n);throw n}}}const he=new ce;function pe(e,t){return he.parse(e,t)}pe.options=pe.setOptions=function(e){return he.setOptions(e),pe.defaults=he.defaults,n(pe.defaults),pe},pe.getDefaults=t,pe.defaults=e.defaults,pe.use=function(...e){return he.use(...e),pe.defaults=he.defaults,n(pe.defaults),pe},pe.walkTokens=function(e,t){return he.walkTokens(e,t)},pe.parseInline=he.parseInline,pe.Parser=oe,pe.parser=oe.parse,pe.Renderer=ie,pe.TextRenderer=le,pe.Lexer=re,pe.lexer=re.lex,pe.Tokenizer=se,pe.Hooks=ae,pe.parse=pe;const ue=pe.options,ge=pe.setOptions,ke=pe.use,de=pe.walkTokens,fe=pe.parseInline,xe=pe,be=oe.parse,we=re.lex;e.Hooks=ae,e.Lexer=re,e.Marked=ce,e.Parser=oe,e.Renderer=ie,e.TextRenderer=le,e.Tokenizer=se,e.getDefaults=t,e.lexer=we,e.marked=pe,e.options=ue,e.parse=xe,e.parseInline=fe,e.parser=be,e.setOptions=ge,e.use=ke,e.walkTokens=de}));
+
+merchant-page.js
+// merchant-page.js
+// Purpose: Manages page-specific functionality for the /merchant page.
+
+try {
+    // Initializes the merchant page with permission checks.
+    function initializeMerchant() {
+        console.log('initializeMerchant - Initializing merchant page');
+        const token = localStorage.getItem('authToken');
+        const userId = localStorage.getItem('userId');
+        if (!token) {
+            console.error('initializeMerchant - No token found, redirecting to /');
+            window.location.href = '/';
+            return;
+        }
+        const decoded = decodeJWT(token);
+        if (!decoded) {
+            console.error('initializeMerchant - Invalid token, redirecting to /');
+            window.location.href = '/';
+            return;
+        }
+        window.userPermissions = decoded.permissions || [];
+        if (!window.userPermissions.includes('merchant') && !window.userPermissions.includes('admin')) {
+            toastr.error('Permission denied: Merchant or Admin permission required');
+            console.error('initializeMerchant - No merchant/admin permission, redirecting to /');
+            window.location.href = '/';
+            return;
+        }
+        const userIdInput = document.getElementById('userId');
+        if (userIdInput && userId) {
+            userIdInput.value = userId;
+        } else if (!userId) {
+            console.warn('initializeMerchant - No userId found in localStorage');
+        } else {
+            console.warn('initializeMerchant - userId input element not found');
+        }
+
+        // Set up navigation and event listeners
+        setupNavigation(); // From site-navigation.js
+        checkAdminPermission();
+        loadBranding('merchant', 'brandingContent'); // Adjusted to match typical usage
+        window.siteNavigation.showSection('info'); // Updated to match actual section ID
+        loadProducts(); // Load merchant products
+        loadStoreRequest(); // Load store request data
+        loadApiKeys(); // Load API keys
+        loadDocumentationMenu(); // Load documentation submenu items
+
+        // Fetch and display contact_name from /settings/user
+        loadUserSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializeMerchant - Updated contact name in info section:', contactName);
+                } else {
+                    console.warn('initializeMerchant - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializeMerchant - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializeMerchant - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+
+        attachEventListeners(); // From page-load.js
+
+        // Call shared "Change Password" logic
+        if (typeof setupChangePassword === 'function') {
+            setupChangePassword(); // From user-management.js
+            console.log('initializeMerchant - Change Password logic initialized');
+        } else {
+            console.error('initializeMerchant - setupChangePassword function not found');
+        }
+
+        // Hide loading overlay after initialization
+        hideLoadingOverlay(); // From page-load.js
+        console.log('initializeMerchant - Merchant page initialized successfully');
+    }
+
+    // Loads user settings from /settings/user
+    async function loadUserSettings() {
+        console.log('loadUserSettings - Fetching user settings');
+        try {
+            const response = await authenticatedFetch(`${window.apiUrl}/settings/user`);
+            if (!response.ok) throw new Error(`Failed to fetch user settings: ${response.status}`);
+            const data = await response.json();
+            console.log('loadUserSettings - User settings fetched:', JSON.stringify(data));
+
+            // Convert array format to object for easier access
+            const settings = {};
+            data.settings.forEach(item => {
+                settings[item.field] = item.value;
+            });
+            return settings;
+        } catch (error) {
+            console.error('loadUserSettings - Error fetching user settings:', error.message);
+            throw error;
+        }
+    }
+
+    // Checks and toggles visibility of admin-specific elements.
+    function checkAdminPermission() {
+        console.log('checkAdminPermission - Checking admin permission');
+        const backButton = document.querySelector('button[data-href="/admin"]');
+        if (backButton) {
+            backButton.style.display = window.userPermissions.includes('admin') ? 'block' : 'none';
+            console.log('checkAdminPermission - Back button visibility:', backButton.style.display);
+        } else {
+            console.warn('checkAdminPermission - Back button not found');
+        }
+    }
+
+    // Loads and displays merchant products.
+    async function loadProducts() {
+        console.log('loadProducts - Loading products');
+        const userId = document.getElementById('userId') ? document.getElementById('userId').value : '';
+        if (!userId) {
+            console.error('loadProducts - User ID not found in session');
+            toastr.error('User ID not found in session');
+            return;
+        }
+        try {
+            console.log('loadProducts - Fetching products - URL:', `${window.apiUrl}/${userId}/products`);
+            const response = await authenticatedFetch(`${window.apiUrl}/settings/products`);
+            if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
+            const data = await response.json();
+            console.log('loadProducts - Products fetched - Data:', JSON.stringify(data));
+            
+            const tbody = document.getElementById('productList');
+            if (tbody) {
+                tbody.innerHTML = '';
+                data.products.forEach(product => tbody.appendChild(createProductRow(product)));
+                console.log('loadProducts - Product table updated - Count:', data.products.length);
+            } else {
+                console.warn('loadProducts - Product list element not found');
+            }
+        } catch (error) {
+            console.error('loadProducts - Error loading products - Error:', error.message, 'Stack:', error.stack);
+            toastr.error(`Error loading products: ${error.message}`);
+        }
+    }
+
+    // Creates a table row for a product.
+    function createProductRow(product) {
+        console.log('createProductRow - Creating row - Product:', JSON.stringify(product));
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="hidden">${product.id || ''}</td>
+            <td>${product.category || 'N/A'}</td>
+            <td>${product.title || 'N/A'}</td>
+            <td><a href="${product.product_url || '#'}" target="_blank">${product.product_url ? 'Link' : 'N/A'}</a></td>
+            <td>${product.current_price || 'N/A'}</td>
+            <td>${product.original_price || 'N/A'}</td>
+            <td><img src="${product.image_url || ''}" width="50" onerror="this.src='https://via.placeholder.com/50';"></td>
+            <td>${product.qty || 'N/A'}</td>
+        `;
+        return tr;
+    }
+
+    // Loads store request data specific to merchant page.
+    async function loadStoreRequest() {
+        console.log('loadStoreRequest - Loading store request');
+        const userId = document.getElementById('userId') ? document.getElementById('userId').value : '';
+        if (!userId) {
+            console.error('loadStoreRequest - User ID not found in session');
+            toastr.error('User ID not found in session');
+            return;
+        }
+        try {
+            console.log('loadStoreRequest - Fetching store request - URL:', `${window.apiUrl}/${userId}/siterequest`);
+            const response = await authenticatedFetch(`${window.apiUrl}/${userId}/siterequest`);
+            if (!response.ok) throw new Error(`Failed to fetch store request: ${response.status}`);
+            const data = await response.json();
+            const storeRequest = data.site_request || {};
+            console.log('loadStoreRequest - Store request fetched - Data:', JSON.stringify(storeRequest));
+
+            document.getElementById('storeName').value = storeRequest.storeName || '';
+            if (window.tinyMCELoaded) {
+                tinymce.get('aboutStore')?.setContent(storeRequest.aboutStore || '');
+            } else {
+                document.getElementById('aboutStore').value = storeRequest.aboutStore || '';
+            }
+            document.getElementById('colorPrefs').value = storeRequest.colorPrefs || '';
+            document.getElementById('stylingDetails').value = storeRequest.stylingDetails || '';
+            document.getElementById('preferredDomain').value = storeRequest.preferredDomain || 'mystore.uk';
+
+            const emails = storeRequest.emails || ['info'];
+            window.emailCount = 0;
+            const emailsContainer = document.getElementById('emailsContainer');
+            if (emailsContainer) {
+                emailsContainer.innerHTML = '';
+                emails.forEach((email, index) => {
+                    window.emailCount++;
+                    const emailDiv = document.createElement('div');
+                    emailDiv.className = 'email-section';
+                    emailDiv.dataset.email = window.emailCount;
+                    emailDiv.innerHTML = `
+                        <label for="email${window.emailCount}Name">Email Name:</label>
+                        <input type="text" id="email${window.emailCount}Name" name="email${window.emailCount}Name" value="${email}">
+                        <span id="email${window.emailCount}Domain">@${storeRequest.preferredDomain || 'mystore.uk'}</span>
+                        ${window.emailCount > 1 ? `<button type="button" class="remove-email-btn" onclick="removeEmail(${window.emailCount})">Remove Email</button>` : ''}
+                    `;
+                    emailsContainer.appendChild(emailDiv);
+                });
+            } else {
+                console.warn('loadStoreRequest - Emails container not found');
+            }
+
+            const pages = storeRequest.pages && storeRequest.pages.length >= 2 ? storeRequest.pages : [
+                { name: 'Home', content: '' },
+                { name: 'Returns Policy', content: '' }
+            ];
+            window.pageCount = 0;
+            const pagesContainer = document.getElementById('pagesContainer');
+            if (pagesContainer) {
+                pagesContainer.innerHTML = '';
+                pages.forEach((page, index) => {
+                    window.pageCount++;
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'page-section';
+                    pageDiv.dataset.page = window.pageCount;
+                    pageDiv.innerHTML = `
+                        <label for="page${window.pageCount}Name">Page Name:</label>
+                        <input type="text" id="page${window.pageCount}Name" name="page${window.pageCount}Name" value="${page.name || ''}" ${window.pageCount <= 2 ? 'readonly' : ''}>
+                        <br><br>
+                        <label for="page${window.pageCount}Content">${window.pageCount === 1 ? 'Home Page' : window.pageCount === 2 ? 'Returns Policy' : 'Page'} Content:</label>
+                        <textarea id="page${window.pageCount}Content" name="page${window.pageCount}Content">${page.content || ''}</textarea>
+                        <label for="page${window.pageCount}Images">Additional Images:</label>
+                        <input type="file" id="page${window.pageCount}Images" name="page${window.pageCount}Images" accept="image/*" multiple>
+                        ${window.pageCount > 2 ? `<button type="button" class="remove-page-btn" onclick="removePage(${window.pageCount})">Remove Page</button>` : ''}
+                    `;
+                    pagesContainer.appendChild(pageDiv);
+                    if (window.tinyMCELoaded) {
+                        tinymce.init({
+                            selector: `#page${window.pageCount}Content`,
+                            height: 200,
+                            menubar: false,
+                            plugins: 'lists',
+                            toolbar: 'bold italic | bullist numlist',
+                            setup: editor => {
+                                editor.on('init', () => console.log(`TinyMCE editor initialized for page${window.pageCount}`));
+                            }
+                        });
+                    }
+                });
+            } else {
+                console.warn('loadStoreRequest - Pages container not found');
+            }
+
+            const widgets = storeRequest.widgets || [];
+            document.querySelectorAll('input[name="widgets"]').forEach(checkbox => {
+                checkbox.checked = widgets.includes(checkbox.value);
+            });
+
+            updateDomainPreview(); // Assumed function from site-request.js
+            console.log('loadStoreRequest - Store request loaded successfully');
+        } catch (error) {
+            console.error('loadStoreRequest - Error loading store request - Error:', error.message, 'Stack:', error.stack);
+            toastr.error(`Error loading store request: ${error.message}`);
+        }
+    }
+
+    // Loads and manages API keys functionality.
+    async function loadApiKeys() {
+        console.log('loadApiKeys - Loading API keys');
+        try {
+            const response = await authenticatedFetch(`${window.apiUrl}/settings/api_key`);
+            if (!response.ok) throw new Error(`Failed to fetch API keys: ${response.status}`);
+            const data = await response.json();
+            console.log('loadApiKeys - API keys fetched - Data:', JSON.stringify(data));
+
+            const iconsContainer = document.getElementById('api-keys-icons');
+            const fieldsContainer = document.getElementById('api-keys-fields');
+            const form = document.getElementById('api-keys-form');
+            if (!iconsContainer || !fieldsContainer || !form) {
+                console.warn('loadApiKeys - Required DOM elements not found');
+                return;
+            }
+
+            // Render icons horizontally
+            iconsContainer.innerHTML = '';
+            data.settings.forEach(setting => {
+                const icon = document.createElement('i');
+                icon.className = setting.icon;
+                icon.title = setting.comment;
+                icon.dataset.keyType = setting.key_type;
+                icon.style.cursor = 'pointer';
+                icon.style.width = '32px';  // Set width to 32px
+                icon.style.height = '32px'; // Set height to 32px
+                icon.style.fontSize = '32px'; // Ensure icon scales to 32px
+                icon.style.color = 'inherit'; // Use current foreground color
+                icon.addEventListener('click', () => displayApiKeyFields(setting, fieldsContainer, form));
+                iconsContainer.appendChild(icon);
+            });
+
+            // Form submission handler
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const keyType = form.dataset.keyType;
+                const fields = {};
+                Array.from(fieldsContainer.querySelectorAll('input')).forEach(input => {
+                    fields[input.name] = input.value;
+                });
+                try {
+                    const patchResponse = await authenticatedFetch(`${window.apiUrl}/settings/api_key/${keyType}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(fields)
+                    });
+                    if (!patchResponse.ok) throw new Error(`Failed to patch API key: ${patchResponse.status}`);
+                    toastr.success(`API key for ${keyType} updated successfully`);
+                    loadApiKeys(); // Reload settings after update
+                } catch (error) {
+                    console.error('loadApiKeys - Error patching API key:', error.message);
+                    toastr.error(`Error updating API key: ${error.message}`);
+                }
+            });
+
+            console.log('loadApiKeys - API keys initialized');
+        } catch (error) {
+            console.error('loadApiKeys - Error loading API keys:', error.message);
+            toastr.error(`Error loading API keys: ${error.message}`);
+        }
+    }
+
+    // Displays fields for the selected API key.
+    function displayApiKeyFields(setting, fieldsContainer, form) {
+        console.log('displayApiKeyFields - Displaying fields for:', setting.key_type);
+        fieldsContainer.innerHTML = '';
+        form.style.display = 'block';
+        form.dataset.keyType = setting.key_type;
+
+        // Add heading with comment
+        const heading = document.createElement('h3');
+        heading.textContent = setting.comment || 'API Key Settings';
+        heading.className = 'api-comment-heading'; // Optional for styling
+        fieldsContainer.appendChild(heading);
+
+        // Add input fields
+        Object.entries(setting.fields).forEach(([name, value]) => {
+            const div = document.createElement('div');
+            div.style.marginBottom = '10px';
+            div.innerHTML = `
+                <label for="${name}">${name}:</label>
+                <input type="text" id="${name}" name="${name}" value="${value}" style="width: 300px;">
+            `;
+            fieldsContainer.appendChild(div);
+        });
+
+        // Hide other sections and show API keys section
+        document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+        document.getElementById('api-keys').style.display = 'block';
+    }
+
+    // Loads documentation submenu items from /settings/api_key
+    async function loadDocumentationMenu() {
+        console.log('loadDocumentationMenu - Loading documentation menu');
+        try {
+            const response = await authenticatedFetch('https://clubmadeira.io/settings/api_key');
+            if (!response.ok) {
+                throw new Error('Failed to fetch API keys');
+            }
+            const data = await response.json();
+            console.log('loadDocumentationMenu - Documentation data fetched:', JSON.stringify(data));
+
+            const submenu = document.getElementById('documentation-submenu');
+            if (!submenu) {
+                console.error('loadDocumentationMenu - Documentation submenu container not found');
+                return;
+            }
+            submenu.innerHTML = '';
+
+            if (!data || !data.settings || data.settings.length === 0) {
+                submenu.innerHTML = '<p>No documentation available.</p>';
+                console.log('loadDocumentationMenu - No documentation data available');
+                return;
+            }
+
+            data.settings.forEach(item => {
+                if (item.comment && item.doc_link) {
+                    const button = document.createElement('button');
+                    button.setAttribute('data-section', 'documentation-content');
+                    button.setAttribute('data-md-path', item.doc_link);
+                    const iconClass = item.icon || 'fas fa-file-alt'; // Default icon if missing
+                    button.innerHTML = `<span class="button-content"><i class="${iconClass}"></i> ${item.comment}</span>`;
+                    submenu.appendChild(button);
+                    console.log('loadDocumentationMenu - Added button:', item.comment);
+                }
+            });
+
+            if (typeof window.siteNavigation?.initializeNavigation === 'function') {
+                window.siteNavigation.initializeNavigation();
+                console.log('loadDocumentationMenu - Navigation reinitialized');
+            }
+        } catch (error) {
+            console.error('loadDocumentationMenu - Error loading documentation menu:', error);
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Failed to load documentation menu');
+            }
+        }
+    }
+
+    // Export for use in other scripts
+    window.initializeMerchant = initializeMerchant;
+    window.checkAdminPermission = checkAdminPermission;
+    window.loadProducts = loadProducts;
+    window.createProductRow = createProductRow;
+    window.loadStoreRequest = loadStoreRequest;
+    window.loadApiKeys = loadApiKeys;
+    window.displayApiKeyFields = displayApiKeyFields;
+    window.loadUserSettings = loadUserSettings;
+    window.loadDocumentationMenu = loadDocumentationMenu; // Added export
+} catch (error) {
+    console.error('Error in merchant-page.js:', error.message, error.stack);
+    // Fallback to prevent undefined errors
+    window.initializeMerchant = function() {
+        console.error('initializeMerchant - Failed to initialize due to an error:', error.message);
+    };
+}
+page-load.js
+// /static/js/page-load.js
+// Purpose: Manages page initialization, event listener attachment for navigation and section handling, and loading overlay behavior.
+
+// Guard against multiple inclusions
+if (window.pageLoadInitialized) {
+    console.log('page-load.js - Already initialized, skipping');
+} else {
+    window.pageLoadInitialized = true;
+
+    // Queue for Toastr messages to delay display until overlay is hidden
+    let toastrQueue = [];
+
+    // Override Toastr methods to queue messages during initial load
+    (function() {
+        const originalSuccess = toastr.success;
+        const originalError = toastr.error;
+        const originalInfo = toastr.info;
+        const originalWarning = toastr.warning;
+
+        function queueMessage(type, message, title, options) {
+            toastrQueue.push({ type, message, title, options });
+            console.log(`Toastr ${type} queued: ${title ? title + ' - ' : ''}${message}`);
+        }
+
+        toastr.success = function(message, title, options) {
+            if (!window.overlayHidden) {
+                queueMessage('success', message, title, options);
+            } else {
+                return originalSuccess.call(toastr, message, title, options);
+            }
+        };
+
+        toastr.error = function(message, title, options) {
+            if (!window.overlayHidden) {
+                queueMessage('error', message, title, options);
+            } else {
+                return originalError.call(toastr, message, title, options);
+            }
+        };
+
+        toastr.info = function(message, title, options) {
+            if (!window.overlayHidden) {
+                queueMessage('info', message, title, options);
+            } else {
+                return originalInfo.call(toastr, message, title, options);
+            }
+        };
+
+        toastr.warning = function(message, title, options) {
+            if (!window.overlayHidden) {
+                queueMessage('warning', message, title, options);
+            } else {
+                return originalWarning.call(toastr, message, title, options);
+            }
+        };
+    })();
+
+    // Function to process queued Toastr messages
+    function processToastrQueue() {
+        while (toastrQueue.length > 0) {
+            const { type, message, title, options } = toastrQueue.shift();
+            toastr[type](message, title, options);
+        }
+    }
+
+    // Function to show the loading overlay
+    function showLoadingOverlay() {
+        let loadingOverlay = document.getElementById('loadingOverlay');
+        if (!loadingOverlay) {
+            loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loadingOverlay';
+            loadingOverlay.innerHTML = `
+                <div class="multicircle-loader">
+                    <div class="circle circle1"></div>
+                    <div class="circle circle2"></div>
+                    <div class="circle circle3"></div>
+                    <div class="circle circle4"></div>
+                </div>
+            `;
+            document.body.prepend(loadingOverlay);
+            console.log('showLoadingOverlay - Created and prepended loading overlay');
+        }
+        loadingOverlay.style.display = 'flex';
+        console.log('showLoadingOverlay - Loading overlay set to visible');
+        return loadingOverlay;
+    }
+
+    // Function to hide the loading overlay and show the main content with a minimum visibility delay
+    async function hideLoadingOverlay(minDelay = 1000) {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const layoutWrapper = document.querySelector('.layout-wrapper');
+        
+        if (loadingOverlay && layoutWrapper) {
+            await new Promise(resolve => setTimeout(resolve, minDelay));
+            loadingOverlay.style.display = 'none';
+            layoutWrapper.style.display = 'block';
+            console.log('hideLoadingOverlay - Loading overlay hidden, main content displayed');
+            window.overlayHidden = true;
+            processToastrQueue();
+        } else {
+            console.warn('hideLoadingOverlay - Loading overlay or layout wrapper not found');
+        }
+    }
+
+    // Function to wait for /static/css/icons.css to load
+    function waitForCssLoad() {
+        return new Promise((resolve) => {
+            const link = document.querySelector('link[href="/static/css/icons.css"]');
+            if (link && link.sheet) {
+                console.log('waitForCssLoad - /static/css/icons.css already loaded');
+                resolve();
+            } else if (link) {
+                link.addEventListener('load', () => {
+                    console.log('waitForCssLoad - /static/css/icons.css loaded');
+                    resolve();
+                });
+                link.addEventListener('error', () => {
+                    console.warn('waitForCssLoad - /static/css/icons.css failed to load');
+                    resolve(); // Proceed even if CSS fails
+                });
+                setTimeout(() => {
+                    console.warn('waitForCssLoad - CSS load timeout after 5 seconds');
+                    resolve(); // Fallback after 5 seconds
+                }, 10000);
+            } else {
+                console.warn('waitForCssLoad - /static/css/icons.css link not found');
+                resolve(); // Proceed if link isn’t found
+            }
+        });
+    }
+
+    // Attaches event listeners for logoff only (navigation handled by site-navigation.js)
+    function attachEventListeners() {
+        console.log('attachEventListeners - Attaching event listeners');
+        const contentWrapper = document.querySelector('.content-wrapper');
+        if (contentWrapper) {
+            contentWrapper.addEventListener('click', (event) => {
+                if (event.target.id === 'logOffBtn') handleLogOff(event);
+            });
+            console.log('attachEventListeners - Logoff listener attached');
+        }
+    }
+
+    // Base initialization function ensuring permission checks before page setup.
+    function initializePage(requiredPermissions, callback) {
+        console.log('initializePage - Starting initialization - Permissions required:', requiredPermissions);
+        const token = localStorage.getItem('authToken');
+        console.log('initializePage - Retrieved token from localStorage:', token || 'None');
+        if (!token) {
+            console.warn('initializePage - No auth token found - Redirecting to /');
+            window.location.href = '/';
+            return;
+        }
+        const decoded = decodeJWT(token);
+        console.log('initializePage - Decoded token:', decoded ? JSON.stringify(decoded) : 'null');
+        if (!decoded) {
+            console.warn('initializePage - Failed to decode token - Redirecting to /');
+            window.location.href = '/';
+            return;
+        }
+        window.userPermissions = decoded.permissions || [];
+        console.log('initializePage - User permissions set:', JSON.stringify(window.userPermissions));
+        if (!requiredPermissions.some(perm => window.userPermissions.includes(perm))) {
+            console.warn('initializePage - Required permissions not found - Required:', requiredPermissions, 'Permissions:', window.userPermissions);
+            toastr.error(`Permission denied: one of ${requiredPermissions.join(', ')} required`);
+            window.location.href = '/';
+            return;
+        }
+        console.log('initializePage - Permission check passed - Executing callback');
+        callback();
+        console.log('initializePage - Initialization completed for permissions:', requiredPermissions);
+    }
+
+    // Dispatcher function to call the appropriate initialization function based on page type
+    function dispatchInitialize(pageType) {
+        const initFunctions = {
+            'partner': window.initializePartner,
+            'merchant': window.initializeMerchant,
+            'community': window.initializeCommunity,
+            'admin': window.initializeAdmin
+        };
+
+        const initFunction = initFunctions[pageType];
+        if (typeof initFunction === 'function') {
+            if (pageType === 'admin') {
+                initFunction('admin'); // Special case for admin, which takes a parameter
+            } else {
+                initFunction();
+            }
+        } else {
+            console.error(`Initialization function for page type "${pageType}" is not defined`);
+        }
+    }
+
+    // Common initialize function handling page-specific setup based on page type.
+    let isInitializing = false;
+
+    async function initialize(pageType) {
+        if (isInitializing) {
+            console.log(`initialize - Already initializing, skipping for: ${pageType}`);
+            return;
+        }
+        isInitializing = true;
+        console.log('initialize - Starting page initialization - Page type:', pageType);
+
+        // Show the loading overlay
+        showLoadingOverlay();
+
+        // Wait for /static/css/icons.css to load
+        await waitForCssLoad();
+
+        const pageConfigs = {
+            'partner': {
+                permissions: ["wixpro", "admin"],
+                initialSection: null,
+                requiresUserId: false,
+                extraSteps: () => {
+                    console.log('initialize - Executing partner-specific steps');
+                    dispatchInitialize('partner');
+                    attachEventListeners();
+                    console.log('initialize - Partner-specific steps completed');
+                }
+            },
+            'merchant': {
+                permissions: ["merchant", "admin"],
+                initialSection: 'info',
+                requiresUserId: true,
+                extraSteps: () => {
+                    console.log('initialize - Executing merchant-specific steps');
+                    dispatchInitialize('merchant');
+                    attachEventListeners();
+                    console.log('initialize - Merchant-specific steps completed');
+                }
+            },
+            'community': {
+                permissions: ["community", "admin"],
+                initialSection: 'welcome',
+                requiresUserId: true,
+                extraSteps: () => {
+                    console.log('initialize - Executing community-specific steps');
+                    dispatchInitialize('community');
+                    attachEventListeners();
+                    console.log('initialize - Community-specific steps completed');
+                }
+            },
+            'admin': {
+                permissions: ["admin"],
+                initialSection: 'welcome',
+                requiresUserId: false,
+                extraSteps: () => {
+                    console.log('initialize - Executing admin-specific steps');
+                    dispatchInitialize('admin');
+                    attachEventListeners();
+                    console.log('initialize - Admin-specific steps completed');
+                }
+            },
+            'login': {
+                permissions: [],
+                initialSection: null,
+                requiresUserId: false,
+                extraSteps: () => {
+                    console.log('initialize - Executing login-specific steps');
+                    console.log('initialize - Login-specific steps completed');
+                }
+            },
+            'signup': {
+                permissions: [],
+                initialSection: null,
+                requiresUserId: false,
+                extraSteps: () => {
+                    console.log('initialize - Executing signup-specific steps');
+                    console.log('initialize - Signup-specific steps completed');
+                }
+            }
+        };
+
+        const config = pageConfigs[pageType];
+        if (!config) {
+            console.error('initialize - Invalid page type provided - Type:', pageType);
+            toastr.error('Invalid page type');
+            await hideLoadingOverlay();
+            isInitializing = false;
+            return;
+        }
+        console.log('initialize - Configuration loaded for page type:', pageType, 'Config:', JSON.stringify(config));
+
+        if (config.permissions && config.permissions.length > 0) {
+            console.log('initialize - Performing permission check for:', config.permissions);
+            await new Promise(resolve => {
+                initializePage(config.permissions, async () => {
+                    console.log('initialize - Permission validated for:', config.permissions);
+                    await performPageSetup(pageType, config);
+                    resolve();
+                });
+            });
+        } else {
+            console.log('initialize - No permissions required for:', pageType);
+            await performPageSetup(pageType, config);
+        }
+
+        // Hide the overlay after setup is complete
+        await hideLoadingOverlay();
+        isInitializing = false;
+        console.log('initialize - Initialization process completed for:', pageType);
+    }
+
+    // Attach initialize to the window object to ensure it's globally available
+    window.initialize = initialize;
+
+    // Helper function to perform page setup after permission checks.
+    async function performPageSetup(pageType, config) {
+        console.log('performPageSetup - Starting setup - Page type:', pageType);
+        
+        if (config.initialSection) {
+            console.log('performPageSetup - Showing initial section - ID:', config.initialSection);
+            siteNavigation.showSection(config.initialSection);
+        } else {
+            console.log('performPageSetup - No initial section specified for:', pageType);
+        }
+
+        if (typeof config.extraSteps === 'function') {
+            console.log('performPageSetup - Executing extra steps for:', pageType);
+            config.extraSteps();
+        } else {
+            console.log('performPageSetup - No extra steps defined for:', pageType);
+        }
+
+        console.log('performPageSetup - Page setup completed for:', pageType);
+    }
+
+    // Initialize on DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded - Starting initialization');
+        const pageType = window.location.pathname.split('/')[1] || 'login';
+        console.log('DOMContentLoaded - Determined page type:', pageType);
+        initialize(pageType);
+    });
+
+    // Expose necessary functions globally
+    window.showLoadingOverlay = showLoadingOverlay;
+    window.hideLoadingOverlay = hideLoadingOverlay;
+}
+partner-page.js
+// partner-page.js
+// Purpose: Manages page-specific functionality for the /partner page.
+
+// Initializes the partner page with permission checks.
+function initializePartner() {
+    console.log('initializePartner - Initializing partner page');
+    const token = localStorage.getItem('authToken');
+    const userId = localStorage.getItem('userId');
+    if (!token) {
+        console.error('initializePartner - No token found, redirecting to /');
+        window.location.href = '/';
+        return;
+    }
+    const decoded = decodeJWT(token);
+    if (!decoded) {
+        console.error('initializePartner - Invalid token, redirecting to /');
+        window.location.href = '/';
+        return;
+    }
+    window.userPermissions = decoded.permissions || [];
+    if (!window.userPermissions.includes('wixpro') && !window.userPermissions.includes('admin')) {
+        toastr.error('Permission denied: WixPro or Admin permission required');
+        console.error('initializePartner - No wixpro/admin permission, redirecting to /');
+        window.location.href = '/';
+        return;
+    }
+    const userIdInput = document.getElementById('userId');
+    if (userIdInput && userId) {
+        userIdInput.value = userId;
+    } else if (!userId) {
+        console.warn('initializePartner - No userId found in localStorage');
+    } else {
+        console.warn('initializePartner - userId input element not found');
+    }
+
+    // Set up navigation and load initial content
+    setupNavigation(); // From site-navigation.js
+    checkAdminPermission();
+    loadPartnerIntegrations(); // Load partner-specific integrations
+
+    // Fetch and display contact_name in the welcome section
+    if (typeof loadSettings === 'function') {
+        loadSettings().then(settings => {
+            const contactName = settings.contact_name || 'User';
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                const userContactNameSpan = document.getElementById('user-contact-name');
+                if (userContactNameSpan) {
+                    userContactNameSpan.textContent = contactName;
+                    console.log('initializePartner - Updated contact name in welcome section:', contactName);
+                } else {
+                    console.warn('initializePartner - user-contact-name span not found in welcome-message');
+                }
+            } else {
+                console.warn('initializePartner - welcome-message element not found');
+            }
+        }).catch(error => {
+            console.error('initializePartner - Error loading settings for contact name:', error.message);
+            toastr.error('Error loading user settings');
+        });
+    } else {
+        console.error('initializePartner - loadSettings function not found');
+    }
+
+    attachEventListeners(); // From page-load.js
+
+    // Call shared "Change Password" logic
+    if (typeof setupChangePassword === 'function') {
+        setupChangePassword(); // From user-management.js
+        console.log('initializePartner - Change Password logic initialized');
+    } else {
+        console.error('initializePartner - setupChangePassword function not found');
+    }
+
+    // Hide loading overlay after initialization
+    hideLoadingOverlay(); // From page-load.js
+    console.log('initializePartner - Partner page initialized successfully');
+}
+
+// Checks and toggles visibility of admin-specific elements.
+function checkAdminPermission() {
+    console.log('checkAdminPermission - Checking admin permission');
+    const backButton = document.querySelector('button[data-href="/admin"]');
+    if (backButton) {
+        backButton.style.display = window.userPermissions.includes('admin') ? 'block' : 'none';
+        console.log('checkAdminPermission - Back button visibility:', backButton.style.display);
+    } else {
+        console.warn('checkAdminPermission - Back button not found');
+    }
+}
+
+// Loads and displays partner-specific integrations or tests.
+async function loadPartnerIntegrations() {
+    console.log('loadPartnerIntegrations - Loading partner integrations');
+    const userId = document.getElementById('userId') ? document.getElementById('userId').value : '';
+    if (!userId) {
+        console.error('loadPartnerIntegrations - User ID not found in session');
+        toastr.error('User ID not found in session');
+        return;
+    }
+    try {
+        console.log('loadPartnerIntegrations - Fetching integrations - URL:', `${window.apiUrl}/${userId}/integrations`);
+        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/integrations`);
+        if (!response.ok) throw new Error(`Failed to fetch integrations: ${response.status}`);
+        const data = await response.json();
+        console.log('loadPartnerIntegrations - Integrations fetched - Data:', JSON.stringify(data));
+
+        const integrationList = document.getElementById('integrationList');
+        if (integrationList) {
+            integrationList.innerHTML = '';
+            data.integrations.forEach(integration => {
+                const li = document.createElement('li');
+                li.textContent = `${integration.name} - Status: ${integration.status}`;
+                integrationList.appendChild(li);
+            });
+            console.log('loadPartnerIntegrations - Integration list updated - Count:', data.integrations.length);
+        } else {
+            console.warn('loadPartnerIntegrations - Integration list element not found');
+        }
+    } catch (error) {
+        console.error('loadPartnerIntegrations - Error loading integrations - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Error loading integrations: ${error.message}`);
+    }
+}
+
+// Export for use in other scripts
+window.initializePartner = initializePartner;
+window.checkAdminPermission = checkAdminPermission;
+window.loadPartnerIntegrations = loadPartnerIntegrations;
+site-auth.js
+// site-auth.js
+// Purpose: Manages authentication-related functionality, including password visibility toggling, 
+// user logout, JWT token decoding, authenticated fetching, and password saving.
+
+// Guard against multiple inclusions
+if (!window.siteAuthInitialized) {
+    window.siteAuthInitialized = true;
+
+    // Configuration for logging (toggle based on environment, e.g., set to false in production)
+    const ENABLE_LOGGING = true;
+
+    // Helper function for consistent logging
+    function log(message, ...args) {
+        if (ENABLE_LOGGING) {
+            console.log(message, ...args);
+        }
+    }
+
+    // Helper function for consistent error logging
+    function error(message, ...args) {
+        if (ENABLE_LOGGING) {
+            console.error(message, ...args);
+        }
+    }
+
+    // Toggles the visibility of a password input field, updating associated icon.
+    function togglePassword(fieldId) {
+        log('togglePassword - Initiating visibility toggle - Field ID:', fieldId);
+        const input = document.getElementById(fieldId);
+        const icon = input ? input.nextElementSibling : null;
+        log('togglePassword - Input element retrieved:', input, 'Icon element:', icon);
+
+        if (!input) {
+            error('togglePassword - Password input not found - Field ID:', fieldId);
+            return;
+        }
+        if (!icon) {
+            error('togglePassword - Icon element not found for input - Field ID:', fieldId);
+            return;
+        }
+
+        const isPassword = input.type === 'password';
+        log('togglePassword - Current input type:', input.type);
+        if (isPassword) {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+            log('togglePassword - Changed to text visibility - Field ID:', fieldId);
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+            log('togglePassword - Changed to password visibility - Field ID:', fieldId);
+        }
+        log('togglePassword - Toggle completed - New type:', input.type);
+    }
+
+    // Logs the user out, clearing session data and redirecting to home.
+    function logOff() {
+        log('logOff - Initiating logout process');
+        const confirmed = confirm('Are you sure you want to log off?');
+        log('logOff - User confirmation received:', confirmed);
+
+        if (confirmed) {
+            log('logOff - User confirmed logout - Clearing session data');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            log('logOff - Auth token and userId removed from localStorage - Current localStorage:', JSON.stringify(localStorage));
+            toastr.success('Logged off successfully');
+            log('logOff - Success toast displayed');
+
+            setTimeout(() => {
+                log('logOff - Redirecting to / after 1-second delay');
+                window.location.href = '/';
+                log('logOff - Redirect executed');
+            }, 1000);
+        } else {
+            log('logOff - Logout cancelled by user');
+        }
+        log('logOff - Logout process completed');
+    }
+
+    // Decodes a JWT token to extract user data, such as permissions.
+    function decodeJWT(token) {
+        log('decodeJWT - Starting JWT decoding - Input token:', token);
+        if (!token || typeof token !== 'string') {
+            error('decodeJWT - Invalid token: null or not a string - Token:', token);
+            return null;
+        }
+        if (!token.match(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)) {
+            error('decodeJWT - Token does not match JWT format - Token:', token);
+            return null;
+        }
+        log('decodeJWT - Token format validated - Proceeding with decode');
+
+        const parts = token.split('.');
+        log('decodeJWT - Token split into parts:', parts);
+
+        try {
+            const base64Url = parts[1];
+            log('decodeJWT - Extracted base64Url from token:', base64Url);
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            log('decodeJWT - Converted to base64:', base64);
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            log('decodeJWT - Decoded JSON payload:', jsonPayload);
+            const decoded = JSON.parse(jsonPayload);
+            log('decodeJWT - Parsed JWT payload:', JSON.stringify(decoded));
+            return decoded;
+        } catch (err) {
+            error('decodeJWT - Error decoding JWT - Error:', err.message, 'Stack:', err.stack, 'Token:', token);
+            return null;
+        }
+    }
+
+    // Authenticated fetch function to handle API requests with auth token
+    async function authenticatedFetch(url, options = {}) {
+        log('authenticatedFetch - Initiating fetch - URL:', url);
+        const token = localStorage.getItem('authToken');
+        
+        // Define public endpoints that don’t require authentication
+        const publicEndpoints = ['/branding?type=login', '/branding?type=signup', '/login', '/signup'];
+        const isPublic = publicEndpoints.some(endpoint => url.includes(endpoint));
+        log('authenticatedFetch - Is public endpoint:', isPublic);
+        
+        if (!token && !isPublic) {
+            error('authenticatedFetch - No authentication token found - Redirecting to /');
+            window.location.href = '/';
+            return null;
+        }
+
+        const headers = new Headers(options.headers || {});
+        if (token) headers.set('Authorization', `Bearer ${token}`);
+        headers.set('Content-Type', 'application/json');
+
+        const fetchOptions = {
+            ...options,
+            headers: headers
+        };
+
+        try {
+            const response = await fetch(url, fetchOptions);
+            if (!response.ok && !isPublic) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Request failed with status ${response.status}`);
+            }
+            log('authenticatedFetch - Response received - Status:', response.status);
+            return response;
+        } catch (err) {
+            error('authenticatedFetch - Error:', err.message);
+            throw err;
+        }
+    }
+
+    // Saves an updated user password via an authenticated request.
+    async function savePassword(newPassword) {
+        log('savePassword - Starting password save - New password length:', newPassword ? newPassword.length : 'None');
+        if (!newPassword || typeof newPassword !== 'string') {
+            error('savePassword - Invalid password provided - Password:', newPassword);
+            toastr.error('Invalid password provided');
+            return;
+        }
+
+        try {
+            log('savePassword - Sending password update via authenticatedFetch');
+            const startTime = Date.now();
+            const response = await authenticatedFetch('/update-password', { 
+                method: 'POST',
+                body: JSON.stringify({ password: newPassword })
+            });
+            const duration = Date.now() - startTime;
+
+            if (!response) {
+                error('savePassword - No response from fetch');
+                toastr.error('Failed to save password: No server response');
+                return;
+            }
+
+            log('savePassword - Response received - Status:', response.status, 'Duration:', `${duration}ms`);
+            const result = await response.json();
+            log('savePassword - Save response data:', JSON.stringify(result));
+
+            if (result.status === 'success') {
+                log('savePassword - Password saved successfully');
+                toastr.success('Password updated successfully');
+            } else {
+                error('savePassword - Server reported failure - Message:', result.message);
+                toastr.error(result.message || 'Failed to save password');
+            }
+        } catch (err) {
+            error('savePassword - Error saving password - Error:', err.message, 'Stack:', err.stack);
+            toastr.error('Failed to save password: ' + err.message);
+        }
+        log('savePassword - Password save process completed');
+    }
+
+    // Expose functions to window for global access
+    window.togglePassword = togglePassword;
+    window.logOff = logOff;
+    window.decodeJWT = decodeJWT;
+    window.authenticatedFetch = authenticatedFetch;
+    window.savePassword = savePassword;
+
+    // Signal that site-auth.js has finished loading
+    window.dispatchEvent(new Event('siteAuthReady'));
+}
+site-navigation.js
+// /static/js/site-navigation.js
+// Purpose: Handles navigation, content loading, section/submenu management, and logout across the site.
+
+// Guard against multiple inclusions
+if (window.siteNavigationInitialized) {
+    console.log('site-navigation.js - Already initialized, skipping');
+} else {
+    window.siteNavigationInitialized = true;
+
+    // Check if window.apiUrl is defined
+    if (!window.apiUrl) {
+        console.error('site-navigation.js - window.apiUrl is not defined. Please set window.apiUrl before loading this script.');
+        throw new Error('window.apiUrl is not defined');
+    }
+    console.log('site-navigation.js - Using apiUrl:', window.apiUrl);
+
+    // Wait for window.authenticatedFetch to be defined using a Promise
+    function waitForAuthFetch() {
+        return new Promise((resolve, reject) => {
+            const maxAttempts = 50;
+            const delay = 100;
+            let attempts = 0;
+
+            function check() {
+                if (typeof window.authenticatedFetch === 'function') {
+                    console.log('waitForAuthFetch - window.authenticatedFetch is now defined');
+                    resolve();
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    console.log(`waitForAuthFetch - Attempt ${attempts}: window.authenticatedFetch not defined yet, retrying in ${delay}ms`);
+                    setTimeout(check, delay);
+                } else {
+                    console.error('waitForAuthFetch - Max attempts reached, window.authenticatedFetch still not defined');
+                    reject(new Error('window.authenticatedFetch is not defined after maximum attempts'));
+                }
+            }
+            check();
+        });
+    }
+
+    // Initialize navigation once window.authenticatedFetch is available
+    waitForAuthFetch()
+        .then(() => {
+            // Fetch protected page content for navigation
+            async function fetchProtectedPage(url) {
+                window.showLoadingOverlay(); // Use the global function
+                try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) {
+                        toastr.error('No authentication token found. Please log in.');
+                        window.location.href = '/login'; // Hard redirect to ensure full initialization
+                        return;
+                    }
+                    const response = await window.authenticatedFetch(`${window.apiUrl}${url}`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'text/html' }
+                    });
+                    if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+                    const html = await response.text();
+                    console.log('fetchProtectedPage - Response status:', response.status);
+
+                    // Update only the content within layout-wrapper
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContent = doc.querySelector('.layout-wrapper');
+                    if (!newContent) throw new Error('No .layout-wrapper found in response HTML');
+                    const layoutWrapper = document.querySelector('.layout-wrapper');
+                    if (!layoutWrapper) throw new Error('No .layout-wrapper found in current DOM');
+                    layoutWrapper.innerHTML = newContent.innerHTML;
+
+                    // Extract and execute inline scripts from the new content
+                    const scripts = doc.querySelectorAll('script:not([src])');
+                    scripts.forEach(script => {
+                        const newScript = document.createElement('script');
+                        newScript.textContent = script.textContent;
+                        document.body.appendChild(newScript);
+                        document.body.removeChild(newScript); // Clean up after execution
+                        console.log('fetchProtectedPage - Executed inline script');
+                    });
+
+                    // Reinitialize page
+                    const pageType = url.split('/')[1] || 'default';
+                    if (typeof window.initialize === 'function') {
+                        console.log('fetchProtectedPage - Triggering initialize for:', pageType);
+                        window.initialize(pageType);
+                    } else {
+                        console.warn('fetchProtectedPage - window.initialize not found, page may not fully initialize');
+                    }
+
+                    // Reinitialize navigation to attach event listeners to new buttons
+                    console.log('fetchProtectedPage - Reinitializing navigation after content load');
+                    initializeNavigation();
+
+                    // Reattach branding header listener
+                    attachBrandingHeaderListener();
+                } catch (error) {
+                    console.error('fetchProtectedPage - Error:', error);
+                    toastr.error(error.message || 'Failed to load page');
+                    window.location.href = '/login'; // Fallback to full reload
+                } finally {
+                    window.hideLoadingOverlay();
+                }
+            }
+
+            // Load content for a specific section
+            async function loadSection(sectionId) {
+                console.log('loadSection - Starting section load - Section ID:', sectionId);
+                if (['api-keys', 'my-products', 'create-store', 'my-store-info'].includes(sectionId)) {
+                    console.log('loadSection - Skipping fetch for custom section:', sectionId);
+                    return;
+                }
+                if (sectionId === 'deal_listings') {
+                    await loadCategories();
+                } else if (sectionId === 'merchants') {
+                    await loadMerchants();
+                } else {
+                    try {
+                        const response = await window.authenticatedFetch(`${window.apiUrl}/settings/user`);
+                        if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+                        const data = await response.json();
+                        console.log('loadSection - User settings fetched:', JSON.stringify(data));
+                        const settings = {};
+                        data.settings.forEach(item => settings[item.field] = item.value);
+                        const el = document.getElementById(`${sectionId}Field`);
+                        if (el && settings[sectionId]) {
+                            el.value = settings[sectionId];
+                            console.log(`loadSection - Updated ${sectionId}Field with value:`, settings[sectionId]);
+                        }
+                    } catch (error) {
+                        console.error('loadSection - Error:', error.message);
+                        toastr.error(`Error loading ${sectionId}: ${error.message}`);
+                    }
+                }
+            }
+
+            // Show a section and hide others
+            function showSection(sectionId, onSectionLoad = null) {
+                console.log('showSection - Starting section display - Section ID:', sectionId);
+                const allSections = document.querySelectorAll('.section');
+                allSections.forEach(s => {
+                    s.classList.remove('active');
+                    s.style.display = 'none';
+                });
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.style.display = 'block';
+                    section.classList.add('active');
+                    if (typeof onSectionLoad === 'function') onSectionLoad(sectionId);
+                    else loadSection(sectionId);
+                } else {
+                    console.error('showSection - Section not found - ID:', sectionId);
+                }
+            }
+
+            // Toggle a submenu
+            function toggleSubmenu(submenuId, action = 'toggle') {
+                console.log(`toggleSubmenu - Starting ${action} - Submenu ID: ${submenuId}`);
+                const submenu = document.getElementById(submenuId);
+                const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
+                const caret = button?.querySelector('.caret');
+                if (submenu && button && caret) {
+                    let isOpen = submenu.classList.contains('open');
+                    if (action === 'toggle') isOpen = !isOpen;
+                    else if (action === 'close') isOpen = false;
+                    else if (action === 'open') isOpen = true;
+                    submenu.classList.toggle('open', isOpen);
+                    submenu.style.display = isOpen ? 'block' : 'none';
+                    caret.classList.toggle('fa-caret-down', isOpen);
+                    caret.classList.toggle('fa-caret-right', !isOpen);
+                    button.setAttribute('aria-expanded', isOpen);
+                    console.log(`toggleSubmenu - Submenu ${submenuId} set to ${isOpen ? 'open' : 'closed'}`);
+                } else {
+                    console.error(`toggleSubmenu - Submenu or button not found - Submenu ID: ${submenuId}`);
+                }
+            }
+
+            // Close all submenus
+            function closeAllSubmenus(container) {
+                const submenus = container.querySelectorAll('.submenu');
+                submenus.forEach(submenu => {
+                    const submenuId = submenu.id;
+                    if (submenuId) toggleSubmenu(submenuId, 'close');
+                });
+            }
+
+            // Handle section button clicks
+            function handleSectionClick(event) {
+                event.stopPropagation();
+                const button = event.currentTarget;
+                const sectionId = button.getAttribute('data-section');
+                const submenuId = button.getAttribute('data-submenu');
+                const href = button.getAttribute('data-href');
+                const mdPath = button.getAttribute('data-md-path');
+
+                console.log(`handleSectionClick - Clicked:`, { sectionId, submenuId, href, mdPath });
+
+                const topLevelSubmenuButtons = document.querySelectorAll('.menu > button[data-submenu]');
+                const isTopLevel = button.parentElement.classList.contains('menu');
+
+                if (submenuId) {
+                    toggleSubmenu(submenuId, 'toggle');
+                    if (isTopLevel) {
+                        topLevelSubmenuButtons.forEach(topButton => {
+                            const otherSubmenuId = topButton.getAttribute('data-submenu');
+                            if (otherSubmenuId && otherSubmenuId !== submenuId) {
+                                closeAllSubmenus(document.getElementById(otherSubmenuId));
+                                toggleSubmenu(otherSubmenuId, 'close');
+                            }
+                        });
+                    }
+                }
+
+                if (sectionId && !href) {
+                    if (mdPath && typeof window.renderMdPage === 'function') {
+                        showSection(sectionId, () => window.renderMdPage(mdPath, 'md-render-target'));
+                    } else {
+                        showSection(sectionId);
+                    }
+                }
+                if (href) fetchProtectedPage(href);
+            }
+
+            // Initialize navigation and logout
+            function initializeNavigation() {
+                console.log('initializeNavigation - Starting navigation setup');
+                // Reset existing event listeners
+                document.querySelectorAll('.menu button[data-section], .menu button[data-submenu], .menu button[data-href]').forEach(button => {
+                    button.removeEventListener('click', handleSectionClick);
+                });
+                // Reset submenu states
+                document.querySelectorAll('.submenu').forEach(submenu => {
+                    submenu.style.display = 'none';
+                    submenu.classList.remove('open');
+                    const submenuId = submenu.id;
+                    const button = document.querySelector(`button[data-submenu="${submenuId}"]`);
+                    if (button) {
+                        button.setAttribute('aria-expanded', 'false');
+                        const caret = button.querySelector('.caret');
+                        if (caret) {
+                            caret.classList.remove('fa-caret-down');
+                            caret.classList.add('fa-caret-right');
+                        }
+                    } else {
+                        console.warn(`initializeNavigation - No button found for submenu: ${submenuId}`);
+                    }
+                });
+                const buttons = document.querySelectorAll('.menu button[data-section], .menu button[data-submenu], .menu button[data-href]');
+                console.log('initializeNavigation - Found buttons to initialize:', buttons.length);
+                buttons.forEach(button => {
+                    button.addEventListener('click', handleSectionClick);
+                    console.log('initializeNavigation - Added click listener to button:', {
+                        section: button.dataset.section,
+                        submenu: button.dataset.submenu,
+                        href: button.dataset.href
+                    });
+                });
+
+                // Handle Log Off button
+                const logOffBtn = document.getElementById('logOffBtn'); // Corrected ID to match templates
+                if (logOffBtn) {
+                    console.log('initializeNavigation - Log Off button found, attaching listener');
+                    logOffBtn.removeEventListener('click', handleLogoutClick);
+                    logOffBtn.addEventListener('click', handleLogoutClick);
+                } else {
+                    console.error('initializeNavigation - Log Off button not found in DOM');
+                }
+
+                // Explicitly show the #info section on load
+                if (document.getElementById('info')) {
+                    console.log('initializeNavigation - Showing info section on load');
+                    showSection('info');
+                } else {
+                    console.error('initializeNavigation - Info section not found on page load');
+                }
+            }
+
+            // Handle logout click
+            function handleLogoutClick(e) {
+                e.preventDefault();
+                console.log('handleLogoutClick - Log Off clicked');
+                localStorage.removeItem('authToken');
+                sessionStorage.clear();
+                window.location.href = '/';
+            }
+
+            // Attach branding header listener
+            function attachBrandingHeaderListener() {
+                const header = document.querySelector('.header');
+                if (header) {
+                    // Remove any existing listeners to prevent duplicates
+                    header.removeEventListener('click', handleHeaderClick);
+                    header.addEventListener('click', handleHeaderClick);
+                    console.log('attachBrandingHeaderListener - Header click listener attached');
+                } else {
+                    console.error('attachBrandingHeaderListener - Header element not found');
+                }
+            }
+
+            // Handle header click to show #info section
+            function handleHeaderClick(event) {
+                const sectionId = event.currentTarget.getAttribute('data-section');
+                if (sectionId) {
+                    console.log('handleHeaderClick - Header clicked, showing section:', sectionId);
+                    showSection(sectionId);
+                } else {
+                    console.error('handleHeaderClick - No data-section attribute found on header');
+                }
+            }
+
+            // Export navigation functions
+            window.siteNavigation = {
+                showSection,
+                toggleSubmenu,
+                initializeNavigation,
+                fetchProtectedPage,
+                loadSection
+            };
+
+            // Initialize on document readiness
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    console.log('DOMContentLoaded - Initializing navigation');
+                    initializeNavigation();
+                    attachBrandingHeaderListener();
+                });
+            } else {
+                console.log('Document already loaded - Initializing navigation immediately');
+                initializeNavigation();
+                attachBrandingHeaderListener();
+            }
+        })
+        .catch(error => {
+            console.error('Failed to initialize navigation due to:', error);
+            toastr.error('Navigation initialization failed. Please refresh the page.');
+        });
+}
+site-request.js
+// site-request.js
+// Purpose: Manages site request functionality for merchants and communities using the consolidated siterequest.inc template,
+// including page/email management, domain handling, and TinyMCE integration.
+
+// Adds a page to the site request form based on user type (merchant/community).
+function addPage(type) {
+    console.log('addPage - Adding page to site request - Type:', type);
+    const maxPages = 5;
+    let pageCount = parseInt(localStorage.getItem(`${type}PageCount`) || (type === 'merchant' ? 2 : 1));
+    console.log('addPage - Current page count:', pageCount);
+
+    if (pageCount >= maxPages) {
+        console.warn('addPage - Maximum pages reached - Max:', maxPages);
+        toastr.error(`Maximum of ${maxPages} pages allowed`);
+        return;
+    }
+
+    pageCount++;
+    console.log('addPage - Incrementing page count to:', pageCount);
+    localStorage.setItem(`${type}PageCount`, pageCount);
+
+    const container = document.getElementById('pagesContainer');
+    console.log('addPage - Pages container:', container);
+    if (!container) {
+        console.error('addPage - Pages container not found');
+        return;
+    }
+
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'page-section';
+    pageDiv.dataset.page = pageCount;
+    const isMerchantDefault = type === 'merchant' && pageCount <= 2;
+    const pageName = isMerchantDefault ? (pageCount === 1 ? 'Home' : 'Returns Policy') : '';
+    pageDiv.innerHTML = `
+        <label for="page${pageCount}Name">Page Name:</label>
+        <input type="text" id="page${pageCount}Name" name="page${pageCount}Name" value="${pageName}" ${isMerchantDefault ? 'readonly' : ''} placeholder="e.g., ${type === 'merchant' ? 'Products' : 'Events'}">
+        <br><br>
+        <label for="page${pageCount}Content">${isMerchantDefault ? (pageCount === 1 ? 'Home Page' : 'Returns Policy') : 'Page'} Content:</label>
+        <textarea id="page${pageCount}Content" name="page${pageCount}Content" placeholder="Describe this page"></textarea>
+        <label for="page${pageCount}Images">Additional Images:</label>
+        <input type="file" id="page${pageCount}Images" name="page${pageCount}Images" accept="image/*" multiple>
+        ${pageCount > (type === 'merchant' ? 2 : 1) ? `<button type="button" class="remove-page-btn" data-page="${pageCount}">Remove Page</button>` : ''}
+    `;
+    container.appendChild(pageDiv);
+    console.log('addPage - New page section added - Page number:', pageCount);
+
+    tinymce.remove(`#page${pageCount}Content`);
+    initializeTinyMCE(`#page${pageCount}Content`);
+    console.log('addPage - TinyMCE initialized for new page');
+    console.log('addPage - Page addition completed');
+}
+
+// Removes a page from the site request form based on user type (merchant/community).
+function removePage(pageNum, type) {
+    console.log('removePage - Removing page - Page number:', pageNum, 'Type:', type);
+    let pageCount = parseInt(localStorage.getItem(`${type}PageCount`) || (type === 'merchant' ? 2 : 1));
+    console.log('removePage - Current page count:', pageCount);
+    const minPages = type === 'merchant' ? 2 : 1;
+
+    if (pageCount <= minPages) {
+        console.warn('removePage - Cannot remove below minimum pages - Min:', minPages);
+        toastr.error(`Cannot remove the last ${type === 'merchant' ? 'Home or Returns Policy' : ''} page${minPages > 1 ? 's' : ''}`);
+        return;
+    }
+
+    const pageSection = document.querySelector(`.page-section[data-page="${pageNum}"]`);
+    console.log('removePage - Page section to remove:', pageSection);
+    if (pageSection) {
+        tinymce.get(`page${pageNum}Content`)?.remove();
+        console.log('removePage - Removed TinyMCE instance for page:', pageNum);
+        pageSection.remove();
+        pageCount--;
+        localStorage.setItem(`${type}PageCount`, pageCount);
+        console.log('removePage - Page removed, new page count:', pageCount);
+    } else {
+        console.error('removePage - Page section not found - Page number:', pageNum);
+    }
+    console.log('removePage - Removal completed');
+}
+
+// Adds an email to the site request form.
+function addEmail(type) {
+    console.log('addEmail - Adding email to site request - Type:', type);
+    const maxEmails = 5;
+    let emailCount = parseInt(localStorage.getItem(`${type}EmailCount`) || 1);
+    console.log('addEmail - Current email count:', emailCount);
+
+    if (emailCount >= maxEmails) {
+        console.warn('addEmail - Maximum emails reached - Max:', maxEmails);
+        toastr.error(`Maximum of ${maxEmails} email addresses allowed`);
+        return;
+    }
+
+    emailCount++;
+    console.log('addEmail - Incrementing email count to:', emailCount);
+    localStorage.setItem(`${type}EmailCount`, emailCount);
+
+    const container = document.getElementById('emailsContainer');
+    console.log('addEmail - Emails container:', container);
+    if (!container) {
+        console.error('addEmail - Emails container not found');
+        return;
+    }
+
+    const domain = document.getElementById('preferredDomain')?.value || (type === 'merchant' ? 'mystore.uk' : 'mycommunity.org');
+    console.log('addEmail - Using domain:', domain);
+    const emailDiv = document.createElement('div');
+    emailDiv.className = 'email-section';
+    emailDiv.dataset.email = emailCount;
+    emailDiv.innerHTML = `
+        <label for="email${emailCount}Name">Email Name:</label>
+        <input type="text" id="email${emailCount}Name" name="email${emailCount}Name" placeholder="e.g., contact">
+        <span id="email${emailCount}Domain">@${domain}</span>
+        <button type="button" class="remove-email-btn" data-email="${emailCount}">Remove Email</button>
+    `;
+    container.appendChild(emailDiv);
+    console.log('addEmail - New email section added - Email number:', emailCount);
+
+    updateDomainPreview(type);
+    console.log('addEmail - Email addition completed');
+}
+
+// Removes an email from the site request form.
+function removeEmail(emailNum, type) {
+    console.log('removeEmail - Removing email - Email number:', emailNum, 'Type:', type);
+    let emailCount = parseInt(localStorage.getItem(`${type}EmailCount`) || 1);
+    console.log('removeEmail - Current email count:', emailCount);
+
+    if (emailCount <= 1) {
+        console.warn('removeEmail - Cannot remove the last email');
+        toastr.error('Cannot remove the last email');
+        return;
+    }
+
+    const emailSection = document.querySelector(`.email-section[data-email="${emailNum}"]`);
+    console.log('removeEmail - Email section to remove:', emailSection);
+    if (emailSection) {
+        emailSection.remove();
+        emailCount--;
+        localStorage.setItem(`${type}EmailCount`, emailCount);
+        console.log('removeEmail - Email removed, new email count:', emailCount);
+        updateDomainPreview(type);
+    } else {
+        console.error('removeEmail - Email section not found - Email number:', emailNum);
+    }
+    console.log('removeEmail - Removal completed');
+}
+
+// Updates the domain preview and email domain spans for the site request.
+function updateDomainPreview(type) {
+    console.log('updateDomainPreview - Updating domain preview - Type:', type);
+    const domain = document.getElementById('preferredDomain')?.value || (type === 'merchant' ? 'mystore.uk' : 'mycommunity.org');
+    console.log('updateDomainPreview - Domain value:', domain);
+
+    const previewElement = document.getElementById('domainPreview');
+    if (previewElement) {
+        previewElement.textContent = `@${domain}`;
+        console.log('updateDomainPreview - Updated domain preview to:', `@${domain}`);
+    }
+
+    let emailCount = parseInt(localStorage.getItem(`${type}EmailCount`) || 1);
+    console.log('updateDomainPreview - Email count:', emailCount);
+    for (let i = 1; i <= emailCount; i++) {
+        const domainSpan = document.getElementById(`email${i}Domain`);
+        console.log('updateDomainPreview - Checking domain span - ID:', `email${i}Domain`, 'Element:', domainSpan);
+        if (domainSpan) {
+            domainSpan.textContent = `@${domain}`;
+            console.log('updateDomainPreview - Updated email domain - ID:', `email${i}Domain`, 'to:', `@${domain}`);
+        }
+    }
+    console.log('updateDomainPreview - Update completed');
+}
+
+// Checks domain availability for the site request.
+async function checkDomainAvailability() {
+    console.log('checkDomainAvailability - Starting domain availability check');
+    const domainInput = document.getElementById('preferredDomain');
+    const domain = domainInput?.value;
+    console.log('checkDomainAvailability - Domain to check:', domain);
+
+    const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+    if (!domain) {
+        console.warn('checkDomainAvailability - No domain provided');
+        toastr.error('Please enter a preferred domain name');
+        return false;
+    }
+    if (!domainRegex.test(domain)) {
+        console.warn('checkDomainAvailability - Invalid domain format - Domain:', domain);
+        toastr.error('Invalid domain name (e.g., mystore.uk)');
+        return false;
+    }
+
+    console.log('checkDomainAvailability - Domain format valid, proceeding with check');
+    toastr.info(`Checking availability for ${domain}...`);
+
+    try {
+        const startTime = Date.now();
+        const response = await fetch(`https://clubmadeira.io/check-domain?domain=${encodeURIComponent(domain)}`, {
+            method: 'GET',
+            credentials: 'same-origin'
+        });
+        const duration = Date.now() - startTime;
+        console.log('checkDomainAvailability - Fetch response received - Status:', response.status, 'Duration:', `${duration}ms`);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('checkDomainAvailability - Fetch failed - Status:', response.status, 'Error text:', errorText);
+            if (response.status === 403) {
+                throw new Error('Permission denied - please log in');
+            }
+            throw new Error(`Server error: ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('checkDomainAvailability - Availability result:', JSON.stringify(result));
+        if (result.available) {
+            console.log('checkDomainAvailability - Domain available:', domain);
+            toastr.success(`${result.domain} is available!`);
+            return true;
+        } else {
+            console.warn('checkDomainAvailability - Domain not available:', domain);
+            toastr.error(`${result.domain} is not available`);
+            if (domainInput) domainInput.value = '';
+            return false;
+        }
+    } catch (error) {
+        console.error('checkDomainAvailability - Error checking domain - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Failed to check domain availability: ${error.message}`);
+        return false;
+    }
+}
+
+// Loads TinyMCE editor for site request content editing.
+async function loadTinyMCE() {
+    console.log('loadTinyMCE - Starting TinyMCE load');
+    if (typeof tinymce !== 'undefined' && tinymce.init) {
+        console.log('loadTinyMCE - TinyMCE already loaded');
+        initializeTinyMCE();
+        return;
+    }
+
+    console.log('loadTinyMCE - Loading TinyMCE script');
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.tiny.cloud/1/ml1wlwr128qsm8hn8d86e5mhs3y2fuvjr9ztknrsh23x6krp/tinymce/5/tinymce.min.js';
+        script.referrerpolicy = 'origin';
+        document.head.appendChild(script);
+        console.log('loadTinyMCE - Script element added to head:', script.src);
+
+        script.onload = () => {
+            console.log('loadTinyMCE - TinyMCE script loaded successfully');
+            initializeTinyMCE();
+            resolve();
+        };
+        script.onerror = () => {
+            console.error('loadTinyMCE - Failed to load TinyMCE script');
+            toastr.error('Failed to load rich text editor');
+            reject(new Error('TinyMCE load failed'));
+        };
+    });
+}
+
+// Initializes TinyMCE editor for site request content editing with a specific selector.
+function initializeTinyMCE(selector = 'textarea[name$="Content"], #about') {
+    console.log('initializeTinyMCE - Starting TinyMCE initialization - Selector:', selector);
+    if (!window.tinymce) {
+        console.error('initializeTinyMCE - TinyMCE not available');
+        return;
+    }
+
+    tinymce.remove(selector);
+    console.log('initializeTinyMCE - Removed existing TinyMCE instances for selector:', selector);
+
+    tinymce.init({
+        selector: selector,
+        height: 200,
+        menubar: false,
+        plugins: 'lists',
+        toolbar: 'bold italic | bullist numlist',
+        setup: editor => {
+            editor.on('init', () => {
+                console.log('initializeTinyMCE - TinyMCE editor initialized for:', editor.id);
+            });
+        }
+    });
+    console.log('initializeTinyMCE - TinyMCE initialization completed');
+}
+
+// Generates a formatted timestamp for site request forms.
+function getCurrentTimestamp() {
+    console.log('getCurrentTimestamp - Generating current timestamp');
+    const now = new Date();
+    console.log('getCurrentTimestamp - Current date object:', now);
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    console.log('getCurrentTimestamp - Extracted components - Year:', year, 'Month:', month, 'Day:', day, 'Hours:', hours, 'Minutes:', minutes, 'Seconds:', seconds);
+    const timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    console.log('getCurrentTimestamp - Generated timestamp:', timestamp);
+    return timestamp;
+}
+
+// Saves the site request form data for either a merchant store or community site.
+async function saveSiteRequest() {
+    console.log('saveSiteRequest - Starting site request save');
+    const userId = document.getElementById('userId')?.value || localStorage.getItem('userId');
+    const userType = document.getElementById('userType')?.value;
+    console.log('saveSiteRequest - Retrieved userId:', userId, 'userType:', userType);
+
+    if (!userId) {
+        console.error('saveSiteRequest - User ID not found in session or DOM');
+        toastr.error('User ID not found in session');
+        return;
+    }
+
+    if (!userType) {
+        console.error('saveSiteRequest - User type not found in form');
+        toastr.error('User type not specified');
+        return;
+    }
+
+    const defaultDomain = userType === 'merchant' ? 'mystore.uk' : 'mycommunity.org';
+    const siteRequest = {
+        userId: userId,
+        type: userType,
+        name: document.getElementById('name')?.value.trim() || '',
+        about: tinymce.get('about')?.getContent() || document.getElementById('about')?.value || '',
+        logos: [],
+        colorPrefs: document.getElementById('colorPrefs')?.value.trim() || '',
+        stylingDetails: document.getElementById('stylingDetails')?.value.trim() || '',
+        preferredDomain: document.getElementById('preferredDomain')?.value.trim() || defaultDomain,
+        emails: [],
+        pages: [],
+        widgets: Array.from(document.querySelectorAll('input[name="widgets"]:checked')).map(cb => cb.value)
+    };
+    console.log('saveSiteRequest - Initial site request object:', JSON.stringify(siteRequest));
+
+    // Validation
+    if (!siteRequest.name) {
+        console.warn('saveSiteRequest - Name field is empty');
+        toastr.error(`${userType === 'merchant' ? 'Store' : 'Community'} name is required`);
+        return;
+    }
+
+    const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+    if (!domainRegex.test(siteRequest.preferredDomain)) {
+        console.warn('saveSiteRequest - Invalid domain format - Domain:', siteRequest.preferredDomain);
+        toastr.error(`Invalid domain name (e.g., ${defaultDomain})`);
+        return;
+    }
+
+    // Handle logos
+    const logoFiles = document.getElementById('logos')?.files || [];
+    console.log('saveSiteRequest - Logo files count:', logoFiles.length);
+    if (logoFiles.length > 5) {
+        console.warn('saveSiteRequest - Too many logos - Count:', logoFiles.length);
+        toastr.error('Maximum of 5 logos allowed');
+        return;
+    }
+    for (let i = 0; i < logoFiles.length; i++) {
+        const reader = new FileReader();
+        await new Promise(resolve => {
+            reader.onload = () => {
+                siteRequest.logos.push(reader.result);
+                console.log('saveSiteRequest - Added logo - Index:', i, 'Result length:', reader.result.length);
+                resolve();
+            };
+            reader.readAsDataURL(logoFiles[i]);
+        });
+    }
+
+    // Collect emails
+    let emailCount = parseInt(localStorage.getItem(`${userType}EmailCount`) || 1);
+    console.log('saveSiteRequest - Collecting emails - Email count:', emailCount);
+    for (let i = 1; i <= emailCount; i++) {
+        const emailInput = document.getElementById(`email${i}Name`);
+        if (emailInput && emailInput.value.trim()) {
+            siteRequest.emails.push(emailInput.value.trim());
+            console.log('saveSiteRequest - Added email - Index:', i, 'Value:', emailInput.value.trim());
+        }
+    }
+
+    // Collect pages
+    let pageCount = parseInt(localStorage.getItem(`${userType}PageCount`) || (userType === 'merchant' ? 2 : 1));
+    console.log('saveSiteRequest - Collecting pages - Page count:', pageCount);
+    for (let i = 1; i <= pageCount; i++) {
+        const nameInput = document.getElementById(`page${i}Name`);
+        const contentEditor = tinymce.get(`page${i}Content`);
+        const contentFallback = document.getElementById(`page${i}Content`);
+        const imagesInput = document.getElementById(`page${i}Images`);
+        if (nameInput && nameInput.value.trim()) {
+            const page = {
+                name: nameInput.value.trim(),
+                content: contentEditor ? contentEditor.getContent() : (contentFallback?.value || ''),
+                images: []
+            };
+            console.log('saveSiteRequest - Processing page - Index:', i, 'Name:', page.name);
+
+            if (imagesInput && imagesInput.files.length > 0) {
+                for (let j = 0; j < imagesInput.files.length; j++) {
+                    const reader = new FileReader();
+                    await new Promise(resolve => {
+                        reader.onload = () => {
+                            page.images.push(reader.result);
+                            console.log('saveSiteRequest - Added image to page - Page:', i, 'Image index:', j, 'Result length:', reader.result.length);
+                            resolve();
+                        };
+                        reader.readAsDataURL(imagesInput.files[j]);
+                    });
+                }
+            }
+            siteRequest.pages.push(page);
+        }
+    }
+
+    const minPages = userType === 'merchant' ? 2 : 1;
+    if (siteRequest.pages.length < minPages || (userType === 'merchant' && (!siteRequest.pages.some(p => p.name === 'Home') || !siteRequest.pages.some(p => p.name === 'Returns Policy')))) {
+        console.warn('saveSiteRequest - Insufficient or missing required pages - Pages:', siteRequest.pages.length, 'Required:', minPages);
+        toastr.error(userType === 'merchant' ? 'Home and Returns Policy pages are required' : 'At least one page is required');
+        return;
+    }
+
+    // Save to server
+    try {
+        console.log('saveSiteRequest - Sending site request to server - URL:', `${apiUrl}/${userId}/siterequest`);
+        const startTime = Date.now();
+        const response = await authenticatedFetch(`${apiUrl}/${userId}/siterequest`, {
+            method: 'POST',
+            body: JSON.stringify(siteRequest)
+        });
+        const duration = Date.now() - startTime;
+
+        if (!response) {
+            console.error('saveSiteRequest - No response from fetch');
+            toastr.error('Failed to save site request: No server response');
+            return;
+        }
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('saveSiteRequest - Fetch failed - Status:', response.status, 'Error text:', errorText);
+            throw new Error(`Failed to save site request: ${response.status} - ${errorText}`);
+        }
+
+        console.log('saveSiteRequest - Save successful - Duration:', `${duration}ms`);
+        toastr.success(`${userType === 'merchant' ? 'Store' : 'Site'} request saved successfully`);
+    } catch (error) {
+        console.error('saveSiteRequest - Error saving site request - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Error saving ${userType === 'merchant' ? 'store' : 'site'} request: ${error.message}`);
+    }
+    console.log('saveSiteRequest - Save process completed');
+}
+user-management.js
+// user-management.js
+// Purpose: Manages user-specific settings, Wix client ID operations, and shared "Change Password" logic.
+
+// Loads user settings into the DOM.
+async function loadSettings() {
+    console.log('loadSettings - Starting settings load');
+    const userId = localStorage.getItem('userId');
+    console.log('loadSettings - Retrieved userId:', userId);
+
+    if (!userId) {
+        console.error('loadSettings - User ID not found in session');
+        toastr.error('User ID not found in session');
+        return;
+    }
+
+    try {
+        console.log('loadSettings - Fetching settings via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/user`);
+        const startTime = Date.now();
+        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/user`);
+        const duration = Date.now() - startTime;
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('loadSettings - Fetch failed - Status:', response.status, 'Error:', errorText);
+            throw new Error(`Failed to fetch settings: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('loadSettings - Settings fetched - Data:', JSON.stringify(data), 'Duration:', `${duration}ms`);
+
+        // Update DOM with settings
+        const referrerId = document.getElementById('referrerId');
+        const contactName = document.getElementById('contactName');
+        const websiteUrl = document.getElementById('websiteUrl');
+        const emailAddress = document.getElementById('emailAddress');
+        const phoneNumber = document.getElementById('phoneNumber');
+
+        if (referrerId) referrerId.textContent = userId;
+        if (contactName) contactName.value = data.contact_name || '';
+        if (websiteUrl) websiteUrl.value = data.website_url || '';
+        if (emailAddress) emailAddress.value = data.email_address || '';
+        if (phoneNumber) phoneNumber.value = data.phone_number || '';
+
+        console.log('loadSettings - DOM updated - Fields:', {
+            referrerId: userId,
+            contactName: data.contact_name || '',
+            websiteUrl: data.website_url || '',
+            emailAddress: data.email_address || '',
+            phoneNumber: data.phone_number || ''
+        });
+    } catch (error) {
+        console.error('loadSettings - Error loading settings - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Error loading settings: ${error.message}`);
+    }
+    console.log('loadSettings - Settings load completed');
+}
+
+// Saves user settings from the DOM.
+async function saveSettings(settings) {
+    console.log('saveSettings - Starting settings save - Settings:', JSON.stringify(settings));
+    const userId = localStorage.getItem('userId');
+    console.log('saveSettings - Retrieved userId:', userId);
+
+    if (!userId) {
+        console.error('saveSettings - User ID not found in session');
+        toastr.error('User ID not found in session');
+        return;
+    }
+
+    try {
+        console.log('saveSettings - Sending settings via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/user`);
+        const startTime = Date.now();
+        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/user`, {
+            method: 'PUT',
+            body: JSON.stringify(settings)
+        });
+        const duration = Date.now() - startTime;
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('saveSettings - Fetch failed - Status:', response.status, 'Error:', errorText);
+            throw new Error(`Failed to save settings: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('saveSettings - Save response received - Result:', JSON.stringify(result), 'Duration:', `${duration}ms`);
+        toastr.success('Settings saved successfully');
+    } catch (error) {
+        console.error('saveSettings - Error saving settings - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Failed to save settings: ${error.message}`);
+    }
+    console.log('saveSettings - Save process completed');
+}
+
+// Loads Wix client ID into the DOM.
+async function loadWixClientId() {
+    console.log('loadWixClientId - Starting Wix client ID load');
+    const userId = localStorage.getItem('userId');
+    console.log('loadWixClientId - Retrieved userId:', userId);
+
+    if (!userId) {
+        console.error('loadWixClientId - User ID not found in session');
+        toastr.error('User ID not found in session');
+        return;
+    }
+
+    try {
+        console.log('loadWixClientId - Fetching Wix client ID via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/wix-client-id`);
+        const startTime = Date.now();
+        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/wix-client-id`);
+        const duration = Date.now() - startTime;
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('loadWixClientId - Fetch failed - Status:', response.status, 'Error:', errorText);
+            throw new Error(`Failed to fetch Wix client ID: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('loadWixClientId - Wix client ID fetched - Data:', JSON.stringify(data), 'Duration:', `${duration}ms`);
+
+        // Update DOM with Wix client ID
+        const wixClientIdField = document.getElementById('wixClientId');
+        if (wixClientIdField) {
+            wixClientIdField.value = data.client_id || data.clientId || '';
+            console.log('loadWixClientId - DOM updated - wixClientId:', data.client_id || data.clientId || '');
+        } else {
+            console.warn('loadWixClientId - Wix client ID field not found - ID: wixClientId');
+        }
+    } catch (error) {
+        console.error('loadWixClientId - Error loading Wix client ID - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Error loading Wix client ID: ${error.message}`);
+    }
+    console.log('loadWixClientId - Wix client ID load completed');
+}
+
+// Saves Wix client ID from the DOM.
+async function saveWixClientId(clientId) {
+    console.log('saveWixClientId - Starting Wix client ID save - Client ID:', clientId);
+    const userId = localStorage.getItem('userId');
+    console.log('saveWixClientId - Retrieved userId:', userId);
+
+    if (!userId) {
+        console.error('saveWixClientId - User ID not found in session');
+        toastr.error('User ID not found in session');
+        return;
+    }
+
+    try {
+        console.log('saveWixClientId - Sending Wix client ID via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/wix-client-id`);
+        const startTime = Date.now();
+        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/wix-client-id`, {
+            method: 'POST',
+            body: JSON.stringify({ clientId })
+        });
+        const duration = Date.now() - startTime;
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('saveWixClientId - Fetch failed - Status:', response.status, 'Error:', errorText);
+            throw new Error(`Failed to save Wix client ID: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('saveWixClientId - Save response received - Result:', JSON.stringify(result), 'Duration:', `${duration}ms`);
+        toastr.success('Wix client ID saved successfully');
+    } catch (error) {
+        console.error('saveWixClientId - Error saving Wix client ID - Error:', error.message, 'Stack:', error.stack);
+        toastr.error(`Failed to save Wix client ID: ${error.message}`);
+    }
+    console.log('saveWixClientId - Save process completed');
+}
+
+// Validates password complexity
+function validatePassword(password) {
+    console.log('validatePassword - Validating password');
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (password.length < minLength) {
+        toastr.error('Password must be at least 8 characters long.');
+        console.log('validatePassword - Failed: Length < 8');
+        return false;
+    }
+    if (!hasUpperCase) {
+        toastr.error('Password must contain at least one uppercase letter.');
+        console.log('validatePassword - Failed: No uppercase');
+        return false;
+    }
+    if (!hasLowerCase) {
+        toastr.error('Password must contain at least one lowercase letter.');
+        console.log('validatePassword - Failed: No lowercase');
+        return false;
+    }
+    if (!hasNumber) {
+        toastr.error('Password must contain at least one number.');
+        console.log('validatePassword - Failed: No number');
+        return false;
+    }
+    if (!hasSpecialChar) {
+        toastr.error('Password must contain at least one special character.');
+        console.log('validatePassword - Failed: No special character');
+        return false;
+    }
+    console.log('validatePassword - Password valid');
+    return true;
+}
+
+// Sets up the "Change Password" form submission logic
+function setupChangePassword() {
+    console.log('setupChangePassword - Setting up change password logic');
+    const changePasswordButton = document.querySelector('button[data-action="savePassword"]');
+    if (!changePasswordButton) {
+        console.warn('setupChangePassword - Change password button not found');
+        return;
+    }
+
+    changePasswordButton.addEventListener('click', async () => {
+        console.log('setupChangePassword - Change password button clicked');
+        const currentPasswordInput = document.getElementById('currentPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        // Validate input elements exist
+        if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) {
+            toastr.error('Password fields are missing on this page.');
+            console.error('setupChangePassword - One or more password input elements not found');
+            return;
+        }
+
+        const currentPassword = currentPasswordInput.value.trim();
+        const newPassword = newPasswordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+
+        // Check for empty fields
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            toastr.error('All password fields are required.');
+            console.log('setupChangePassword - Empty password field detected');
+            return;
+        }
+
+        // Check password match
+        if (newPassword !== confirmPassword) {
+            toastr.error('New password and confirmation do not match.');
+            console.log('setupChangePassword - Passwords do not match');
+            return;
+        }
+
+        // Validate password complexity
+        if (!validatePassword(newPassword)) {
+            console.log('setupChangePassword - Password complexity validation failed');
+            return;
+        }
+
+        // Submit password change request
+        try {
+            console.log('setupChangePassword - Submitting password change request');
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await authenticatedFetch(`${window.apiUrl}/update-password`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to update password: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('setupChangePassword - Password updated successfully:', data);
+            toastr.success('Password updated successfully!');
+            // Clear form fields after success
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+        } catch (error) {
+            console.error('setupChangePassword - Error updating password:', error.message);
+            toastr.error(error.message || 'An error occurred while updating the password.');
+        }
+    });
+    console.log('setupChangePassword - Event listener attached');
+}
+
+// Export for use in other scripts
+window.loadSettings = loadSettings;
+window.saveSettings = saveSettings;
+window.loadWixClientId = loadWixClientId;
+window.saveWixClientId = saveWixClientId;
+window.validatePassword = validatePassword;
+window.setupChangePassword = setupChangePassword;
