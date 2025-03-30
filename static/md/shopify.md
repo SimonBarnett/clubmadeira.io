@@ -1,26 +1,57 @@
-# Shopify API Integration for Categories and Products
+# Shopify API Settings for Categories and Products
 
-This guide explains how to integrate with Shopify to retrieve category and product information programmatically using the Shopify Admin API.
-
-Below is a simple shopping cart icon to visualize the process:
-
-<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTUuNTMgMi43M2wtMS4zOS0xLjM5Yy0uMzktLjM5LTEuMDMtLjM5LTEuNDIgMGwtMS4zOSAxLjM5IDQuMjMgNC4yM2gxMy42OHYtNS40NWgtMTMuN2MtLjI4IDAtLjU0LS4xMS0uNzUtLjMxeiIvPjxwYXRoIGQ9Ik0xOCAxOGMwIDEuMS0uOSAyLTIgMnMtMi0uOS0yLTItLjktMiAyLTJzMiAuOSAyIDJoNGMxLjEgMCAyLS45IDItMnMtLjktMi0yLTJ6Ii8+PHBhdGggZD0iTTcgMTguMWMwIDEuMS0uOSAyLTIgMnMtMi0uOS0yLTItLjktMiAyLTJzMiAuOSAyIDJoNGMxLjEgMCAyLS45IDItMnMtLjktMi0yLTJ6Ii8+PHBhdGggZD0iTTAgMjEuNDVsNy03LjI5IDExIDcuMjkiLz48L3N2Zz4=" alt="Shopping Cart Icon" width="24" height="24">
+This guide details how to obtain the `ACCESS_TOKEN`, `API_KEY`, `API_SECRET_KEY`, and `STORE_URL` for the Shopify Admin REST API, per the [Shopify API Docs](https://shopify.dev/api/admin-rest).
 
 ## Prerequisites
-- A Shopify store with admin access.
-- An app created in the Shopify Partner Dashboard or store settings to generate API credentials.
+- A Shopify store.
+- Admin access to the Shopify admin panel.
 
-## Required Credentials
-- **API Key**: Generated when you create a custom app in your Shopify store.
-- **API Secret Key**: Paired with the API Key for authentication.
-- **Access Token**: Obtained via OAuth or directly for private/custom apps.
-- **Store URL**: Your Shopify store domain (e.g., `mystorename.myshopify.com`).
+## Obtaining the API_KEY and API_SECRET_KEY
+These are credentials for a custom app.
 
-To get credentials:
-1. Log in to your Shopify admin.
-2. Go to **Settings > Apps and sales channels > Develop apps**.
-3. Create a custom app, enable Admin API access with scopes `read_products` and `read_product_listings`.
-4. Save to generate API Key, Secret Key, and Access Token.
+1. **Log into Shopify Admin**:
+   - Access `https://{your-store}.myshopify.com/admin`.
 
-## Authentication
-Shopify uses HTTP Basic Auth or OAuth. For simplicity, use the Access Token in the header:
+2. **Create a Custom App**:
+   - Go to "Apps" > "App and sales channel settings" > "Develop apps".
+   - Click "Create an app".
+   - Name it (e.g., "ClubMadeira Integration").
+
+3. **Configure Admin API Scopes**:
+   - In the app settings, go to "Configuration" > "Admin API integration".
+   - Enable scopes (e.g., `read_products`, `write_products`, `read_product_listings`).
+
+4. **Get API Credentials**:
+   - Go to "API credentials".
+   - Copy:
+     - `API Key` (e.g., `1234567890abcdef1234567890abcdef`)
+     - `API Secret Key` (e.g., `abcdef1234567890abcdef1234567890`)
+   - Save these securely.
+
+## Obtaining the ACCESS_TOKEN
+The `ACCESS_TOKEN` is an admin API token.
+
+1. **Generate an Admin API Token**:
+   - In the same "API credentials" section, under "Admin API access token", click "Generate API token".
+   - Select the same scopes as above.
+   - Copy the token (e.g., `shpat_1234567890abcdef1234567890abcdef`).
+
+2. **Store the ACCESS_TOKEN**:
+   - Save it securely.
+
+## Obtaining the STORE_URL
+The `STORE_URL` is your Shopify store’s domain.
+
+1. **Find Your Store URL**:
+   - In the admin panel, it’s the URL you log into (e.g., `https://{your-store}.myshopify.com`).
+
+2. **Store the STORE_URL**:
+   - Example: `https://example-store.myshopify.com`.
+
+## Usage
+Authenticate API requests with the token:
+```
+GET {STORE_URL}/admin/api/2023-10/products.json
+X-Shopify-Access-Token: {ACCESS_TOKEN}
+```
+

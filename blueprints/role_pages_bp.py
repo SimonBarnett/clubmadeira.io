@@ -77,7 +77,7 @@ def admin():
             logging.warning(f"UX Issue - Admin route - User not found: {user_id}")
             return jsonify({"status": "error", "message": "User not found"}), 404
         
-        logging.debug(f"Rendering admin dashboard for user {user_id}")
+        logging.debug(f"Rendering admin dashboard for user {user_id}")        
         return render_template('admin.html', title='clubmadeira.io | Admin', page_type='admin', user=user)
     except Exception as e:
         logging.error(f"UX Issue - Failed to render admin page: {str(e)}", exc_info=True)
@@ -105,8 +105,8 @@ def community():
         if not user and user_id:
             logging.warning(f"UX Issue - Community route - User not found: {user_id}")
         
-        logging.debug(f"Rendering community dashboard for user {user_id}")
-        return render_template('community.html', user=user)
+        logging.debug(f"Rendering community dashboard for user {user_id}")        
+        return render_template('community.html', title='clubmadeira.io | Community', page_type='community', user=user)
     except Exception as e:
         logging.error(f"UX Issue - Failed to render community page: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
@@ -134,7 +134,8 @@ def merchant():
             logging.warning(f"UX Issue - Merchant route - User not found: {user_id}")
         
         logging.debug(f"Rendering merchant dashboard for user {user_id}")
-        return render_template('merchant.html', user=user)
+        return render_template('merchant.html', title='clubmadeira.io | Merchant', page_type='merchant', user=user)
+    
     except Exception as e:
         logging.error(f"UX Issue - Failed to render merchant page: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
@@ -162,7 +163,7 @@ def partner():
             logging.warning(f"UX Issue - Partner route - User not found: {user_id}")
         
         logging.debug(f"Rendering partner dashboard for user {user_id}")
-        return render_template('partner.html', user=user)
+        return render_template('partner.html', title='clubmadeira.io | Partner', page_type='partner', user=user)        
     except Exception as e:
         logging.error(f"UX Issue - Failed to render partner page: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
@@ -204,72 +205,6 @@ def get_branding():
     except Exception as e:
         logging.error(f"UX Issue - Failed to retrieve branding: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# region /settings/api_key GET - Retrieve API Key Settings
-@role_pages_bp.route('/settings/api_key', methods=['GET'])
-@login_required(["allauth"], require_all=False)
-def get_api_key_settings():
-    """
-    Retrieves settings for 'api_key' type from the configuration.
-    Purpose: Provides API key settings for authenticated users.
-    Permissions: "allauth"—any authenticated user can access.
-    Outputs:
-        - Success: JSON {"status": "success", "setting_type": "api_key", "settings": [<list_of_settings>]}, 200
-        - Errors:
-            - 500: {"status": "error", "message": "Server error"}
-    """
-    try:
-        config = load_config()
-        settings = [
-            {
-                "key_type": key,
-                "fields": {k: "" for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment"]},
-                "icon": value.get("icon", "icon-favicon"),
-                "doc_link": value.get("doc_link", ""),
-                "comment": value.get("_comment", "")
-            }
-            for key, value in config.items()
-            if value.get("setting_type") == "api_key" and value.get("setting_type") != "setting_hidden"
-        ]
-        logging.debug(f"Listed settings for api_key: {json.dumps(settings)}")
-        return jsonify({"status": "success", "setting_type": "api_key", "settings": settings}), 200
-    except Exception as e:
-        logging.error(f"Failed to list api_key settings: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": "Server error"}), 500
-# endregion
-
-# region /settings/client_api GET - Retrieve Client API Settings
-@role_pages_bp.route('/settings/client_api', methods=['GET'])
-@login_required(["allauth"], require_all=False)
-def get_client_api_settings():
-    """
-    Retrieves settings for 'client_api' type from the configuration.
-    Purpose: Provides client API settings for authenticated users.
-    Permissions: "allauth"—any authenticated user can access.
-    Outputs:
-        - Success: JSON {"status": "success", "setting_type": "client_api", "settings": [<list_of_settings>]}, 200
-        - Errors:
-            - 500: {"status": "error", "message": "Server error"}
-    """
-    try:
-        config = load_config()
-        settings = [
-            {
-                "key_type": key,
-                "fields": {k: "" for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment"]},
-                "icon": value.get("icon", "icon-favicon"),
-                "doc_link": value.get("doc_link", ""),
-                "comment": value.get("_comment", "")
-            }
-            for key, value in config.items()
-            if value.get("setting_type") == "client_api" and value.get("setting_type") != "setting_hidden"
-        ]
-        logging.debug(f"Listed settings for client_api: {json.dumps(settings)}")
-        return jsonify({"status": "success", "setting_type": "client_api", "settings": settings}), 200
-    except Exception as e:
-        logging.error(f"Failed to list client_api settings: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": "Server error"}), 500
 # endregion
 
 # ASCII Art: The Towel (Hitchhiker’s Guide)

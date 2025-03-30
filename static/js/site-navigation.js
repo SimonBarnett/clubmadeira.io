@@ -1,5 +1,5 @@
 // /static/js/site-navigation.js
-// Purpose: Handles navigation, content loading, branding, section/submenu management, and logout across the site.
+// Purpose: Handles navigation, content loading, section/submenu management, and logout across the site.
 
 // Guard against multiple inclusions
 if (window.siteNavigationInitialized) {
@@ -43,14 +43,14 @@ if (window.siteNavigationInitialized) {
         .then(() => {
             // Fetch protected page content for navigation
             async function fetchProtectedPage(url) {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    toastr.error('No authentication token found. Please log in.');
-                    showLogin();
-                    return;
-                }
-                showLoadingOverlay();
+                window.showLoadingOverlay(); // Use the global function
                 try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) {
+                        toastr.error('No authentication token found. Please log in.');
+                        window.location.href = '/login'; // Hard redirect to ensure full initialization
+                        return;
+                    }
                     const response = await window.authenticatedFetch(`${window.apiUrl}${url}`, {
                         method: 'GET',
                         headers: { 'Accept': 'text/html' }
@@ -58,95 +58,74 @@ if (window.siteNavigationInitialized) {
                     if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
                     const html = await response.text();
                     console.log('fetchProtectedPage - Response status:', response.status);
-                    console.log('fetchProtectedPage - Full HTML response:', html.substring(0, 200));
 
+                    // Update only the content within layout-wrapper
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    document.documentElement.innerHTML = doc.documentElement.innerHTML;
+                    const newContent = doc.querySelector('.layout-wrapper');
+                    if (!newContent) throw new Error('No .layout-wrapper found in response HTML');
+                    const layoutWrapper = document.querySelector('.layout-wrapper');
+                    if (!layoutWrapper) throw new Error('No .layout-wrapper found in current DOM');
+                    layoutWrapper.innerHTML = newContent.innerHTML;
 
-                    // Reattach scripts synchronously
-                    const scripts = doc.querySelectorAll('script');
-                    for (const oldScript of scripts) {
+                    // Extract and execute inline scripts from the new content
+                    const scripts = doc.querySelectorAll('script:not([src])');
+                    scripts.forEach(script => {
                         const newScript = document.createElement('script');
-                        if (oldScript.src) {
-                            newScript.src = oldScript.src;
-                            newScript.async = false;
-                            document.body.appendChild(newScript);
-                            await new Promise(resolve => {
-                                newScript.onload = () => {
-                                    console.log('fetchProtectedPage - Script loaded:', oldScript.src);
-                                    resolve();
-                                };
-                                newScript.onerror = () => {
-                                    console.error('fetchProtectedPage - Script load failed:', oldScript.src);
-                                    resolve();
-                                };
-                            });
-                        } else {
-                            newScript.textContent = oldScript.textContent;
-                            document.body.appendChild(newScript);
-                            console.log('fetchProtectedPage - Inline script executed');
-                        }
-                    }
+                        newScript.textContent = script.textContent;
+                        document.body.appendChild(newScript);
+                        document.body.removeChild(newScript); // Clean up after execution
+                        console.log('fetchProtectedPage - Executed inline script');
+                    });
 
-                    // Trigger page-specific initialization
-                    const pageType = url.split('/')[1] || 'admin';
+                    // Reinitialize page
+                    const pageType = url.split('/')[1] || 'default';
                     if (typeof window.initialize === 'function') {
                         console.log('fetchProtectedPage - Triggering initialize for:', pageType);
                         window.initialize(pageType);
+                    } else {
+                        console.warn('fetchProtectedPage - window.initialize not found, page may not fully initialize');
                     }
-                    setTimeout(() => hideLoadingOverlay(), 1000);
+
+                    // Reinitialize navigation to attach event listeners to new buttons
+                    console.log('fetchProtectedPage - Reinitializing navigation after content load');
+                    initializeNavigation();
+
+                    // Reattach branding header listener
+                    attachBrandingHeaderListener();
                 } catch (error) {
                     console.error('fetchProtectedPage - Error:', error);
-                    toastr.error(error.message || 'Failed to load protected page');
-                    hideLoadingOverlay();
-                }
-            }
-
-            // Load page-specific branding content
-            async function loadBranding(brandingType, containerId = 'brandingContent') {
-                console.log('loadBranding - Starting branding load - Type:', brandingType, 'Container ID:', containerId);
-                const defaultContents = {
-                    'partner': '<h1>Partner Dashboard</h1>',
-                    'merchant': '<h1>Merchant Dashboard</h1>',
-                    'community': '<h1>Community Dashboard</h1>',
-                    'admin': '<h1>Admin Dashboard</h1>',
-                    'login': '<h1>Login</h1>',
-                    'signup': '<h1>Signup</h1>'
-                };
-                const defaultContent = defaultContents[brandingType] || '<h1>Dashboard</h1>';
-                const container = document.getElementById(containerId);
-                if (!container) {
-                    console.error('loadBranding - Container not found - ID:', containerId);
-                    return;
-                }
-                try {
-                    const response = await window.authenticatedFetch(`${window.apiUrl}/branding?type=${encodeURIComponent(brandingType)}`);
-                    if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
-                    const data = await response.json();
-                    container.innerHTML = data.status === 'success' && data.branding ? data.branding : defaultContent;
-                    console.log('loadBranding - Branding loaded - Type:', brandingType);
-                } catch (error) {
-                    console.error('loadBranding - Error:', error.message);
-                    container.innerHTML = defaultContent;
+                    toastr.error(error.message || 'Failed to load page');
+                    window.location.href = '/login'; // Fallback to full reload
+                } finally {
+                    window.hideLoadingOverlay();
                 }
             }
 
             // Load content for a specific section
             async function loadSection(sectionId) {
                 console.log('loadSection - Starting section load - Section ID:', sectionId);
+                if (['api-keys', 'my-products', 'create-store', 'my-store-info'].includes(sectionId)) {
+                    console.log('loadSection - Skipping fetch for custom section:', sectionId);
+                    return;
+                }
                 if (sectionId === 'deal_listings') {
                     await loadCategories();
                 } else if (sectionId === 'merchants') {
                     await loadMerchants();
                 } else {
                     try {
-                        const response = await window.authenticatedFetch(`${window.apiUrl}/config`);
+                        const response = await window.authenticatedFetch(`${window.apiUrl}/settings/user`);
                         if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
                         const data = await response.json();
-                        const config = data.config[sectionId] || {};
+                        console.log('loadSection - User settings fetched:', JSON.stringify(data));
+                        const settings = {};
+                        data.settings.forEach(item => settings[item.field] = item.value);
                         const el = document.getElementById(`${sectionId}Field`);
-                        if (el) el.value = config.value || '';
+                        if (el && settings[sectionId]) {
+                            el.value = settings[sectionId];
+                            console.log(`loadSection - Updated ${sectionId}Field with value:`, settings[sectionId]);
+                        }
                     } catch (error) {
                         console.error('loadSection - Error:', error.message);
                         toastr.error(`Error loading ${sectionId}: ${error.message}`);
@@ -211,8 +190,9 @@ if (window.siteNavigationInitialized) {
                 const sectionId = button.getAttribute('data-section');
                 const submenuId = button.getAttribute('data-submenu');
                 const href = button.getAttribute('data-href');
+                const mdPath = button.getAttribute('data-md-path');
 
-                console.log(`handleSectionClick - Clicked:`, { sectionId, submenuId, href });
+                console.log(`handleSectionClick - Clicked:`, { sectionId, submenuId, href, mdPath });
 
                 const topLevelSubmenuButtons = document.querySelectorAll('.menu > button[data-submenu]');
                 const isTopLevel = button.parentElement.classList.contains('menu');
@@ -230,16 +210,24 @@ if (window.siteNavigationInitialized) {
                     }
                 }
 
-                if (sectionId && !href) showSection(sectionId);
+                if (sectionId && !href) {
+                    if (mdPath && typeof window.renderMdPage === 'function') {
+                        showSection(sectionId, () => window.renderMdPage(mdPath, 'md-render-target'));
+                    } else {
+                        showSection(sectionId);
+                    }
+                }
                 if (href) fetchProtectedPage(href);
             }
 
             // Initialize navigation and logout
             function initializeNavigation() {
                 console.log('initializeNavigation - Starting navigation setup');
+                // Reset existing event listeners
                 document.querySelectorAll('.menu button[data-section], .menu button[data-submenu], .menu button[data-href]').forEach(button => {
                     button.removeEventListener('click', handleSectionClick);
                 });
+                // Reset submenu states
                 document.querySelectorAll('.submenu').forEach(submenu => {
                     submenu.style.display = 'none';
                     submenu.classList.remove('open');
@@ -267,16 +255,23 @@ if (window.siteNavigationInitialized) {
                     });
                 });
 
-                setTimeout(() => {
-                    const logOffBtn = document.getElementById('logOffBtn');
-                    if (logOffBtn) {
-                        console.log('initializeNavigation - Log Off button found, attaching listener');
-                        logOffBtn.removeEventListener('click', handleLogoutClick);
-                        logOffBtn.addEventListener('click', handleLogoutClick);
-                    } else {
-                        console.error('initializeNavigation - Log Off button not found in DOM');
-                    }
-                }, 100);
+                // Handle Log Off button
+                const logOffBtn = document.getElementById('logOffBtn'); // Corrected ID to match templates
+                if (logOffBtn) {
+                    console.log('initializeNavigation - Log Off button found, attaching listener');
+                    logOffBtn.removeEventListener('click', handleLogoutClick);
+                    logOffBtn.addEventListener('click', handleLogoutClick);
+                } else {
+                    console.error('initializeNavigation - Log Off button not found in DOM');
+                }
+
+                // Explicitly show the #info section on load
+                if (document.getElementById('info')) {
+                    console.log('initializeNavigation - Showing info section on load');
+                    showSection('info');
+                } else {
+                    console.error('initializeNavigation - Info section not found on page load');
+                }
             }
 
             // Handle logout click
@@ -290,16 +285,25 @@ if (window.siteNavigationInitialized) {
 
             // Attach branding header listener
             function attachBrandingHeaderListener() {
-                if (!window.brandingHeaderListenerAttached) {
-                    const brandingContent = document.getElementById('brandingContent');
-                    if (brandingContent) {
-                        brandingContent.addEventListener('click', () => {
-                            const sectionToShow = window.currentPageType === 'merchant' ? 'info' : 'welcome';
-                            showSection(sectionToShow);
-                        });
-                        window.brandingHeaderListenerAttached = true;
-                        console.log('Branding header click listener attached');
-                    }
+                const header = document.querySelector('.header');
+                if (header) {
+                    // Remove any existing listeners to prevent duplicates
+                    header.removeEventListener('click', handleHeaderClick);
+                    header.addEventListener('click', handleHeaderClick);
+                    console.log('attachBrandingHeaderListener - Header click listener attached');
+                } else {
+                    console.error('attachBrandingHeaderListener - Header element not found');
+                }
+            }
+
+            // Handle header click to show #info section
+            function handleHeaderClick(event) {
+                const sectionId = event.currentTarget.getAttribute('data-section');
+                if (sectionId) {
+                    console.log('handleHeaderClick - Header clicked, showing section:', sectionId);
+                    showSection(sectionId);
+                } else {
+                    console.error('handleHeaderClick - No data-section attribute found on header');
                 }
             }
 
@@ -309,7 +313,6 @@ if (window.siteNavigationInitialized) {
                 toggleSubmenu,
                 initializeNavigation,
                 fetchProtectedPage,
-                loadBranding,
                 loadSection
             };
 

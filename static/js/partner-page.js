@@ -36,8 +36,6 @@ function initializePartner() {
     // Set up navigation and load initial content
     setupNavigation(); // From site-navigation.js
     checkAdminPermission();
-    loadBranding('partner', 'brandingContent'); // Adjusted to match typical usage
-    window.siteNavigation.showSection('welcome'); // Show the welcome section by default
     loadPartnerIntegrations(); // Load partner-specific integrations
 
     // Fetch and display contact_name in the welcome section

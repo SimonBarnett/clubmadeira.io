@@ -116,14 +116,20 @@ if (!window.siteAuthInitialized) {
     async function authenticatedFetch(url, options = {}) {
         log('authenticatedFetch - Initiating fetch - URL:', url);
         const token = localStorage.getItem('authToken');
-        if (!token) {
+        
+        // Define public endpoints that don’t require authentication
+        const publicEndpoints = ['/branding?type=login', '/branding?type=signup', '/login', '/signup'];
+        const isPublic = publicEndpoints.some(endpoint => url.includes(endpoint));
+        log('authenticatedFetch - Is public endpoint:', isPublic);
+        
+        if (!token && !isPublic) {
             error('authenticatedFetch - No authentication token found - Redirecting to /');
             window.location.href = '/';
             return null;
         }
 
         const headers = new Headers(options.headers || {});
-        headers.set('Authorization', `Bearer ${token}`);
+        if (token) headers.set('Authorization', `Bearer ${token}`);
         headers.set('Content-Type', 'application/json');
 
         const fetchOptions = {
@@ -133,7 +139,7 @@ if (!window.siteAuthInitialized) {
 
         try {
             const response = await fetch(url, fetchOptions);
-            if (!response.ok) {
+            if (!response.ok && !isPublic) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `Request failed with status ${response.status}`);
             }

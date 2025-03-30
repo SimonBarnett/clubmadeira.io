@@ -1,58 +1,52 @@
-# WooCommerce API Integration for Categories and Products
+# WooCommerce API Settings for Categories and Products
 
-This guide explains how to access category and product data from a WooCommerce store using the WooCommerce REST API.
+This document outlines how to get the `CONSUMER_KEY`, `CONSUMER_SECRET`, and `STORE_URL` for the WooCommerce REST API, per the [WooCommerce REST API Docs](https://woocommerce.github.io/woocommerce-rest-api-docs/).
 
 ## Prerequisites
 - A WordPress site with WooCommerce installed.
-- Admin access to generate API keys.
+- Admin access to the WordPress dashboard.
 
-## Required Credentials
-- **Consumer Key**: Generated in WooCommerce settings.
-- **Consumer Secret**: Paired with the Consumer Key for authentication.
-- **Store URL**: Your WordPress site URL (e.g., `https://mystorename.com`).
+## Obtaining the CONSUMER_KEY and CONSUMER_SECRET
+These are API keys for authenticating requests.
 
-To get credentials:
-1. Log in to WordPress admin.
-2. Go to **WooCommerce > Settings > Advanced > REST API**.
-3. Click "Add Key," set permissions to "Read," and generate.
-4. Copy the Consumer Key and Consumer Secret.
+1. **Log into WordPress Admin**:
+   - Access `https://{your-store}/wp-admin`.
 
-## Authentication
-WooCommerce uses Basic Auth or OAuth. For Basic Auth:
+2. **Navigate to WooCommerce Settings**:
+   - Go to "WooCommerce" > "Settings" > "Advanced" > "REST API".
 
-Authorization: Basic {base64(consumer_key:consumer_secret)}
+3. **Add a Key**:
+   - Click "Add Key".
+   - Enter a description (e.g., "ClubMadeira Integration").
+   - Select a user with admin rights.
+   - Set permissions to "Read/Write".
 
-Or append keys to the URL:
+4. **Generate and Save Keys**:
+   - Click "Generate API Key".
+   - Copy:
+     - `Consumer Key` (e.g., `ck_1234567890abcdef1234567890abcdef12345678`)
+     - `Consumer Secret` (e.g., `cs_1234567890abcdef1234567890abcdef12345678`)
+   - Save these securely as they won’t be shown again.
 
-?consumer_key={consumer_key}&consumer_secret={consumer_secret}
+## Obtaining the STORE_URL
+The `STORE_URL` is your WooCommerce store’s domain.
 
-## Retrieving Categories
-To get all product categories:
+1. **Find Your Store URL**:
+   - In WordPress, go to "Settings" > "General".
+   - Note the "Site Address (URL)" (e.g., `https://example.com`).
 
-@bash
-curl -X GET "https://{storename}.com/wp-json/wc/v3/products/categories" \
--H "Authorization: Basic {base64(consumer_key:consumer_secret)}"
-@
+2. **Store the STORE_URL**:
+   - Example: `https://example.com`.
 
-- Endpoint: `GET /wp-json/wc/v3/products/categories`
-- Returns category IDs, names, and slugs.
+## Usage
+Make API requests with basic auth:
+```
+GET {STORE_URL}/wp-json/wc/v3/products
+Authorization: Basic {Base64 encoded CONSUMER_KEY:CONSUMER_SECRET}
+```
+Or use query parameters:
 
-## Retrieving Products
-To fetch all products:
+GET {STORE_URL}/wp-json/wc/v3/products?consumer_key={CONSUMER_KEY}&consumer_secret={CONSUMER_SECRET}
 
-@bash
-curl -X GET "https://{storename}.com/wp-json/wc/v3/products" \
--H "Authorization: Basic {base64(consumer_key:consumer_secret)}"
-@
-
-- Endpoint: `GET /wp-json/wc/v3/products`
-- Returns product IDs, names, prices, categories, etc.
-- Filter by category: `?category={category_id}`.
-
-## Notes
-- Ensure the WooCommerce REST API is enabled in settings.
-- Rate limits depend on server hosting (typically 100 requests/minute).
-- Use `?per_page=100` for pagination.
-
-Check [WooCommerce REST API Docs](https://woocommerce.github.io/woocommerce-rest-api-docs/) for more info.
+See the [WooCommerce API Docs](https://w
 

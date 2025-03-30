@@ -5,7 +5,6 @@
 function initializeCommunity() {
     console.log('initializeCommunity - Initializing community page');
     const token = localStorage.getItem('authToken');
-    const userId = localStorage.getItem('userId');
     if (!token) {
         console.error('initializeCommunity - No token found, redirecting to /');
         window.location.href = '/';
@@ -18,18 +17,23 @@ function initializeCommunity() {
         return;
     }
     window.userPermissions = decoded.permissions || [];
-    if (!window.userPermissions.includes('community')) {
-        toastr.error('Permission denied: Community permission required');
-        console.error('initializeCommunity - No community permission, redirecting to /');
+    // Allow 'community' or 'admin' permissions, matching page-load.js config
+    if (!window.userPermissions.some(perm => ['community', 'admin'].includes(perm))) {
+        toastr.error('Permission denied: Community or Admin permission required');
+        console.error('initializeCommunity - No community or admin permission, redirecting to /');
         window.location.href = '/';
         return;
     }
+    // Use userId from token if not in localStorage
+    let userId = localStorage.getItem('userId') || decoded.userId;
     if (!userId) {
-        toastr.error('User ID not found in session, redirecting to login');
-        console.error('initializeCommunity - No userId found in localStorage');
+        toastr.error('User ID not found in session or token, redirecting to login');
+        console.error('initializeCommunity - No userId found in localStorage or token');
         window.location.href = '/';
         return;
     }
+    // Ensure userId is stored in localStorage for consistency
+    localStorage.setItem('userId', userId);
     const userIdInput = document.getElementById('userId');
     if (userIdInput) {
         userIdInput.value = userId;
@@ -41,10 +45,7 @@ function initializeCommunity() {
     setupNavigation(); // From site-navigation.js
     attachEventListeners(); // From page-load.js
 
-    // Load branding and initial data
-    loadBranding('community', 'brandingContent');
-    updateMenu();
-    window.siteNavigation.showSection('welcome');
+    // Load initial data
     waitForTinyMCE(() => initializeTinyMCE('#aboutCommunity, #stylingDetails, #page1Content'));
     loadVisits();
     loadOrders();
@@ -98,11 +99,14 @@ function updateMenu() {
     if (menu) {
         menu.innerHTML = `<input type="text" id="userId" style="display: none;" value="${userId || ''}">`;
         menu.innerHTML += `
-            <button data-submenu="my_website_intro" data-section="my_website_intro">
+            <button data-section="info">
+                <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
+            </button>
+            <button data-submenu="my_website_submenu" data-section="my_website_intro_section">
                 <span class="button-content"><i class="fas fa-globe"></i> My Web Site</span>
                 <i class="fas fa-caret-right caret"></i>
             </button>
-            <div id="my_website_intro" class="submenu">
+            <div id="my_website_submenu" class="submenu">
                 <button data-section="wix">
                     <span class="button-content"><span class="icon-wix menu-size"></span> Wix</span>
                 </button>
@@ -125,13 +129,13 @@ function updateMenu() {
             <button data-section="categories">
                 <span class="button-content"><i class="fas fa-list"></i> My Categories</span>
             </button>
-            <button data-submenu="referrals_intro" data-section="referrals_intro">
+            <button data-submenu="referrals_submenu" data-section="referrals_intro_section">
                 <span class="button-content">
                     <span class="icon-community menu-size"></span> My Referrals
                 </span>
                 <i class="fas fa-caret-right caret"></i>
             </button>
-            <div id="referrals_intro" class="submenu">
+            <div id="referrals_submenu" class="submenu">
                 <button data-section="visits">
                     <span class="button-content"><i class="fas fa-eye"></i> Visits</span>
                 </button>
@@ -144,7 +148,7 @@ function updateMenu() {
                 <i class="fas fa-caret-right caret"></i>
             </button>
             <div id="my-account-submenu" class="submenu">
-                <button data-section="contact-details">
+                <button data-section="contact_details">
                     <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
                 </button>
                 <button data-section="change-password">
@@ -167,8 +171,8 @@ function updateMenu() {
         console.log('updateMenu - Menu updated');
 
         // Ensure submenu visibility is handled correctly
-        if (typeof initializeNavigation === 'function') {
-            initializeNavigation(); // From site-navigation.js to fix submenu hiding
+        if (typeof window.siteNavigation?.initializeNavigation === 'function') {
+            window.siteNavigation.initializeNavigation(); // From site-navigation.js to fix submenu hiding
             console.log('updateMenu - initializeNavigation called to fix submenu hiding');
         } else {
             console.error('updateMenu - initializeNavigation function not found');

@@ -1,6 +1,6 @@
-{% extends "auth.inc" %}
+{% extends "base.inc" %}
 {% block content %}
-<!-- Deployed 2025-03-29 v6 -->
+<!-- Deployed 2025-03-30 v8 -->
 <div class="login-page">
     <div id="loadingOverlay" class="hidden">
         <div class="multicircle-loader">
@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <div class="container" id="loginContainer" style="display: block !important; visibility: visible !important; opacity: 1 !important;">
+    <div class="container hidden" id="loginContainer">
         <h2>Login</h2>
         <div class="custom-login-notice">
             <span class="highlight">Please log in</span> to access your account. If you don’t have an account, click "Sign Up" below.
@@ -81,59 +81,29 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Login script loaded - Version: Using plain fetch for /login - Timestamp:', new Date().toISOString());
+        console.log('Login script loaded - Version: v8 - Timestamp:', new Date().toISOString());
 
-        // Check for site-navigation.js after DOM load
-        if (!window.siteNavigation || !window.siteNavigation.fetchProtectedPage) {
-            console.error('site-navigation.js not loaded properly after DOMContentLoaded');
-            return; // Avoid throwing an error to allow partial functionality
+        if (!window.siteNavigation || !window.siteNavigation.fetchProtectedPage || !window.decodeJWT || !window.initialize) {
+            console.error('Required scripts (site-navigation.js, site-auth.js, or page-load.js) not loaded');
+            showLogin();
+            return;
         }
 
         function showLoadingOverlay() {
-            let overlay = document.getElementById('loadingOverlay');
-            if (overlay) {
-                overlay.classList.remove('hidden');
-                console.log('showLoadingOverlay - Overlay set to visible');
-            } else {
-                console.error('showLoadingOverlay - Overlay not found');
-            }
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.classList.remove('hidden');
         }
 
         function hideLoadingOverlay() {
-            let overlay = document.getElementById('loadingOverlay');
-            if (overlay) {
-                overlay.classList.add('hidden');
-                console.log('hideLoadingOverlay - Overlay hidden');
-            } else {
-                console.error('hideLoadingOverlay - Overlay not found');
-            }
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.classList.add('hidden');
         }
 
         function showLogin() {
             const loginContainer = document.getElementById('loginContainer');
             const forgotContainer = document.getElementById('forgotPasswordContainer');
             const verifyContainer = document.getElementById('verifyOtpContainer');
-            const loginPage = document.querySelector('.login-page');
-            
-            if (loginContainer) {
-                loginContainer.classList.remove('hidden');
-                loginContainer.style.display = 'block';
-                loginContainer.style.visibility = 'visible';
-                loginContainer.style.opacity = '1';
-                console.log('showLogin - Login container set to visible');
-            } else {
-                console.error('showLogin - Login container not found');
-            }
-            
-            if (loginPage) {
-                loginPage.style.display = 'block';
-                loginPage.style.visibility = 'visible';
-                loginPage.style.opacity = '1';
-                console.log('showLogin - Login page set to visible');
-            } else {
-                console.error('showLogin - Login page not found');
-            }
-            
+            if (loginContainer) loginContainer.classList.remove('hidden');
             if (forgotContainer) forgotContainer.classList.add('hidden');
             if (verifyContainer) verifyContainer.classList.add('hidden');
             hideLoadingOverlay();
@@ -154,42 +124,16 @@
             hideLoadingOverlay();
         }
 
-        console.log('DOMContentLoaded - Initializing login page');
-        try {
-            showLogin();
-            console.log('DOMContentLoaded - showLogin executed successfully');
+        function redirectBasedOnPermissions() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                showLogin();
+                return;
+            }
 
-            document.querySelectorAll('.toggle-password').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const input = this.parentElement.querySelector('input');
-                    const icon = this.querySelector('i');
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
-                    } else {
-                        input.type = 'password';
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                    }
-                });
-            });
-
-            function redirectBasedOnPermissions() {
-                const token = localStorage.getItem('authToken');
-                if (!token) return false;
-
-                let decoded;
-                try { 
-                    decoded = decodeJWT(token); 
-                    console.log('redirectBasedOnPermissions - Token decoded:', decoded);
-                } catch (e) {
-                    toastr.error('Invalid token format. Please log in again.');
-                    localStorage.removeItem('authToken');
-                    return false;
-                }
-
-                const permissions = decoded.permissions;
+            try {
+                const decoded = decodeJWT(token);
+                const permissions = decoded.permissions || [];
                 let redirectPath;
                 if (permissions.includes('admin')) redirectPath = '/admin';
                 else if (permissions.includes('wixpro')) redirectPath = '/partner';
@@ -198,180 +142,172 @@
                 else redirectPath = '/';
 
                 if (window.location.pathname !== redirectPath) {
-                    console.log('redirectBasedOnPermissions - Redirecting to:', redirectPath);
-                    window.siteNavigation.fetchProtectedPage(redirectPath);
-                    return true;
-                }
-                console.log('redirectBasedOnPermissions - No redirect needed');
-                return false;
-            }
-
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                // Remove existing listeners to prevent overrides
-                const newForm = loginForm.cloneNode(true);
-                loginForm.parentNode.replaceChild(newForm, loginForm);
-                document.getElementById('loginForm').addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const email = document.getElementById('loginEmail').value.trim();
-                    const password = document.getElementById('loginPassword').value;
-
+                    console.log('Redirecting to:', redirectPath);
                     showLoadingOverlay();
-                    console.log('Attaching loginForm event listener - Using plain fetch - Timestamp:', new Date().toISOString());
-                    try {
-                        console.log('Submitting login request with plain fetch');
-                        const response = await fetch(`${window.apiUrl}/login`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                            body: JSON.stringify({ email, password })
+                    window.siteNavigation.fetchProtectedPage(redirectPath)
+                        .then(() => {
+                            const pageType = redirectPath.slice(1) || 'default';
+                            window.initialize(pageType);
                         });
-                        if (!response) throw new Error('No response from server');
-                        if (!response.ok) throw new Error((await response.json()).message || `Login failed with status ${response.status}`);
+                } else {
+                    showLogin();
+                }
+            } catch (e) {
+                console.error('Invalid token:', e.message);
+                localStorage.removeItem('authToken');
+                showLogin();
+            }
+        }
 
-                        const data = await response.json();
-                        if (data.status !== 'success') throw new Error(data.message || 'Login failed');
+        // Initial check
+        redirectBasedOnPermissions();
 
-                        localStorage.setItem('authToken', data.token);
-                        if (data.userId) localStorage.setItem('userId', data.userId);
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                input.type = input.type === 'password' ? 'text' : 'password';
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+        });
 
-                        const decoded = decodeJWT(data.token);
-                        const permissions = decoded.permissions || [];
-                        const needsVerification = (permissions.includes('merchant') || permissions.includes('community')) && !permissions.includes('verified');
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
 
-                        if (needsVerification) {
-                            console.log('Needs OTP verification');
-                            const otpResponse = await fetch(`${window.apiUrl}/reset-password`, {
+                showLoadingOverlay();
+                try {
+                    const response = await fetch(`${window.apiUrl}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    if (!response.ok) throw new Error((await response.json()).message || 'Login failed');
+
+                    const data = await response.json();
+                    if (data.status !== 'success') throw new Error(data.message || 'Login failed');
+
+                    localStorage.setItem('authToken', data.token);
+                    if (data.userId) localStorage.setItem('userId', data.userId);
+
+                    const decoded = decodeJWT(data.token);
+                    const permissions = decoded.permissions || [];
+                    const needsVerification = (permissions.includes('merchant') || permissions.includes('community')) && !permissions.includes('verified');
+
+                    if (needsVerification) {
+                        const otpResponse = await fetch(`${window.apiUrl}/reset-password`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email })
+                        });
+                        const otpData = await otpResponse.json();
+                        if (!otpResponse.ok) throw new Error(otpData.message || 'Failed to send OTP');
+
+                        toastr.success('OTP sent to your phone. Please enter it below.');
+                        const loginContainer = document.getElementById('loginContainer');
+                        loginContainer.innerHTML = `
+                            <h2>Verify OTP</h2>
+                            <form id="loginOtpForm" class="form">
+                                <div class="form-group">
+                                    <label for="loginOtp">One-Time Password:</label>
+                                    <input type="text" id="loginOtp" name="otp" placeholder="Enter OTP" required>
+                                </div>
+                                <button type="submit">Verify OTP</button>
+                            </form>
+                        `;
+                        hideLoadingOverlay();
+
+                        document.getElementById('loginOtpForm').addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const otp = document.getElementById('loginOtp').value.trim();
+                            if (!otp) {
+                                toastr.error('Please enter the OTP.');
+                                return;
+                            }
+
+                            showLoadingOverlay();
+                            const verifyResponse = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ email })
+                                body: JSON.stringify({ email, code: otp, new_password: password })
                             });
-                            const otpData = await otpResponse.json();
-                            if (!otpResponse.ok) throw new Error(otpData.message || 'Failed to send OTP');
+                            const verifyData = await verifyResponse.json();
+                            if (!verifyResponse.ok) throw new Error(verifyData.message || 'OTP verification failed');
 
-                            toastr.success('OTP sent to your phone. Please enter it below.');
-                            const loginContainer = document.getElementById('loginContainer');
-                            loginContainer.innerHTML = `
-                                <h2>Verify OTP</h2>
-                                <form id="loginOtpForm" class="form">
-                                    <div class="form-group">
-                                        <label for="loginOtp">One-Time Password:</label>
-                                        <input type="text" id="loginOtp" name="otp" placeholder="Enter OTP" required>
-                                    </div>
-                                    <button type="submit">Verify OTP</button>
-                                </form>
-                            `;
-                            hideLoadingOverlay();
-
-                            document.getElementById('loginOtpForm').addEventListener('submit', async (e) => {
-                                e.preventDefault();
-                                const otp = document.getElementById('loginOtp').value.trim();
-                                if (!otp) {
-                                    toastr.error('Please enter the OTP.');
-                                    return;
-                                }
-
-                                showLoadingOverlay();
-                                const verifyResponse = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ email, code: otp, new_password: password })
-                                });
-                                const verifyData = await verifyResponse.json();
-                                if (!verifyResponse.ok) throw new Error(verifyData.message || 'OTP verification failed');
-
-                                localStorage.setItem('authToken', verifyData.token);
-                                toastr.success('Verification successful! Redirecting...');
-                                redirectBasedOnPermissions();
-                            });
-                        } else {
-                            console.log('Login successful, redirecting based on permissions');
+                            localStorage.setItem('authToken', verifyData.token);
+                            toastr.success('Verification successful! Redirecting...');
                             redirectBasedOnPermissions();
-                        }
-                    } catch (error) {
-                        toastr.error(error.message || 'Unable to connect to server.');
-                        hideLoadingOverlay();
+                        });
+                    } else {
+                        redirectBasedOnPermissions();
                     }
+                } catch (error) {
+                    toastr.error(error.message || 'Unable to connect to server.');
+                    hideLoadingOverlay();
+                }
+            });
+        }
+
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            showLoadingOverlay();
+            try {
+                const response = await fetch(`${window.apiUrl}/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
                 });
-            } else {
-                console.error('loginForm element not found');
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Reset request failed');
+
+                toastr.success('A one-time password has been sent to your phone.');
+                showVerifyOtp(email);
+            } catch (error) {
+                toastr.error(error.message || 'Error sending OTP');
+                hideLoadingOverlay();
+            }
+        });
+
+        document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('verifyEmail').value.trim();
+            const code = document.getElementById('otpCode').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            const passwordRegex = /^(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                toastr.error('New password must be at least 8 characters long and include numbers');
+                return;
+            }
+            if (newPassword !== confirmNewPassword) {
+                toastr.error('New password and confirmation do not match');
+                return;
             }
 
-            document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const email = document.getElementById('forgotEmail').value.trim();
+            showLoadingOverlay();
+            try {
+                const response = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code, new_password: newPassword })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Verification failed');
 
-                showLoadingOverlay();
-                try {
-                    const response = await fetch(`${window.apiUrl}/reset-password`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email })
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message || 'Reset request failed');
-
-                    toastr.success('A one-time password has been sent to your phone.');
-                    showVerifyOtp(email);
-                } catch (error) {
-                    toastr.error(error.message || 'Error sending OTP');
-                    hideLoadingOverlay();
-                }
-            });
-
-            document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const email = document.getElementById('verifyEmail').value.trim();
-                const code = document.getElementById('otpCode').value.trim();
-                const newPassword = document.getElementById('newPassword').value;
-                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-
-                const passwordRegex = /^(?=.*\d).{8,}$/;
-                if (!passwordRegex.test(newPassword)) {
-                    toastr.error('New password must be at least 8 characters long and include numbers');
-                    return;
-                }
-                if (newPassword !== confirmNewPassword) {
-                    toastr.error('New password and confirmation do not match');
-                    return;
-                }
-
-                showLoadingOverlay();
-                try {
-                    const response = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, code, new_password: newPassword })
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message || 'Verification failed');
-
-                    toastr.success('Password updated successfully!');
-                    showLogin();
-                } catch (error) {
-                    toastr.error(error.message || 'Error verifying OTP');
-                    hideLoadingOverlay();
-                }
-            });
-
-            setTimeout(() => {
-                const loginContainer = document.getElementById('loginContainer');
-                const loginPage = document.querySelector('.login-page');
-                if (loginContainer && window.getComputedStyle(loginContainer).display === 'none') {
-                    console.error('DOMContentLoaded - Login container still hidden after showLogin');
-                    loginContainer.style.display = 'block';
-                    loginContainer.style.visibility = 'visible';
-                    loginContainer.style.opacity = '1';
-                }
-                if (loginPage && window.getComputedStyle(loginPage).display === 'none') {
-                    console.error('DOMContentLoaded - Login page still hidden');
-                    loginPage.style.display = 'block';
-                    loginPage.style.visibility = 'visible';
-                    loginPage.style.opacity = '1';
-                }
-            }, 100);
-        } catch (e) {
-            console.error('DOMContentLoaded - Error in initialization:', e.message);
-        }
+                toastr.success('Password updated successfully!');
+                showLogin();
+            } catch (error) {
+                toastr.error(error.message || 'Error verifying OTP');
+                hideLoadingOverlay();
+            }
+        });
     });
 </script>
 {% endblock %}

@@ -1,166 +1,105 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>clubmadeira.io | Partner</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <link rel="stylesheet" href="/static/styles.css">
-    <!-- Favicon: Font Awesome "group-arrows-rotate" SVG (Unicode f366) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
-    <!-- Define window.apiUrl before loading scripts -->
-    <script>
-        window.apiUrl = 'https://clubmadeira.io';
-    </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
-</head>
-<body>
-    {% include 'overlay.inc' %}  <!-- Loading overlay added -->
-    <div class="layout-wrapper">
-        <div class="header">
-            <div class="header-content" id="brandingContent">
-                <!-- Branding content will be loaded here -->
+{% extends "base.inc" %}
+{% block content %}
+    <div class="main-container">
+        <div class="menu-container">
+            <div class="menu">
+                <button data-section="info">
+                    <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
+                </button>
+                <button data-submenu="my-account-submenu" data-section="my-account">
+                    <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
+                    <i class="fas fa-caret-right caret"></i>
+                </button>
+                <div id="my-account-submenu" class="submenu">
+                    <button data-section="my-account">
+                        <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
+                    </button>
+                    <button data-section="change-password">
+                        <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
+                    </button>
+                </div>
+                <button data-section="my-products">
+                    <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
+                </button>
+                <button data-section="site-requests">
+                    <span class="button-content"><i class="fas fa-file-alt"></i> Site Requests</span>
+                </button>
+                <button data-section="documentation">
+                    <span class="button-content"><i class="fas fa-book"></i> Documentation</span>
+                </button>
+                {% include 'account_menu.inc' with context %}
             </div>
         </div>
-        <div class="main-container">
-            <div class="menu-container">
-                <div class="menu">
-                    <button data-section="welcome">
-                        <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
-                    </button>
-                    <button data-submenu="my-account-submenu" data-section="my-account">
-                        <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
-                        <i class="fas fa-caret-right caret"></i>
-                    </button>
-                    <div id="my-account-submenu" class="submenu">
-                        <button data-section="my-account">
-                            <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
-                        </button>
-                        <button data-section="change-password">
-                            <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
-                        </button>
+        <div class="content-wrapper">
+            {% include 'welcome.inc' with context %}
+            <div id="my-products" class="section" style="display: none;">
+                <h2>My Products</h2>
+                <p>These are the products from your parts feed.</p>
+                <table id="productTable">
+                    <thead>
+                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
+                    </thead>
+                    <tbody id="productList"></tbody>
+                </table>
+            </div>
+            <div id="site-requests" class="section" style="display: none;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <i class="fas fa-file-alt" style="font-size: 32px; margin-right: 10px;"></i>
+                    <h2>Site Requests</h2>
+                </div>
+                <p>View and manage site requests from merchants and communities. Click a row to see details.</p>
+                <table id="siteRequestsTable">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Received At</th>
+                            <th>Contact Name</th>
+                            <th>Email</th>
+                            <th>Organisation</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="siteRequestsList"></tbody>
+                </table>
+                <div id="apiKeyModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <span class="close" data-action="closeApiKeyModal"><i class="fas fa-times"></i></span>
+                        <h3><i class="fas fa-key"></i> Enter API Key</h3>
+                        <label for="merchantWixClientId">Wix Client ID:</label>
+                        <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
+                        <button data-action="saveMerchantWixClientId"><i class="fas fa-save"></i> Save</button>
                     </div>
-                    <button data-section="my-products">
-                        <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
-                    </button>
-                    <button data-section="site-requests">
-                        <span class="button-content"><i class="fas fa-file-alt"></i> Site Requests</span>
-                    </button>
-                    <button data-section="documentation">
-                        <span class="button-content"><i class="fas fa-book"></i> Documentation</span>
-                    </button>
-                    <button data-href="/admin">
-                        <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
-                    </button>
-                    <button id="logOffBtn" style="background-color: #dc3545;">
-                        <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
-                    </button>
                 </div>
             </div>
-            <div class="content-wrapper">
-                <div id="welcome" class="section active">
-                    <h2>Welcome to Your Partner Dashboard</h2>
-                    <p>This dashboard is designed for partners to manage merchant integrations with clubmadeira.io. Use the "My Account" section to update your contact details or change your password for security. If you have admin privileges, you can return to the admin panel using the "Back to Admin" button.</p>
+            <div id="site-request-detail" class="section" style="display: none;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <i class="fas fa-info-circle" style="font-size: 32px; margin-right: 10px;"></i>
+                    <h2>Site Request Details</h2>
                 </div>
-                <div id="my-account" class="section">
-                    <h2>My Account</h2>
-                    <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security. Use the options below to navigate to the desired section:</p>
+                <div class="settings-form">
+                    <button data-section="site-requests"><i class="fas fa-arrow-left"></i> Back to Site Requests</button>
+                    <div id="siteRequestContent"></div>
                 </div>
-                {% with user_type='partner' %}
-                    {% include 'my_account.inc' %}
-                {% endwith %}
-                {% with user_type='partner' %}
-                    <div id="change-password" class="section" style="display: none;">
-                        {% include 'change_password.inc' %}
-                    </div>
-                {% endwith %}
-                <div id="my-products" class="section">
-                    <h2>My Products</h2>
-                    <p>These are the products from your parts feed.</p>
-                    <table id="productTable">
-                        <thead>
-                            <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
-                        </thead>
-                        <tbody id="productList"></tbody>
-                    </table>
+            </div>
+            <div id="documentation" class="section" style="display: none;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <i class="fas fa-book" style="font-size: 32px; margin-right: 10px;"></i>
+                    <h2>Documentation</h2>
                 </div>
-                <div id="site-requests" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fas fa-file-alt" style="font-size: 32px; margin-right: 10px;"></i>
-                        <h2>Site Requests</h2>
-                    </div>
-                    <p>View and manage site requests from merchants and communities. Click a row to see details.</p>
-                    <table id="siteRequestsTable">
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Received At</th>
-                                <th>Contact Name</th>
-                                <th>Email</th>
-                                <th>Organisation</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="siteRequestsList"></tbody>
-                    </table>
-                    <div id="apiKeyModal" class="modal" style="display: none;">
-                        <div class="modal-content">
-                            <span class="close" data-action="closeApiKeyModal"><i class="fas fa-times"></i></span>
-                            <h3><i class="fas fa-key"></i> Enter API Key</h3>
-                            <label for="merchantWixClientId">Wix Client ID:</label>
-                            <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
-                            <button data-action="saveMerchantWixClientId"><i class="fas fa-save"></i> Save</button>
-                        </div>
-                    </div>
+                <div id="documentation-content">
+                    <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
                 </div>
-                <div id="site-request-detail" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fas fa-info-circle" style="font-size: 32px; margin-right: 10px;"></i>
-                        <h2>Site Request Details</h2>
-                    </div>
-                    <div class="settings-form">
-                        <button data-section="site-requests"><i class="fas fa-arrow-left"></i> Back to Site Requests</button>
-                        <div id="siteRequestContent"></div>
-                    </div>
-                </div>
-                <div id="documentation" class="section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <i class="fas fa-book" style="font-size: 32px; margin-right: 10px;"></i>
-                        <h2>Documentation</h2>
-                    </div>
-                    <div id="documentation-content">
-                        <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
-                    </div>
-                </div>
+            </div>
+            <div id="my-account" class="section" style="display: none;">
+                <h2>My Account</h2>
+                <p>Update your contact details here.</p>
+                <!-- Assuming this is populated dynamically or via account_menu.inc -->
+            </div>
+            <div id="change-password" class="section" style="display: none;">
+                <h2>Change Password</h2>
+                <p>Change your password here.</p>
+                <!-- Assuming this is populated dynamically or via account_menu.inc -->
             </div>
         </div>
     </div>
-
-    <!-- Load scripts in the correct order with defer where appropriate -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js" defer></script>
-    <script src="/static/js/site-auth.js" defer></script>
-    <script src="/static/js/site-navigation.js" defer></script>
-    <script src="/static/js/site-request.js" defer></script>
-    <script src="/static/js/user-management.js" defer></script>
-    <script src="/static/js/partner-page.js" defer></script>
-    <script src="/static/js/page-load.js" defer></script>
-    <script>
-        // Wait for the initialize function to become available
-        function waitForInitialize(attempts = 50, delay = 1000) {
-            if (typeof window.initialize === 'function') {
-                console.log('Initialize function found, calling initialize("partner")');
-                window.initialize('partner');
-            } else if (attempts > 0) {
-                console.log(`Initialize function not found, retrying (${attempts} attempts left)...`);
-                setTimeout(() => waitForInitialize(attempts - 1, delay), delay);
-            } else {
-                console.error('Initialize function not found after maximum retries');
-            }
-        }
-        // Call waitForInitialize after all scripts are loaded
-        waitForInitialize();
-    </script>
-</body>
-</html>
+{% endblock %}

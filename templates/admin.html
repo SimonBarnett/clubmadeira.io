@@ -97,38 +97,12 @@
                     </button>
                 </div>
             </div>
-            <button data-submenu="myAccountSubmenu" data-section="myAccountIntro">
-                <span class="button-content"><i class="fas fa-user"></i> My Account</span>
-                <i class="fas fa-caret-right caret"></i>
-            </button>
-            <div id="myAccountSubmenu" class="submenu">
-                <button data-section="contactDetails">
-                    <span class="button-content"><i class="fas fa-address-book"></i> Contact Details</span>
-                </button>
-                <button data-section="changePassword">
-                    <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
-                </button>
-            </div>
-            <button id="logOffBtn" style="background-color: #dc3545;">
-                <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
-            </button>
+            {% include 'account_menu.inc' with context %}
         </div>
     </div>
     <div class="content-wrapper">
-        <div id="welcome" class="section">
-            <h2>Welcome to Admin Dashboard</h2>
-            <p>This is the main administration tool for managing your affiliate programs and deal listings.</p>
-            <p>Use the menu on the left to:</p>
-            <ul>
-                <li>View and filter discounted deals in "Deal Listings"</li>
-                <li>Manage affiliate credentials under "Affiliate Programs"</li>
-                <li>Manage users under "User Management"</li>
-                <li>Test referral tracking with "Test Scripts"</li>
-                <li>Update your account details in "My Account"</li>
-            </ul>
-        </div>
-
-        <div id="deal_listings" class="section">
+        {% include 'welcome.inc' with context %}
+        <div id="deal_listings" class="section" style="display: none;">
             <h2>Discounted Deal Listings</h2>
             <p>This section displays all currently active deal listings available across your affiliate programs.</p>
             <div style="display: flex; gap: 20px;">
@@ -155,14 +129,12 @@
                 </div>
             </div>
         </div>
-
-        <div id="affiliateProgramsIntro" class="section">
+        <div id="affiliateProgramsIntro" class="section" style="display: none;">
             <h2>Affiliate Programs</h2>
             <p>Use this section to manage your affiliate program credentials.</p>
             <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
         </div>
-
-        <div id="amazon_uk" class="section">
+        <div id="amazon_uk" class="section" style="display: none;">
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <span class="icon-amazon-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
                 <h2>Amazon UK Credentials</h2>
@@ -182,8 +154,7 @@
                 <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
             </div>
         </div>
-
-        <div id="ebay_uk" class="section">
+        <div id="ebay_uk" class="section" style="display: none;">
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <span class="icon-ebay-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
                 <h2>eBay UK Credentials</h2>
@@ -197,8 +168,7 @@
                 <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
             </div>
         </div>
-
-        <div id="awin" class="section">
+        <div id="awin" class="section" style="display: none;">
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <i class="fas fa-network-wired" style="font-size: 32px; margin-right: 10px; color: white;"></i>
                 <h2>Awin Credentials</h2>
@@ -212,8 +182,7 @@
                 <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
             </div>
         </div>
-
-        <div id="cj" class="section">
+        <div id="cj" class="section" style="display: none;">
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <i class="fas fa-link" style="font-size: 32px; margin-right: 10px; color: white;"></i>
                 <h2>CJ Credentials</h2>
@@ -229,8 +198,7 @@
                 <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
             </div>
         </div>
-
-        <div id="textmagic" class="section">
+        <div id="textmagic" class="section" style="display: none;">
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <i class="fas fa-sms" style="font-size: 32px; margin-right: 10px; color: white;"></i>
                 <h2>TextMagic Credentials</h2>
@@ -246,8 +214,7 @@
                 <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
             </div>
         </div>
-
-        <div id="tiny" class="section">
+        <div id="tiny" class="section" style="display: none;">
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <i class="fas fa-pen" style="font-size: 32px; margin-right: 10px; color: white;"></i>
                 <h2>tiny Credentials</h2>
@@ -261,8 +228,7 @@
                 <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
             </div>
         </div>
-
-        <div id="userManagementIntro" class="section">
+        <div id="userManagementIntro" class="section" style="display: none;">
             <h2>User Management</h2>
             <p>This section allows you to manage different types of users in your system.</p>
             <p>Select a user type from the menu to view their details or modify their permissions:</p>
@@ -272,8 +238,7 @@
                 <li><strong>Merchants:</strong> Manage merchant users.</li>
             </ul>
         </div>
-
-        <div id="merchants" class="section">
+        <div id="merchants" class="section" style="display: none;">
             <h2>Merchant Management</h2>
             <table>
                 <thead>
@@ -290,8 +255,7 @@
                 </tbody>
             </table>
         </div>
-
-        <div id="communities" class="section">
+        <div id="communities" class="section" style="display: none;">
             <h2>Communities Management</h2>
             <table>
                 <thead>
@@ -308,8 +272,7 @@
                 </tbody>
             </table>
         </div>
-
-        <div id="partners" class="section">
+        <div id="partners" class="section" style="display: none;">
             <h2>Partner Management</h2>
             <table>
                 <thead>
@@ -326,62 +289,72 @@
                 </tbody>
             </table>
         </div>
-
-        <div id="testScriptsIntro" class="section">
+        <div id="testScriptsIntro" class="section" style="display: none;">
             <h2>Test Scripts</h2>
             <p>Use this section to test referral tracking and other scripts.</p>
             <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
         </div>
-
-        <div id="referralTestsIntro" class="section">
+        <div id="referralTestsIntro" class="section" style="display: none;">
             <h2>Referral Tests</h2>
             <p>This section contains tools to test referral tracking functionality.</p>
             <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
         </div>
-
-        <div id="page_visit_test" class="section">
+        <div id="page_visit_test" class="section" style="display: none;">
             <h2>Page Visit Referral Test</h2>
             <div class="form">
                 <form id="pageVisitForm">
                     <table>
-                        <tr><td><label for="pageReferer">Referer:</label></td><td><select id="pageReferer" name="referer"></select></td></tr>
-                        <tr><td><label for="page">Page:</label></td><td><input type="text" id="page" name="page" value="/home"></td></tr>
-                        <tr><td><label for="pageTimestamp">Timestamp:</label></td><td><input type="text" id="pageTimestamp" name="timestamp"></td></tr>
-                        <tr><td colspan="2"><button type="submit">Submit Page Visit</button></td></tr>
+                        <tr>
+                            <td><label for="pageReferer">Referer:</label></td>
+                            <td><select id="pageReferer" name="referer"></select></td>
+                        </tr>
+                        <tr>
+                            <td><label for="page">Page:</label></td>
+                            <td><input type="text" id="page" name="page" value="/home"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="pageTimestamp">Timestamp:</label></td>
+                            <td><input type="text" id="pageTimestamp" name="timestamp"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><button type="submit">Submit Page Visit</button></td>
+                        </tr>
                     </table>
                 </form>
             </div>
         </div>
-
-        <div id="order_test" class="section">
+        <div id="order_test" class="section" style="display: none;">
             <h2>Order Referral Test</h2>
             <div class="form">
                 <form id="orderForm">
                     <table>
-                        <tr><td><label for="orderReferer">Referer:</label></td><td><select id="orderReferer" name="referer"></select></td></tr>
-                        <tr><td><label for="orderId">Order ID:</label></td><td><input type="text" id="orderId" name="orderId" value="ORD12345"></td></tr>
-                        <tr><td><label for="buyer">Buyer Name:</label></td><td><input type="text" id="buyer" name="buyer" value="John Doe"></td></tr>
-                        <tr><td><label for="total">Total Amount (£):</label></td><td><input type="number" id="total" name="total" value="99.99" step="0.01"></td></tr>
-                        <tr><td><label for="orderTimestamp">Timestamp:</label></td><td><input type="text" id="orderTimestamp" name="timestamp"></td></tr>
-                        <tr><td colspan="2"><button type="submit">Submit Order</button></td></tr>
+                        <tr>
+                            <td><label for="orderReferer">Referer:</label></td>
+                            <td><select id="orderReferer" name="referer"></select></td>
+                        </tr>
+                        <tr>
+                            <td><label for="orderId">Order ID:</label></td>
+                            <td><input type="text" id="orderId" name="orderId" value="ORD12345"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="buyer">Buyer Name:</label></td>
+                            <td><input type="text" id="buyer" name="buyer" value="John Doe"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="total">Total Amount (£):</label></td>
+                            <td><input type="number" id="total" name="total" value="99.99" step="0.01"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="orderTimestamp">Timestamp:</label></td>
+                            <td><input type="text" id="orderTimestamp" name="timestamp"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><button type="submit">Submit Order</button></td>
+                        </tr>
                     </table>
                 </form>
             </div>
         </div>
-
-        <div id="myAccountIntro" class="section">
-            <h2>My Account</h2>
-            <p>Welcome to your account settings. Here, you can manage your personal information and update your password for security.</p>
-            <p>Use the options below to navigate to the desired section:</p>
-        </div>
-
-        {% include 'my_account.inc' %}
-                
-        <div id="changePassword" class="section" style="display: none;">
-            {% include 'change_password.inc' %}
-        </div>
-    
     </div>
 </div>
 {% endblock %}
-

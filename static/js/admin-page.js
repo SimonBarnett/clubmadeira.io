@@ -1,3 +1,4 @@
+// admin-page.js
 function initializeAdmin(pageType) {
     console.log('initializeAdmin - Initializing admin page with type: ' + pageType);
     const token = localStorage.getItem('authToken');
@@ -15,14 +16,12 @@ function initializeAdmin(pageType) {
     }
 
     // Load initial content
-    loadBranding(pageType, 'brandingContent');
     setupNavigation();
-    window.siteNavigation.showSection('welcome');
 
     // Fetch and display contact_name in the welcome section
     if (typeof loadSettings === 'function') {
         loadSettings().then(settings => {
-            const contactName = settings.contact_name || 'User';
+            const contactName = settings?.contact_name || 'User'; // Use optional chaining and fallback
             const userContactNameSpan = document.getElementById('user-contact-name');
             if (userContactNameSpan) {
                 userContactNameSpan.textContent = contactName;
@@ -33,21 +32,24 @@ function initializeAdmin(pageType) {
         }).catch(error => {
             console.error('initializeAdmin - Error loading settings:', error.message);
             toastr.error('Failed to load user settings');
+            // Set default name on error
+            const userContactNameSpan = document.getElementById('user-contact-name');
+            if (userContactNameSpan) {
+                userContactNameSpan.textContent = 'User';
+            }
         });
     } else {
         console.error('initializeAdmin - loadSettings function not found');
+        toastr.error('Settings loader unavailable');
+        // Set default name if loadSettings is missing
+        const userContactNameSpan = document.getElementById('user-contact-name');
+        if (userContactNameSpan) {
+            userContactNameSpan.textContent = 'User';
+        }
     }
 
     loadInitialData();
     setupEventListeners();
-
-    // Call shared "Change Password" logic
-    if (typeof setupChangePassword === 'function') {
-        setupChangePassword();
-        console.log('initializeAdmin - Change Password logic initialized');
-    } else {
-        console.error('initializeAdmin - setupChangePassword function not found');
-    }
 
     // Ensure loading overlay is hidden
     hideLoadingOverlay();
@@ -88,17 +90,34 @@ function setupNavigation() {
 
 function loadInitialData() {
     console.log('loadInitialData - Loading initial data');
-    authenticatedFetch(`${window.apiUrl}/deals`)
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to fetch deals');
-            return response.json();
+    // First, fetch categories to get a valid category_id
+    authenticatedFetch(`${window.apiUrl}/categories`)
+        .then(response => response.json())
+        .then(categories => {
+            const categoryId = categories[0]?.id || 'default'; // Use the first category or a default
+            return authenticatedFetch(`${window.apiUrl}/deals?category_id=${categoryId}`);
         })
+        .then(response => response.json())
         .then(data => {
             console.log('loadInitialData - Deals fetched:', data);
-            // Placeholder for deal list population
+            const dealList = document.getElementById('dealList');
+            if (dealList) {
+                dealList.innerHTML = data.map(deal => `
+                    <tr>
+                        <td>${deal.category}</td>
+                        <td>${deal.title}</td>
+                        <td><a href="${deal.url}" target="_blank">Link</a></td>
+                        <td>${deal.price}</td>
+                        <td>${deal.original}</td>
+                        <td>${deal.discount}</td>
+                        <td><img src="${deal.image}" alt="Product Image" style="width: 50px;"></td>
+                        <td>${deal.quantity}</td>
+                    </tr>
+                `).join('');
+            }
         })
         .catch(error => {
-            console.error('loadInitialData - Error:', error);
+            console.error('loadInitialData - Failed to load deal listings:', error);
             toastr.error('Failed to load deal listings');
         });
 }

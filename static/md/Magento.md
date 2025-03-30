@@ -1,63 +1,55 @@
-# Magento API Integration for Categories and Products
+# Magento API Settings for Categories and Products
 
-This guide covers accessing category and product information from Magento using the Magento REST API.
+This guide explains how to obtain the `ACCESS_TOKEN` and `STORE_URL` for the Magento REST API, detailed in the [Magento REST API documentation](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html).
 
 ## Prerequisites
-- A Magento 2 store (Open Source or Commerce).
-- Admin access to create integration credentials.
+- A Magento 2 store (self-hosted or cloud).
+- Admin access to the Magento Admin Panel.
 
-## Required Credentials
-- **Access Token**: Generated via an integration or admin user.
-- **Store URL**: Your Magento store domain (e.g., `https://mystorename.com`).
+## Obtaining the ACCESS_TOKEN
+The `ACCESS_TOKEN` is an OAuth or integration token for API access.
 
-To get credentials:
-1. Log in to Magento Admin.
-2. Go to **System > Integrations > Add New Integration**.
-3. Name it, set permissions for `Catalog > Categories` and `Catalog > Products`.
-4. Save and activate to get an Access Token (OAuth-based).
+1. **Log into Magento Admin**:
+   - Access `https://{your-store}/admin`.
 
-Alternatively, use admin username/password to request a token:
+2. **Create an Integration**:
+   - Go to "System" > "Integrations".
+   - Click "Add New Integration".
+   - Name it (e.g., "ClubMadeira Integration").
+   - Set permissions (e.g., "Catalog" > "Categories" and "Products").
 
-@bash
-curl -X POST "https://{storename}.com/rest/V1/integration/admin/token" \
--H "Content-Type: application/json" \
--d '{"username":"admin","password":"yourpassword"}'
-@
+3. **Activate the Integration**:
+   - Save and activate the integration.
+   - Approve the permissions prompt.
 
-- Response provides the Access Token.
+4. **Copy the ACCESS_TOKEN**:
+   - After activation, Magento provides:
+     - `Consumer Key`
+     - `Consumer Secret`
+     - `Access Token` (this is your `ACCESS_TOKEN`)
+     - `Access Token Secret`
+   - Example: `abcdefghijklmnopqrstuvwxyz123456`.
+   - Save the `ACCESS_TOKEN` securely.
 
-## Authentication
-Use the Access Token in the header:
+## Obtaining the STORE_URL
+The `STORE_URL` is your Magento store’s base URL.
 
-Authorization: Bearer {access_token}
+1. **Find Your Store URL**:
+   - In the Admin Panel, go to "Stores" > "Configuration" > "General" > "Web".
+   - Under "Base URLs", note the "Base URL" (e.g., `https://example.com`).
 
-## Retrieving Categories
-To get all categories:
+2. **Verify API Endpoint**:
+   - The REST API base URL is typically `{STORE_URL}/rest` (e.g., `https://example.com/rest`).
 
-@bash
-curl -X GET "https://{storename}.com/rest/V1/categories" \
--H "Authorization: Bearer {access_token}"
-@
+3. **Store the STORE_URL**:
+   - Example: `https://example.com`.
 
-- Endpoint: `GET /rest/V1/categories`
-- Returns a category tree with IDs, names, and levels.
+## Usage
+Authenticate API requests with the token:
+```
+GET {STORE_URL}/rest/V1/products
+Authorization: Bearer {ACCESS_TOKEN}
+```
 
-## Retrieving Products
-To fetch all products:
-
-@bash
-curl -X GET "https://{storename}.com/rest/V1/products" \
--H "Authorization: Bearer {access_token}"
-@
-
-- Endpoint: `GET /rest/V1/products`
-- Returns product SKUs, names, prices, and category IDs.
-- Filter by category: Use search criteria, e.g., `?searchCriteria[filter_groups][0][filters][0][field]=category_id&searchCriteria[filter_groups][0][filters][0][value]={category_id}`.
-
-## Notes
-- Magento uses a complex EAV model; expect nested JSON responses.
-- Rate limits depend on server setup (no strict default).
-- Use `?searchCriteria[pageSize]=100` for pagination.
-
-See [Magento API Docs](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html) for more.
+Refer to the [Magento REST API docs](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html) for endpoints.
 

@@ -1,133 +1,142 @@
 + [md]
-+----BigCommerce.md
-+----Magento.md
-+----WooCommerce.md
++----bigcommerce.md
++----magento.md
 +----md_contents_text.txt
 +----shopify.md
 +----wix.md
++----wixStore.md
++----woocommerce.md
 
-BigCommerce.md
-# BigCommerce API Integration for Categories and Products
+bigcommerce.md
+# BigCommerce API Settings for Categories and Products
 
-This guide details how to programmatically retrieve category and product data from BigCommerce using the BigCommerce Catalog API.
+This document details how to obtain the `API_TOKEN`, `CLIENT_ID`, `STORE_HASH`, and `STORE_URL` required for the BigCommerce API, as per the [BigCommerce API Reference](https://developer.bigcommerce.com/api-reference).
 
 ## Prerequisites
-- A BigCommerce store with admin access.
-- An API token created in the store settings.
+- A BigCommerce store account.
+- Admin access to the store’s control panel.
 
-## Required Credentials
-- **API Token**: A single token for authentication.
-- **Client ID**: Used to generate the API Token.
-- **Store Hash**: Unique identifier for your store (e.g., `stores/{store_hash}`).
-- **Store URL**: Your BigCommerce store domain (e.g., `https://api.bigcommerce.com/stores/{store_hash}`).
+## Obtaining the API_TOKEN
+The `API_TOKEN` is a legacy API token for authenticating requests.
 
-To get credentials:
-1. Log in to your BigCommerce admin.
-2. Go to **Settings > API Accounts > Create API Account**.
-3. Select scopes `Products (read-only)` and `Categories (read-only)`.
-4. Save to get Client ID, API Token, and Store Hash.
+1. **Log into BigCommerce**:
+   - Access your store’s control panel at `https://{your-store}.mybigcommerce.com/manage`.
 
-## Authentication
-Use the API Token in the header:
+2. **Navigate to API Settings**:
+   - Go to "Settings" > "API" > "Store-level API accounts".
 
-X-Auth-Token: {api_token}
+3. **Create an API Account**:
+   - Click "Create API Account".
+   - Name it (e.g., "ClubMadeira Integration").
+   - Select scopes (e.g., "Products" and "Categories" set to "Modify").
 
-## Retrieving Categories
-To list all categories:
+4. **Generate and Save Credentials**:
+   - Click "Save" to generate:
+     - `API Token`: Your `API_TOKEN`.
+     - `Client ID` and `Client Secret` (save these too; `Client ID` is needed later).
+   - Download the credentials file or copy the `API Token`.
 
-@bash
-curl -X GET "https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/categories" \
--H "X-Auth-Token: {api_token}" \
--H "Accept: application/json"
-@
+5. **Store the API_TOKEN**:
+   - Example: `a1b2c3d4e5f6g7h8i9j0`.
+   - Keep it secure.
 
-- Endpoint: `GET /stores/{store_hash}/v3/catalog/categories`
-- Returns category IDs, names, and parent IDs.
+## Obtaining the CLIENT_ID
+- **Source**: Generated with the `API_TOKEN` in the API account creation step above.
+- **Value**: A string like `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6`.
+- **Action**: Copy from the API account credentials.
 
-## Retrieving Products
-To fetch all products:
+## Obtaining the STORE_HASH
+The `STORE_HASH` is a unique identifier for your store in BigCommerce’s API.
 
-@bash
-curl -X GET "https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products" \
--H "X-Auth-Token: {api_token}" \
--H "Accept: application/json"
-@
+1. **Find Your Store Hash**:
+   - In the API credentials file or control panel, it’s the part of the API path after `/stores/`.
+   - Example API path: `https://api.bigcommerce.com/stores/{STORE_HASH}/v3/`.
+   - Or, make a test API call (e.g., `GET /stores/{guess}/v3/catalog/products`) and adjust until it works.
 
-- Endpoint: `GET /stores/{store_hash}/v3/catalog/products`
-- Returns product IDs, names, prices, and categories.
-- Filter by category: `?categories:in={category_id}`.
+2. **Record the STORE_HASH**:
+   - Example: `abc123`.
+   - Save this value.
 
-## Notes
-- API version `v3` is recommended.
-- Rate limit: 20,000 requests/hour (varies by plan).
-- Use `?limit=250` for pagination.
+## Obtaining the STORE_URL
+The `STORE_URL` is your store’s domain.
 
-Refer to [BigCommerce API Docs](https://developer.bigcommerce.com/api-reference) for full details.
+1. **Get Your Store Domain**:
+   - In the control panel, go to "Settings" > "Store Details".
+   - Note the "Store URL" (e.g., `https://{your-store}.mybigcommerce.com`).
+
+2. **Alternative Method**:
+   - Use the storefront URL you access (e.g., `https://example-store.mybigcommerce.com`).
+
+3. **Store the STORE_URL**:
+   - Example: `https://example-store.mybigcommerce.com`.
+
+## Usage
+With these credentials, authenticate API requests:
+```
+GET https://api.bigcommerce.com/stores/{STORE_HASH}/v3/catalog/products
+X-Auth-Token: {API_TOKEN}
+X-Auth-Client: {CLIENT_ID}
+Accept: application/json
+```
+
+See the [BigCommerce API Reference](https://developer.bigcommerce.com/api-reference) for more.
 
 
-Magento.md
-# Magento API Integration for Categories and Products
+magento.md
+# Magento API Settings for Categories and Products
 
-This guide covers accessing category and product information from Magento using the Magento REST API.
+This guide explains how to obtain the `ACCESS_TOKEN` and `STORE_URL` for the Magento REST API, detailed in the [Magento REST API documentation](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html).
 
 ## Prerequisites
-- A Magento 2 store (Open Source or Commerce).
-- Admin access to create integration credentials.
+- A Magento 2 store (self-hosted or cloud).
+- Admin access to the Magento Admin Panel.
 
-## Required Credentials
-- **Access Token**: Generated via an integration or admin user.
-- **Store URL**: Your Magento store domain (e.g., `https://mystorename.com`).
+## Obtaining the ACCESS_TOKEN
+The `ACCESS_TOKEN` is an OAuth or integration token for API access.
 
-To get credentials:
-1. Log in to Magento Admin.
-2. Go to **System > Integrations > Add New Integration**.
-3. Name it, set permissions for `Catalog > Categories` and `Catalog > Products`.
-4. Save and activate to get an Access Token (OAuth-based).
+1. **Log into Magento Admin**:
+   - Access `https://{your-store}/admin`.
 
-Alternatively, use admin username/password to request a token:
+2. **Create an Integration**:
+   - Go to "System" > "Integrations".
+   - Click "Add New Integration".
+   - Name it (e.g., "ClubMadeira Integration").
+   - Set permissions (e.g., "Catalog" > "Categories" and "Products").
 
-@bash
-curl -X POST "https://{storename}.com/rest/V1/integration/admin/token" \
--H "Content-Type: application/json" \
--d '{"username":"admin","password":"yourpassword"}'
-@
+3. **Activate the Integration**:
+   - Save and activate the integration.
+   - Approve the permissions prompt.
 
-- Response provides the Access Token.
+4. **Copy the ACCESS_TOKEN**:
+   - After activation, Magento provides:
+     - `Consumer Key`
+     - `Consumer Secret`
+     - `Access Token` (this is your `ACCESS_TOKEN`)
+     - `Access Token Secret`
+   - Example: `abcdefghijklmnopqrstuvwxyz123456`.
+   - Save the `ACCESS_TOKEN` securely.
 
-## Authentication
-Use the Access Token in the header:
+## Obtaining the STORE_URL
+The `STORE_URL` is your Magento store’s base URL.
 
-Authorization: Bearer {access_token}
+1. **Find Your Store URL**:
+   - In the Admin Panel, go to "Stores" > "Configuration" > "General" > "Web".
+   - Under "Base URLs", note the "Base URL" (e.g., `https://example.com`).
 
-## Retrieving Categories
-To get all categories:
+2. **Verify API Endpoint**:
+   - The REST API base URL is typically `{STORE_URL}/rest` (e.g., `https://example.com/rest`).
 
-@bash
-curl -X GET "https://{storename}.com/rest/V1/categories" \
--H "Authorization: Bearer {access_token}"
-@
+3. **Store the STORE_URL**:
+   - Example: `https://example.com`.
 
-- Endpoint: `GET /rest/V1/categories`
-- Returns a category tree with IDs, names, and levels.
+## Usage
+Authenticate API requests with the token:
+```
+GET {STORE_URL}/rest/V1/products
+Authorization: Bearer {ACCESS_TOKEN}
+```
 
-## Retrieving Products
-To fetch all products:
-
-@bash
-curl -X GET "https://{storename}.com/rest/V1/products" \
--H "Authorization: Bearer {access_token}"
-@
-
-- Endpoint: `GET /rest/V1/products`
-- Returns product SKUs, names, prices, and category IDs.
-- Filter by category: Use search criteria, e.g., `?searchCriteria[filter_groups][0][filters][0][field]=category_id&searchCriteria[filter_groups][0][filters][0][value]={category_id}`.
-
-## Notes
-- Magento uses a complex EAV model; expect nested JSON responses.
-- Rate limits depend on server setup (no strict default).
-- Use `?searchCriteria[pageSize]=100` for pagination.
-
-See [Magento API Docs](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html) for more.
+Refer to the [Magento REST API docs](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html) for endpoints.
 
 
 md_contents_text.txt
@@ -135,32 +144,64 @@ md_contents_text.txt
 
 
 shopify.md
-# Shopify API Integration for Categories and Products
+# Shopify API Settings for Categories and Products
 
-This guide explains how to integrate with Shopify to retrieve category and product information programmatically using the Shopify Admin API.
-
-Below is a simple shopping cart icon to visualize the process:
-
-<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTUuNTMgMi43M2wtMS4zOS0xLjM5Yy0uMzktLjM5LTEuMDMtLjM5LTEuNDIgMGwtMS4zOSAxLjM5IDQuMjMgNC4yM2gxMy42OHYtNS40NWgtMTMuN2MtLjI4IDAtLjU0LS4xMS0uNzUtLjMxeiIvPjxwYXRoIGQ9Ik0xOCAxOGMwIDEuMS0uOSAyLTIgMnMtMi0uOS0yLTItLjktMiAyLTJzMiAuOSAyIDJoNGMxLjEgMCAyLS45IDItMnMtLjktMi0yLTJ6Ii8+PHBhdGggZD0iTTcgMTguMWMwIDEuMS0uOSAyLTIgMnMtMi0uOS0yLTItLjktMiAyLTJzMiAuOSAyIDJoNGMxLjEgMCAyLS45IDItMnMtLjktMi0yLTJ6Ii8+PHBhdGggZD0iTTAgMjEuNDVsNy03LjI5IDExIDcuMjkiLz48L3N2Zz4=" alt="Shopping Cart Icon" width="24" height="24">
+This guide details how to obtain the `ACCESS_TOKEN`, `API_KEY`, `API_SECRET_KEY`, and `STORE_URL` for the Shopify Admin REST API, per the [Shopify API Docs](https://shopify.dev/api/admin-rest).
 
 ## Prerequisites
-- A Shopify store with admin access.
-- An app created in the Shopify Partner Dashboard or store settings to generate API credentials.
+- A Shopify store.
+- Admin access to the Shopify admin panel.
 
-## Required Credentials
-- **API Key**: Generated when you create a custom app in your Shopify store.
-- **API Secret Key**: Paired with the API Key for authentication.
-- **Access Token**: Obtained via OAuth or directly for private/custom apps.
-- **Store URL**: Your Shopify store domain (e.g., `mystorename.myshopify.com`).
+## Obtaining the API_KEY and API_SECRET_KEY
+These are credentials for a custom app.
 
-To get credentials:
-1. Log in to your Shopify admin.
-2. Go to **Settings > Apps and sales channels > Develop apps**.
-3. Create a custom app, enable Admin API access with scopes `read_products` and `read_product_listings`.
-4. Save to generate API Key, Secret Key, and Access Token.
+1. **Log into Shopify Admin**:
+   - Access `https://{your-store}.myshopify.com/admin`.
 
-## Authentication
-Shopify uses HTTP Basic Auth or OAuth. For simplicity, use the Access Token in the header:
+2. **Create a Custom App**:
+   - Go to "Apps" > "App and sales channel settings" > "Develop apps".
+   - Click "Create an app".
+   - Name it (e.g., "ClubMadeira Integration").
+
+3. **Configure Admin API Scopes**:
+   - In the app settings, go to "Configuration" > "Admin API integration".
+   - Enable scopes (e.g., `read_products`, `write_products`, `read_product_listings`).
+
+4. **Get API Credentials**:
+   - Go to "API credentials".
+   - Copy:
+     - `API Key` (e.g., `1234567890abcdef1234567890abcdef`)
+     - `API Secret Key` (e.g., `abcdef1234567890abcdef1234567890`)
+   - Save these securely.
+
+## Obtaining the ACCESS_TOKEN
+The `ACCESS_TOKEN` is an admin API token.
+
+1. **Generate an Admin API Token**:
+   - In the same "API credentials" section, under "Admin API access token", click "Generate API token".
+   - Select the same scopes as above.
+   - Copy the token (e.g., `shpat_1234567890abcdef1234567890abcdef`).
+
+2. **Store the ACCESS_TOKEN**:
+   - Save it securely.
+
+## Obtaining the STORE_URL
+The `STORE_URL` is your Shopify store’s domain.
+
+1. **Find Your Store URL**:
+   - In the admin panel, it’s the URL you log into (e.g., `https://{your-store}.myshopify.com`).
+
+2. **Store the STORE_URL**:
+   - Example: `https://example-store.myshopify.com`.
+
+## Usage
+Authenticate API requests with the token:
+```
+GET {STORE_URL}/admin/api/2023-10/products.json
+X-Shopify-Access-Token: {ACCESS_TOKEN}
+```
+
+
 wix.md
 # Wix API Integration for Categories and Products
 
@@ -214,63 +255,160 @@ curl -X GET "https://www.wixapis.com/stores/v1/products" \
 - Use pagination (`?paging.limit=100`) for large datasets.
 
 See [Wix eCommerce API Docs](https://dev.wix.com/api/rest/wix-stores) for more details.
-WooCommerce.md
-# WooCommerce API Integration for Categories and Products
+wixStore.md
+# Wix Store API Settings
 
-This guide explains how to access category and product data from a WooCommerce store using the WooCommerce REST API.
+This document explains how to obtain the `API_TOKEN` and `SITE_ID` required to integrate with the Wix Stores API, as outlined in the [Wix Stores API documentation](https://dev.wix.com/api/rest/wix-stores).
+
+## Prerequisites
+- A Wix account with a store (e.g., a Wix site with the Stores app installed).
+- Administrative access to your Wix site.
+- A registered Wix app in the Wix Developers Center.
+
+## Obtaining the API_TOKEN
+The `API_TOKEN` is an OAuth access token used to authenticate API requests. Follow these steps:
+
+1. **Log into Wix Developers Center**:
+   - Go to [dev.wix.com](https://dev.wix.com/).
+   - Sign in with your Wix account credentials.
+
+2. **Create an App**:
+   - Navigate to "My Apps" in the Developers Center.
+   - Click "Create New App" and provide a name (e.g., "ClubMadeira Integration").
+   - Save the app to generate its credentials.
+
+3. **Get Client ID and Client Secret**:
+   - In your app’s dashboard, go to the "OAuth" tab.
+   - Note the `Client ID` and `Client Secret` (you’ll need these temporarily for OAuth).
+
+4. **Set Up OAuth Flow**:
+   - Use an OAuth 2.0 client or script to request an access token.
+   - Redirect users to the authorization URL:
+     ```
+     https://www.wix.com/installer/install?appId={CLIENT_ID}&redirectUrl={YOUR_REDIRECT_URL}
+     ```
+   - After user approval, Wix redirects to your `redirectUrl` with a `code` parameter.
+
+5. **Exchange Code for API_TOKEN**:
+   - Make a POST request to:
+     ```
+     https://www.wix.com/oauth/access
+     ```
+     With the body:
+     @@@json
+     {
+         "grant_type": "authorization_code",
+         "client_id": "{CLIENT_ID}",
+         "client_secret": "{CLIENT_SECRET}",
+         "code": "{CODE_FROM_REDIRECT}"
+     }
+     @@@
+   - Response includes the `access_token`, which is your `API_TOKEN`. Example:
+     @@@json
+     {
+         "access_token": "your-api-token-here",
+         "refresh_token": "your-refresh-token",
+         "expires_in": 3600
+     }
+     @@@
+
+6. **Store the API_TOKEN**:
+   - Save this token securely for use in API requests.
+
+## Obtaining the SITE_ID
+The `SITE_ID` is the unique identifier for your Wix site.
+
+1. **Access Your Site Dashboard**:
+   - Log into your Wix account and open the site with the store.
+
+2. **Find the Site ID**:
+   - In the Wix Dashboard, go to "Settings" > "Developer Tools" (or use the Developers Center).
+   - Alternatively, make an API call with your `API_TOKEN` to list sites:
+     ```
+     GET https://www.wixapis.com/site/v1/sites
+     Authorization: Bearer {API_TOKEN}
+     ```
+   - Response includes site details:
+     @@@json
+     {
+         "sites": [
+             {
+                 "id": "your-site-id-here",
+                 "name": "Your Site Name",
+                 ...
+             }
+         ]
+     }
+     @@@
+   - The `id` field is your `SITE_ID`.
+
+3. **Record the SITE_ID**:
+   - Copy this value (e.g., a UUID like `9fa0f271-1600-4282-9fae-d841be6aaff6`) for integration.
+
+## Usage
+With `API_TOKEN` and `SITE_ID`, you can make authenticated requests to the Wix Stores API, such as retrieving products:
+```
+GET https://www.wixapis.com/stores/v1/products
+Authorization: Bearer {API_TOKEN}
+X-Wix-Site-Id: {SITE_ID}
+
+```
+Refer to the [Wix Stores API docs](https://dev.wix.com/api/rest/wix-stores) for full details.
+
+
+
+
+woocommerce.md
+# WooCommerce API Settings for Categories and Products
+
+This document outlines how to get the `CONSUMER_KEY`, `CONSUMER_SECRET`, and `STORE_URL` for the WooCommerce REST API, per the [WooCommerce REST API Docs](https://woocommerce.github.io/woocommerce-rest-api-docs/).
 
 ## Prerequisites
 - A WordPress site with WooCommerce installed.
-- Admin access to generate API keys.
+- Admin access to the WordPress dashboard.
 
-## Required Credentials
-- **Consumer Key**: Generated in WooCommerce settings.
-- **Consumer Secret**: Paired with the Consumer Key for authentication.
-- **Store URL**: Your WordPress site URL (e.g., `https://mystorename.com`).
+## Obtaining the CONSUMER_KEY and CONSUMER_SECRET
+These are API keys for authenticating requests.
 
-To get credentials:
-1. Log in to WordPress admin.
-2. Go to **WooCommerce > Settings > Advanced > REST API**.
-3. Click "Add Key," set permissions to "Read," and generate.
-4. Copy the Consumer Key and Consumer Secret.
+1. **Log into WordPress Admin**:
+   - Access `https://{your-store}/wp-admin`.
 
-## Authentication
-WooCommerce uses Basic Auth or OAuth. For Basic Auth:
+2. **Navigate to WooCommerce Settings**:
+   - Go to "WooCommerce" > "Settings" > "Advanced" > "REST API".
 
-Authorization: Basic {base64(consumer_key:consumer_secret)}
+3. **Add a Key**:
+   - Click "Add Key".
+   - Enter a description (e.g., "ClubMadeira Integration").
+   - Select a user with admin rights.
+   - Set permissions to "Read/Write".
 
-Or append keys to the URL:
+4. **Generate and Save Keys**:
+   - Click "Generate API Key".
+   - Copy:
+     - `Consumer Key` (e.g., `ck_1234567890abcdef1234567890abcdef12345678`)
+     - `Consumer Secret` (e.g., `cs_1234567890abcdef1234567890abcdef12345678`)
+   - Save these securely as they won’t be shown again.
 
-?consumer_key={consumer_key}&consumer_secret={consumer_secret}
+## Obtaining the STORE_URL
+The `STORE_URL` is your WooCommerce store’s domain.
 
-## Retrieving Categories
-To get all product categories:
+1. **Find Your Store URL**:
+   - In WordPress, go to "Settings" > "General".
+   - Note the "Site Address (URL)" (e.g., `https://example.com`).
 
-@bash
-curl -X GET "https://{storename}.com/wp-json/wc/v3/products/categories" \
--H "Authorization: Basic {base64(consumer_key:consumer_secret)}"
-@
+2. **Store the STORE_URL**:
+   - Example: `https://example.com`.
 
-- Endpoint: `GET /wp-json/wc/v3/products/categories`
-- Returns category IDs, names, and slugs.
+## Usage
+Make API requests with basic auth:
+```
+GET {STORE_URL}/wp-json/wc/v3/products
+Authorization: Basic {Base64 encoded CONSUMER_KEY:CONSUMER_SECRET}
+```
+Or use query parameters:
 
-## Retrieving Products
-To fetch all products:
+GET {STORE_URL}/wp-json/wc/v3/products?consumer_key={CONSUMER_KEY}&consumer_secret={CONSUMER_SECRET}
 
-@bash
-curl -X GET "https://{storename}.com/wp-json/wc/v3/products" \
--H "Authorization: Basic {base64(consumer_key:consumer_secret)}"
-@
-
-- Endpoint: `GET /wp-json/wc/v3/products`
-- Returns product IDs, names, prices, categories, etc.
-- Filter by category: `?category={category_id}`.
-
-## Notes
-- Ensure the WooCommerce REST API is enabled in settings.
-- Rate limits depend on server hosting (typically 100 requests/minute).
-- Use `?per_page=100` for pagination.
-
-Check [WooCommerce REST API Docs](https://woocommerce.github.io/woocommerce-rest-api-docs/) for more info.
+See the [WooCommerce API Docs](https://w
 
 

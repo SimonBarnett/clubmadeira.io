@@ -29,299 +29,537 @@ from there, depending on user permssion, we redirect to one of the templates abo
 
 CR Blueprint Endpoints
 
-Lists endpoints from blueprints in `/blueprints` with `curl` commands, descriptions, and permissions as of March 28, 2025.
+# Flask API cURL Commands Documentation
+
+This document provides cURL commands for interacting with the Flask API endpoints defined in the following blueprints:
+
+- `authentication_bp.py`
+- `content_bp.py`
+- `manager_bp.py`
+- `referral_bp.py`
+- `role_pages_bp.py`
+- `site_request_bp.py`
+- `user_settings_bp.py`
+- `utility_bp.py`
+
+All endpoints are hosted at `https://clubmadeira.io`. Replace placeholders like `<your_token>`, `<admin_token>`, `<user_id>`, and sample data with actual values relevant to your environment.
+
+---
 
 ## Authentication Blueprint (`authentication_bp.py`)
 
-### /login - POST
-Description: Authenticates a user and returns a JWT token if successful.  
-Permissions: Public  
-@curl -X POST https://madeira.io/login -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "secure123"}'@
+### `/login` (POST)
+Login a user with email and password.
 
-### /signup - GET
-Description: Renders the signup page for new users.  
-Permissions: Public  
-@curl -X GET https://madeira.io/signup@
+@@@bash
+curl -X POST https://clubmadeira.io/login \
+-H "Content-Type: application/json" \
+-d '{"email": "user@example.com", "password": "mypassword"}'
+@@@
 
-### /signup - POST
-Description: Registers a new user and sends an OTP via /send-sms.  
-Permissions: Public  
-@curl -X POST https://madeira.io/signup -H "Content-Type: application/json" -d '{"signup_type": "seller", "contact_name": "John Doe", "signup_email": "john@example.com", "signup_password": "secure123", "signup_phone": "+1234567890"}'@
+### `/signup` (GET)
+Retrieve the signup page (returns HTML).
 
-### /reset-password - POST
-Description: Initiates a password reset, sending an OTP via /send-sms.  
-Permissions: Public  
-@curl -X POST https://madeira.io/reset-password -H "Content-Type: application/json" -d '{"email": "user@example.com"}'@
+@@@bash
+curl -X GET https://clubmadeira.io/signup
+@@@
 
-### /verify-reset-code - POST
-Description: Verifies an OTP and resets the password, returning a new JWT token.  
-Permissions: Public  
-@curl -X POST https://madeira.io/verify-reset-code -H "Content-Type: application/json" -d '{"email": "user@example.com", "code": "123456", "new_password": "newsecure123"}'@
+### `/signup` (POST)
+Register a new user with required fields.
 
-### /update-password - POST
-Description: Updates a user’s password for the authenticated user.  
-Permissions: ["self"]  
-@curl -X POST https://madeira.io/update-password -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "newsecure123"}'@
+@@@bash
+curl -X POST https://clubmadeira.io/signup \
+-H "Content-Type: application/json" \
+-d '{"signup_type": "seller", "contact_name": "John Doe", "signup_email": "john@example.com", "signup_password": "securepass", "signup_phone": "1234567890"}'
+@@@
+
+### `/reset-password` (POST)
+Initiate a password reset by sending an OTP to the user's phone.
+
+@@@bash
+curl -X POST https://clubmadeira.io/reset-password \
+-H "Content-Type: application/json" \
+-d '{"email": "user@example.com"}'
+@@@
+
+### `/verify-reset-code` (POST)
+Verify the OTP and reset the password.
+
+@@@bash
+curl -X POST https://clubmadeira.io/verify-reset-code \
+-H "Content-Type: application/json" \
+-d '{"email": "user@example.com", "code": "123456", "new_password": "newsecurepass"}'
+@@@
+
+### `/update-password` (POST)
+Update the user's password (requires authentication).
+
+@@@bash
+curl -X POST https://clubmadeira.io/update-password \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <your_token>" \
+-d '{"email": "user@example.com", "password": "newersecurepass"}'
+@@@
+
+---
 
 ## Content Blueprint (`content_bp.py`)
 
-### /deals - GET
-Description: Retrieves all discounted products for a given category.  
-Permissions: Public  
-@curl -X GET "https://madeira.io/deals?category_id=123"@
+### `/deals` (GET)
+Fetch discounted products by category ID.
 
-### /categories - GET
-Description: Retrieves product categories, optionally filtered by parent_id.  
-Permissions: Public  
-@curl -X GET "https://madeira.io/categories?parent_id=456"@  
-Notes: Omit ?parent_id=456 for top-level categories
+@@@bash
+curl -X GET "https://clubmadeira.io/deals?category_id=123"
+@@@
+
+### `/categories` (GET)
+Retrieve categories, optionally filtered by parent ID.
+
+@@@bash
+curl -X GET "https://clubmadeira.io/categories?parent_id=456"
+@@@
+
+---
 
 ## Manager Blueprint (`manager_bp.py`)
 
-### /users - GET
-Description: Retrieves a list of all users (basic info).  
-Permissions: ["admin"]  
-@curl -X GET https://madeira.io/users -H "Authorization: Bearer <jwt_token>"@
+### `/users` (GET)
+List all users (admin only).
 
-### /users/<user_id> - GET
-Description: Retrieves detailed user info for a specific user.  
-Permissions: ["admin"]  
-@curl -X GET https://madeira.io/users/123 -H "Authorization: Bearer <jwt_token>"@
+@@@bash
+curl -X GET https://clubmadeira.io/users \
+-H "Authorization: Bearer <admin_token>"
+@@@
 
-### /permissions/<user_id> - GET
-Description: Fetches a user’s permissions list.  
-Permissions: ["admin"]  
-@curl -X GET https://madeira.io/permissions/123 -H "Authorization: Bearer <jwt_token>"@
+### `/users/<user_id>` (GET)
+Get details for a specific user (admin only).
 
-### /permissions/<user_id> - POST
-Description: Adds a permission to a user.  
-Permissions: ["admin"]  
-@curl -X POST https://madeira.io/permissions/123 -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"permission": "merchant"}'@
+@@@bash
+curl -X GET https://clubmadeira.io/users/789 \
+-H "Authorization: Bearer <admin_token>"
+@@@
 
-### /config - GET
-Description: Retrieves the full configuration.  
-Permissions: ["admin"]  
-@curl -X GET https://madeira.io/config -H "Authorization: Bearer <jwt_token>"@
+### `/permissions/<user_id>` (GET)
+Fetch a user's permissions (admin only).
 
-### /config/<affiliate> - PATCH
-Description: Updates configuration for a specific affiliate.  
-Permissions: ["admin"]  
-@curl -X PATCH https://madeira.io/config/wixpro -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"key": "value"}'@
+@@@bash
+curl -X GET https://clubmadeira.io/permissions/789 \
+-H "Authorization: Bearer <admin_token>"
+@@@
+
+### `/permissions/<user_id>` (POST)
+Add a permission to a user (admin only).
+
+@@@bash
+curl -X POST https://clubmadeira.io/permissions/789 \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <admin_token>" \
+-d '{"permission": "merchant"}'
+@@@
+
+### `/settings/settings_key` (GET)
+Retrieve all settings of type `settings_key` (admin only).
+
+@@@bash
+curl -X GET https://clubmadeira.io/settings/settings_key \
+-H "Authorization: Bearer <admin_token>"
+@@@
+
+### `/settings/settings_key/<key_type>` (PATCH)
+Update specific fields of a `settings_key` (admin only).
+
+@@@bash
+curl -X PATCH https://clubmadeira.io/settings/settings_key/mykey \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <admin_token>" \
+-d '{"field1": "new_value1"}'
+@@@
+
+### `/settings/settings_key/<key_type>` (PUT)
+Replace a `settings_key` entry (admin only).
+
+@@@bash
+curl -X PUT https://clubmadeira.io/settings/settings_key/mykey \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <admin_token>" \
+-d '{"setting_type": "settings_key", "field1": "value1", "field2": "value2"}'
+@@@
+
+### `/settings/affiliate_key` (GET)
+Retrieve all settings of type `affiliate_key` (admin only).
+
+@@@bash
+curl -X GET https://clubmadeira.io/settings/affiliate_key \
+-H "Authorization: Bearer <admin_token>"
+@@@
+
+### `/settings/affiliate_key/<key_type>` (PATCH)
+Update specific fields of an `affiliate_key` (admin only).
+
+@@@bash
+curl -X PATCH https://clubmadeira.io/settings/affiliate_key/affkey \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <admin_token>" \
+-d '{"field1": "new_value1"}'
+@@@
+
+### `/settings/affiliate_key/<key_type>` (PUT)
+Replace an `affiliate_key` entry (admin only).
+
+@@@bash
+curl -X PUT https://clubmadeira.io/settings/affiliate_key/affkey \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <admin_token>" \
+-d '{"setting_type": "affiliate_key", "field1": "value1", "field2": "value2"}'
+@@@
+
+---
 
 ## Referral Blueprint (`referral_bp.py`)
 
-### /referral - POST
-Description: Records referral data (visits or orders).  
-Permissions: Public  
-@curl -X POST https://madeira.io/referral -H "Content-Type: application/json" -d '{"timestamp": "2025-03-28T12:00:00Z", "referer": "123", "page": "home"}'@  
-Notes: For orders: @curl -X POST https://madeira.io/referral -H "Content-Type: application/json" -d '{"timestamp": "2025-03-28T12:00:00Z", "referer": "123", "orderId": "456", "buyer": "John", "total": 99.99"}'@
+### `/referral` (POST)
+Record a referral visit or order (public endpoint).
 
-### /<user_id>/visits - GET
-Description: Retrieves referral visits for a user.  
-Permissions: ["self", "admin"]  
-@curl -X GET https://madeira.io/123/visits -H "Authorization: Bearer <jwt_token>"@
+- **For a visit:**
+@@@bash
+curl -X POST https://clubmadeira.io/referral \
+-H "Content-Type: application/json" \
+-d '{"timestamp": "2023-10-26T12:34:56Z", "referer": "user123", "page": "/deals"}'
+@@@
 
-### /<user_id>/orders - GET
-Description: Retrieves referral orders for a user.  
-Permissions: ["self", "admin"]  
-@curl -X GET https://madeira.io/123/orders -H "Authorization: Bearer <jwt_token>"@
+- **For an order:**
+@@@bash
+curl -X POST https://clubmadeira.io/referral \
+-H "Content-Type: application/json" \
+-d '{"timestamp": "2023-10-26T12:34:56Z", "referer": "user123", "orderId": "ORD001", "buyer": "Jane Doe", "total": 99.99}'
+@@@
+
+### `/<user_id>/visits` (GET)
+Retrieve referral visits for a user (self or admin).
+
+@@@bash
+curl -X GET https://clubmadeira.io/user123/visits \
+-H "Authorization: Bearer <your_token>"
+@@@
+
+### `/<user_id>/orders` (GET)
+Retrieve referral orders for a user (self or admin).
+
+@@@bash
+curl -X GET https://clubmadeira.io/user123/orders \
+-H "Authorization: Bearer <your_token>"
+@@@
+
+---
 
 ## Role Pages Blueprint (`role_pages_bp.py`)
 
-### /admin - GET
-Description: Renders the admin dashboard.  
-Permissions: ["admin"]  
-@curl -X GET https://madeira.io/admin -H "Authorization: Bearer <jwt_token>"@
+### `/admin` (GET)
+Render the admin dashboard (admin only).
 
-### /community - GET
-Description: Renders the community dashboard.  
-Permissions: ["community", "admin"]  
-@curl -X GET https://madeira.io/community -H "Authorization: Bearer <jwt_token>"@
+@@@bash
+curl -X GET https://clubmadeira.io/admin \
+-H "Authorization: Bearer <admin_token>"
+@@@
 
-### /merchant - GET
-Description: Renders the merchant dashboard.  
-Permissions: ["merchant", "admin"]  
-@curl -X GET https://madeira.io/merchant -H "Authorization: Bearer <jwt_token>"@
+### `/community` (GET)
+Render the community dashboard (community or admin).
 
-### /partner - GET
-Description: Renders the partner (wixpro) dashboard.  
-Permissions: ["wixpro", "admin"]  
-@curl -X GET https://madeira.io/partner -H "Authorization: Bearer <jwt_token>"@
+@@@bash
+curl -X GET https://clubmadeira.io/community \
+-H "Authorization: Bearer <your_token>"
+@@@
 
-### /branding - GET
-Description: Retrieves branding data for a specified type.  
-Permissions: ["allauth"]  
-@curl -X GET "https://madeira.io/branding?type=admin" -H "Authorization: Bearer <jwt_token>"@
+### `/merchant` (GET)
+Render the merchant dashboard (merchant or admin).
+
+@@@bash
+curl -X GET https://clubmadeira.io/merchant \
+-H "Authorization: Bearer <your_token>"
+@@@
+
+### `/partner` (GET)
+Render the partner dashboard (wixpro or admin).
+
+@@@bash
+curl -X GET https://clubmadeira.io/partner \
+-H "Authorization: Bearer <your_token>"
+@@@
+
+### `/branding` (GET)
+Fetch branding data for a specific type (authenticated users).
+
+@@@bash
+curl -X GET "https://clubmadeira.io/branding?type=admin" \
+-H "Authorization: Bearer <your_token>"
+@@@
+
+---
 
 ## Site Request Blueprint (`site_request_bp.py`)
 
-### /siterequests - GET
-Description: Lists all site requests.  
-Permissions: ["admin", "wixpro"]  
-@curl -X GET https://madeira.io/siterequests -H "Authorization: Bearer <jwt_token>"@
+### `/siterequests` (GET)
+List all site requests (admin or wixpro).
 
-### /siterequests - POST
-Description: Saves a new site request for the authenticated user.  
-Permissions: ["self"]  
-@curl -X POST https://madeira.io/siterequests -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"userId": "123", "type": "community", "communityName": "MyCommunity", "aboutCommunity": "Cool stuff", "communityLogos": [], "colorPrefs": "blue", "stylingDetails": "modern", "preferredDomain": "mycommunity.org", "emails": ["test@example.com"], "pages": [], "widgets": []}'@
+@@@bash
+curl -X GET https://clubmadeira.io/siterequests \
+-H "Authorization: Bearer <admin_or_wixpro_token>"
+@@@
+
+### `/siterequests` (POST)
+Submit a new site request (self only).
+
+@@@bash
+curl -X POST https://clubmadeira.io/siterequests \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <your_token>" \
+-d '{"userId": "user123", "type": "community", "communityName": "MyCommunity", "aboutCommunity": "A great community", "communityLogos": ["logo1.png"], "colorPrefs": "blue", "stylingDetails": "modern", "preferredDomain": "mycommunity.org", "emails": ["contact@mycommunity.org"], "pages": [{"title": "Home", "content": "Welcome"}], "widgets": ["chat"]}'
+@@@
+
+---
 
 ## User Settings Blueprint (`user_settings_bp.py`)
 
-### /<USERid>/user - PUT
-Description: Fully updates a user’s settings (except password).  
-Permissions: ["self", "admin"]  
-@curl -X PUT https://madeira.io/123/user -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"email_address": "new@example.com", "contact_name": "New Name", "phone_number": "+1234567890"}'@
+### `/settings/user` (GET)
+Retrieve user settings (self only).
 
-### /<USERid>/user - PATCH
-Description: Partially updates a user’s settings.  
-Permissions: ["self", "admin", "wixpro"]  
-@curl -X PATCH https://madeira.io/123/user -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"contact_name": "Updated Name"}'@
+@@@bash
+curl -X GET https://clubmadeira.io/settings/user \
+-H "Authorization: Bearer <your_token>"
+@@@
 
-### /<USERid>/categories - GET
-Description: Retrieves a user’s categories.  
-Permissions: ["self"]  
-@curl -X GET https://madeira.io/123/categories -H "Authorization: Bearer <jwt_token>"@
+### `/settings/user` (PUT)
+Replace user settings (self only).
 
-### /<USERid>/categories - PUT
-Description: Replaces a user’s categories entirely.  
-Permissions: ["self"]  
-@curl -X PUT https://madeira.io/123/categories -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"categories": ["cat1", "cat2"]}'@
+@@@bash
+curl -X PUT https://clubmadeira.io/settings/user \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <your_token>" \
+-d '{"email": "newemail@example.com", "notifications": false, "theme": "dark"}'
+@@@
 
-### /<USERid>/categories - PATCH
-Description: Updates a user’s categories by appending new ones.  
-Permissions: ["self"]  
-@curl -X PATCH https://madeira.io/123/categories -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"categories": ["cat3"]}'@
+### `/settings/user` (PATCH)
+Update specific user settings (self only).
 
-### /<USERid>/categories - DELETE
-Description: Deletes a user’s categories.  
-Permissions: ["self"]  
-@curl -X DELETE https://madeira.io/123/categories -H "Authorization: Bearer <jwt_token>"@
+@@@bash
+curl -X PATCH https://clubmadeira.io/settings/user \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <your_token>" \
+-d '{"notifications": true}'
+@@@
 
-## Utility Blueprint (`utility_bp.py`)
+### `/settings/client_api` (GET)
+Retrieve all `client_api` settings (authenticated users).
 
-### /system/stats - GET
-Description: Retrieves system statistics.  
-Permissions: ["admin"]  
-@curl -X GET https://madeira.io/system/stats -H "Authorization: Bearer <jwt_token>"@
+@@@bash
+curl -X GET https://clubmadeira.io/settings/client_api \
+-H "Authorization: Bearer <your_token>"
+@@@
 
-### /ping - GET
-Description: Checks service availability.  
-Permissions: ["admin", "wixpro"]  
-@curl -X GET https://madeira.io/ping -H "Authorization: Bearer <jwt_token>"@
+### `/settings/client_api/<key>` (PUT)
+Replace a `client_api` setting (self only).
 
-### /activity/log - POST
-Description: Logs user activity.  
-Permissions: ["admin"]  
-@curl -X POST https://madeira.io/activity/log -H "Authorization: Bearer <jwt_token>" -H "Content-Type: application/json" -d '{"user_id": "123", "action": "login", "details": {"ip": "127.0.0.1"}}'@
+@@@bash
+curl -X PUT https://clubmadeira.io/settings/client_api/mykey \
+-H "Content-Type: application/json" \
 
-### /send-sms - POST
-Description: Sends an SMS to a user’s phone number, looked up by email.  
-Permissions: Public  
-@curl -X POST https://madeira.io/send-sms -H "Content-Type: application/json" -d '{"email": "user@example.com", "message": "Your OTP is 123456"}'@
 
-### /render-md/<path:full_path> - GET
-Description: Renders Markdown files from static folder or GitHub.  
-Permissions: ["allauth"]  
-@curl -X GET https://madeira.io/render-md/static/docs/example.md -H "Authorization: Bearer <jwt_token>"@  
-Notes: GitHub example: @curl -X GET https://madeira.io/render-md/SimonBarnett/clubmadeira.io/main/README.md -H "Authorization: Bearer <jwt_token>"@
+Below is a complete list of functions from the JavaScript files located under /static/js in the Flask application. Each entry includes the function's name, description, and parameters, presented in a simple, copyable plaintext format. The functions are organized by their respective JavaScript files for clarity.
+Functions from admin-page.js  
+initializeAdmin: Initializes the admin page based on the specified page type.  
+Parameters: pageType (string)
 
-### /check-domain - GET
-Description: Checks domain availability using WHOIS.  
-Permissions: ["allauth"]  
-@curl -X GET "https://madeira.io/check-domain?domain=example.com" -H "Authorization: Bearer <jwt_token>"@
+setupNavigation: Configures the navigation elements for the admin page.  
+Parameters: None
 
-## Notes
-- Replace `<jwt_token>` with a valid token from `/login`:  
-  @curl -X POST https://madeira.io/login -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "secure123"}'@  
-- Adjust placeholders (e.g., `user@example.com`, `123`) with valid data from `users_settings.json`.  
-- Assumes `https://madeira.io` as the production URL; use `http://localhost` for local testing if needed.
+loadInitialData: Loads initial data (e.g., deals) required for the admin page.  
+Parameters: None
 
-CR Prompt for Next Instance
+setupEventListeners: Sets up event listeners for interactive elements like save buttons on the admin page.  
+Parameters: None
 
-Continue working on the Flask app's role-based pages (`/admin`, `/community`, `/merchant`, `/partner`). The following JavaScript files in `/static/js/` provide key functionality:
+Functions from category-management.js  
+createTreeNode: Creates a tree node for displaying a category in a hierarchical structure.  
+Parameters: category (object), level (number, default: 0), isAdmin (boolean, default: false), savedCategories (array, default: [])
 
-- **admin-page.js:** Admin page management.
-  - `initializeAdmin(pageType)`: Initializes admin page with permission checks, loads branding, and sets up navigation.
-  - `setupNavigation()`: Configures navigation, delegating to `site-navigation.js` or using fallback logic.
-  - `loadInitialData()`: Fetches initial deal data for admin dashboard.
-  - `setupEventListeners()`: Attaches listeners for saving settings.
+loadCategories: Loads category data, optionally filtered by user or admin context.  
+Parameters: userId (string|null, default: null), isAdmin (boolean, default: false)
 
-- **category-management.js:** Treeview for category management (used in `community.html`, `admin.html`).
-  - `createTreeNode(category, level, isAdmin, savedCategories)`: Creates a treeview node for a category.
-  - `loadCategories(userId, isAdmin)`: Loads and renders categories in a treeview.
-  - `toggleSubcategories(categoryId, toggle)`: Toggles subcategory visibility, loading them dynamically.
-  - `saveCategories(userId)`: Saves selected categories for a user (community context).
-  - `handleCategorySelection(categoryId, checkbox)`: Loads discounted products for a selected category (admin context).
+toggleSubcategories: Toggles the visibility of subcategories for a given category.  
+Parameters: categoryId (string), toggle (boolean)
 
-- **common.js:** Shared utilities.
-  - `setupToastr()`: Configures Toastr for consistent toast notifications.
+saveCategories: Saves the selected categories for a specific user.  
+Parameters: userId (string)
 
-- **community-page.js:** Community page functionality.
-  - `initializeCommunity()`: Initializes community page with permission checks, loads branding, visits, orders, and categories.
-  - `updateMenu()`: Dynamically updates the menu based on permissions.
-  - `updateIntegrationCode(section)`: Updates iframe code for website integrations (e.g., Wix, WordPress).
-  - `loadVisits()`: Fetches and categorizes visit data (this month, last month, earlier).
-  - `updateVisitsTable(tableId, visits)`: Updates visit tables with fetched data.
-  - `loadOrders()`: Fetches and categorizes order data.
-  - `updateOrdersTable(tableId, orders)`: Updates order tables with fetched data.
-  - `setupCollapsibleSections()`: Sets up collapsible sections for visits and orders.
-  - `waitForTinyMCE(callback)`: Waits for TinyMCE to load before executing a callback.
+handleCategorySelection: Manages the selection of a category, typically for admin purposes like loading related products.  
+Parameters: categoryId (string), checkbox (HTMLElement)
 
-- **merchant-page.js:** Merchant page functionality.
-  - `initializeMerchant()`: Initializes merchant page with permission checks, loads products and store requests.
-  - `checkAdminPermission()`: Toggles visibility of admin-specific elements.
-  - `loadProducts()`: Fetches and displays merchant products.
-  - `createProductRow(product)`: Creates a table row for a product.
-  - `loadStoreRequest()`: Loads store request data into the form.
+Functions from common.js  
+setupToastr: Configures the Toastr library for displaying notifications.  
+Parameters: None
 
-- **page-load.js:** Page initialization and overlay management.
-  - `showLoadingOverlay()`: Displays the loading overlay.
-  - `hideLoadingOverlay(minDelay)`: Hides the overlay after a delay (default 1000ms).
-  - `waitForCssLoad()`: Waits for `styles.css` to load.
-  - `loadBranding(brandingType)`: Fetches and applies branding content.
-  - `attachEventListeners()`: Attaches logoff event listeners.
-  - `initializePage(requiredPermissions, callback)`: Performs permission checks before page setup.
-  - `initialize(pageType)`: Initializes a page based on its type (e.g., admin, merchant).
-  - `performPageSetup(pageType, config)`: Sets up a page with branding and initial sections.
+Functions from community-page.js  
+initializeCommunity: Initializes the community page with necessary setup.  
+Parameters: None
 
-- **partner-page.js:** Partner page functionality.
-  - `initializePartner()`: Initializes partner page with permission checks, loads integrations.
-  - `checkAdminPermission()`: Toggles visibility of admin-specific elements.
-  - `loadPartnerIntegrations()`: Fetches and displays partner-specific integrations.
+updateMenu: Updates the menu based on the user’s permissions.  
+Parameters: None
 
-- **site-auth.js:** Authentication utilities.
-  - `togglePassword(fieldId)`: Toggles password field visibility.
-  - `logOff()`: Logs out the user, clearing session data.
-  - `decodeJWT(token)`: Decodes a JWT token to extract user data.
-  - `savePassword(newPassword)`: Saves an updated user password.
+updateIntegrationCode: Updates the integration code displayed for a specific section.  
+Parameters: section (string)
 
-- **site-navigation.js:** Navigation and content loading.
-  - `authenticatedFetch(url, options)`: Performs authenticated fetch requests.
-  - `fetchProtectedPage(url, targetContainer)`: Fetches and loads protected page content.
-  - `loadBranding(brandingType, containerId)`: Loads branding content into a container.
-  - `loadSection(sectionId)`: Loads content for a specific section.
-  - `showSection(sectionId, onSectionLoad)`: Shows a section, hiding others.
-  - `toggleSubmenu(submenuId, action)`: Toggles submenu visibility.
-  - `initializeNavigation()`: Initializes navigation event listeners.
+loadVisits: Loads visit data for the community page.  
+Parameters: None
 
-- **site-request.js:** Site request form management.
-  - `addPage(type)`: Adds a page to the site request form.
-  - `removePage(pageNum, type)`: Removes a page from the form.
-  - `addEmail(type)`: Adds an email to the form.
-  - `removeEmail(emailNum, type)`: Removes an email from the form.
-  - `updateDomainPreview(type)`: Updates domain preview and email domains.
-  - `checkDomainAvailability()`: Checks domain availability.
-  - `loadTinyMCE()`: Loads TinyMCE for content editing.
-  - `initializeTinyMCE(selector)`: Initializes TinyMCE for a selector.
-  - `getCurrentTimestamp()`: Generates a formatted timestamp.
-  - `saveSiteRequest()`: Saves the site request form data.
+loadOrders: Loads order data for the community page.  
+Parameters: None
 
-- **user-management.js:** User settings and Wix client ID management.
-  - `loadSettings()`: Loads user settings into the DOM.
-  - `saveSettings(settings)`: Saves user settings.
-  - `loadWixClientId()`: Loads Wix client ID into the DOM.
-  - `saveWixClientId(clientId)`: Saves Wix client ID.
-  - `validatePassword(password)`: Validates password complexity.
-  - `setupChangePassword()`: Sets up "Change Password" form submission.
+setupCollapsibleSections: Sets up collapsible sections for displaying orders and visits.  
+Parameters: None
 
-Use these functions to continue optimizing the app, focusing on performance, consistency, and user experience.
+waitForTinyMCE: Waits for the TinyMCE editor to load, then executes a callback.  
+Parameters: callback (function)
+
+Functions from merchant-page.js  
+initializeMerchant: Initializes the merchant page with necessary setup.  
+Parameters: None
+
+checkAdminPermission: Checks user permissions and toggles visibility of admin-specific elements.  
+Parameters: None
+
+loadProducts: Loads and displays products associated with the merchant.  
+Parameters: None
+
+loadStoreRequest: Loads store request data specific to the merchant page.  
+Parameters: None
+
+Functions from page-load.js  
+showLoadingOverlay: Displays a loading overlay during page transitions.  
+Parameters: None
+
+hideLoadingOverlay: Hides the loading overlay after a specified minimum delay.  
+Parameters: minDelay (number, default: 1000)
+
+waitForCssLoad: Waits for CSS files to finish loading before proceeding.  
+Parameters: None
+
+loadBranding: Loads branding content based on the specified type.  
+Parameters: brandingType (string)
+
+attachEventListeners: Attaches event listeners for actions like logging off.  
+Parameters: None
+
+initializePage: Initializes the page, including permission checks, and executes a callback.  
+Parameters: requiredPermissions (array), callback (function)
+
+initialize: Handles page-specific setup based on the page type.  
+Parameters: pageType (string)
+
+Functions from partner-page.js  
+initializePartner: Initializes the partner page with necessary setup.  
+Parameters: None
+
+checkAdminPermission: Checks user permissions and toggles visibility of admin-specific elements.  
+Parameters: None
+
+loadPartnerIntegrations: Loads and displays integrations specific to the partner page.  
+Parameters: None
+
+Functions from site-auth.js  
+togglePassword: Toggles the visibility of a password input field (e.g., show/hide).  
+Parameters: fieldId (string)
+
+logOff: Logs the user out and clears session data.  
+Parameters: None
+
+decodeJWT: Decodes a JWT token to extract user information.  
+Parameters: token (string)
+
+authenticatedFetch: Performs an authenticated fetch request using a JWT token.  
+Parameters: url (string), options (object, default: {})
+
+savePassword: Saves an updated user password via an API call.  
+Parameters: newPassword (string)
+
+Functions from site-navigation.js  
+fetchProtectedPage: Fetches content for a protected page requiring authentication.  
+Parameters: url (string)
+
+loadBranding: Loads branding content into a specified container.  
+Parameters: brandingType (string), containerId (string, default: 'brandingContent')
+
+loadSection: Loads content for a specific section of the page.  
+Parameters: sectionId (string)
+
+showSection: Shows a specified section while hiding others, with an optional callback.  
+Parameters: sectionId (string), onSectionLoad (function|null, default: null)
+
+toggleSubmenu: Toggles the visibility of a submenu.  
+Parameters: submenuId (string), action (string, default: 'toggle')
+
+closeAllSubmenus: Closes all submenus within a specified container.  
+Parameters: container (HTMLElement)
+
+handleSectionClick: Handles click events on section navigation buttons.  
+Parameters: event (Event)
+
+initializeNavigation: Initializes the navigation system for the application.  
+Parameters: None
+
+handleLogoutClick: Handles the logout button click event.  
+Parameters: e (Event)
+
+attachBrandingHeaderListener: Attaches an event listener to the branding header for interactivity.  
+Parameters: None
+
+Functions from site-request.js  
+addPage: Adds a new page entry to the site request form.  
+Parameters: type (string)
+
+removePage: Removes a page entry from the site request form.  
+Parameters: pageNum (number), type (string)
+
+addEmail: Adds a new email entry to the site request form.  
+Parameters: type (string)
+
+removeEmail: Removes an email entry from the site request form.  
+Parameters: emailNum (number), type (string)
+
+updateDomainPreview: Updates the domain preview based on user input.  
+Parameters: type (string)
+
+checkDomainAvailability: Checks the availability of a domain name via an API call.  
+Parameters: None
+
+loadTinyMCE: Loads the TinyMCE editor library for content editing.  
+Parameters: None
+
+initializeTinyMCE: Initializes TinyMCE for specified text areas.  
+Parameters: selector (string, default: 'textarea[name$="Content"], #about')
+
+getCurrentTimestamp: Generates a formatted timestamp for the current time.  
+Parameters: None
+
+saveSiteRequest: Saves the site request form data via an API call.  
+Parameters: None
+
+Functions from user-management.js  
+loadSettings: Loads user settings into the DOM for display/editing.  
+Parameters: None
+
+saveSettings: Saves user settings from the DOM to the backend.  
+Parameters: settings (object)
+
+loadWixClientId: Loads the Wix client ID into the DOM for display/editing.  
+Parameters: None
+
+saveWixClientId: Saves the Wix client ID from the DOM to the backend.  
+Parameters: clientId (string)
+
+validatePassword: Validates the complexity of a password based on predefined rules.  
+Parameters: password (string)
+
+setupChangePassword: Sets up the submission logic for the "Change Password" form.  
+Parameters: None
+
+CR
