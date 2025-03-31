@@ -1,0 +1,414 @@
+{
+    "SCHEMA": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Comprehensive Project Schema",
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "The name of the project (optional)"
+            },
+            "description": {
+                "type": "string",
+                "description": "A brief description of the project"
+            },
+            "base_url": {
+                "type": "string",
+                "format": "uri",
+                "description": "The base URL of the project"
+            },
+            "main_file": {
+                "type": "string",
+                "description": "The main file of the project"
+            },
+            "github": {
+                "type": "string",
+                "format": "uri",
+                "description": "The GitHub repository URL"
+            },
+            "files": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/file"
+                },
+                "description": "An array of files in the project"
+            },
+            "version": {
+                "type": "string",
+                "description": "The version of the project (optional)"
+            },
+            "dependencies": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "List of dependencies (optional)"
+            },
+            "technologies": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "List of technologies used (optional)"
+            }
+        },
+        "required": [
+            "description",
+            "base_url",
+            "main_file",
+            "github",
+            "files"
+        ],
+        "definitions": {
+            "file": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the file"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "The type or extension of the file"
+                    },
+                    "relative_location": {
+                        "type": "string",
+                        "description": "The relative path to the file from the main file"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type",
+                    "relative_location"
+                ],
+                "oneOf": [
+                    {
+                        "$ref": "#/definitions/js_file"
+                    },
+                    {
+                        "$ref": "#/definitions/blueprint_file"
+                    },
+                    {
+                        "$ref": "#/definitions/template_file"
+                    },
+                    {
+                        "$ref": "#/definitions/document_file"
+                    }
+                ]
+            },
+            "parameter": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the parameter"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "The data type of the parameter"
+                    },
+                    "optional": {
+                        "type": "boolean",
+                        "description": "Whether the parameter is optional"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "A concise description of the parameter"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type",
+                    "optional",
+                    "description"
+                ]
+            },
+            "js_file": {
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/file"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "functions": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/function"
+                                },
+                                "description": "An array of functions defined in the JS file"
+                            }
+                        },
+                        "required": [
+                            "functions"
+                        ]
+                    }
+                ]
+            },
+            "function": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the function"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "A brief description of the function"
+                    },
+                    "parameters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/parameter"
+                        },
+                        "description": "An array of parameters for the function"
+                    }
+                },
+                "required": [
+                    "name",
+                    "description",
+                    "parameters"
+                ]
+            },
+            "blueprint_file": {
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/file"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "flask_blueprint": {
+                                "type": "string",
+                                "description": "The name of the Flask blueprint"
+                            },
+                            "endpoint_name": {
+                                "type": "string",
+                                "description": "The name of the endpoint"
+                            },
+                            "method": {
+                                "type": "string",
+                                "enum": [
+                                    "GET",
+                                    "POST",
+                                    "PUT",
+                                    "DELETE"
+                                ],
+                                "description": "The HTTP method of the endpoint"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "A brief description of the endpoint"
+                            },
+                            "parameters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/parameter"
+                                },
+                                "description": "An array of parameters for the endpoint"
+                            }
+                        },
+                        "required": [
+                            "flask_blueprint",
+                            "endpoint_name",
+                            "method",
+                            "description",
+                            "parameters"
+                        ]
+                    }
+                ]
+            },
+            "template_file": {
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/file"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "engine": {
+                                "type": "string",
+                                "enum": [
+                                    "jinja2",
+                                    "handlebars",
+                                    "mustache"
+                                ],
+                                "description": "The templating engine used"
+                            }
+                        },
+                        "required": [
+                            "engine"
+                        ]
+                    }
+                ]
+            },
+            "document_file": {
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/file"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "format": {
+                                "type": "string",
+                                "enum": [
+                                    "pdf",
+                                    "docx",
+                                    "txt"
+                                ],
+                                "description": "The format of the document"
+                            }
+                        },
+                        "required": [
+                            "format"
+                        ]
+                    }
+                ]
+            },
+            "command": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the command"
+                    },
+                    "syntax": {
+                        "type": "string",
+                        "description": "The syntax of the command"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "A brief description of the command"
+                    },
+                    "responses": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/response"
+                        },
+                        "description": "An array of possible responses"
+                    }
+                },
+                "required": [
+                    "name",
+                    "syntax",
+                    "description",
+                    "responses"
+                ]
+            },
+            "response": {
+                "type": "object",
+                "properties": {
+                    "accepted_response": {
+                        "type": "string",
+                        "description": "The accepted response message"
+                    },
+                    "condition": {
+                        "type": "string",
+                        "description": "The condition under which this response is issued"
+                    }
+                },
+                "required": [
+                    "accepted_response",
+                    "condition"
+                ]
+            }
+        }
+    },
+    "VALID_COMMANDS": [
+        {
+            "name": "CR",
+            "syntax": "CR",
+            "description": "Confirm receipt of file/code/content, providing no additional response.",
+            "responses": [
+                {
+                    "accepted_response": "CR",
+                    "condition": "Always"
+                }
+            ]
+        },
+        {
+            "name": "CREQ",
+            "syntax": "CREQ",
+            "description": "Confirm requirement. Read any files you need from the project git. Then give a concise review of your current understanding of the requirement and any questions you have. Update this with new info from subsequent 'CREQ' prompts; do not generate code unless instructed. Always include the list of files that will be changed by the CREQ.",
+            "responses": [
+                {
+                    "accepted_response": "A concise text summary of understanding, questions, and a list of files to be changed.",
+                    "condition": "When the requirement is understood and files to be changed are identified."
+                },
+                {
+                    "accepted_response": "Clarification needed: [specific question]",
+                    "condition": "When there are ambiguities or missing information in the requirement."
+                }
+            ]
+        },
+        {
+            "name": "NF",
+            "syntax": "NF",
+            "description": "When working with the array of files from CREQ, provide the Next file in sequence. May be used in combination with AMD. May be modified with ?. Response with the next file or none if all complete.",
+            "responses": [
+                {
+                    "accepted_response": "The next filename",
+                    "condition": "When there are remaining files in the sequence."
+                },
+                {
+                    "accepted_response": "none",
+                    "condition": "When all files in the sequence have been processed."
+                },
+                {
+                    "accepted_response": "?",
+                    "condition": "When the command is modified with '?' to indicate uncertainty."
+                }
+            ]
+        },
+        {
+            "name": "AMD",
+            "syntax": "AMD {filename}\n{body}",
+            "description": "Ammend. Add your amendments to your most recent version. When writing an AMD this MUST be the FULL unabridged version of the original file plus your changes. If a newer version exists it will be provided in the {body}. Amend the provided version if given else your most recent update. If omitted and no recent update, read the file from the repo. Do not repeat the AMD command in the code.",
+            "responses": [
+                {
+                    "accepted_response": "The full amended file content reflecting all changes.",
+                    "condition": "When the amendment is successfully applied to the file."
+                }
+            ]
+        },
+        {
+            "name": "XREQ",
+            "syntax": "XREQ",
+            "description": "A Transfer Request. Create a concise prompt to restart the chat with another instance, stating the Current Requirement and progress made toward it. List files changed in AMD amendments with before and after code. Add a section of observations for code improvement. This may be saved as xreq.md in the project repo, so use .md formatting. Include a timestamp, self-assessment of your performance in our session, and advice for future instances. Choose your own session identifier and sign the md.",
+            "responses": [
+                {
+                    "accepted_response": "A raw Markdown text block formatted with @ for internal code blocks, containing the transfer request details.",
+                    "condition": "When the transfer request is generated with all required details."
+                }
+            ]
+        },
+        {
+            "name": "LEARN",
+            "syntax": "LEARN\n{body}",
+            "description": "Create a Comprehensive Project Schema if one is not in memeory. Read the {body} and add/update entries from body to the project. Add to the schema as appropriate. CR only when done.",
+            "responses": [
+                {
+                    "accepted_response": "CR",
+                    "condition": "When the learning process is completed and entries are updated."
+                }
+            ]
+        },
+        {
+            "name": "SUMMARISE ",
+            "syntax": "summarise {all}",
+            "description": "If all is ommited wite the the current project schema in full. Othersise write this json in full in the format {`SCHEMA`: current SCHEMA in full ; `VALID_COMMANDS`: current valid commands in full ; `Comprehensive Project Schema`: the current project schema in full }",
+            "responses": [
+                {
+                    "accepted_response": "{`SCHEMA`: current SCHEMA in full ; `VALID_COMMANDS`: current valid commands in full ; `Comprehensive Project Schema`: the current project schema in full }",
+                    "condition": "if all"
+                },
+                {
+                    "accepted_response": "Write just current `Comprehensive Project Schema` JSON in full.",
+                    "condition": "if all is omitted"
+                }
+            ]
+        }
+    ],
+    "Comprehensive Project Schema": {}
+}
