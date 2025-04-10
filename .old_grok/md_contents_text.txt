@@ -1,0 +1,1159 @@
++ [md]
++----amazon_uk_readme.md
++----awin_readme.md
++----bigcommerce.md
++----bigcommerce_readme.md
++----cj_readme.md
++----ebay_uk_readme.md
++----joomla_readme.md
++----magento.md
++----magento_readme.md
++----md_contents_text.txt
++----shopify.md
++----shopify_readme.md
++----squarespace_readme.md
++----weebly_readme.md
++----wix.md
++----wixStore.md
++----wixStore_readme.md
++----wix_readme.md
++----woocommerce.md
++----woocommerce_readme.md
++----wordpress_readme.md
+
+amazon_uk_readme.md
+# Amazon UK Affiliate Signup Process
+
+This document provides a detailed, step-by-step guide to signing up for the Amazon UK Affiliate Program (Amazon Associates) to obtain the necessary credentials (`ACCESS_KEY`, `SECRET_KEY`, `ASSOCIATE_TAG`, `COUNTRY`) for use in the `clubmadeira.io` configuration.
+
+## Prerequisites
+- A valid email address.
+- A website or blog (Amazon requires you to have a platform to promote products; `clubmadeira.io` can be used if already set up).
+- Basic understanding of affiliate marketing.
+
+## Step-by-Step Instructions
+
+### Step 1: Visit the Amazon Associates Signup Page
+- Open your web browser and navigate to the Amazon UK Associates signup page: [https://affiliate-program.amazon.co.uk](https://affiliate-program.amazon.co.uk).
+- Click on the "Join Now for Free" button.
+
+### Step 2: Sign In or Create an Amazon Account
+- If you have an existing Amazon UK account:
+  - Enter your email address or phone number and password.
+  - Click "Sign In".
+- If you don’t have an account:
+  - Click "Create your Amazon account".
+  - Provide your name, email address, and a secure password.
+  - Click "Create your Amazon account" and verify your email if prompted.
+
+### Step 3: Start the Application Process
+- After signing in, you’ll be directed to the Amazon Associates application form.
+- **Account Information**:
+  - Select your preferred language (e.g., English).
+  - Enter your full name and address (ensure this matches your legal details for payment purposes).
+  - Provide a phone number for verification.
+
+### Step 4: Specify Your Website
+- **Website and Mobile Apps**:
+  - Enter the URL of your primary website (e.g., `https://clubmadeira.io`).
+  - If you have additional sites or apps, list them (optional).
+  - Amazon requires at least one valid site; ensure it has some content (e.g., blog posts or product pages) before submission.
+
+### Step 5: Profile Details
+- **Associate ID**:
+  - Create a unique Associate ID (e.g., `clubmadeira-21`). This will be your `ASSOCIATE_TAG`.
+  - Write this down; you’ll need it for the config.
+- **Website Description**:
+  - Describe what your website is about (e.g., "Club Madeira is a platform for car enthusiasts to find parts and accessories").
+  - Specify the primary content type (e.g., blog, reviews, e-commerce).
+- **Traffic Sources**:
+  - Select how you drive traffic (e.g., organic search, social media).
+  - Be honest; Amazon reviews this.
+
+### Step 6: Verify Your Identity
+- **Phone Verification**:
+  - Enter your phone number.
+  - Choose to receive a call or SMS for a verification code.
+  - Enter the code provided to proceed.
+
+### Step 7: Submit Application
+- Review all entered information.
+- Check the box to agree to the Amazon Associates Operating Agreement.
+- Click "Finish" to submit your application.
+
+### Step 8: Wait for Approval
+- Amazon will review your application (typically within 1-3 business days).
+- You’ll receive an email notification with approval status.
+- If rejected, review the feedback (e.g., insufficient content) and reapply after addressing issues.
+
+### Step 9: Access Your Credentials
+- Once approved, log in to your Amazon Associates account at [https://affiliate-program.amazon.co.uk](https://affiliate-program.amazon.co.uk).
+- **Associate Tag**:
+  - Your `ASSOCIATE_TAG` is the Associate ID you created (e.g., `clubmadeira-21`).
+- **API Access (ACCESS_KEY, SECRET_KEY)**:
+  - Navigate to "Tools" > "Product Advertising API".
+  - Click "Sign Up Now" for API access (requires an approved account with some activity).
+  - Follow prompts to generate your `ACCESS_KEY` and `SECRET_KEY`.
+  - Note: Initial API access may require 3 qualifying sales within 180 days of signup.
+- **COUNTRY**:
+  - Set to "UK" for Amazon UK.
+
+### Step 10: Update Config
+- Open your `clubmadeira.io` configuration file (`config.json`).
+- Locate the `"amazon_uk"` section.
+- Enter your credentials:
+  - `"ACCESS_KEY": "<your_access_key>"`
+  - `"SECRET_KEY": "<your_secret_key>"`
+  - `"ASSOCIATE_TAG": "<your_associate_id>"`
+  - `"COUNTRY": "UK"`
+- Save the file and redeploy the configuration as needed.
+
+## Troubleshooting
+- **Application Rejected**: Ensure your website has sufficient content (e.g., 10+ posts) and resubmit.
+- **API Access Denied**: Generate some affiliate sales first, then reapply for API access.
+- **Lost Credentials**: Log back into Amazon Associates to retrieve your `ASSOCIATE_TAG`; regenerate API keys if needed.
+
+## Next Steps
+- Use the Product Advertising API to integrate Amazon UK products into `clubmadeira.io`.
+- Refer to the developer documentation at [https://webservices.amazon.com/paapi5/documentation/](https://webservices.amazon.com/paapi5/documentation/) for API usage.
+awin_readme.md
+# Awin Affiliate Signup Process
+
+This document provides a detailed, step-by-step guide to signing up for the Awin Affiliate Program to obtain the `API_TOKEN` credential for use in the `clubmadeira.io` configuration.
+
+## Prerequisites
+- A valid email address.
+- A website or platform (e.g., `clubmadeira.io`) with some content.
+- Understanding of affiliate marketing basics.
+
+## Step-by-Step Instructions
+
+### Step 1: Visit the Awin Signup Page
+- Open your browser and navigate to the Awin affiliate signup page: [https://www.awin.com/gb/affiliates](https://www.awin.com/gb/affiliates).
+- Click "Sign Up" or "Join as an Affiliate".
+
+### Step 2: Register an Account
+- **Account Creation**:
+  - Enter your email address and create a password.
+  - Click "Continue" or "Sign Up".
+  - Verify your email by clicking the link sent to your inbox.
+
+### Step 3: Complete the Application Form
+- **Personal Details**:
+  - Provide your full name, address, and phone number.
+- **Website Information**:
+  - Enter your website URL (e.g., `https://clubmadeira.io`).
+  - Describe your site (e.g., "A platform for car parts and accessories").
+  - Select your promotional methods (e.g., content, social media).
+- **Preferences**:
+  - Choose your preferred currency (e.g., GBP for UK).
+
+### Step 4: Submit Application
+- Review your details.
+- Agree to Awin’s terms and conditions.
+- Click "Submit" or "Join Now".
+
+### Step 5: Wait for Approval
+- Awin reviews applications within 1-7 business days.
+- Monitor your email for approval or additional information requests.
+- If denied, enhance your site (e.g., add more content) and reapply.
+
+### Step 6: Access Your Awin Dashboard
+- Once approved, log in to [https://ui.awin.com/](https://ui.awin.com/) with your credentials.
+
+### Step 7: Obtain Your API_TOKEN
+- **API Access**:
+  - Go to "Account" > "API Credentials" or "Developer Settings".
+  - If not visible, contact Awin support to request API access (mention your affiliate status).
+  - Generate an `API_TOKEN` (a long alphanumeric string).
+- Copy the `API_TOKEN`.
+
+### Step 8: Update Config
+- Open your `clubmadeira.io` configuration file (`config.json`).
+- Locate the `"awin"` section.
+- Enter your `API_TOKEN`:
+  - `"API_TOKEN": "<your_api_token>"`
+- Save and redeploy the configuration.
+
+## Troubleshooting
+- **Delayed Approval**: Ensure your site has unique content; contact support if delayed.
+- **No API Option**: Confirm your account is fully approved; request API access via support.
+- **Lost Token**: Regenerate it in the Awin dashboard.
+
+## Next Steps
+- Use the Awin API to integrate affiliate links into `clubmadeira.io`.
+- Refer to [https://ui.awin.com/developer](https://ui.awin.com/developer) for API documentation.
+bigcommerce.md
+# BigCommerce API Settings for Categories and Products
+
+This document details how to obtain the `API_TOKEN`, `CLIENT_ID`, `STORE_HASH`, and `STORE_URL` required for the BigCommerce API, as per the [BigCommerce API Reference](https://developer.bigcommerce.com/api-reference).
+
+## Prerequisites
+- A BigCommerce store account.
+- Admin access to the store’s control panel.
+
+## Obtaining the API_TOKEN
+The `API_TOKEN` is a legacy API token for authenticating requests.
+
+1. **Log into BigCommerce**:
+   - Access your store’s control panel at `https://{your-store}.mybigcommerce.com/manage`.
+
+2. **Navigate to API Settings**:
+   - Go to "Settings" > "API" > "Store-level API accounts".
+
+3. **Create an API Account**:
+   - Click "Create API Account".
+   - Name it (e.g., "ClubMadeira Integration").
+   - Select scopes (e.g., "Products" and "Categories" set to "Modify").
+
+4. **Generate and Save Credentials**:
+   - Click "Save" to generate:
+     - `API Token`: Your `API_TOKEN`.
+     - `Client ID` and `Client Secret` (save these too; `Client ID` is needed later).
+   - Download the credentials file or copy the `API Token`.
+
+5. **Store the API_TOKEN**:
+   - Example: `a1b2c3d4e5f6g7h8i9j0`.
+   - Keep it secure.
+
+## Obtaining the CLIENT_ID
+- **Source**: Generated with the `API_TOKEN` in the API account creation step above.
+- **Value**: A string like `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6`.
+- **Action**: Copy from the API account credentials.
+
+## Obtaining the STORE_HASH
+The `STORE_HASH` is a unique identifier for your store in BigCommerce’s API.
+
+1. **Find Your Store Hash**:
+   - In the API credentials file or control panel, it’s the part of the API path after `/stores/`.
+   - Example API path: `https://api.bigcommerce.com/stores/{STORE_HASH}/v3/`.
+   - Or, make a test API call (e.g., `GET /stores/{guess}/v3/catalog/products`) and adjust until it works.
+
+2. **Record the STORE_HASH**:
+   - Example: `abc123`.
+   - Save this value.
+
+## Obtaining the STORE_URL
+The `STORE_URL` is your store’s domain.
+
+1. **Get Your Store Domain**:
+   - In the control panel, go to "Settings" > "Store Details".
+   - Note the "Store URL" (e.g., `https://{your-store}.mybigcommerce.com`).
+
+2. **Alternative Method**:
+   - Use the storefront URL you access (e.g., `https://example-store.mybigcommerce.com`).
+
+3. **Store the STORE_URL**:
+   - Example: `https://example-store.mybigcommerce.com`.
+
+## Usage
+With these credentials, authenticate API requests:
+```
+GET https://api.bigcommerce.com/stores/{STORE_HASH}/v3/catalog/products
+X-Auth-Token: {API_TOKEN}
+X-Auth-Client: {CLIENT_ID}
+Accept: application/json
+```
+
+See the [BigCommerce API Reference](https://developer.bigcommerce.com/api-reference) for more.
+
+
+bigcommerce_readme.md
+# BigCommerce API Usage for Club Madeira
+
+This document provides a detailed guide on using the BigCommerce API to retrieve part category and part data for clubmadeira.io. This will later be replaced with instructions on how to obtain the API key details from BigCommerce to use in the config.
+
+## Prerequisites
+- A BigCommerce account (sign up at [https://www.bigcommerce.com/signup](https://www.bigcommerce.com/signup)).
+- API credentials (API_TOKEN, CLIENT_ID, STORE_HASH) from BigCommerce.
+- Basic API knowledge.
+
+## Step-by-Step Instructions
+
+### Step 1: Verify API Credentials
+Ensure you have your API_TOKEN, CLIENT_ID, and STORE_HASH from your BigCommerce account (in config.json).
+
+### Step 2: Access BigCommerce API
+Refer to the BigCommerce API documentation: [https://developer.bigcommerce.com/api-docs](https://developer.bigcommerce.com/api-docs). Base URL: https://api.bigcommerce.com/stores/<STORE_HASH>/v3.
+
+### Step 3: Retrieve Part Categories
+API Endpoint: GET /catalog/categories. Request: Headers: X-Auth-Token: <API_TOKEN>. URL: https://api.bigcommerce.com/stores/<STORE_HASH>/v3/catalog/categories. Example with cURL: ``` curl -X GET "https://api.bigcommerce.com/stores/<STORE_HASH>/v3/catalog/categories" -H "X-Auth-Token: <API_TOKEN>" ``` Response: JSON with category data (e.g., {"data": [{"id": 1, "name": "Brakes"}]}). Steps: 1. Replace <API_TOKEN> and <STORE_HASH> with your config values. 2. Send the request. 3. Parse the response to list categories.
+
+### Step 4: Retrieve Part Data
+API Endpoint: GET /catalog/products. Request: Headers: X-Auth-Token: <API_TOKEN>. URL: https://api.bigcommerce.com/stores/<STORE_HASH>/v3/catalog/products?categories:in=<category_id>. Example with cURL: ``` curl -X GET "https://api.bigcommerce.com/stores/<STORE_HASH>/v3/catalog/products?categories:in=<category_id>" -H "X-Auth-Token: <API_TOKEN>" ``` Response: JSON with product data (e.g., {"data": [{"id": 101, "name": "Brake Pad", "price": "29.99"}]}). Steps: 1. Use a category_id from Step 3 (e.g., 1). 2. Send the request. 3. Parse the response to display parts.
+
+### Step 5: Integrate with Club Madeira
+Use the fetched data in clubmadeira.io (e.g., populate a parts catalog). Update your application to use these API calls with user-provided credentials.
+
+## Troubleshooting
+- **403 Forbidden**: Check API_TOKEN and STORE_HASH accuracy.
+- **Empty Response**: Add categories and products in your BigCommerce store.
+
+## Next Steps
+Test with your BigCommerce store data. **Note**: This guide will be replaced with instructions on how to obtain API_TOKEN, CLIENT_ID, and STORE_HASH from BigCommerce for the config.
+cj_readme.md
+# CJ Affiliate Signup Process
+
+This document provides a detailed, step-by-step guide to signing up for the CJ Affiliate Program to obtain the `API_KEY` and `WEBSITE_ID` credentials for use in the `clubmadeira.io` configuration.
+
+## Prerequisites
+- A valid email address.
+- A website (e.g., `clubmadeira.io`) with content for promotion.
+- Basic affiliate marketing knowledge.
+
+## Step-by-Step Instructions
+
+### Step 1: Visit the CJ Signup Page
+- Open your browser and go to the CJ Affiliate publisher signup page: [https://signup.cj.com/member/signup/publisher/](https://signup.cj.com/member/signup/publisher/).
+- Click "Sign Up" or "Join Now".
+
+### Step 2: Create an Account
+- **Account Details**:
+  - Enter your email address and create a password.
+  - Provide your full name and company name (if applicable, use `Club Madeira` or your personal name).
+  - Select your country (e.g., UK).
+
+### Step 3: Fill Out the Application
+- **Website Information**:
+  - Enter your website URL (e.g., `https://clubmadeira.io`).
+  - Describe your site (e.g., "Car parts and accessories platform").
+  - Specify promotional methods (e.g., content marketing, social media).
+- **Business Details**:
+  - Provide your address and phone number.
+  - Select your primary audience (e.g., UK).
+
+### Step 4: Submit Application
+- Agree to CJ’s terms and conditions.
+- Click "Submit" or "Join CJ".
+
+### Step 5: Wait for Approval
+- CJ reviews applications within 1-5 business days.
+- Check your email for approval or requests for more information.
+- If rejected, improve your site (e.g., add content) and reapply.
+
+### Step 6: Access Your CJ Account
+- Once approved, log in to [https://members.cj.com/](https://members.cj.com/).
+
+### Step 7: Get Your WEBSITE_ID
+- **Website ID**:
+  - Go to "Account" > "Websites".
+  - Your `WEBSITE_ID` is listed next to your approved site (e.g., a numeric ID like `1234567`).
+  - Copy this ID.
+
+### Step 8: Obtain Your API_KEY
+- **API Access**:
+  - Navigate to "Account" > "API Keys" or "Developer Portal" (may require contacting support).
+  - Request API access if not available (mention your publisher status).
+  - Generate an `API_KEY` (e.g., a long string like `abcdef123456`).
+  - Copy the `API_KEY`.
+
+### Step 9: Update Config
+- Open your `clubmadeira.io` configuration file (`config.json`).
+- Locate the `"cj"` section.
+- Enter your credentials:
+  - `"API_KEY": "<your_api_key>"`
+  - `"WEBSITE_ID": "<your_website_id>"`
+- Save and redeploy the configuration.
+
+## Troubleshooting
+- **Application Denied**: Ensure your site meets CJ’s content standards; reapply.
+- **API Access Missing**: Contact CJ support to enable API for your account.
+- **Lost Credentials**: Retrieve or regenerate in the CJ dashboard.
+
+## Next Steps
+- Use the CJ API to integrate affiliate links into `clubmadeira.io`.
+- See [https://developers.cj.com/](https://developers.cj.com/) for API details.
+ebay_uk_readme.md
+# eBay UK Affiliate Signup Process
+
+This document provides a detailed, step-by-step guide to signing up for the eBay UK Partner Network to obtain the `APP_ID` credential for use in the `clubmadeira.io` configuration.
+
+## Prerequisites
+- A valid email address.
+- A website or platform (e.g., `clubmadeira.io`) to promote eBay products.
+- Basic knowledge of affiliate marketing.
+
+## Step-by-Step Instructions
+
+### Step 1: Visit the eBay Partner Network Signup Page
+- Open your browser and go to the eBay Partner Network signup page: [https://partnernetwork.ebay.com/](https://partnernetwork.ebay.com/).
+- Click "Join Now" or "Sign Up".
+
+### Step 2: Sign In or Register
+- If you have an eBay account:
+  - Enter your eBay username or email and password.
+  - Click "Sign In".
+- If you don’t have an account:
+  - Click "Register".
+  - Provide your email, create a password, and fill in personal details.
+  - Verify your email address via the link sent to your inbox.
+
+### Step 3: Start the Application
+- After signing in, you’ll be directed to the eBay Partner Network application form.
+- **Personal/Business Information**:
+  - Enter your full name or business name.
+  - Provide your address and contact details.
+
+### Step 4: Add Your Website
+- **Website Information**:
+  - Enter your primary website URL (e.g., `https://clubmadeira.io`).
+  - Describe your site (e.g., "A car parts and accessories platform").
+  - List traffic sources (e.g., SEO, social media).
+  - Ensure your site has some content (e.g., product listings or articles).
+
+### Step 5: Agree to Terms
+- Review the eBay Partner Network Agreement.
+- Check the box to accept the terms.
+- Click "Submit Application".
+
+### Step 6: Wait for Approval
+- eBay reviews applications within 1-5 business days.
+- Check your email for approval notification.
+- If denied, improve your site based on feedback (e.g., add content) and reapply.
+
+### Step 7: Access Your Dashboard
+- Once approved, log in to [https://partnernetwork.ebay.com/](https://partnernetwork.ebay.com/).
+- Navigate to the dashboard.
+
+### Step 8: Obtain Your APP_ID
+- **Developer Account**:
+  - Go to "Developer Program" via [https://developer.ebay.com/](https://developer.ebay.com/).
+  - Sign in with your eBay credentials.
+  - Click "Join" if not already enrolled in the eBay Developers Program.
+- **Create an Application**:
+  - Go to "My Apps" or "Application Keys".
+  - Click "Create a Keyset" or "Generate Keys".
+  - Name your app (e.g., `ClubMadeira_eBay`).
+  - Select "Production" environment.
+  - Generate keys; you’ll receive an `App ID` (Production Keyset).
+- Copy the `App ID` (e.g., `ClubMade-1234-5678-9012`).
+
+### Step 9: Update Config
+- Open your `clubmadeira.io` configuration file (`config.json`).
+- Locate the `"ebay_uk"` section.
+- Enter your `APP_ID`:
+  - `"APP_ID": "<your_app_id>"`
+- Save and redeploy the configuration.
+
+## Troubleshooting
+- **Application Denied**: Ensure your site has content and complies with eBay policies; reapply.
+- **No API Access**: Verify your Partner Network approval, then join the Developers Program.
+- **Lost APP_ID**: Log into [https://developer.ebay.com/](https://developer.ebay.com/) to retrieve or regenerate keys.
+
+## Next Steps
+- Use the eBay Affiliate API to integrate eBay UK products into `clubmadeira.io`.
+- See [https://developer.ebay.com/api-docs/static/ebay-affiliate-api.html](https://developer.ebay.com/api-docs/static/ebay-affiliate-api.html) for API details.
+joomla_readme.md
+# Joomla Module Creation for Club Madeira
+
+This document explains how Joomla uses modules and provides a step-by-step guide to creating a module for clubmadeira.io. This will later be replaced with instructions on how to add the created module to a user’s Joomla site.
+
+## How Joomla Uses Modules
+Joomla uses "modules" as extensions to display content or functionality (e.g., car part search). Modules are PHP-based and can integrate with Joomla’s API.
+
+## Prerequisites
+- A Joomla site (download from [https://www.joomla.org/download.html](https://www.joomla.org/download.html)).
+- Basic PHP knowledge.
+- Local server (e.g., XAMPP) or hosting with Joomla installed.
+
+## Step-by-Step Instructions
+
+### Step 1: Set Up Joomla
+Download Joomla from [https://www.joomla.org/download.html](https://www.joomla.org/download.html). Install locally or on a server (follow Joomla’s installation guide).
+
+### Step 2: Create a Module Folder
+Navigate to modules/ in your Joomla installation. Create a folder named mod_clubmadeira_parts.
+
+### Step 3: Create Module Files
+Create mod_clubmadeira_parts.php with: ``` <?php defined('_JEXEC') or die; $search = JFactory::getApplication()->input->get('part_search', '', 'string'); ?> <form method="post"> <input type="text" name="part_search" placeholder="Search Parts"> <button type="submit">Search</button> </form> <?php if ($search): ?> <p>Results for: <?php echo htmlspecialchars($search); ?></p> <?php $db = JFactory::getDbo(); $query = $db->getQuery(true) ->select('*') ->from('#__clubmadeira_parts') ->where('name LIKE ' . $db->quote('%' . $search . '%')); $db->setQuery($query); $results = $db->loadObjectList(); foreach ($results as $result) { echo '<div>' . $result->name . ' - $' . $result->price . '</div>'; } ?> <?php endif; ?> ``` Create mod_clubmadeira_parts.xml with: ``` <?xml version="1.0" encoding="utf-8"?> <extension type="module" version="3.9" client="site" method="upgrade"> <name>Club Madeira Parts</name> <author>Club Madeira Team</author> <version>1.0</version> <description>Car parts search module</description> <files> <filename module="mod_clubmadeira_parts">mod_clubmadeira_parts.php</filename> <filename>mod_clubmadeira_parts.xml</filename> </files> </extension> ```
+
+### Step 4: Create a Database Table
+Access your Joomla database (e.g., via phpMyAdmin). Run: ``` CREATE TABLE #__clubmadeira_parts ( id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), price DECIMAL(10,2) ); INSERT INTO #__clubmadeira_parts (name, price) VALUES ('Brake Pad', 29.99); ```
+
+### Step 5: Install the Module
+Zip the mod_clubmadeira_parts folder. In Joomla admin (e.g., http://localhost/administrator), go to "Extensions" > "Manage" > "Install". Upload the zip file.
+
+### Step 6: Activate and Test
+Go to "Extensions" > "Modules". Find "Club Madeira Parts", set position (e.g., position-7), and enable it. Visit your site and test the search.
+
+## Troubleshooting
+- **Module Not Showing**: Check position and status in Module Manager.
+- **DB Errors**: Verify table creation and permissions.
+
+## Next Steps
+Enhance with Joomla API integration. See [https://docs.joomla.org/Joomla_API](https://docs.joomla.org/Joomla_API) for details. **Note**: This guide will be replaced with instructions on adding this module to a user’s Joomla site.
+magento.md
+# Magento API Settings for Categories and Products
+
+This guide explains how to obtain the `ACCESS_TOKEN` and `STORE_URL` for the Magento REST API, detailed in the [Magento REST API documentation](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html).
+
+## Prerequisites
+- A Magento 2 store (self-hosted or cloud).
+- Admin access to the Magento Admin Panel.
+
+## Obtaining the ACCESS_TOKEN
+The `ACCESS_TOKEN` is an OAuth or integration token for API access.
+
+1. **Log into Magento Admin**:
+   - Access `https://{your-store}/admin`.
+
+2. **Create an Integration**:
+   - Go to "System" > "Integrations".
+   - Click "Add New Integration".
+   - Name it (e.g., "ClubMadeira Integration").
+   - Set permissions (e.g., "Catalog" > "Categories" and "Products").
+
+3. **Activate the Integration**:
+   - Save and activate the integration.
+   - Approve the permissions prompt.
+
+4. **Copy the ACCESS_TOKEN**:
+   - After activation, Magento provides:
+     - `Consumer Key`
+     - `Consumer Secret`
+     - `Access Token` (this is your `ACCESS_TOKEN`)
+     - `Access Token Secret`
+   - Example: `abcdefghijklmnopqrstuvwxyz123456`.
+   - Save the `ACCESS_TOKEN` securely.
+
+## Obtaining the STORE_URL
+The `STORE_URL` is your Magento store’s base URL.
+
+1. **Find Your Store URL**:
+   - In the Admin Panel, go to "Stores" > "Configuration" > "General" > "Web".
+   - Under "Base URLs", note the "Base URL" (e.g., `https://example.com`).
+
+2. **Verify API Endpoint**:
+   - The REST API base URL is typically `{STORE_URL}/rest` (e.g., `https://example.com/rest`).
+
+3. **Store the STORE_URL**:
+   - Example: `https://example.com`.
+
+## Usage
+Authenticate API requests with the token:
+```
+GET {STORE_URL}/rest/V1/products
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+Refer to the [Magento REST API docs](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html) for endpoints.
+
+
+magento_readme.md
+# Magento API Usage for Club Madeira
+
+This document provides a detailed guide on using the Magento API to retrieve part category and part data for clubmadeira.io. This will later be replaced with instructions on how to obtain the API key details from Magento to use in the config.
+
+## Prerequisites
+- A Magento account (sign up at [https://magento.com/magento-commerce](https://magento.com/magento-commerce)).
+- API credential (ACCESS_TOKEN) from Magento.
+- Basic API knowledge.
+
+## Step-by-Step Instructions
+
+### Step 1: Verify API Credentials
+Ensure you have your ACCESS_TOKEN from your Magento account (in config.json).
+
+### Step 2: Access Magento API
+Refer to the Magento REST API documentation: [https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html](https://devdocs.magento.com/guides/v2.4/rest/bk-rest.html). Base URL: <STORE_URL>/rest/V1 (e.g., https://yourstore.com/rest/V1).
+
+### Step 3: Retrieve Part Categories
+API Endpoint: GET /categories. Request: Headers: Authorization: Bearer <ACCESS_TOKEN>. URL: <STORE_URL>/rest/V1/categories. Example with cURL: ``` curl -X GET "<STORE_URL>/rest/V1/categories" -H "Authorization: Bearer <ACCESS_TOKEN>" ``` Response: JSON with category data (e.g., {"id": 2, "name": "Brakes", "children_data": []}). Steps: 1. Replace <STORE_URL> and <ACCESS_TOKEN> with your config values. 2. Send the request. 3. Parse the response to list categories.
+
+### Step 4: Retrieve Part Data
+API Endpoint: GET /products. Request: Headers: Authorization: Bearer <ACCESS_TOKEN>. URL: <STORE_URL>/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=category_id&searchCriteria[filter_groups][0][filters][0][value]=<category_id>. Example with cURL: ``` curl -X GET "<STORE_URL>/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=category_id&searchCriteria[filter_groups][0][filters][0][value]=<category_id>" -H "Authorization: Bearer <ACCESS_TOKEN>" ``` Response: JSON with product data (e.g., {"items": [{"sku": "brakepad", "name": "Brake Pad", "price": "29.99"}]}). Steps: 1. Use a category_id from Step 3 (e.g., 2). 2. Send the request. 3. Parse the response to display parts.
+
+### Step 5: Integrate with Club Madeira
+Use the fetched data in clubmadeira.io (e.g., display parts in a catalog). Update your application to use these API calls with user-provided ACCESS_TOKEN and STORE_URL.
+
+## Troubleshooting
+- **401 Unauthorized**: Verify ACCESS_TOKEN is valid.
+- **No Data**: Add categories and products in your Magento admin.
+
+## Next Steps
+Test with your Magento store data. **Note**: This guide will be replaced with instructions on how to obtain ACCESS_TOKEN from Magento for the config.
+md_contents_text.txt
++ [md]
+
+
+shopify.md
+# Shopify API Settings for Categories and Products
+
+This guide details how to obtain the `ACCESS_TOKEN`, `API_KEY`, `API_SECRET_KEY`, and `STORE_URL` for the Shopify Admin REST API, per the [Shopify API Docs](https://shopify.dev/api/admin-rest).
+
+## Prerequisites
+- A Shopify store.
+- Admin access to the Shopify admin panel.
+
+## Obtaining the API_KEY and API_SECRET_KEY
+These are credentials for a custom app.
+
+1. **Log into Shopify Admin**:
+   - Access `https://{your-store}.myshopify.com/admin`.
+
+2. **Create a Custom App**:
+   - Go to "Apps" > "App and sales channel settings" > "Develop apps".
+   - Click "Create an app".
+   - Name it (e.g., "ClubMadeira Integration").
+
+3. **Configure Admin API Scopes**:
+   - In the app settings, go to "Configuration" > "Admin API integration".
+   - Enable scopes (e.g., `read_products`, `write_products`, `read_product_listings`).
+
+4. **Get API Credentials**:
+   - Go to "API credentials".
+   - Copy:
+     - `API Key` (e.g., `1234567890abcdef1234567890abcdef`)
+     - `API Secret Key` (e.g., `abcdef1234567890abcdef1234567890`)
+   - Save these securely.
+
+## Obtaining the ACCESS_TOKEN
+The `ACCESS_TOKEN` is an admin API token.
+
+1. **Generate an Admin API Token**:
+   - In the same "API credentials" section, under "Admin API access token", click "Generate API token".
+   - Select the same scopes as above.
+   - Copy the token (e.g., `shpat_1234567890abcdef1234567890abcdef`).
+
+2. **Store the ACCESS_TOKEN**:
+   - Save it securely.
+
+## Obtaining the STORE_URL
+The `STORE_URL` is your Shopify store’s domain.
+
+1. **Find Your Store URL**:
+   - In the admin panel, it’s the URL you log into (e.g., `https://{your-store}.myshopify.com`).
+
+2. **Store the STORE_URL**:
+   - Example: `https://example-store.myshopify.com`.
+
+## Usage
+Authenticate API requests with the token:
+```
+GET {STORE_URL}/admin/api/2023-10/products.json
+X-Shopify-Access-Token: {ACCESS_TOKEN}
+```
+
+
+shopify_readme.md
+# Shopify API Usage for Club Madeira
+
+This document provides a detailed guide on using the Shopify API to retrieve part category and part data for clubmadeira.io. This will later be replaced with instructions on how to obtain the API key details from Shopify to use in the config.
+
+## Prerequisites
+- A Shopify account (sign up at [https://www.shopify.com/signup](https://www.shopify.com/signup)).
+- API credentials (API_KEY, API_SECRET_KEY, ACCESS_TOKEN) from Shopify.
+- Basic API knowledge.
+
+## Step-by-Step Instructions
+
+### Step 1: Verify API Credentials
+Ensure you have your API_KEY, API_SECRET_KEY, and ACCESS_TOKEN from your Shopify account (in config.json).
+
+### Step 2: Access Shopify API
+Refer to the Shopify API documentation: [https://shopify.dev/api](https://shopify.dev/api). Base URL: <STORE_URL>/admin/api/2023-10 (e.g., https://yourstore.myshopify.com/admin/api/2023-10).
+
+### Step 3: Retrieve Part Categories
+API Endpoint: GET /collections. Request: Headers: X-Shopify-Access-Token: <ACCESS_TOKEN>. URL: <STORE_URL>/admin/api/2023-10/collections.json. Example with cURL: ``` curl -X GET "<STORE_URL>/admin/api/2023-10/collections.json" -H "X-Shopify-Access-Token: <ACCESS_TOKEN>" ``` Response: JSON with collection data (e.g., {"collections": [{"id": 123456, "title": "Brakes"}]}). Steps: 1. Replace <STORE_URL> and <ACCESS_TOKEN> with your config values. 2. Send the request. 3. Parse the response to list categories (collections).
+
+### Step 4: Retrieve Part Data
+API Endpoint: GET /products. Request: Headers: X-Shopify-Access-Token: <ACCESS_TOKEN>. URL: <STORE_URL>/admin/api/2023-10/products.json?collection_id=<collection_id>. Example with cURL: ``` curl -X GET "<STORE_URL>/admin/api/2023-10/products.json?collection_id=<collection_id>" -H "X-Shopify-Access-Token: <ACCESS_TOKEN>" ``` Response: JSON with product data (e.g., {"products": [{"id": 789012, "title": "Brake Pad", "variants": [{"price": "29.99"}]}]}). Steps: 1. Use a collection_id from Step 3 (e.g., 123456). 2. Send the request. 3. Parse the response to display parts.
+
+### Step 5: Integrate with Club Madeira
+Use the fetched data in clubmadeira.io (e.g., display parts in a search UI). Update your application to use these API calls with user-provided credentials.
+
+## Troubleshooting
+- **401 Unauthorized**: Verify ACCESS_TOKEN is correct.
+- **No Data**: Add collections and products in your Shopify admin.
+
+## Next Steps
+Test with your Shopify store data. **Note**: This guide will be replaced with instructions on how to obtain API_KEY, API_SECRET_KEY, and ACCESS_TOKEN from Shopify for the config.
+squarespace_readme.md
+# Squarespace Module Creation for Club Madeira
+
+This document explains how Squarespace uses modules (via Developer Mode) and provides a step-by-step guide to creating a module for clubmadeira.io. This will later be replaced with instructions on how to add the created module to a user’s Squarespace site.
+
+## How Squarespace Uses Modules
+Squarespace supports "modules" through Developer Mode, allowing custom code (HTML, CSS, JavaScript) and API integrations. Modules can add features like car part search for clubmadeira.io.
+
+## Prerequisites
+- A Squarespace account (sign up at [https://www.squarespace.com/signup](https://www.squarespace.com/signup)).
+- Basic HTML, CSS, and JavaScript knowledge.
+- Git and SFTP access (for Developer Mode).
+
+## Step-by-Step Instructions
+
+### Step 1: Sign Up for Squarespace
+Go to [https://www.squarespace.com/signup](https://www.squarespace.com/signup) and create an account. Choose a plan (Business or higher for Developer Mode).
+
+### Step 2: Create a Site
+Start a new site with a template (e.g., "Commerce"). Name it (e.g., ClubMadeiraTest).
+
+### Step 3: Enable Developer Mode
+From the site dashboard, go to "Settings" > "Developer Mode". Toggle Developer Mode ON. Follow prompts to set up Git or SFTP access (SFTP recommended for simplicity).
+
+### Step 4: Access Site Files
+Use an SFTP client (e.g., FileZilla). Connect using credentials from Squarespace (e.g., host: sftp.squarespace.com, username/password provided). Download the site template files locally.
+
+### Step 5: Create a Custom Module
+Add a page: Locally, open pages/ and create clubmadeira-parts.page with this content: ``` --- layout: default --- <div id="parts-search"> <input type="text" id="searchInput" placeholder="Search Parts"> <button id="searchButton">Search</button> <div id="partsResults"></div> </div> ``` Add JavaScript: Open scripts/site.js and append: ``` document.addEventListener("DOMContentLoaded", function() { document.getElementById("searchButton").addEventListener("click", function() { var query = document.getElementById("searchInput").value; var results = "<p>Results for: " + query + "</p>"; document.getElementById("partsResults").innerHTML = results; }); }); ``` Style with CSS: Open styles/site.css and add: ``` #parts-search { margin: 20px; } #searchInput { padding: 5px; } #partsResults { margin-top: 10px; } ```
+
+### Step 6: Upload and Test
+Upload modified files via SFTP. In the Squarespace Editor, add the "Club Madeira Parts" page to the navigation. Preview and test the search functionality.
+
+## Troubleshooting
+- **SFTP Issues**: Verify credentials and connection.
+- **Code Not Loading**: Clear Squarespace cache or check file paths.
+
+## Next Steps
+Integrate with Squarespace API for dynamic data. See [https://developers.squarespace.com/](https://developers.squarespace.com/) for API details. **Note**: This guide will be replaced with instructions on adding this module to a user’s Squarespace site.
+weebly_readme.md
+# Weebly Module Creation for Club Madeira
+
+This document explains how Weebly uses modules (via apps or custom code) and provides a step-by-step guide to creating a module for clubmadeira.io. This will later be replaced with instructions on how to add the created module to a user’s Weebly site.
+
+## How Weebly Uses Modules
+Weebly supports "modules" through its App Center or custom HTML/CSS/JavaScript embeds. Custom code can create features like car part search for clubmadeira.io.
+
+## Prerequisites
+- A Weebly account (sign up at [https://www.weebly.com/signup](https://www.weebly.com/signup)).
+- Basic HTML and JavaScript knowledge.
+
+## Step-by-Step Instructions
+
+### Step 1: Sign Up for Weebly
+Go to [https://www.weebly.com/signup](https://www.weebly.com/signup) and create an account. Choose a plan (Pro or higher for custom code).
+
+### Step 2: Create a Site
+Start a new site with a template (e.g., "Online Store"). Name it (e.g., ClubMadeiraTest).
+
+### Step 3: Open the Editor
+From the Weebly dashboard, click "Edit Site" for your new site.
+
+### Step 4: Add a Custom Module
+Add a page: Click "Pages" > "Add Page". Name it "Club Madeira Parts". Embed code: Drag an "Embed Code" element onto the page from the left sidebar. Click the element and select "Edit Custom HTML". Add: ``` <div id="parts-search"> <input type="text" id="searchInput" placeholder="Search Parts"> <button id="searchButton">Search</button> <div id="partsResults"></div> </div> <script> document.getElementById("searchButton").addEventListener("click", function() { var query = document.getElementById("searchInput").value; document.getElementById("partsResults").innerHTML = "<p>Results for: " + query + "</p>"; }); </script> <style> #parts-search { margin: 20px; } #searchInput { padding: 5px; } #partsResults { margin-top: 10px; } </style> ```
+
+### Step 5: Test the Module
+Click "Preview" to test the search functionality. Enter a part name and click "Search" to see results.
+
+### Step 6: Publish
+Click "Publish" to make the site live (optional for development).
+
+## Troubleshooting
+- **Code Not Working**: Ensure JavaScript is enabled; check for syntax errors.
+- **Limited Features**: Upgrade plan for more customization options.
+
+## Next Steps
+Integrate with Weebly API for dynamic data. See [https://www.weebly.com/developer](https://www.weebly.com/developer) for API details. **Note**: This guide will be replaced with instructions on adding this module to a user’s Weebly site.
+wix.md
+# Wix API Integration for Categories and Products
+
+This guide covers programmatic access to category and product information from Wix Stores using the Wix eCommerce API.
+
+## Prerequisites
+- A Wix account with a store enabled (Wix Stores app added).
+- Admin access to generate API credentials.
+
+## Required Credentials
+- **API Token**: A single token for authentication, generated in the Wix dashboard.
+- **Site ID**: Unique identifier for your Wix site (found in API calls or dashboard).
+
+To get credentials:
+1. Log in to your Wix account.
+2. Go to **Settings > Advanced Settings > API Tokens**.
+3. Generate a new token with scopes `STORE_READ_PRODUCTS` and `STORE_READ_CATEGORIES`.
+4. Copy the API Token. The Site ID is available in the dashboard or via API calls.
+
+## Authentication
+Use the API Token in the request header:
+
+Authorization: Bearer {api_token}
+
+## Retrieving Categories
+Wix calls categories "Collections." To list all collections:
+
+@bash
+curl -X GET "https://www.wixapis.com/stores/v1/collections" \
+-H "Authorization: Bearer {api_token}"
+@
+
+- Endpoint: `GET https://www.wixapis.com/stores/v1/collections`
+- Response includes collection IDs, names, and slugs.
+
+## Retrieving Products
+To fetch all products:
+
+@bash
+curl -X GET "https://www.wixapis.com/stores/v1/products" \
+-H "Authorization: Bearer {api_token}"
+@
+
+- Endpoint: `GET https://www.wixapis.com/stores/v1/products`
+- Returns product IDs, names, prices, and more.
+- Filter by collection: Add `?collectionId={collection_id}` to the query.
+
+## Notes
+- Wix APIs require HTTPS.
+- Rate limits are not publicly detailed but monitored per app.
+- Use pagination (`?paging.limit=100`) for large datasets.
+
+See [Wix eCommerce API Docs](https://dev.wix.com/api/rest/wix-stores) for more details.
+wixStore.md
+# Wix Store API Settings
+
+This document explains how to obtain the `API_TOKEN` and `SITE_ID` required to integrate with the Wix Stores API, as outlined in the [Wix Stores API documentation](https://dev.wix.com/api/rest/wix-stores).
+
+## Prerequisites
+- A Wix account with a store (e.g., a Wix site with the Stores app installed).
+- Administrative access to your Wix site.
+- A registered Wix app in the Wix Developers Center.
+
+## Obtaining the API_TOKEN
+The `API_TOKEN` is an OAuth access token used to authenticate API requests. Follow these steps:
+
+1. **Log into Wix Developers Center**:
+   - Go to [dev.wix.com](https://dev.wix.com/).
+   - Sign in with your Wix account credentials.
+
+2. **Create an App**:
+   - Navigate to "My Apps" in the Developers Center.
+   - Click "Create New App" and provide a name (e.g., "ClubMadeira Integration").
+   - Save the app to generate its credentials.
+
+3. **Get Client ID and Client Secret**:
+   - In your app’s dashboard, go to the "OAuth" tab.
+   - Note the `Client ID` and `Client Secret` (you’ll need these temporarily for OAuth).
+
+4. **Set Up OAuth Flow**:
+   - Use an OAuth 2.0 client or script to request an access token.
+   - Redirect users to the authorization URL:
+     ```
+     https://www.wix.com/installer/install?appId={CLIENT_ID}&redirectUrl={YOUR_REDIRECT_URL}
+     ```
+   - After user approval, Wix redirects to your `redirectUrl` with a `code` parameter.
+
+5. **Exchange Code for API_TOKEN**:
+   - Make a POST request to:
+     ```
+     https://www.wix.com/oauth/access
+     ```
+     With the body:
+     @@@json
+     {
+         "grant_type": "authorization_code",
+         "client_id": "{CLIENT_ID}",
+         "client_secret": "{CLIENT_SECRET}",
+         "code": "{CODE_FROM_REDIRECT}"
+     }
+     @@@
+   - Response includes the `access_token`, which is your `API_TOKEN`. Example:
+     @@@json
+     {
+         "access_token": "your-api-token-here",
+         "refresh_token": "your-refresh-token",
+         "expires_in": 3600
+     }
+     @@@
+
+6. **Store the API_TOKEN**:
+   - Save this token securely for use in API requests.
+
+## Obtaining the SITE_ID
+The `SITE_ID` is the unique identifier for your Wix site.
+
+1. **Access Your Site Dashboard**:
+   - Log into your Wix account and open the site with the store.
+
+2. **Find the Site ID**:
+   - In the Wix Dashboard, go to "Settings" > "Developer Tools" (or use the Developers Center).
+   - Alternatively, make an API call with your `API_TOKEN` to list sites:
+     ```
+     GET https://www.wixapis.com/site/v1/sites
+     Authorization: Bearer {API_TOKEN}
+     ```
+   - Response includes site details:
+     @@@json
+     {
+         "sites": [
+             {
+                 "id": "your-site-id-here",
+                 "name": "Your Site Name",
+                 ...
+             }
+         ]
+     }
+     @@@
+   - The `id` field is your `SITE_ID`.
+
+3. **Record the SITE_ID**:
+   - Copy this value (e.g., a UUID like `9fa0f271-1600-4282-9fae-d841be6aaff6`) for integration.
+
+## Usage
+With `API_TOKEN` and `SITE_ID`, you can make authenticated requests to the Wix Stores API, such as retrieving products:
+```
+GET https://www.wixapis.com/stores/v1/products
+Authorization: Bearer {API_TOKEN}
+X-Wix-Site-Id: {SITE_ID}
+
+```
+Refer to the [Wix Stores API docs](https://dev.wix.com/api/rest/wix-stores) for full details.
+
+
+
+
+wixStore_readme.md
+# Wix Store API Usage for Club Madeira
+
+This document provides a detailed guide on using the Wix Stores API to retrieve part category and part data for clubmadeira.io. This will later be replaced with instructions on how to obtain the API key details from Wix to use in the config.
+
+## Prerequisites
+- A Wix account with a store (sign up at [https://www.wix.com/signup](https://www.wix.com/signup)).
+- API credentials (API_TOKEN, SITE_ID) from Wix.
+- Basic API knowledge (e.g., REST, JSON).
+
+## Step-by-Step Instructions
+
+### Step 1: Verify API Credentials
+Ensure you have your API_TOKEN and SITE_ID from your Wix account (to be added to config.json).
+
+### Step 2: Access Wix Stores API
+Refer to the Wix Stores API documentation: [https://dev.wix.com/api/rest/wix-stores](https://dev.wix.com/api/rest/wix-stores). Base URL: https://www.wixapis.com/stores/v1.
+
+### Step 3: Retrieve Part Categories
+API Endpoint: GET /catalog/categories. Request: Headers: Authorization: Bearer <API_TOKEN>. URL: https://www.wixapis.com/stores/v1/catalog/categories?siteId=<SITE_ID>. Example with cURL: ``` curl -X GET "https://www.wixapis.com/stores/v1/catalog/categories?siteId=<SITE_ID>" -H "Authorization: Bearer <API_TOKEN>" ``` Response: JSON with category data (e.g., {"categories": [{"id": "cat1", "name": "Brakes"}]}). Steps: 1. Replace <API_TOKEN> and <SITE_ID> with your config values. 2. Send the request. 3. Parse the response to list categories (e.g., "Brakes", "Engines").
+
+### Step 4: Retrieve Part Data
+API Endpoint: GET /catalog/products. Request: Headers: Authorization: Bearer <API_TOKEN>. URL: https://www.wixapis.com/stores/v1/catalog/products?siteId=<SITE_ID>&categoryId=<category_id>. Example with cURL: ``` curl -X GET "https://www.wixapis.com/stores/v1/catalog/products?siteId=<SITE_ID>&categoryId=<category_id>" -H "Authorization: Bearer <API_TOKEN>" ``` Response: JSON with product data (e.g., {"products": [{"id": "prod1", "name": "Brake Pad", "price": "29.99"}]}). Steps: 1. Use a category_id from Step 3 (e.g., cat1). 2. Send the request. 3. Parse the response to display parts (e.g., "Brake Pad - $29.99").
+
+### Step 5: Integrate with Club Madeira
+Use the fetched data in clubmadeira.io (e.g., display categories and parts in a search interface). Update your application code to handle these API calls dynamically with user-provided API_TOKEN and SITE_ID.
+
+## Troubleshooting
+- **401 Unauthorized**: Verify API_TOKEN is correct and not expired.
+- **No Data**: Ensure categories and products are added to your Wix Store.
+
+## Next Steps
+Test API calls with your Wix Store data. **Note**: This guide will be replaced with instructions on how to obtain API_TOKEN and SITE_ID from Wix for the config.
+wix_readme.md
+# Wix Module Creation for Club Madeira
+
+This document explains how Wix uses modules and provides a step-by-step guide to creating a module for `clubmadeira.io` using Wix’s Velo platform. This will later be replaced with instructions on how to add the created module to a user’s Wix site.
+
+## How Wix Uses Modules
+- Wix uses "modules" via Velo, a full-stack development platform integrated into Wix.
+- Velo allows you to add custom code (JavaScript, APIs) to Wix sites, creating dynamic features like car part search or listings for `clubmadeira.io`.
+- Modules are reusable code blocks or integrations that enhance site functionality.
+
+## Prerequisites
+- A Wix account (sign up at [https://www.wix.com/signup](https://www.wix.com/signup)).
+- Basic JavaScript knowledge.
+- Access to the Wix Editor and Velo.
+
+## Step-by-Step Instructions
+
+### Step 1: Create or Log In to Your Wix Account
+- Go to [https://www.wix.com/signup](https://www.wix.com/signup) and sign up, or log in at [https://www.wix.com/](https://www.wix.com/).
+- Use your email and a secure password.
+
+### Step 2: Set Up a Wix Site
+- From the Wix dashboard, click "Create New Site".
+- Choose a template (e.g., "Business" or "Online Store").
+- Name your site (e.g., `ClubMadeiraTest`); this can be temporary for development.
+
+### Step 3: Enable Velo
+- Open the Wix Editor for your site.
+- Click "Dev Mode" in the top bar and toggle "Enable Velo" to ON.
+- This activates Velo’s coding features.
+
+### Step 4: Create a Custom Module
+- **Add a Page**:
+  - In the Editor, click "Pages" > "Add Page".
+  - Name it "Club Madeira Parts" (or similar).
+- **Design the UI**:
+  - Add elements like a search bar (Text Input), a button (Button), and a repeater (Repeater) for part listings.
+  - Assign IDs: `searchInput`, `searchButton`, `partsRepeater`.
+- **Add Backend Code**:
+  - In the left panel, click "Code Files" > "+ New.js" under "Backend".
+  - Name it `clubmadeira.jsw`.
+  - Add a function to fetch data (example):
+    ```
+    import wixData from 'wix-data';
+
+    export async function getClubMadeiraParts(query) {
+        const results = await wixData.query("ClubMadeiraParts")
+            .contains("name", query)
+            .find();
+        return results.items;
+    }
+    ```
+- **Add Frontend Code**:
+  - On the page, right-click `searchButton`, select "View Properties" > "OnClick" > "Add Code".
+  - Write:
+    ```
+    import { getClubMadeiraParts } from 'backend/clubmadeira.jsw';
+
+    $w.onReady(function () {
+        $w("#searchButton").onClick(async () => {
+            const query = $w("#searchInput").value;
+            const parts = await getClubMadeiraParts(query);
+            $w("#partsRepeater").data = parts;
+            $w("#partsRepeater").forEachItem(($item, itemData) => {
+                $item("#partName").text = itemData.name;
+                $item("#partPrice").text = itemData.price;
+            });
+        });
+    });
+    ```
+- **Create a Database**:
+  - Go to "Databases" in the left panel > "+ Create Collection".
+  - Name it `ClubMadeiraParts`.
+  - Add fields: `name` (Text), `price` (Number).
+  - Insert sample data (e.g., `{ "name": "Brake Pad", "price": "29.99" }`).
+
+### Step 5: Test the Module
+- Click "Preview" in the Editor.
+- Enter a part name in the search bar and click the button.
+- Verify the repeater displays matching parts.
+
+### Step 6: Save and Publish
+- Save your work in the Editor.
+- Publish the site to test live (optional for development).
+
+## Troubleshooting
+- **Velo Not Enabled**: Ensure "Dev Mode" is ON.
+- **Code Errors**: Check the console (F12) for syntax issues.
+- **No Data**: Verify database permissions are set to "Site Content" readable.
+
+## Next Steps
+- This module can be integrated into `clubmadeira.io` via the Wix API.
+- Refer to [https://dev.wix.com/api/rest/wix-stores](https://dev.wix.com/api/rest/wix-stores) for API details.
+- **Note**: This guide will be replaced with instructions on adding this module to a user’s Wix site.
+woocommerce.md
+# WooCommerce API Settings for Categories and Products
+
+This document outlines how to get the `CONSUMER_KEY`, `CONSUMER_SECRET`, and `STORE_URL` for the WooCommerce REST API, per the [WooCommerce REST API Docs](https://woocommerce.github.io/woocommerce-rest-api-docs/).
+
+## Prerequisites
+- A WordPress site with WooCommerce installed.
+- Admin access to the WordPress dashboard.
+
+## Obtaining the CONSUMER_KEY and CONSUMER_SECRET
+These are API keys for authenticating requests.
+
+1. **Log into WordPress Admin**:
+   - Access `https://{your-store}/wp-admin`.
+
+2. **Navigate to WooCommerce Settings**:
+   - Go to "WooCommerce" > "Settings" > "Advanced" > "REST API".
+
+3. **Add a Key**:
+   - Click "Add Key".
+   - Enter a description (e.g., "ClubMadeira Integration").
+   - Select a user with admin rights.
+   - Set permissions to "Read/Write".
+
+4. **Generate and Save Keys**:
+   - Click "Generate API Key".
+   - Copy:
+     - `Consumer Key` (e.g., `ck_1234567890abcdef1234567890abcdef12345678`)
+     - `Consumer Secret` (e.g., `cs_1234567890abcdef1234567890abcdef12345678`)
+   - Save these securely as they won’t be shown again.
+
+## Obtaining the STORE_URL
+The `STORE_URL` is your WooCommerce store’s domain.
+
+1. **Find Your Store URL**:
+   - In WordPress, go to "Settings" > "General".
+   - Note the "Site Address (URL)" (e.g., `https://example.com`).
+
+2. **Store the STORE_URL**:
+   - Example: `https://example.com`.
+
+## Usage
+Make API requests with basic auth:
+```
+GET {STORE_URL}/wp-json/wc/v3/products
+Authorization: Basic {Base64 encoded CONSUMER_KEY:CONSUMER_SECRET}
+```
+Or use query parameters:
+
+GET {STORE_URL}/wp-json/wc/v3/products?consumer_key={CONSUMER_KEY}&consumer_secret={CONSUMER_SECRET}
+
+See the [WooCommerce API Docs](https://w
+
+
+woocommerce_readme.md
+# WooCommerce API Usage for Club Madeira
+
+This document provides a detailed guide on using the WooCommerce API to retrieve part category and part data for clubmadeira.io. This will later be replaced with instructions on how to obtain the API key details from WooCommerce to use in the config.
+
+## Prerequisites
+- A WooCommerce site (sign up at [https://woocommerce.com/start](https://woocommerce.com/start)).
+- API credentials (CONSUMER_KEY, CONSUMER_SECRET) from WooCommerce.
+- Basic API knowledge.
+
+## Step-by-Step Instructions
+
+### Step 1: Verify API Credentials
+Ensure you have your CONSUMER_KEY and CONSUMER_SECRET from your WooCommerce site (in config.json).
+
+### Step 2: Access WooCommerce API
+Refer to the WooCommerce REST API documentation: [https://woocommerce.github.io/woocommerce-rest-api-docs/](https://woocommerce.github.io/woocommerce-rest-api-docs/). Base URL: <STORE_URL>/wp-json/wc/v3 (e.g., https://yourstore.com/wp-json/wc/v3).
+
+### Step 3: Retrieve Part Categories
+API Endpoint: GET /products/categories. Request: Headers: Authorization: Basic <base64(<CONSUMER_KEY>:<CONSUMER_SECRET>)>. URL: <STORE_URL>/wp-json/wc/v3/products/categories. Example with cURL: ``` curl -X GET "<STORE_URL>/wp-json/wc/v3/products/categories" -u <CONSUMER_KEY>:<CONSUMER_SECRET> ``` Response: JSON with category data (e.g., [{"id": 15, "name": "Brakes"}]). Steps: 1. Replace <STORE_URL>, <CONSUMER_KEY>, and <CONSUMER_SECRET> with your config values. 2. Send the request (use -u for basic auth). 3. Parse the response to list categories.
+
+### Step 4: Retrieve Part Data
+API Endpoint: GET /products. Request: Headers: Authorization: Basic <base64(<CONSUMER_KEY>:<CONSUMER_SECRET>)>. URL: <STORE_URL>/wp-json/wc/v3/products?category=<category_id>. Example with cURL: ``` curl -X GET "<STORE_URL>/wp-json/wc/v3/products?category=<category_id>" -u <CONSUMER_KEY>:<CONSUMER_SECRET> ``` Response: JSON with product data (e.g., [{"id": 101, "name": "Brake Pad", "price": "29.99"}]). Steps: 1. Use a category_id from Step 3 (e.g., 15). 2. Send the request. 3. Parse the response to display parts.
+
+### Step 5: Integrate with Club Madeira
+Use the fetched data in clubmadeira.io (e.g., populate a parts list). Update your application to use these API calls with user-provided credentials.
+
+## Troubleshooting
+- **401 Unauthorized**: Check CONSUMER_KEY and CONSUMER_SECRET.
+- **Empty Response**: Add categories and products in WooCommerce admin.
+
+## Next Steps
+Test with your WooCommerce store data. **Note**: This guide will be replaced with instructions on how to obtain CONSUMER_KEY and CONSUMER_SECRET from WooCommerce for the config.
+wordpress_readme.md
+# WordPress Module Creation for Club Madeira
+
+This document explains how WordPress uses modules (plugins) and provides a step-by-step guide to creating a plugin for clubmadeira.io. This will later be replaced with instructions on how to add the created plugin to a user's WordPress site.
+
+## How WordPress Uses Modules
+WordPress uses "modules" as plugins—custom PHP code extending site functionality. Plugins can add features like car part listings or search for clubmadeira.io. They leverage WordPress APIs (e.g., REST API, shortcodes) for integration.
+
+## Prerequisites
+- A WordPress site (sign up at [https://wordpress.com/start](https://wordpress.com/start)).
+- Basic PHP and WordPress development knowledge.
+- Local development environment (e.g., XAMPP) or access to a WordPress install.
+
+## Step-by-Step Instructions
+
+### Step 1: Sign Up or Access WordPress
+Go to [https://wordpress.com/start](https://wordpress.com/start) and create a site, or log in to an existing one. For self-hosted, download WordPress from [https://wordpress.org/download/](https://wordpress.org/download/) and install it locally or on a server following their instructions.
+
+### Step 2: Set Up Development Environment
+Access your WordPress installation’s file system (e.g., via FTP or local wp-content/plugins/). Navigate to the wp-content/plugins/ directory where plugins are stored.
+
+### Step 3: Create a Plugin Folder
+In the wp-content/plugins/ directory, create a new folder named clubmadeira-parts. This will contain your plugin files.
+
+### Step 4: Write the Plugin Code
+Create a file named clubmadeira-parts.php inside the clubmadeira-parts folder. Open it in a text editor and add the following code: ```php <?php /* Plugin Name: Club Madeira Parts Description: A plugin to display car parts for clubmadeira.io. Version: 1.0 Author: Club Madeira Team */ function clubmadeira_parts_search() { ob_start(); ?> <form method="post"> <input type="text" name="part_search" id="part_search" placeholder="Search Parts"> <button type="submit">Search</button> </form> <?php if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_POST["part_search"])) { $search = sanitize_text_field($_POST["part_search"]); echo "<p>Search results for: " . esc_html($search) . "</p>"; $args = array( 'post_type' => 'part', 's' => $search ); $query = new WP_Query($args); if ($query->have_posts()) { while ($query->have_posts()) { $query->the_post(); echo '<div>' . get_the_title() . ' - $' . get_post_meta(get_the_ID(), 'price', true) . '</div>'; } } else { echo "<p>No parts found.</p>"; } wp_reset_postdata(); } return ob_get_clean(); } add_shortcode('clubmadeira_parts', 'clubmadeira_parts_search'); function clubmadeira_register_parts() { register_post_type('part', array( 'labels' => array('name' => 'Parts', 'singular_name' => 'Part'), 'public' => true, 'has_archive' => true, 'supports' => array('title', 'editor') )); register_post_meta('part', 'price', array('type' => 'string', 'single' => true, 'show_in_rest' => true)); } add_action('init', 'clubmadeira_register_parts'); ``` This code defines a plugin with a shortcode [clubmadeira_parts] that creates a searchable parts list using a custom post type called "part".
+
+### Step 5: Activate the Plugin
+Log in to your WordPress admin panel (e.g., http://localhost/wp-admin or yourdomain.com/wp-admin). Go to **Plugins** > **Installed Plugins**. Find "Club Madeira Parts" in the list and click **Activate**.
+
+### Step 6: Add Parts Data
+In the admin menu, go to **Parts** > **Add New**. Create a new part with a title (e.g., "Brake Pad"). In the custom fields section, add a field named "price" with a value (e.g., "29.99"). If custom fields aren’t visible, enable them under **Screen Options** at the top. Click **Publish** to save. Add more parts as needed.
+
+### Step 7: Add the Shortcode
+Go to **Pages** > **Add New**, or edit an existing page. In the editor, insert [clubmadeira_parts] where you want the search form. Save or update the page, then click **Preview** to test. Enter a part name (e.g., "Brake Pad") and click **Search** to see results.
+
+## Troubleshooting
+- **Shortcode Not Working**: Ensure the plugin is activated and check for PHP errors by enabling debug mode in wp-config.php with define('WP_DEBUG', true);.
+- **No Results**: Verify parts are added under the "Parts" post type and the price field is set correctly.
+
+## Next Steps
+Enhance the plugin with REST API integration for clubmadeira.io. Refer to [https://developer.wordpress.com/docs/api/](https://developer.wordpress.com/docs/api/) for API details. **Note**: This guide will be replaced with instructions on how to add this plugin to a user's WordPress site.

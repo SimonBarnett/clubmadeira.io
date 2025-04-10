@@ -1,11 +1,13 @@
+
 from functools import wraps
-from flask import request, jsonify, current_app, url_for
+from flask import request, jsonify, current_app, url_for, redirect, session
 import jwt
 import datetime
 import bcrypt
 import string
 import random
 import logging
+import json
 from utils.users import load_users_settings, save_users_settings
 
 def login_required(required_permissions, require_all=True):
@@ -13,15 +15,16 @@ def login_required(required_permissions, require_all=True):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             token = request.headers.get("Authorization", "").replace("Bearer ", "")
+            if not token and 'user' in session:
+                token = session.get('user', {}).get('token', '')
+
             if not token:
-                logging.warning("Security Issue - No token provided in Authorization header")
-                return jsonify({"status": "error", "message": "Token required"}), 401
+                logging.warning("Security Issue - No token provided in Authorization header or session, redirecting to /")
+                return redirect(url_for('home'))
+
             try:
-                payload = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
-                if datetime.datetime.utcnow().timestamp() > payload["exp"]:
-                    logging.warning(f"Security Issue - Token expired for user: {payload.get('userId')}")
-                    return jsonify({"status": "error", "message": "Token expired"}), 401
-                request.user_id = payload["userId"]
+                payload = decode_token(token)
+                request.user_id = payload["user_id"]
                 request.permissions = payload.get("permissions", [])
                 effective_perms = []
                 for perm in required_permissions:
@@ -45,8 +48,8 @@ def login_required(required_permissions, require_all=True):
                         return jsonify({"status": "error", "message": f"Insufficient permissions: {effective_perms}"}), 403
                 return f(*args, **kwargs)
             except jwt.InvalidTokenError:
-                logging.error("Security Issue - Invalid token provided", exc_info=True)
-                return jsonify({"status": "error", "message": "Invalid token"}), 401
+                logging.error("Security Issue - Invalid token provided, redirecting to /", exc_info=True)
+                return redirect(url_for('home'))
             except Exception as e:
                 logging.error(f"UX Issue - Token processing error: {str(e)}", exc_info=True)
                 return jsonify({"status": "error", "message": f"Token error: {str(e)}"}), 500
@@ -80,11 +83,7 @@ def login_user():
             return jsonify({"status": "error", "message": "Invalid credentials"}), 401
 
         permissions = user.get("permissions", [])
-        token = jwt.encode(
-            {"userId": user_id, "permissions": permissions, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
-            current_app.config['JWT_SECRET_KEY'],
-            algorithm="HS256"
-        )
+        token = generate_token(user_id, permissions)
         
         redirect_url = None
         if "admin" in permissions:
@@ -100,13 +99,13 @@ def login_user():
 
         response_data = {
             "status": "success",
-            "token": "[REDACTED]",  # Redact JWT in logs
-            "userId": user_id,
+            "token": "[REDACTED]",
+            "user_id": user_id,
             "contact_name": user.get("contact_name", "User"),
             "redirect_url": redirect_url
         }
         logging.debug(f"Login response for user {user_id}: {json.dumps(response_data)}")
-        return jsonify({"status": "success", "token": token, "userId": user_id, "contact_name": user.get("contact_name", "User"), "redirect_url": redirect_url}), 200
+        return jsonify({"status": "success", "token": token, "user_id": user_id, "contact_name": user.get("contact_name", "User"), "redirect_url": redirect_url}), 200
     except Exception as e:
         logging.error(f"UX Issue - Login processing error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
@@ -148,15 +147,29 @@ def signup_user():
     logging.debug(f"User signed up - User ID: {USERid}, Type: {signup_type}")
     return jsonify({"status": "success", "message": "Signup successful"}), 201
 
-def generate_token(user_id, permissions):
+def generate_token(user_id, permissions, x_role=None):
     payload = {
-        "userId": user_id,
+        "user_id": user_id,
         "permissions": permissions,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        "exp": int(datetime.datetime.utcnow().timestamp() + (24 * 3600))
     }
+    if x_role:
+        payload["x-role"] = x_role
     token = jwt.encode(payload, current_app.config['JWT_SECRET_KEY'], algorithm="HS256")
-    logging.debug(f"Generated token for user {user_id}: [REDACTED]")
+    logging.debug(f"Generated token for user {user_id} with x-role {x_role}: [REDACTED]")
     return token
+
+def decode_token(token):
+    try:
+        payload = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
+        if datetime.datetime.utcnow().timestamp() > payload["exp"]:
+            logging.warning(f"Security Issue - Token expired for user: {payload.get('user_id')}")
+            raise jwt.InvalidTokenError("Token expired")
+        logging.debug(f"Decoded token for user {payload['user_id']}")
+        return payload
+    except jwt.InvalidTokenError as e:
+        logging.error(f"Security Issue - Invalid token: {str(e)}", exc_info=True)
+        raise
 
 def generate_code():
     charset = string.digits + string.ascii_uppercase

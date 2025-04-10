@@ -7,10 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Local CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css?v=1.0.1') }}">
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
-    <!-- Fallback for browsers that don't support SVG favicons -->
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <!-- Dynamic API URL -->
     <script>
@@ -33,17 +32,29 @@
         {% block content %}{% endblock %}
     </div>
 
-    <!-- Local JS -->
+    <!-- Core scripts always loaded -->
     <script src="{{ url_for('static', filename='js/site-auth.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/site-navigation.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/category-management.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/site-request.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/user-management.js') }}" defer></script>    
-    <script src="{{ url_for('static', filename='js/admin-page.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/merchant-page.js') }}" defer></script>    
-    <script src="{{ url_for('static', filename='js/partner-page.js') }}" defer></script>    
-    <script src="{{ url_for('static', filename='js/community-page.js') }}" defer></script>    
+    <script src="{{ url_for('static', filename='js/user-management.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/page-load.js') }}" defer></script>
+
+    <!-- Page-specific scripts -->
+    {% if page_type == 'login' %}
+        <script src="{{ url_for('static', filename='js/login-page.js') }}" defer></script>
+    {% elif page_type == 'admin' %}
+        <script src="{{ url_for('static', filename='js/admin-page.js') }}" defer></script>
+    {% elif page_type == 'merchant' %}
+        <script src="{{ url_for('static', filename='js/category-management.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='js/site-request.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='js/merchant-page.js') }}" defer></script>
+    {% elif page_type == 'partner' %}
+        <script src="{{ url_for('static', filename='js/partner-page.js') }}" defer></script>
+    {% elif page_type == 'community' %}
+        <script src="{{ url_for('static', filename='js/category-management.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='js/site-request.js') }}" defer></script>
+        <script src="{{ url_for('static', filename='js/community-page.js') }}" defer></script>
+    {% endif %}
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const layoutWrapper = document.querySelector('.layout-wrapper');
@@ -76,10 +87,10 @@
             if (typeof window.renderMdPage === 'function') {
                 document.querySelectorAll('.md-link').forEach(link => {
                     link.addEventListener('click', function(event) {
-                        event.preventDefault(); // Prevent default link behavior
-                        const mdPath = this.getAttribute('data-md-path'); // Get markdown path from attribute
-                        const targetId = 'md-render-target'; // Define target element ID
-                        window.renderMdPage(mdPath, targetId); // Call renderMdPage
+                        event.preventDefault();
+                        const mdPath = this.getAttribute('data-md-path');
+                        const targetId = 'md-render-target';
+                        window.renderMdPage(mdPath, targetId);
                     });
                 });
             } else {

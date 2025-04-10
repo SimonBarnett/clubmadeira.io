@@ -23,25 +23,31 @@ import string
 import random
 
 # region Blueprint Setup
-# Here begins the grand adventure of authentication_bp, a blueprint forged in the fires of Mount Doom (or at least the xAI labs).
-# Zaphod Beeblebrox would approve—two heads are better than one, and this module handles signups and password resets with flair!
 authentication_bp = Blueprint('authentication_bp', __name__)
 # endregion
 
-# region /login POST - User Login
-@authentication_bp.route('/login', methods=['POST'])
+# region /login GET and POST - User Login
+@authentication_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    try:
-        data = request.get_json(silent=True, force=True, cache=False)
-        logging.debug(f"Raw JSON from request: {data}")
+    if request.method == 'GET':
+        # Render login.html for GET requests
+        return render_template('login.html', title='clubmadeira.io | Login', page_type='login', base_url=request.url_root.rstrip('/'))
 
-        # Log without modifying original data
+    # Handle POST request (login form submission)
+    try:
+        content_type = request.headers.get('Content-Type', '')
+        if 'application/json' in content_type:
+            data = request.get_json(silent=True, force=True, cache=False)
+        else:
+            data = request.form.to_dict()
+
         log_data = {
             "method": request.method,
             "url": request.full_path,
             "headers": {k: "[REDACTED]" if k == "Authorization" else v for k, v in request.headers.items()},
             "ip": request.remote_addr,
-            "body": {"email": data["email"], "password": "[REDACTED]"} if data else "[NO BODY]"
+            "content_type": content_type,
+            "body": {"email": data.get("email"), "password": "[REDACTED]"} if data else "[NO BODY]"
         }
         logging.debug(f"Request: {json.dumps(log_data)}")
 
@@ -51,17 +57,17 @@ def login():
         
         email = data['email'].strip().lower()
         password = data['password'].strip()
-        logging.debug(f"Raw password before validation: {password}")
+        logging.debug(f"Raw password before validation: [REDACTED]")
         
         users_settings = load_users_settings()
         user_entry = next(((uid, u) for uid, u in users_settings.items() if u['email_address'].lower() == email), None)
         
         if user_entry:
             user_id, user = user_entry
-            logging.debug(f"Stored hash for user {user_id}: {user['password']}")
+            logging.debug(f"Stored hash for user {user_id}: [REDACTED]")
             if bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
                 token = generate_token(user_id, user['permissions'])
-                return jsonify({"status": "success", "token": token, "user_id": user_id}), 200
+                return jsonify({"status": "success", "token": token, "user_id": user_id}), 200  # Changed "userId" to "user_id"
             else:
                 logging.debug("Password does not match")
         else:
@@ -71,22 +77,12 @@ def login():
     except Exception as e:
         logging.error(f"Login error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
-    
 # endregion
 
 # region /signup GET - The Holy Grail of New User Entry
 @authentication_bp.route('/signup', methods=['GET'])
 def signup_page():
-    """
-    Renders the signup page, a portal to the galaxy for new users.
-    Purpose: Like the Knights of the Round Table seeking the Grail, this endpoint offers a form for brave souls to join the ranks.
-    Inputs: None—just point your browser and pray you’re not a shrubbery.
-    Outputs: 
-        - Success: HTML signup form, a beacon of hope.
-        - Error: JSON {"status": "error", "message": "Server error"}, status 500—like Marvin groaning, "I’ve got a brain the size of a planet and they ask me to render a page."
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -112,26 +108,7 @@ def signup_page():
 # region /signup POST - Joining the Galactic Crew
 @authentication_bp.route('/signup', methods=['POST'])
 def signup():
-    """
-    Registers a new user and sends an OTP via /send-sms.
-    Purpose: Takes JSON data to create a user account and initiates OTP verification.
-    Inputs: JSON payload with:
-        - signup_type (str): "seller", "community", "wixpro", etc.
-        - contact_name (str): Your alias, e.g., "Arthur Dent".
-        - signup_email (str): Galactic comms address.
-        - signup_password (str): Secret key, not "four candles".
-        - signup_phone (str): Required for all users.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "User created, please verify OTP"}, status 201
-        - Errors:
-            - 400: {"status": "error", "message": "Missing required fields"}
-            - 400: {"status": "error", "message": "Phone required for all users"}
-            - 409: {"status": "error", "message": "Email already registered"}
-            - 500: {"status": "error", "message": "Failed to send SMS: <reason>"}
-            - 500: {"status": "error", "message": "Server error"}
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -160,7 +137,6 @@ def signup():
         signup_password = data['signup_password']
         signup_phone = data['signup_phone']
 
-        # Phone is mandatory for all users
         if not signup_phone:
             logging.warning(f"UX Issue - Signup failed for {signup_type} - Phone required")
             response_data = {"status": "error", "message": "Phone required for all users"}
@@ -180,7 +156,6 @@ def signup():
         permission_map = {'seller': 'merchant', 'community': 'community', 'wixpro': 'wixpro'}
         permission = permission_map.get(signup_type, signup_type)
 
-        # Generate OTP
         otp = ''.join(random.choices(string.digits, k=6))
         signup_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
         if "signup_codes" not in current_app.config:
@@ -197,7 +172,6 @@ def signup():
         save_users_settings(users_settings)
         logging.debug(f"User signed up - User ID: {user_id}, Permission: {permission}")
 
-        # Send OTP via /send-sms (public endpoint, no token needed)
         sms_payload = {
             "email": signup_email,
             "message": f"clubmadeira.io signup OTP: {otp}. Expires in 15 mins."
@@ -236,20 +210,7 @@ def signup():
 # region /reset-password POST - A New Hope for Forgotten Passwords
 @authentication_bp.route('/reset-password', methods=['POST'])
 def reset_password():
-    """
-    Initiates a password reset, sending an OTP via the centralized /send-sms endpoint.
-    Purpose: Like Brian’s sandal leading the masses, this endpoint guides users back to access with a one-time password.
-    Inputs: JSON payload with:
-        - email (str): The user’s galactic address to reset.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "A one-time password has been sent to your phone"}, status 200—help is on the way!
-        - Errors:
-            - 400: {"status": "error", "message": "Email is required"}—no email, no fork handles!
-            - 404: {"status": "error", "message": "Email not found"}—this user’s not in the Guide.
-            - 500: {"status": "error", "message": "Failed to send SMS: <reason>"}—a comedy of errors!
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -288,7 +249,6 @@ def reset_password():
         current_app.config["reset_codes"][matching_user_id] = {"code": otp, "expires": reset_expiry.isoformat()}
         logging.debug(f"Generated OTP for reset - User ID: {matching_user_id}, OTP: {otp}")
 
-        # Use /send-sms (public endpoint, no token needed)
         sms_payload = {
             "email": email,
             "message": f"clubmadeira.io one-time password: {otp}. Expires in 15 mins."
@@ -315,25 +275,7 @@ def reset_password():
 # region /verify-reset-code POST - The Messiah of Password Recovery
 @authentication_bp.route('/verify-reset-code', methods=['POST'])
 def verify_reset_code():
-    """
-    Verifies an OTP and resets the password—like Arthur Dent finding the Ultimate Answer (42, obviously).
-    Purpose: Validates the OTP and updates the password, granting access like the *Life of Brian* crowd shouting “He IS the Messiah!”.
-    Inputs: JSON payload with:
-        - email (str): The user’s address.
-        - code (str): The OTP, six digits of destiny.
-        - new_password (str): The new key to the galaxy.
-    Outputs:
-        - Success: JSON {"status": "success", "token": "<JWT>", "user_id": "<id>"}, status 200—access granted!
-        - Errors:
-            - 400: {"status": "error", "message": "Email, code, and new password are required"}—no shortcuts here!
-            - 404: {"status": "error", "message": "Email not found"}—lost in space!
-            - 400: {"status": "error", "message": "No reset code found for this user"}—no OTP, no entry!
-            - 500: {"status": "error", "message": "Invalid reset code expiry format"}—time’s gone wonky!
-            - 400: {"status": "error", "message": "Invalid or expired reset code"}—this code’s pining for the fjords!
-            - 500: {"status": "error", "message": "Server error"}—the Ronnies misplaced the candles!
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -404,9 +346,9 @@ def verify_reset_code():
 
         token = generate_token(matching_user_id, user.get("permissions", []))
         logging.info(f"Password reset successful for user {matching_user_id}")
-        response_data = {"status": "success", "token": "[REDACTED]", "user_id": matching_user_id}
+        response_data = {"status": "success", "token": "[REDACTED]", "user_id": matching_user_id}  # Changed "userId" to "user_id"
         logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify({"status": "success", "token": token, "user_id": matching_user_id}), 200
+        return jsonify({"status": "success", "token": token, "user_id": matching_user_id}), 200  # Changed "userId" to "user_id"
     except Exception as e:
         logging.error(f"UX Issue - Verify reset code error: {str(e)}", exc_info=True)
         response_data = {"status": "error", "message": "Server error"}
@@ -418,22 +360,7 @@ def verify_reset_code():
 @authentication_bp.route('/update-password', methods=['POST'])
 @login_required(["self"], require_all=True)
 def update_password():
-    """
-    Updates a user’s password, secure as a Two Ronnies sketch twist.
-    Purpose: Lets an authenticated user change their password—like swapping four candles for fork handles, but with more security.
-    Permissions: Restricted to "self"—only you can wield this lightsaber!
-    Inputs: JSON payload with:
-        - email (str): Your address, matching your JWT.
-        - password (str): The new password to hash.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Password updated for <email>", "user_id": "<id>"}, status 200—victory!
-        - Errors:
-            - 400: {"status": "error", "message": "Email and password required"}—no dice without both!
-            - 403: {"status": "error", "message": "Unauthorized"}—this isn’t your password, you naughty boy!
-            - 500: {"status": "error", "message": "Server error"}—the system’s gone to the People’s Front of Judea!
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -471,7 +398,7 @@ def update_password():
         users_settings[user_id]["password"] = hashed_password
         save_users_settings(users_settings)
         logging.info(f"Password updated for user {user_id}")
-        response_data = {"status": "success", "message": f"Password updated for {email}", "user_id": user_id}
+        response_data = {"status": "success", "message": f"Password updated for {email}", "user_id": user_id}  # Changed "userId" to "user_id"
         logging.debug(f"Response: {json.dumps(response_data)}")
         return jsonify(response_data), 200
     except Exception as e:
@@ -591,124 +518,89 @@ import json
 # This is the control room—admin-only, like the bridge of the Heart of Gold, but with less improbability.
 manager_bp = Blueprint('manager_bp', __name__)
 
-@manager_bp.route('/users', methods=['GET'])
+from flask import jsonify, abort
+from utils.auth import login_required
+from utils.users import load_users_settings
+
+@manager_bp.route('/users/<role>', methods=['GET'])
 @login_required(["admin"], require_all=True)
-def get_users():
+def get_users(role):
+    # Restrict role to valid values
+    valid_roles = {"admin", "merchant", "community", "partner"}
+    if role not in valid_roles:
+        abort(400, description=f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+
     users_settings = load_users_settings()
-    user_list = [{"USERid": user_id, "email_address": user["email_address"], "contact_name": user["contact_name"]} 
-                 for user_id, user in users_settings.items()]
+    user_list = [
+        {
+            "USERid": user_id,
+            "fields": [
+                {"field_name": key, "field_value": value}
+                for key, value in user.items()
+                if key != "password"
+            ]
+        }
+        for user_id, user in users_settings.items()
+        if role in user.get("permissions", [])  # Check if role is in user's permissions list
+    ]
     return jsonify({"status": "success", "users": user_list}), 200
 
-@manager_bp.route('/users/<user_id>', methods=['GET'])
-@login_required(["admin"], require_all=True)
-def get_user(user_id):
+@manager_bp.route('/permission', methods=['PATCH'])
+@login_required(required_permissions=['admin'])
+def patch_permission():
     """
-    Retrieves detailed user info for admins, faster than Trillian can calculate the meaning of life.
-    Purpose: Like the Holy Grail sought by the Knights Who Say Ni, this endpoint delivers a user’s full profile—admin eyes only!
-    Permissions: Restricted to "admin"—you must be the Messiah (or at least Brian) to wield this power!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user to fetch, e.g., "42".
-    Outputs:
-        - Success: JSON {"status": "success", "user": {"USERid": "<id>", "email_address": "<email>", ...}}, status 200—user data delivered!
-        - Errors:
-            - 404: {"status": "error", "message": "User not found"}—this user’s as dead as a parrot!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies lost the fork handles!
+    Add a permission for a user if it doesn't already exist.
+    Payload: {"USERid": "string", "permission": "string"}
     """
-    try:
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            logging.warning(f"UX Issue - User not found: {user_id}")
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        
-        user = users_settings[user_id]
-        user_data = {
-            "USERid": user_id,
-            "email_address": user.get("email_address", ""),
-            "contact_name": user.get("contact_name", ""),
-            "phone_number": user.get("phone_number", ""),
-            "permissions": user.get("permissions", []),
-            "website_url": user.get("website_url", ""),
-            "referrals": user.get("referrals", {"visits": [], "orders": []})
-        }
-        log_data = user_data.copy()
-        if "password" in log_data:
-            log_data["password"] = "[REDACTED]"
-        logging.debug(f"Retrieved user data for {user_id}: {json.dumps(log_data)}")
-        return jsonify({"status": "success", "user": user_data}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to retrieve user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    data = request.get_json()
+    if not data or 'USERid' not in data or 'permission' not in data:
+        return jsonify({"status": "error", "message": "USERid and permission are required"}), 400
+    
+    user_id = data['USERid']
+    new_permission = data['permission']
+    
+    users_data = load_users_settings()
+    user = users_data.get(user_id)
+    
+    if not user:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    
+    if 'permissions' not in user:
+        user['permissions'] = []
+    
+    if new_permission in user['permissions']:
+        return jsonify({"status": "error", "message": f"Permission {new_permission} already exists for user {user_id}"}), 400
+    
+    user['permissions'].append(new_permission)
+    save_users_settings(users_data)
+    return jsonify({"status": "success", "message": f"Permission {new_permission} added for user {user_id}"}), 200
 
-@manager_bp.route('/permissions/<user_id>', methods=['GET'])
-@login_required(["admin"], require_all=True)
-def get_permissions(user_id):
+@manager_bp.route('/permission', methods=['DELETE'])
+@login_required(required_permissions=['admin'])
+def delete_permission():
     """
-    Fetches a user’s permissions, like Zaphod checking his presidential privileges.
-    Purpose: Returns the list of permissions for a user—admin-only, because only the chosen one (or Brian) gets to peek!
-    Permissions: Restricted to "admin"—you’re either the Messiah or nobody!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user whose permissions are sought.
-    Outputs:
-        - Success: JSON {"status": "success", "permissions": [<permission_list>]}, status 200—rank revealed!
-        - Errors:
-            - 404: {"status": "error", "message": "User not found"}—this user’s not in the Guide!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
+    Remove a specific permission from a user.
+    Payload: {"USERid": "string", "permission": "string"}
     """
-    try:
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            logging.warning(f"UX Issue - User not found for permissions: {user_id}")
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        
-        permissions = users_settings[user_id].get('permissions', [])
-        logging.debug(f"Retrieved permissions for user {user_id}: {json.dumps(permissions)}")
-        return jsonify({"status": "success", "permissions": permissions}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to retrieve permissions for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@manager_bp.route('/permissions/<user_id>', methods=['POST'])
-@login_required(["admin"], require_all=True)
-def add_permission(user_id):
-    """
-    Adds a permission to a user, like giving Zaphod a third head (if only!).
-    Purpose: Grants a new permission to a user—admin-only, because only the chosen can wield this power!
-    Permissions: Restricted to "admin"—you’re the Messiah, not just a naughty boy!
-    Inputs: JSON payload with:
-        - permission (str): The permission to add, e.g., "merchant", "wixpro".
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Permission added"}, status 200—rank upgraded!
-        - Errors:
-            - 400: {"status": "error", "message": "Permission field is required"}—no permission, no fork handles!
-            - 404: {"status": "error", "message": "User not found"}—this user’s not in the galaxy!
-            - 400: {"status": "error", "message": "Permission already exists"}—already got it, Biggus Dickus!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the system’s gone to Judea!
-    """
-    try:
-        data = request.get_json()
-        if not data or 'permission' not in data:
-            logging.warning(f"UX Issue - Missing permission field in request for user {user_id}: {json.dumps(data)}")
-            return jsonify({"status": "error", "message": "Permission field is required"}), 400
-        
-        permission = data['permission']
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            logging.warning(f"UX Issue - User not found for adding permission: {user_id}")
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        
-        user_permissions = users_settings[user_id].get('permissions', [])
-        if permission in user_permissions:
-            logging.warning(f"UX Issue - Permission already exists for user {user_id}: {permission}")
-            return jsonify({"status": "error", "message": "Permission already exists"}), 400
-        
-        user_permissions.append(permission)
-        users_settings[user_id]['permissions'] = user_permissions
-        save_users_settings(users_settings)
-        logging.info(f"Added permission {permission} to user {user_id}")
-        return jsonify({"status": "success", "message": "Permission added"}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to add permission for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    data = request.get_json()
+    if not data or 'USERid' not in data or 'permission' not in data:
+        return jsonify({"status": "error", "message": "USERid and permission are required"}), 400
+    
+    user_id = data['USERid']
+    permission_to_remove = data['permission']
+    
+    users_data = load_users_settings()
+    user = users_data.get(user_id)
+    
+    if not user:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    
+    if 'permissions' not in user or permission_to_remove not in user['permissions']:
+        return jsonify({"status": "error", "message": f"Permission {permission_to_remove} not found for user {user_id}"}), 404
+    
+    user['permissions'].remove(permission_to_remove)
+    save_users_settings(users_data)
+    return jsonify({"status": "success", "message": f"Permission {permission_to_remove} removed from user {user_id}"}), 200
 
 # region settings/api - Manage settings_key and affiliate_key
 
@@ -731,13 +623,14 @@ def get_settings_key_settings():
         settings = []
         for key, value in config.items():
             if value.get('setting_type') == 'settings_key':
-                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link']}
+                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
                 setting = {
                     'key_type': key,
                     'fields': fields,
                     'icon': value.get('icon', 'icon-favicon'),
                     'doc_link': value.get('doc_link', ''),
-                    'comment': value.get('_comment', '')
+                    'comment': value.get('_comment', ''),
+                    'description': value.get('_description', '')
                 }
                 settings.append(setting)
         
@@ -775,9 +668,10 @@ def patch_settings_key(key_type):
         config = load_config()
         if key_type not in config or config[key_type].get('setting_type') != 'settings_key':
             return jsonify({"status": "error", "message": "Setting not found"}), 404
-
+        
+        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
         for field, value in data.items():
-            if field in config[key_type]:
+            if field in valid_fields:
                 config[key_type][field] = value
             else:
                 return jsonify({"status": "error", "message": f"Invalid field: {field}"}), 400
@@ -811,9 +705,19 @@ def put_settings_key(key_type):
 
         if data.get('setting_type') != 'settings_key':
             return jsonify({"status": "error", "message": "Invalid setting_type for this endpoint."}), 400
-
+        
         config = load_config()
-        config[key_type] = data
+        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']} if key_type in config else set()
+        if valid_fields:
+            temp_data = {k: v for k, v in data.items() if k in valid_fields}
+            temp_data['setting_type'] = 'settings_key'
+            temp_data['_comment'] = config[key_type].get('_comment', '')
+            temp_data['icon'] = config[key_type].get('icon', 'icon-favicon')
+            temp_data['doc_link'] = config[key_type].get('doc_link', '')
+            temp_data['_description'] = config[key_type].get('_description', '')
+            config[key_type] = temp_data
+        else:
+            config[key_type] = data
         save_config(config)
         logging.info(f"Replaced settings_key: {key_type}")
         return jsonify({"status": "success", "message": f"Setting {key_type} replaced"}), 200
@@ -826,7 +730,7 @@ def put_settings_key(key_type):
 def get_affiliate_key_settings():
     """
     Retrieves all settings of type 'affiliate_key' from the configuration.
-    Purpose: Provides admins with a list of affiliate key settings for management.
+    Purpose: Provides admins with a list of affiliate_key settings for management.
     Permissions: Restricted to "admin"—only the chosen can access this!
     Inputs: None
     Outputs:
@@ -840,13 +744,14 @@ def get_affiliate_key_settings():
         settings = []
         for key, value in config.items():
             if value.get('setting_type') == 'affiliate_key':
-                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link']}
+                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
                 setting = {
                     'key_type': key,
                     'fields': fields,
                     'icon': value.get('icon', 'icon-favicon'),
                     'doc_link': value.get('doc_link', ''),
-                    'comment': value.get('_comment', '')
+                    'comment': value.get('_comment', ''),
+                    'description': value.get('_description', '')
                 }
                 settings.append(setting)
         
@@ -884,9 +789,10 @@ def patch_affiliate_key(key_type):
         config = load_config()
         if key_type not in config or config[key_type].get('setting_type') != 'affiliate_key':
             return jsonify({"status": "error", "message": "Setting not found"}), 404
-
+        
+        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
         for field, value in data.items():
-            if field in config[key_type]:
+            if field in valid_fields:
                 config[key_type][field] = value
             else:
                 return jsonify({"status": "error", "message": f"Invalid field: {field}"}), 400
@@ -920,9 +826,19 @@ def put_affiliate_key(key_type):
 
         if data.get('setting_type') != 'affiliate_key':
             return jsonify({"status": "error", "message": "Invalid setting_type for this endpoint."}), 400
-
+        
         config = load_config()
-        config[key_type] = data
+        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']} if key_type in config else set()
+        if valid_fields:
+            temp_data = {k: v for k, v in data.items() if k in valid_fields}
+            temp_data['setting_type'] = 'affiliate_key'
+            temp_data['_comment'] = config[key_type].get('_comment', '')
+            temp_data['icon'] = config[key_type].get('icon', 'icon-favicon')
+            temp_data['doc_link'] = config[key_type].get('doc_link', '')
+            temp_data['_description'] = config[key_type].get('_description', '')
+            config[key_type] = temp_data
+        else:
+            config[key_type] = data
         save_config(config)
         logging.info(f"Replaced affiliate_key: {key_type}")
         return jsonify({"status": "success", "message": f"Setting {key_type} replaced"}), 200

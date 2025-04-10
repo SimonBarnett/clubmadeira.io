@@ -1,105 +1,26 @@
 {% extends "base.inc" %}
+{% block body_attributes %}data-page-type="partner"{% endblock %}
 {% block content %}
-    <div class="main-container">
+    <div class="layout-wrapper">
         <div class="menu-container">
-            <div class="menu">
-                <button data-section="info">
-                    <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
-                </button>
-                <button data-submenu="my-account-submenu" data-section="my-account">
-                    <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
-                    <i class="fas fa-caret-right caret"></i>
-                </button>
-                <div id="my-account-submenu" class="submenu">
-                    <button data-section="my-account">
-                        <span class="button-content"><i class="fas fa-address-book"></i> Contact</span>
-                    </button>
-                    <button data-section="change-password">
-                        <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
-                    </button>
-                </div>
-                <button data-section="my-products">
-                    <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
-                </button>
-                <button data-section="site-requests">
-                    <span class="button-content"><i class="fas fa-file-alt"></i> Site Requests</span>
-                </button>
-                <button data-section="documentation">
-                    <span class="button-content"><i class="fas fa-book"></i> Documentation</span>
+            <div id="menu" class="menu">
+                <input type="text" id="userId" style="display: none;" value="{{ user.user_id if user else '' }}">
+                <button data-section="integrations">
+                    <span class="button-content"><i class="fas fa-plug"></i> Integrations</span>
                 </button>
                 {% include 'account_menu.inc' with context %}
             </div>
         </div>
         <div class="content-wrapper">
             {% include 'welcome.inc' with context %}
-            <div id="my-products" class="section" style="display: none;">
-                <h2>My Products</h2>
-                <p>These are the products from your parts feed.</p>
-                <table id="productTable">
-                    <thead>
-                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
-                    </thead>
-                    <tbody id="productList"></tbody>
-                </table>
-            </div>
-            <div id="site-requests" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <i class="fas fa-file-alt" style="font-size: 32px; margin-right: 10px;"></i>
-                    <h2>Site Requests</h2>
-                </div>
-                <p>View and manage site requests from merchants and communities. Click a row to see details.</p>
-                <table id="siteRequestsTable">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Received At</th>
-                            <th>Contact Name</th>
-                            <th>Email</th>
-                            <th>Organisation</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="siteRequestsList"></tbody>
-                </table>
-                <div id="apiKeyModal" class="modal" style="display: none;">
-                    <div class="modal-content">
-                        <span class="close" data-action="closeApiKeyModal"><i class="fas fa-times"></i></span>
-                        <h3><i class="fas fa-key"></i> Enter API Key</h3>
-                        <label for="merchantWixClientId">Wix Client ID:</label>
-                        <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
-                        <button data-action="saveMerchantWixClientId"><i class="fas fa-save"></i> Save</button>
-                    </div>
-                </div>
-            </div>
-            <div id="site-request-detail" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <i class="fas fa-info-circle" style="font-size: 32px; margin-right: 10px;"></i>
-                    <h2>Site Request Details</h2>
-                </div>
-                <div class="settings-form">
-                    <button data-section="site-requests"><i class="fas fa-arrow-left"></i> Back to Site Requests</button>
-                    <div id="siteRequestContent"></div>
-                </div>
-            </div>
-            <div id="documentation" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <i class="fas fa-book" style="font-size: 32px; margin-right: 10px;"></i>
-                    <h2>Documentation</h2>
-                </div>
-                <div id="documentation-content">
-                    <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
-                </div>
-            </div>
-            <div id="my-account" class="section" style="display: none;">
-                <h2>My Account</h2>
-                <p>Update your contact details here.</p>
-                <!-- Assuming this is populated dynamically or via account_menu.inc -->
-            </div>
-            <div id="change-password" class="section" style="display: none;">
-                <h2>Change Password</h2>
-                <p>Change your password here.</p>
-                <!-- Assuming this is populated dynamically or via account_menu.inc -->
+            <div id="integrations" class="section" style="display: none;">
+                <h2>Integrations</h2>
+                <p>View your integration statuses below.</p>
+                <ul id="integrationList"></ul>
             </div>
         </div>
     </div>
+    <script>
+        console.log('partner.html - Template loaded');
+    </script>
 {% endblock %}

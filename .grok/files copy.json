@@ -1,0 +1,535 @@
+{
+  "files": [
+    {
+      "path": "/README.md"
+    },
+    {
+      "path": "/Wix.py"
+    },
+    {
+      "path": "/affiliate.md"
+    },
+    {
+      "path": "/blueprints/authentication_bp.py"
+    },
+    {
+      "path": "/blueprints/content_bp.py"
+    },
+    {
+      "path": "/blueprints/getcode.json"
+    },
+    {
+      "path": "/blueprints/manager_bp.py"
+    },
+    {
+      "path": "/blueprints/referral_bp.py"
+    },
+    {
+      "path": "/blueprints/site_request_bp.py"
+    },
+    {
+      "path": "/blueprints/user_settings_bp.py"
+    },
+    {
+      "path": "/blueprints/utility_bp.py"
+    },
+    {
+      "path": "/branding.json"
+    },
+    {
+      "path": "/checksum.md"
+    },
+    {
+      "path": "/clubmadeira.io_dir.txt"
+    },
+    {
+      "path": "/config copy.json"
+    },
+    {
+      "path": "/config.json"
+    },
+    {
+      "path": "/flask.md"
+    },
+    {
+      "path": "/has.py"
+    },
+    {
+      "path": "/madeira.py"
+    },
+    {
+      "path": "/pseudo_categories.py"
+    },
+    {
+      "path": "/referal.htm"
+    },
+    {
+      "path": "/sms.py"
+    },
+    {
+      "path": "/static/css/base.css"
+    },
+    {
+      "path": "/static/css/components.css"
+    },
+    {
+      "path": "/static/css/icons copy.css"
+    },
+    {
+      "path": "/static/css/icons.css"
+    },
+    {
+      "path": "/static/css/layout.css"
+    },
+    {
+      "path": "/static/css/pages.css"
+    },
+    {
+      "path": "/static/css/signup.css"
+    },
+    {
+      "path": "/static/css/styles.css"
+    },
+    {
+      "path": "/static/css/test-svg.html"
+    },
+    {
+      "path": "/static/css/utilities.css"
+    },
+    {
+      "path": "/static/error/200.md"
+    },
+    {
+      "path": "/static/error/403.md"
+    },
+    {
+      "path": "/static/error/404.md"
+    },
+    {
+      "path": "/static/error/500.md"
+    },
+    {
+      "path": "/static/getcode.json"
+    },
+    {
+      "path": "/static/js/admin-page.js"
+    },
+    {
+      "path": "/static/js/amd-admin-page.js"
+    },
+    {
+      "path": "/static/js/category-management.js"
+    },
+    {
+      "path": "/static/js/common.js"
+    },
+    {
+      "path": "/static/js/community-page.js"
+    },
+    {
+      "path": "/static/js/getcode.json"
+    },
+    {
+      "path": "/static/js/marked.min.js"
+    },
+    {
+      "path": "/static/js/merchant-page.js"
+    },
+    {
+      "path": "/static/js/page-load.js"
+    },
+    {
+      "path": "/static/js/partner-page.js"
+    },
+    {
+      "path": "/static/js/site-auth.js"
+    },
+    {
+      "path": "/static/js/site-navigation.js"
+    },
+    {
+      "path": "/static/js/site-request.js"
+    },
+    {
+      "path": "/static/js/user-management.js"
+    },
+    {
+      "path": "/static/md/amazon_uk_readme.md"
+    },
+    {
+      "path": "/static/md/awin_readme.md"
+    },
+    {
+      "path": "/static/md/bigcommerce.md"
+    },
+    {
+      "path": "/static/md/bigcommerce_readme.md"
+    },
+    {
+      "path": "/static/md/cj_readme.md"
+    },
+    {
+      "path": "/static/md/ebay_uk_readme.md"
+    },
+    {
+      "path": "/static/md/getcode.json"
+    },
+    {
+      "path": "/static/md/joomla_readme.md"
+    },
+    {
+      "path": "/static/md/magento.md"
+    },
+    {
+      "path": "/static/md/magento_readme.md"
+    },
+    {
+      "path": "/static/md/md_contents_text.txt"
+    },
+    {
+      "path": "/static/md/shopify.md"
+    },
+    {
+      "path": "/static/md/shopify_readme.md"
+    },
+    {
+      "path": "/static/md/squarespace_readme.md"
+    },
+    {
+      "path": "/static/md/weebly_readme.md"
+    },
+    {
+      "path": "/static/md/wix.md"
+    },
+    {
+      "path": "/static/md/wixStore.md"
+    },
+    {
+      "path": "/static/md/wixStore_readme.md"
+    },
+    {
+      "path": "/static/md/wix_readme.md"
+    },
+    {
+      "path": "/static/md/woocommerce.md"
+    },
+    {
+      "path": "/static/md/woocommerce_readme.md"
+    },
+    {
+      "path": "/static/md/wordpress_readme.md"
+    },
+    {
+      "path": "/templates/account_menu.inc"
+    },
+    {
+      "path": "/templates/admin.html"
+    },
+    {
+      "path": "/templates/base.inc"
+    },
+    {
+      "path": "/templates/community.html"
+    },
+    {
+      "path": "/templates/getcode.json"
+    },
+    {
+      "path": "/templates/login.html"
+    },
+    {
+      "path": "/templates/merchant.html"
+    },
+    {
+      "path": "/templates/overlay.inc"
+    },
+    {
+      "path": "/templates/partner.html"
+    },
+    {
+      "path": "/templates/roles.inc"
+    },
+    {
+      "path": "/templates/signup.html"
+    },
+    {
+      "path": "/templates/siterequest.inc"
+    },
+    {
+      "path": "/templates/welcome.inc"
+    },
+    {
+      "path": "/test.py"
+    },
+    {
+      "path": "/test.txt"
+    },
+    {
+      "path": "/test2.py"
+    },
+    {
+      "path": "/users_settings.json"
+    },
+    {
+      "path": "/utils/__init__.py"
+    },
+    {
+      "path": "/utils/auth.py"
+    },
+    {
+      "path": "/utils/categories.py"
+    },
+    {
+      "path": "/utils/config.py"
+    },
+    {
+      "path": "/utils/data.py"
+    },
+    {
+      "path": "/utils/getcode.json"
+    },
+    {
+      "path": "/utils/helpers.py"
+    },
+    {
+      "path": "/utils/products.py"
+    },
+    {
+      "path": "/utils/users.py"
+    },
+    {
+      "path": "/utils/wix.py"
+    },
+    {
+      "path": "/velo.clubdiscounts.js"
+    },
+    {
+      "path": "/velo.md",
+      "lastModified": "2025-03-21T17:40:48.614385",
+      "description": "Documentation for installing Velo scripts in Wix for community and seller websites.",
+      "functions": [],
+      "endpoints": [],
+      "related": [
+        {
+          "description": "References Flask backend API",
+          "relative_path": "/madeira.py",
+          "source": "/velo.md"
+        }
+      ]
+    },
+    {
+      "path": "/velo.orderplace.js",
+      "lastModified": "2025-03-21T20:07:12.335586",
+      "description": "Backend script for handling order placement events in Wix, sending callbacks to Flask.",
+      "functions": [
+        {
+          "name": "wixStores_onOrderPlaced",
+          "description": "Event handler for when an order is placed in Wix Stores."
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/referal",
+          "description": "POST endpoint for sending order details to Flask backend."
+        }
+      ],
+      "related": [
+        {
+          "description": "References Flask backend API",
+          "relative_path": "/madeira.py",
+          "source": "/velo.orderplace.js"
+        }
+      ]
+    },
+    {
+      "path": "/velo.product.js",
+      "lastModified": "2025-03-21T17:40:48.636118",
+      "description": "Frontend script for capturing referer query parameters and sending callbacks to Flask.",
+      "functions": [
+        {
+          "name": "sendCallbackToReferer",
+          "description": "Function to send a callback to the referrer."
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/referal",
+          "description": "POST endpoint for sending referer data to Flask backend."
+        }
+      ],
+      "related": [
+        {
+          "description": "References Flask backend API",
+          "relative_path": "/madeira.py",
+          "source": "/velo.product.js"
+        }
+      ]
+    },
+    {
+      "path": "/web.config",
+      "lastModified": "2025-03-21T19:25:52.344362",
+      "description": "IIS configuration file for setting up FastCGI with Flask.",
+      "functions": [],
+      "endpoints": [],
+      "related": [
+        {
+          "description": "References Flask application",
+          "relative_path": "/madeira.py",
+          "source": "/web.config"
+        }
+      ]
+    },
+    {
+      "path": "/wix2.py",
+      "lastModified": "2025-03-21T17:40:48.636118",
+      "description": "Python script for interacting with Wix API to fetch discounted products.",
+      "functions": [
+        {
+          "name": "get_wix_access_token",
+          "description": "Retrieve an access token for the given Wix clientId."
+        },
+        {
+          "name": "search_wix_discounted",
+          "description": "Search for discounted Wix products in a collection for a given clientId."
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/oauth2/token",
+          "description": "POST endpoint for retrieving Wix access token."
+        },
+        {
+          "path": "/stores/v1/products/query",
+          "description": "POST endpoint for querying Wix products."
+        }
+      ],
+      "related": [
+        {
+          "description": "References Flask backend API",
+          "relative_path": "/madeira.py",
+          "source": "/wix2.py"
+        }
+      ]
+    },
+    {
+      "path": "/wixcat.py",
+      "lastModified": "2025-03-21T17:40:48.636118",
+      "description": "Python script for fetching Wix collections and their products.",
+      "functions": [
+        {
+          "name": "fetch_collections",
+          "description": "Fetch collections from Wix API."
+        },
+        {
+          "name": "fetch_products_for_collection",
+          "description": "Fetch products for a specific collection from Wix API."
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/oauth2/token",
+          "description": "POST endpoint for retrieving Wix access token."
+        },
+        {
+          "path": "/stores-reader/v1/collections/query",
+          "description": "POST endpoint for querying Wix collections."
+        },
+        {
+          "path": "/stores/v1/products/query",
+          "description": "POST endpoint for querying Wix products."
+        }
+      ],
+      "related": [
+        {
+          "description": "References Flask backend API",
+          "relative_path": "/madeira.py",
+          "source": "/wixcat.py"
+        }
+      ]
+    },
+    {
+      "path": "/LICENSE",
+      "excluded": "not text"
+    },
+    {
+      "path": "/log/2025/03/2025-03-27.log",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/03/2025-03-28.log",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/03/2025-03-29.log",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/03/2025-03-30.log",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/03/2025-03-31.log",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/04/2025-04-01.log",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/04/2025-04-02.log",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/04/2025-04-03.log",
+      "excluded": "not text"
+    },
+    {
+      "path": "/log/2025/04/2025-04-03.log.2025-04-03",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/04/2025-04-04.log",
+      "excluded": "too large"
+    },
+    {
+      "path": "/log/2025/04/2025-04-05.log",
+      "excluded": "not text"
+    },
+    {
+      "path": "/log/2025/04/2025-04-06.log",
+      "excluded": "not text"
+    },
+    {
+      "path": "/siterequest/232",
+      "excluded": "not text"
+    },
+    {
+      "path": "/static/img/community.jpg",
+      "excluded": "too large"
+    },
+    {
+      "path": "/static/img/merchant.jpg",
+      "excluded": "too large"
+    },
+    {
+      "path": "/static/img/wixpro.jpg",
+      "excluded": "too large"
+    },
+    {
+      "path": "/static/static_contents_css.txt",
+      "excluded": "too large"
+    },
+    {
+      "path": "/templates/community.html.bak",
+      "excluded": "not text"
+    },
+    {
+      "path": "/utils/utils_contents_text.txt",
+      "excluded": "too large"
+    },
+    {
+      "path": "/xreq.md",
+      "excluded": "too large"
+    }
+  ]
+}

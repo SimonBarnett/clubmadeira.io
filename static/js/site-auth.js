@@ -118,12 +118,22 @@ if (!window.siteAuthInitialized) {
         const token = localStorage.getItem('authToken');
         
         // Define public endpoints that don’t require authentication
-        const publicEndpoints = ['/branding?type=login', '/branding?type=signup', '/login', '/signup'];
+        const publicEndpoints = ['/', '/signup'];
         const isPublic = publicEndpoints.some(endpoint => url.includes(endpoint));
         log('authenticatedFetch - Is public endpoint:', isPublic);
         
+        // Add redirect counter to prevent recursion
+        const redirectCount = parseInt(localStorage.getItem('authFetchRedirectCount') || '0');
         if (!token && !isPublic) {
+            if (redirectCount > 2) {
+                error('authenticatedFetch - Redirect loop detected, clearing token');
+                localStorage.removeItem('authToken');
+                localStorage.setItem('authFetchRedirectCount', '0');
+                window.location.href = '/';
+                return null;
+            }
             error('authenticatedFetch - No authentication token found - Redirecting to /');
+            localStorage.setItem('authFetchRedirectCount', redirectCount + 1);
             window.location.href = '/';
             return null;
         }
@@ -144,11 +154,19 @@ if (!window.siteAuthInitialized) {
                 throw new Error(errorData.message || `Request failed with status ${response.status}`);
             }
             log('authenticatedFetch - Response received - Status:', response.status);
+            localStorage.setItem('authFetchRedirectCount', '0'); // Reset counter on success
             return response;
         } catch (err) {
             error('authenticatedFetch - Error:', err.message);
+            if (!isPublic && redirectCount <= 2) {
+                localStorage.setItem('authFetchRedirectCount', redirectCount + 1);
+                window.location.href = '/';
+                return null;
+            }
             throw err;
         }
+        // Suggestion: Use this function in login-page.js for login submission to ensure consistent auth handling
+        // Example: await window.authenticatedFetch('/', { method: 'POST', body: JSON.stringify({ email, password }) });
     }
 
     // Saves an updated user password via an authenticated request.

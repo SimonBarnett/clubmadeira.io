@@ -12,25 +12,31 @@ import string
 import random
 
 # region Blueprint Setup
-# Here begins the grand adventure of authentication_bp, a blueprint forged in the fires of Mount Doom (or at least the xAI labs).
-# Zaphod Beeblebrox would approve—two heads are better than one, and this module handles signups and password resets with flair!
 authentication_bp = Blueprint('authentication_bp', __name__)
 # endregion
 
-# region /login POST - User Login
-@authentication_bp.route('/login', methods=['POST'])
+# region /login GET and POST - User Login
+@authentication_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    try:
-        data = request.get_json(silent=True, force=True, cache=False)
-        logging.debug(f"Raw JSON from request: {data}")
+    if request.method == 'GET':
+        # Render login.html for GET requests
+        return render_template('login.html', title='clubmadeira.io | Login', page_type='login', base_url=request.url_root.rstrip('/'))
 
-        # Log without modifying original data
+    # Handle POST request (login form submission)
+    try:
+        content_type = request.headers.get('Content-Type', '')
+        if 'application/json' in content_type:
+            data = request.get_json(silent=True, force=True, cache=False)
+        else:
+            data = request.form.to_dict()
+
         log_data = {
             "method": request.method,
             "url": request.full_path,
             "headers": {k: "[REDACTED]" if k == "Authorization" else v for k, v in request.headers.items()},
             "ip": request.remote_addr,
-            "body": {"email": data["email"], "password": "[REDACTED]"} if data else "[NO BODY]"
+            "content_type": content_type,
+            "body": {"email": data.get("email"), "password": "[REDACTED]"} if data else "[NO BODY]"
         }
         logging.debug(f"Request: {json.dumps(log_data)}")
 
@@ -40,17 +46,17 @@ def login():
         
         email = data['email'].strip().lower()
         password = data['password'].strip()
-        logging.debug(f"Raw password before validation: {password}")
+        logging.debug(f"Raw password before validation: [REDACTED]")
         
         users_settings = load_users_settings()
         user_entry = next(((uid, u) for uid, u in users_settings.items() if u['email_address'].lower() == email), None)
         
         if user_entry:
             user_id, user = user_entry
-            logging.debug(f"Stored hash for user {user_id}: {user['password']}")
+            logging.debug(f"Stored hash for user {user_id}: [REDACTED]")
             if bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
                 token = generate_token(user_id, user['permissions'])
-                return jsonify({"status": "success", "token": token, "user_id": user_id}), 200
+                return jsonify({"status": "success", "token": token, "user_id": user_id}), 200  # Changed "userId" to "user_id"
             else:
                 logging.debug("Password does not match")
         else:
@@ -60,22 +66,12 @@ def login():
     except Exception as e:
         logging.error(f"Login error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
-    
 # endregion
 
 # region /signup GET - The Holy Grail of New User Entry
 @authentication_bp.route('/signup', methods=['GET'])
 def signup_page():
-    """
-    Renders the signup page, a portal to the galaxy for new users.
-    Purpose: Like the Knights of the Round Table seeking the Grail, this endpoint offers a form for brave souls to join the ranks.
-    Inputs: None—just point your browser and pray you’re not a shrubbery.
-    Outputs: 
-        - Success: HTML signup form, a beacon of hope.
-        - Error: JSON {"status": "error", "message": "Server error"}, status 500—like Marvin groaning, "I’ve got a brain the size of a planet and they ask me to render a page."
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -101,26 +97,7 @@ def signup_page():
 # region /signup POST - Joining the Galactic Crew
 @authentication_bp.route('/signup', methods=['POST'])
 def signup():
-    """
-    Registers a new user and sends an OTP via /send-sms.
-    Purpose: Takes JSON data to create a user account and initiates OTP verification.
-    Inputs: JSON payload with:
-        - signup_type (str): "seller", "community", "wixpro", etc.
-        - contact_name (str): Your alias, e.g., "Arthur Dent".
-        - signup_email (str): Galactic comms address.
-        - signup_password (str): Secret key, not "four candles".
-        - signup_phone (str): Required for all users.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "User created, please verify OTP"}, status 201
-        - Errors:
-            - 400: {"status": "error", "message": "Missing required fields"}
-            - 400: {"status": "error", "message": "Phone required for all users"}
-            - 409: {"status": "error", "message": "Email already registered"}
-            - 500: {"status": "error", "message": "Failed to send SMS: <reason>"}
-            - 500: {"status": "error", "message": "Server error"}
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -149,7 +126,6 @@ def signup():
         signup_password = data['signup_password']
         signup_phone = data['signup_phone']
 
-        # Phone is mandatory for all users
         if not signup_phone:
             logging.warning(f"UX Issue - Signup failed for {signup_type} - Phone required")
             response_data = {"status": "error", "message": "Phone required for all users"}
@@ -169,7 +145,6 @@ def signup():
         permission_map = {'seller': 'merchant', 'community': 'community', 'wixpro': 'wixpro'}
         permission = permission_map.get(signup_type, signup_type)
 
-        # Generate OTP
         otp = ''.join(random.choices(string.digits, k=6))
         signup_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
         if "signup_codes" not in current_app.config:
@@ -186,7 +161,6 @@ def signup():
         save_users_settings(users_settings)
         logging.debug(f"User signed up - User ID: {user_id}, Permission: {permission}")
 
-        # Send OTP via /send-sms (public endpoint, no token needed)
         sms_payload = {
             "email": signup_email,
             "message": f"clubmadeira.io signup OTP: {otp}. Expires in 15 mins."
@@ -225,20 +199,7 @@ def signup():
 # region /reset-password POST - A New Hope for Forgotten Passwords
 @authentication_bp.route('/reset-password', methods=['POST'])
 def reset_password():
-    """
-    Initiates a password reset, sending an OTP via the centralized /send-sms endpoint.
-    Purpose: Like Brian’s sandal leading the masses, this endpoint guides users back to access with a one-time password.
-    Inputs: JSON payload with:
-        - email (str): The user’s galactic address to reset.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "A one-time password has been sent to your phone"}, status 200—help is on the way!
-        - Errors:
-            - 400: {"status": "error", "message": "Email is required"}—no email, no fork handles!
-            - 404: {"status": "error", "message": "Email not found"}—this user’s not in the Guide.
-            - 500: {"status": "error", "message": "Failed to send SMS: <reason>"}—a comedy of errors!
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -277,7 +238,6 @@ def reset_password():
         current_app.config["reset_codes"][matching_user_id] = {"code": otp, "expires": reset_expiry.isoformat()}
         logging.debug(f"Generated OTP for reset - User ID: {matching_user_id}, OTP: {otp}")
 
-        # Use /send-sms (public endpoint, no token needed)
         sms_payload = {
             "email": email,
             "message": f"clubmadeira.io one-time password: {otp}. Expires in 15 mins."
@@ -304,25 +264,7 @@ def reset_password():
 # region /verify-reset-code POST - The Messiah of Password Recovery
 @authentication_bp.route('/verify-reset-code', methods=['POST'])
 def verify_reset_code():
-    """
-    Verifies an OTP and resets the password—like Arthur Dent finding the Ultimate Answer (42, obviously).
-    Purpose: Validates the OTP and updates the password, granting access like the *Life of Brian* crowd shouting “He IS the Messiah!”.
-    Inputs: JSON payload with:
-        - email (str): The user’s address.
-        - code (str): The OTP, six digits of destiny.
-        - new_password (str): The new key to the galaxy.
-    Outputs:
-        - Success: JSON {"status": "success", "token": "<JWT>", "user_id": "<id>"}, status 200—access granted!
-        - Errors:
-            - 400: {"status": "error", "message": "Email, code, and new password are required"}—no shortcuts here!
-            - 404: {"status": "error", "message": "Email not found"}—lost in space!
-            - 400: {"status": "error", "message": "No reset code found for this user"}—no OTP, no entry!
-            - 500: {"status": "error", "message": "Invalid reset code expiry format"}—time’s gone wonky!
-            - 400: {"status": "error", "message": "Invalid or expired reset code"}—this code’s pining for the fjords!
-            - 500: {"status": "error", "message": "Server error"}—the Ronnies misplaced the candles!
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -393,9 +335,9 @@ def verify_reset_code():
 
         token = generate_token(matching_user_id, user.get("permissions", []))
         logging.info(f"Password reset successful for user {matching_user_id}")
-        response_data = {"status": "success", "token": "[REDACTED]", "user_id": matching_user_id}
+        response_data = {"status": "success", "token": "[REDACTED]", "user_id": matching_user_id}  # Changed "userId" to "user_id"
         logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify({"status": "success", "token": token, "user_id": matching_user_id}), 200
+        return jsonify({"status": "success", "token": token, "user_id": matching_user_id}), 200  # Changed "userId" to "user_id"
     except Exception as e:
         logging.error(f"UX Issue - Verify reset code error: {str(e)}", exc_info=True)
         response_data = {"status": "error", "message": "Server error"}
@@ -407,22 +349,7 @@ def verify_reset_code():
 @authentication_bp.route('/update-password', methods=['POST'])
 @login_required(["self"], require_all=True)
 def update_password():
-    """
-    Updates a user’s password, secure as a Two Ronnies sketch twist.
-    Purpose: Lets an authenticated user change their password—like swapping four candles for fork handles, but with more security.
-    Permissions: Restricted to "self"—only you can wield this lightsaber!
-    Inputs: JSON payload with:
-        - email (str): Your address, matching your JWT.
-        - password (str): The new password to hash.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Password updated for <email>", "user_id": "<id>"}, status 200—victory!
-        - Errors:
-            - 400: {"status": "error", "message": "Email and password required"}—no dice without both!
-            - 403: {"status": "error", "message": "Unauthorized"}—this isn’t your password, you naughty boy!
-            - 500: {"status": "error", "message": "Server error"}—the system’s gone to the People’s Front of Judea!
-    """
     try:
-        # Log request like madeira.py
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -460,7 +387,7 @@ def update_password():
         users_settings[user_id]["password"] = hashed_password
         save_users_settings(users_settings)
         logging.info(f"Password updated for user {user_id}")
-        response_data = {"status": "success", "message": f"Password updated for {email}", "user_id": user_id}
+        response_data = {"status": "success", "message": f"Password updated for {email}", "user_id": user_id}  # Changed "userId" to "user_id"
         logging.debug(f"Response: {json.dumps(response_data)}")
         return jsonify(response_data), 200
     except Exception as e:

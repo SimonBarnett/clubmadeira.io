@@ -1,15 +1,19 @@
 {% extends 'base.inc' %}
-
+{% block body_attributes %}data-page-type="merchant"{% endblock %}
 {% block content %}
     <div class="main-container" style="margin-top: 0; padding-top: 0;">
         <!-- Menu Container -->
         <div class="menu-container">
-            <div class="menu">
+            <div class="menu" id="menu">
+                <input type="text" id="userId" style="display: none;" value="{{ user.user_id if user else '' }}">
                 <button data-section="info">
                     <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
                 </button>
-                <button data-submenu="my-store-submenu" data-section="my-store-info">
-                    <span class="button-content"><i class="fas fa-store"></i> My Store</span>
+                <button data-section="my-products">
+                    <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
+                </button>
+                <button data-submenu="my-store-submenu" data-section="store-request">
+                    <span class="button-content"><i class="fas fa-store"></i> My Store Request</span>
                     <i class="fas fa-caret-right caret"></i>
                 </button>
                 <div id="my-store-submenu" class="submenu">
@@ -20,9 +24,6 @@
                         <span class="button-content"><i class="fas fa-store-alt"></i> Create Store</span>
                     </button>
                 </div>
-                <button data-section="my-products">
-                    <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
-                </button>
                 <button data-submenu="documentation-submenu" data-section="documentation-content">
                     <span class="button-content"><i class="fas fa-book"></i> Documentation</span>
                     <i class="fas fa-caret-right caret"></i>
@@ -31,15 +32,16 @@
                     <!-- Submenu items will be dynamically inserted here via JavaScript -->
                 </div>
                 {% include 'account_menu.inc' with context %}
+                <!-- Role-switching buttons will be appended here dynamically -->
             </div>
         </div>
 
         <!-- Content Wrapper -->
         <div class="content-wrapper" style="margin-top: 0;">  
             {% include 'welcome.inc' with context %}       
-            <div id="my-store-info" class="section" style="display: none;">
-                <h2>My Store</h2>
-                <p>Manage your store settings and integrations here.</p>
+            <div id="store-request" class="section" style="display: none;">
+                <h2>My Store Request</h2>
+                <p>Manage your store request details here.</p>
             </div>
             <div id="api-keys" class="section" style="display: none;">
                 <h2>API Keys</h2>
@@ -76,4 +78,7 @@
             </div>
         </div>
     </div>
+    <script>
+        console.log('merchant.html - Template loaded');
+    </script>
 {% endblock %}

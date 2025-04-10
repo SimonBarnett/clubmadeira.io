@@ -1,0 +1,3976 @@
+{
+  "name": null,
+  "description": "",
+  "base_url": "",
+  "main_file": "madeira.py",
+  "github": "https://github.com/SimonBarnett/clubmadeira.io",
+  "files": [
+    {
+      "name": "authentication_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/authentication_bp.py",
+      "flask_blueprint": "authentication_bp",
+      "endpoint_name": "login",
+      "method": "GET",
+      "description": "Renders the login page for GET requests",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/auth.py",
+          "function": "login_required",
+          "relationship": "Provides authentication check for endpoints"
+        },
+        {
+          "file": "utils/users.py",
+          "function": "load_users_settings",
+          "relationship": "Loads user settings for authentication"
+        },
+        {
+          "file": "utils/users.py",
+          "function": "save_users_settings",
+          "relationship": "Saves user settings during signup or password updates"
+        },
+        {
+          "file": "utils/config.py",
+          "function": "load_config",
+          "relationship": "Loads configuration settings"
+        },
+        {
+          "file": "templates/login.html",
+          "relationship": "Template rendered for the login page"
+        }
+      ]
+    },
+    {
+      "name": "authentication_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/authentication_bp.py",
+      "flask_blueprint": "authentication_bp",
+      "endpoint_name": "login",
+      "method": "POST",
+      "description": "Handles login form submission",
+      "parameters": [
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false,
+          "description": "User's email address"
+        },
+        {
+          "name": "password",
+          "type": "string",
+          "optional": false,
+          "description": "User's password"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/auth.py",
+          "function": "generate_token",
+          "relationship": "Generates JWT token upon successful login"
+        },
+        {
+          "file": "templates/login.html",
+          "relationship": "Template rendered for the login page"
+        }
+      ]
+    },
+    {
+      "name": "authentication_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/authentication_bp.py",
+      "flask_blueprint": "authentication_bp",
+      "endpoint_name": "signup_page",
+      "method": "GET",
+      "description": "Renders the signup page",
+      "parameters": [],
+      "related": [
+        {
+          "file": "templates/signup.html",
+          "relationship": "Template rendered for the signup page"
+        }
+      ]
+    },
+    {
+      "name": "authentication_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/authentication_bp.py",
+      "flask_blueprint": "authentication_bp",
+      "endpoint_name": "signup",
+      "method": "POST",
+      "description": "Handles user signup",
+      "parameters": [
+        {
+          "name": "signup_type",
+          "type": "string",
+          "optional": false,
+          "description": "Type of signup (e.g., seller, community)"
+        },
+        {
+          "name": "contact_name",
+          "type": "string",
+          "optional": false,
+          "description": "User's contact name"
+        },
+        {
+          "name": "signup_email",
+          "type": "string",
+          "optional": false,
+          "description": "User's email address"
+        },
+        {
+          "name": "signup_password",
+          "type": "string",
+          "optional": false,
+          "description": "User's password"
+        },
+        {
+          "name": "signup_phone",
+          "type": "string",
+          "optional": true,
+          "description": "User's phone number"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/users.py",
+          "function": "generate_code",
+          "relationship": "Generates unique user ID"
+        },
+        {
+          "file": "templates/signup.html",
+          "relationship": "Template rendered for the signup page"
+        }
+      ]
+    },
+    {
+      "name": "authentication_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/authentication_bp.py",
+      "flask_blueprint": "authentication_bp",
+      "endpoint_name": "reset_password",
+      "method": "POST",
+      "description": "Handles password reset requests",
+      "parameters": [
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false,
+          "description": "User's email address"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/login.html",
+          "relationship": "Template rendered for forgot password form"
+        }
+      ]
+    },
+    {
+      "name": "authentication_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/authentication_bp.py",
+      "flask_blueprint": "authentication_bp",
+      "endpoint_name": "verify_reset_code",
+      "method": "POST",
+      "description": "Verifies reset code and updates password",
+      "parameters": [
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false,
+          "description": "User's email address"
+        },
+        {
+          "name": "code",
+          "type": "string",
+          "optional": false,
+          "description": "One-time password code"
+        },
+        {
+          "name": "new_password",
+          "type": "string",
+          "optional": false,
+          "description": "New password to set"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/login.html",
+          "relationship": "Template rendered for OTP verification form"
+        }
+      ]
+    },
+    {
+      "name": "authentication_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/authentication_bp.py",
+      "flask_blueprint": "authentication_bp",
+      "endpoint_name": "update_password",
+      "method": "POST",
+      "description": "Updates user's password",
+      "parameters": [
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false,
+          "description": "User's email address"
+        },
+        {
+          "name": "password",
+          "type": "string",
+          "optional": false,
+          "description": "New password"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/auth.py",
+          "function": "login_required",
+          "relationship": "Restricts access to authenticated users"
+        },
+        {
+          "file": "templates/account_menu.inc",
+          "relationship": "Template rendered for password change form"
+        }
+      ]
+    },
+    {
+      "name": "content_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/content_bp.py",
+      "flask_blueprint": "content_bp",
+      "endpoint_name": "get_all_discounted_products",
+      "method": "GET",
+      "description": "Retrieves all discounted products for a category",
+      "parameters": [
+        {
+          "name": "category_id",
+          "type": "string",
+          "optional": false,
+          "description": "ID of the category to filter products"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/products.py",
+          "function": "search_all_discounted",
+          "relationship": "Fetches discounted products from Amazon API"
+        },
+        {
+          "file": "templates/admin.html",
+          "relationship": "Displays discounted products in deal_listings section"
+        }
+      ]
+    },
+    {
+      "name": "content_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/content_bp.py",
+      "flask_blueprint": "content_bp",
+      "endpoint_name": "get_categories",
+      "method": "GET",
+      "description": "Retrieves product categories",
+      "parameters": [
+        {
+          "name": "parent_id",
+          "type": "string",
+          "optional": true,
+          "description": "ID of the parent category"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/categories.py",
+          "function": "get_all_categories",
+          "relationship": "Fetches category data"
+        },
+        {
+          "file": "templates/admin.html",
+          "relationship": "Displays categories in deal_listings section"
+        },
+        {
+          "file": "templates/community.html",
+          "relationship": "Displays categories in categories section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "get_users",
+      "method": "GET",
+      "description": "Retrieves users by role",
+      "parameters": [
+        {
+          "name": "role",
+          "type": "string",
+          "optional": false,
+          "description": "Role to filter users by"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/auth.py",
+          "function": "login_required",
+          "relationship": "Restricts access to admin users"
+        },
+        {
+          "file": "utils/users.py",
+          "function": "load_users_settings",
+          "relationship": "Loads user settings"
+        },
+        {
+          "file": "templates/admin.html",
+          "relationship": "Displays users in user_management section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "patch_permission",
+      "method": "PATCH",
+      "description": "Adds a permission to a user",
+      "parameters": [
+        {
+          "name": "USERid",
+          "type": "string",
+          "optional": false,
+          "description": "ID of the user"
+        },
+        {
+          "name": "permission",
+          "type": "string",
+          "optional": false,
+          "description": "Permission to add"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/users.py",
+          "function": "save_users_settings",
+          "relationship": "Saves updated user settings"
+        },
+        {
+          "file": "templates/admin.html",
+          "relationship": "Updates permissions in user_management section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "delete_permission",
+      "method": "DELETE",
+      "description": "Removes a permission from a user",
+      "parameters": [
+        {
+          "name": "USERid",
+          "type": "string",
+          "optional": false,
+          "description": "ID of the user"
+        },
+        {
+          "name": "permission",
+          "type": "string",
+          "optional": false,
+          "description": "Permission to remove"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/admin.html",
+          "relationship": "Updates permissions in user_management section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "get_settings_key_settings",
+      "method": "GET",
+      "description": "Retrieves settings_key settings",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/config.py",
+          "function": "load_config",
+          "relationship": "Loads configuration data"
+        },
+        {
+          "file": "templates/admin.html",
+          "relationship": "Displays settings in site_settings section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "patch_settings_key",
+      "method": "PATCH",
+      "description": "Updates specific fields of a settings_key",
+      "parameters": [
+        {
+          "name": "key_type",
+          "type": "string",
+          "optional": false,
+          "description": "Type of setting key to update"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/config.py",
+          "function": "save_config",
+          "relationship": "Saves updated configuration"
+        },
+        {
+          "file": "templates/admin.html",
+          "relationship": "Updates settings in site_settings section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "put_settings_key",
+      "method": "PUT",
+      "description": "Replaces a settings_key entry",
+      "parameters": [
+        {
+          "name": "key_type",
+          "type": "string",
+          "optional": false,
+          "description": "Type of setting key to replace"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/admin.html",
+          "relationship": "Updates settings in site_settings section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "get_affiliate_key_settings",
+      "method": "GET",
+      "description": "Retrieves affiliate_key settings",
+      "parameters": [],
+      "related": [
+        {
+          "file": "templates/admin.html",
+          "relationship": "Displays affiliate settings in affiliates section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "patch_affiliate_key",
+      "method": "PATCH",
+      "description": "Updates specific fields of an affiliate_key",
+      "parameters": [
+        {
+          "name": "key_type",
+          "type": "string",
+          "optional": false,
+          "description": "Type of affiliate key to update"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/admin.html",
+          "relationship": "Updates affiliate settings in affiliates section"
+        }
+      ]
+    },
+    {
+      "name": "manager_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/manager_bp.py",
+      "flask_blueprint": "manager_bp",
+      "endpoint_name": "put_affiliate_key",
+      "method": "PUT",
+      "description": "Replaces an affiliate_key entry",
+      "parameters": [
+        {
+          "name": "key_type",
+          "type": "string",
+          "optional": false,
+          "description": "Type of affiliate key to replace"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/admin.html",
+          "relationship": "Updates affiliate settings in affiliates section"
+        }
+      ]
+    },
+    {
+      "name": "referral_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/referral_bp.py",
+      "flask_blueprint": "referral_bp",
+      "endpoint_name": "handle_referral",
+      "method": "POST",
+      "description": "Records referral data",
+      "parameters": [
+        {
+          "name": "timestamp",
+          "type": "string",
+          "optional": false,
+          "description": "When the referral happened"
+        },
+        {
+          "name": "referer",
+          "type": "string",
+          "optional": true,
+          "description": "ID of the referer"
+        },
+        {
+          "name": "page",
+          "type": "string",
+          "optional": true,
+          "description": "Page visited"
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": true,
+          "description": "Order ID"
+        },
+        {
+          "name": "buyer",
+          "type": "string",
+          "optional": true,
+          "description": "Buyer's name or ID"
+        },
+        {
+          "name": "total",
+          "type": "float",
+          "optional": true,
+          "description": "Order total"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/users.py",
+          "function": "load_users_settings",
+          "relationship": "Loads user settings to store referral data"
+        },
+        {
+          "file": "utils/users.py",
+          "function": "save_users_settings",
+          "relationship": "Saves updated referral data"
+        },
+        {
+          "file": "templates/community.html",
+          "relationship": "Displays referral data in visits and orders sections"
+        }
+      ]
+    },
+    {
+      "name": "referral_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/referral_bp.py",
+      "flask_blueprint": "referral_bp",
+      "endpoint_name": "get_referral_visits",
+      "method": "GET",
+      "description": "Retrieves referral visits for a user",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "string",
+          "optional": false,
+          "description": "ID of the user"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/auth.py",
+          "function": "login_required",
+          "relationship": "Restricts access to self or admin"
+        },
+        {
+          "file": "templates/community.html",
+          "relationship": "Displays visits in visits section"
+        }
+      ]
+    },
+    {
+      "name": "referral_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/referral_bp.py",
+      "flask_blueprint": "referral_bp",
+      "endpoint_name": "get_referral_orders",
+      "method": "GET",
+      "description": "Retrieves referral orders for a user",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "string",
+          "optional": false,
+          "description": "ID of the user"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/community.html",
+          "relationship": "Displays orders in orders section"
+        }
+      ]
+    },
+    {
+      "name": "role_pages_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/role_pages_bp.py",
+      "flask_blueprint": "role_pages",
+      "endpoint_name": "admin",
+      "method": "GET",
+      "description": "Renders admin dashboard",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/auth.py",
+          "function": "login_required",
+          "relationship": "Restricts access to admin users"
+        },
+        {
+          "file": "utils/users.py",
+          "function": "load_users_settings",
+          "relationship": "Loads user data for rendering"
+        },
+        {
+          "file": "templates/admin.html",
+          "relationship": "Template rendered for admin dashboard"
+        }
+      ]
+    },
+    {
+      "name": "role_pages_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/role_pages_bp.py",
+      "flask_blueprint": "role_pages",
+      "endpoint_name": "community",
+      "method": "GET",
+      "description": "Renders community dashboard",
+      "parameters": [],
+      "related": [
+        {
+          "file": "templates/community.html",
+          "relationship": "Template rendered for community dashboard"
+        }
+      ]
+    },
+    {
+      "name": "role_pages_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/role_pages_bp.py",
+      "flask_blueprint": "role_pages",
+      "endpoint_name": "merchant",
+      "method": "GET",
+      "description": "Renders merchant dashboard",
+      "parameters": [],
+      "related": [
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Template rendered for merchant dashboard"
+        }
+      ]
+    },
+    {
+      "name": "role_pages_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/role_pages_bp.py",
+      "flask_blueprint": "role_pages",
+      "endpoint_name": "partner",
+      "method": "GET",
+      "description": "Renders partner dashboard",
+      "parameters": [],
+      "related": [
+        {
+          "file": "templates/partner.html",
+          "relationship": "Template rendered for partner dashboard"
+        }
+      ]
+    },
+    {
+      "name": "role_pages_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/role_pages_bp.py",
+      "flask_blueprint": "role_pages",
+      "endpoint_name": "get_branding",
+      "method": "GET",
+      "description": "Retrieves branding data",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false,
+          "description": "Type of branding (e.g., admin, merchant)"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/roles.inc",
+          "relationship": "Template used for rendering branding icons and text"
+        }
+      ]
+    },
+    {
+      "name": "site_request_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/site_request_bp.py",
+      "flask_blueprint": "site_request_bp",
+      "endpoint_name": "list_site_requests",
+      "method": "GET",
+      "description": "Lists all site requests",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/auth.py",
+          "function": "login_required",
+          "relationship": "Restricts access to admin or wixpro"
+        },
+        {
+          "file": "utils/data.py",
+          "function": "load_site_request",
+          "relationship": "Loads site request data"
+        },
+        {
+          "file": "templates/partner.html",
+          "relationship": "Displays site requests in site-requests section"
+        }
+      ]
+    },
+    {
+      "name": "site_request_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/site_request_bp.py",
+      "flask_blueprint": "site_request_bp",
+      "endpoint_name": "save_site_request_endpoint",
+      "method": "POST",
+      "description": "Saves a new site request",
+      "parameters": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": true,
+          "description": "ID of the user"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "optional": true,
+          "description": "Request type"
+        },
+        {
+          "name": "communityName",
+          "type": "string",
+          "optional": false,
+          "description": "Name of the community or store"
+        },
+        {
+          "name": "aboutCommunity",
+          "type": "string",
+          "optional": false,
+          "description": "Description of the community or store"
+        },
+        {
+          "name": "communityLogos",
+          "type": "array",
+          "optional": false,
+          "description": "Logos for the community or store"
+        },
+        {
+          "name": "colorPrefs",
+          "type": "string",
+          "optional": false,
+          "description": "Color preferences"
+        },
+        {
+          "name": "stylingDetails",
+          "type": "string",
+          "optional": false,
+          "description": "Styling details"
+        },
+        {
+          "name": "preferredDomain",
+          "type": "string",
+          "optional": false,
+          "description": "Preferred domain"
+        },
+        {
+          "name": "emails",
+          "type": "array",
+          "optional": false,
+          "description": "List of emails"
+        },
+        {
+          "name": "pages",
+          "type": "array",
+          "optional": false,
+          "description": "List of pages"
+        },
+        {
+          "name": "widgets",
+          "type": "array",
+          "optional": false,
+          "description": "List of widgets"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/data.py",
+          "function": "save_site_request",
+          "relationship": "Saves site request data"
+        },
+        {
+          "file": "templates/siterequest.inc",
+          "relationship": "Template used for site request form"
+        },
+        {
+          "file": "templates/community.html",
+          "relationship": "Includes siterequest.inc for community site requests"
+        },
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Includes siterequest.inc for merchant store creation"
+        }
+      ]
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "manage_user_settings",
+      "method": "GET",
+      "description": "Retrieves user's top-level settings",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/auth.py",
+          "function": "login_required",
+          "relationship": "Restricts access to self"
+        },
+        {
+          "file": "utils/users.py",
+          "function": "load_users_settings",
+          "relationship": "Loads user settings"
+        },
+        {
+          "file": "templates/account_menu.inc",
+          "relationship": "Displays user settings in contact_details section"
+        }
+      ]
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "manage_user_settings",
+      "method": "PUT",
+      "description": "Replaces user's top-level settings",
+      "parameters": [
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false,
+          "description": "User's email"
+        },
+        {
+          "name": "notifications",
+          "type": "string",
+          "optional": false,
+          "description": "Notification settings"
+        },
+        {
+          "name": "theme",
+          "type": "string",
+          "optional": false,
+          "description": "Theme preference"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/users.py",
+          "function": "save_users_settings",
+          "relationship": "Saves updated settings"
+        },
+        {
+          "file": "templates/account_menu.inc",
+          "relationship": "Updates user settings in contact_details section"
+        }
+      ]
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "manage_user_settings",
+      "method": "PATCH",
+      "description": "Updates specific fields in user's settings",
+      "parameters": [],
+      "related": [
+        {
+          "file": "templates/account_menu.inc",
+          "relationship": "Updates user settings in contact_details section"
+        }
+      ]
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "get_client_api_settings",
+      "method": "GET",
+      "description": "Retrieves client_api settings",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/config.py",
+          "function": "load_config",
+          "relationship": "Loads configuration data"
+        }
+      ]
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "put_client_api_setting",
+      "method": "PUT",
+      "description": "Replaces a client_api setting",
+      "parameters": [
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false,
+          "description": "Key of the client_api setting"
+        }
+      ],
+      "related": []
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "patch_client_api_setting",
+      "method": "PATCH",
+      "description": "Updates specific fields of a client_api setting",
+      "parameters": [
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false,
+          "description": "Key of the client_api setting"
+        }
+      ],
+      "related": []
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "get_api_key_settings",
+      "method": "GET",
+      "description": "Retrieves api_key settings",
+      "parameters": [],
+      "related": [
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Displays API keys in api-keys section"
+        }
+      ]
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "put_api_key_setting",
+      "method": "PUT",
+      "description": "Replaces an api_key setting",
+      "parameters": [
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false,
+          "description": "Key of the api_key setting"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Updates API keys in api-keys section"
+        }
+      ]
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "patch_api_key_setting",
+      "method": "PATCH",
+      "description": "Updates specific fields of an api_key setting",
+      "parameters": [
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false,
+          "description": "Key of the api_key setting"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Updates API keys in api-keys section"
+        }
+      ]
+    },
+    {
+      "name": "user_settings_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/user_settings_bp.py",
+      "flask_blueprint": "user_settings_bp",
+      "endpoint_name": "get_user_products",
+      "method": "GET",
+      "description": "Retrieves user's products from Wix",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/wix.py",
+          "function": "fetch_user_products",
+          "relationship": "Fetches products from Wix API"
+        },
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Displays products in my-products section"
+        },
+        {
+          "file": "templates/partner.html",
+          "relationship": "Displays products in my-products section"
+        }
+      ]
+    },
+    {
+      "name": "utility_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/utility_bp.py",
+      "flask_blueprint": "utility_bp",
+      "endpoint_name": "system_stats",
+      "method": "GET",
+      "description": "Retrieves system statistics",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/helpers.py",
+          "function": "get_system_stats",
+          "relationship": "Provides system statistics"
+        }
+      ]
+    },
+    {
+      "name": "utility_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/utility_bp.py",
+      "flask_blueprint": "utility_bp",
+      "endpoint_name": "ping",
+      "method": "GET",
+      "description": "Pings the service",
+      "parameters": [],
+      "related": [
+        {
+          "file": "utils/helpers.py",
+          "function": "ping_service",
+          "relationship": "Checks service availability"
+        }
+      ]
+    },
+    {
+      "name": "utility_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/utility_bp.py",
+      "flask_blueprint": "utility_bp",
+      "endpoint_name": "log_user_activity",
+      "method": "POST",
+      "description": "Logs user activity",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "string",
+          "optional": false,
+          "description": "ID of the user"
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "optional": false,
+          "description": "Action performed"
+        },
+        {
+          "name": "details",
+          "type": "object",
+          "optional": true,
+          "description": "Additional details"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/helpers.py",
+          "function": "log_activity",
+          "relationship": "Logs the activity"
+        }
+      ]
+    },
+    {
+      "name": "utility_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/utility_bp.py",
+      "flask_blueprint": "utility_bp",
+      "endpoint_name": "send_sms",
+      "method": "POST",
+      "description": "Sends an SMS",
+      "parameters": [
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false,
+          "description": "User's email to lookup phone"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "optional": false,
+          "description": "Message to send"
+        }
+      ],
+      "related": [
+        {
+          "file": "utils/users.py",
+          "function": "load_users_settings",
+          "relationship": "Loads user settings to get phone number"
+        },
+        {
+          "file": "templates/login.html",
+          "relationship": "Used for sending OTP in reset password flow"
+        }
+      ]
+    },
+    {
+      "name": "utility_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/utility_bp.py",
+      "flask_blueprint": "utility_bp",
+      "endpoint_name": "render_md",
+      "method": "GET",
+      "description": "Renders markdown content",
+      "parameters": [
+        {
+          "name": "full_path",
+          "type": "string",
+          "optional": false,
+          "description": "Path to markdown file"
+        }
+      ],
+      "related": [
+        {
+          "file": "static/js/common.js",
+          "function": "renderMdPage",
+          "relationship": "Client-side rendering of markdown content"
+        }
+      ]
+    },
+    {
+      "name": "utility_bp.py",
+      "type": "blueprint_file",
+      "relative_location": "blueprints/utility_bp.py",
+      "flask_blueprint": "utility_bp",
+      "endpoint_name": "check_domain",
+      "method": "GET",
+      "description": "Checks domain availability",
+      "parameters": [
+        {
+          "name": "domain",
+          "type": "string",
+          "optional": false,
+          "description": "Domain name to check"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/siterequest.inc",
+          "relationship": "Checks domain availability for site request form"
+        }
+      ]
+    },
+    {
+      "name": "auth.py",
+      "type": "js_file",
+      "relative_location": "utils/auth.py",
+      "functions": [
+        {
+          "name": "login_required",
+          "description": "Decorator to restrict endpoint access",
+          "parameters": [
+            {
+              "name": "required_permissions",
+              "type": "list",
+              "optional": false,
+              "description": "List of required permissions"
+            },
+            {
+              "name": "require_all",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether all permissions are required"
+            }
+          ],
+          "related": [
+            {
+              "file": "madeira.py",
+              "relationship": "Used in Flask routes for authentication"
+            }
+          ]
+        },
+        {
+          "name": "login_user",
+          "description": "Handles user login",
+          "parameters": [],
+          "related": [
+            {
+              "file": "utils/users.py",
+              "function": "load_users_settings",
+              "relationship": "Loads user settings for authentication"
+            },
+            {
+              "file": "authentication_bp.py",
+              "function": "generate_token",
+              "relationship": "Generates JWT token"
+            }
+          ]
+        },
+        {
+          "name": "signup_user",
+          "description": "Handles user signup",
+          "parameters": [],
+          "related": [
+            {
+              "file": "utils/users.py",
+              "function": "save_users_settings",
+              "relationship": "Saves new user settings"
+            },
+            {
+              "file": "utils/users.py",
+              "function": "generate_code",
+              "relationship": "Generates unique user ID"
+            }
+          ]
+        },
+        {
+          "name": "generate_token",
+          "description": "Generates a JWT token",
+          "parameters": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            },
+            {
+              "name": "permissions",
+              "type": "list",
+              "optional": false,
+              "description": "User's permissions"
+            }
+          ],
+          "related": [
+            {
+              "file": "utils/config.py",
+              "function": "load_config",
+              "relationship": "Loads JWT secret key"
+            }
+          ]
+        },
+        {
+          "name": "decode_token",
+          "description": "Decodes a JWT token",
+          "parameters": [
+            {
+              "name": "token",
+              "type": "string",
+              "optional": false,
+              "description": "JWT token to decode"
+            }
+          ],
+          "related": []
+        },
+        {
+          "name": "generate_code",
+          "description": "Generates a unique code",
+          "parameters": [],
+          "related": []
+        }
+      ],
+      "related": [
+        {
+          "file": "madeira.py",
+          "relationship": "Imported for authentication utilities"
+        }
+      ]
+    },
+    {
+      "name": "categories.py",
+      "type": "js_file",
+      "relative_location": "utils/categories.py",
+      "functions": [
+        {
+          "name": "get_all_categories",
+          "description": "Fetches all categories",
+          "parameters": [
+            {
+              "name": "parent_id",
+              "type": "string",
+              "optional": true,
+              "description": "ID of the parent category"
+            }
+          ],
+          "related": [
+            {
+              "file": "utils/config.py",
+              "function": "load_config",
+              "relationship": "Loads Amazon API config"
+            }
+          ]
+        },
+        {
+          "name": "filter_categories_with_products",
+          "description": "Filters categories with products",
+          "parameters": [
+            {
+              "name": "category_ids",
+              "type": "list",
+              "optional": false,
+              "description": "List of category IDs"
+            },
+            {
+              "name": "min_discount_percent",
+              "type": "float",
+              "optional": false,
+              "description": "Minimum discount percentage"
+            }
+          ],
+          "related": []
+        }
+      ],
+      "related": [
+        {
+          "file": "madeira.py",
+          "relationship": "Imported for category management"
+        }
+      ]
+    },
+    {
+      "name": "config.py",
+      "type": "js_file",
+      "relative_location": "utils/config.py",
+      "functions": [
+        {
+          "name": "load_config",
+          "description": "Loads configuration from file",
+          "parameters": [],
+          "related": []
+        },
+        {
+          "name": "save_config",
+          "description": "Saves configuration to file",
+          "parameters": [
+            {
+              "name": "config",
+              "type": "object",
+              "optional": false,
+              "description": "Configuration data to save"
+            }
+          ],
+          "related": []
+        }
+      ],
+      "related": [
+        {
+          "file": "madeira.py",
+          "relationship": "Imported for configuration management"
+        }
+      ]
+    },
+    {
+      "name": "data.py",
+      "type": "js_file",
+      "relative_location": "utils/data.py",
+      "functions": [
+        {
+          "name": "load_site_request",
+          "description": "Loads site request data",
+          "parameters": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            }
+          ],
+          "related": []
+        },
+        {
+          "name": "save_site_request",
+          "description": "Saves site request data",
+          "parameters": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            },
+            {
+              "name": "site_request_data",
+              "type": "object",
+              "optional": false,
+              "description": "Site request data to save"
+            }
+          ],
+          "related": []
+        }
+      ],
+      "related": [
+        {
+          "file": "madeira.py",
+          "relationship": "Imported for site request data management"
+        }
+      ]
+    },
+    {
+      "name": "helpers.py",
+      "type": "js_file",
+      "relative_location": "utils/helpers.py",
+      "functions": [
+        {
+          "name": "get_system_stats",
+          "description": "Retrieves system statistics",
+          "parameters": [],
+          "related": []
+        },
+        {
+          "name": "ping_service",
+          "description": "Checks service availability",
+          "parameters": [],
+          "related": []
+        },
+        {
+          "name": "log_activity",
+          "description": "Logs user activity",
+          "parameters": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            },
+            {
+              "name": "action",
+              "type": "string",
+              "optional": false,
+              "description": "Action performed"
+            },
+            {
+              "name": "details",
+              "type": "object",
+              "optional": true,
+              "description": "Additional details"
+            }
+          ],
+          "related": []
+        }
+      ],
+      "related": [
+        {
+          "file": "madeira.py",
+          "relationship": "Imported for utility functions"
+        }
+      ]
+    },
+    {
+      "name": "products.py",
+      "type": "js_file",
+      "relative_location": "utils/products.py",
+      "functions": [
+        {
+          "name": "search_all_discounted",
+          "description": "Searches for discounted products",
+          "parameters": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the category"
+            }
+          ],
+          "related": [
+            {
+              "file": "utils/config.py",
+              "function": "load_config",
+              "relationship": "Loads Amazon API config"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "madeira.py",
+          "relationship": "Imported for product management"
+        }
+      ]
+    },
+    {
+      "name": "users.py",
+      "type": "js_file",
+      "relative_location": "utils/users.py",
+      "functions": [
+        {
+          "name": "load_users_settings",
+          "description": "Loads user settings",
+          "parameters": [],
+          "related": []
+        },
+        {
+          "name": "save_users_settings",
+          "description": "Saves user settings",
+          "parameters": [
+            {
+              "name": "users_settings",
+              "type": "object",
+              "optional": false,
+              "description": "User settings to save"
+            }
+          ],
+          "related": []
+        },
+        {
+          "name": "get_user_settings",
+          "description": "Retrieves settings for a user",
+          "parameters": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            }
+          ],
+          "related": []
+        },
+        {
+          "name": "generate_code",
+          "description": "Generates a unique user code",
+          "parameters": [],
+          "related": []
+        }
+      ],
+      "related": [
+        {
+          "file": "madeira.py",
+          "relationship": "Imported for user management"
+        }
+      ]
+    },
+    {
+      "name": "utils_contents_text.txt",
+      "type": "document_file",
+      "relative_location": "utils/utils_contents_text.txt",
+      "format": "txt",
+      "related": []
+    },
+    {
+      "name": "wix.py",
+      "type": "js_file",
+      "relative_location": "utils/wix.py",
+      "functions": [
+        {
+          "name": "get_wix_access_token",
+          "description": "Obtains Wix access token",
+          "parameters": [
+            {
+              "name": "client_id",
+              "type": "string",
+              "optional": false,
+              "description": "Wix client ID"
+            }
+          ],
+          "related": []
+        },
+        {
+          "name": "fetch_wix_collections",
+          "description": "Fetches Wix collections",
+          "parameters": [
+            {
+              "name": "access_token",
+              "type": "string",
+              "optional": false,
+              "description": "Wix access token"
+            }
+          ],
+          "related": []
+        },
+        {
+          "name": "fetch_wix_products_for_collection",
+          "description": "Fetches products for a Wix collection",
+          "parameters": [
+            {
+              "name": "access_token",
+              "type": "string",
+              "optional": false,
+              "description": "Wix access token"
+            },
+            {
+              "name": "collection_id",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the collection"
+            }
+          ],
+          "related": []
+        },
+        {
+          "name": "fetch_user_products",
+          "description": "Fetches all products for a user from Wix",
+          "parameters": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            }
+          ],
+          "related": [
+            {
+              "file": "utils/users.py",
+              "function": "load_users_settings",
+              "relationship": "Loads user settings to get Wix API token"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "madeira.py",
+          "relationship": "Imported for Wix integration"
+        }
+      ]
+    },
+    {
+      "name": "admin-page.js",
+      "type": "js_file",
+      "relative_location": "admin-page.js",
+      "functions": [
+        {
+          "name": "initializeAdmin",
+          "description": "Initializes the admin page with permission checks",
+          "parameters": [
+            {
+              "name": "pageType",
+              "type": "string",
+              "optional": false,
+              "description": "Type of page to initialize"
+            }
+          ],
+          "related": [
+            {
+              "file": "site-navigation.js",
+              "function": "initializeNavigation",
+              "relationship": "Sets up navigation for admin page"
+            },
+            {
+              "file": "templates/admin.html",
+              "relationship": "Renders admin dashboard content"
+            }
+          ]
+        },
+        {
+          "name": "setupNavigation",
+          "description": "Sets up navigation for the admin page",
+          "parameters": [],
+          "related": [
+            {
+              "file": "site-navigation.js",
+              "function": "initializeNavigation",
+              "relationship": "Delegates navigation setup"
+            }
+          ]
+        },
+        {
+          "name": "loadInitialData",
+          "description": "Loads initial data for deal listings",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Populates deal_listings section"
+            }
+          ]
+        },
+        {
+          "name": "setupEventListeners",
+          "description": "Sets up event listeners for settings save",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Handles save settings button in contact_details"
+            }
+          ]
+        },
+        {
+          "name": "loadAffiliates",
+          "description": "Loads affiliate programs dynamically",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Populates affiliates section"
+            }
+          ]
+        },
+        {
+          "name": "displayAffiliateFields",
+          "description": "Displays fields for selected affiliate settings",
+          "parameters": [
+            {
+              "name": "setting",
+              "type": "object",
+              "optional": false,
+              "description": "Affiliate setting object"
+            },
+            {
+              "name": "fieldsContainer",
+              "type": "object",
+              "optional": false,
+              "description": "DOM container for fields"
+            },
+            {
+              "name": "form",
+              "type": "object",
+              "optional": false,
+              "description": "Form element"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Displays affiliate fields in affiliates section"
+            }
+          ]
+        },
+        {
+          "name": "loadSiteSettings",
+          "description": "Loads site settings dynamically",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Populates site_settings section"
+            }
+          ]
+        },
+        {
+          "name": "displaySiteSettingsFields",
+          "description": "Displays fields for selected site settings",
+          "parameters": [
+            {
+              "name": "setting",
+              "type": "object",
+              "optional": false,
+              "description": "Site setting object"
+            },
+            {
+              "name": "fieldsContainer",
+              "type": "object",
+              "optional": false,
+              "description": "DOM container for fields"
+            },
+            {
+              "name": "form",
+              "type": "object",
+              "optional": false,
+              "description": "Form element"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Displays site settings fields in site_settings section"
+            }
+          ]
+        },
+        {
+          "name": "loadUserData",
+          "description": "Loads user data by role",
+          "parameters": [
+            {
+              "name": "role",
+              "type": "string",
+              "optional": false,
+              "description": "Role to filter users"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Populates user_management section"
+            }
+          ]
+        },
+        {
+          "name": "updatePermission",
+          "description": "Updates user permission",
+          "parameters": [
+            {
+              "name": "userId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            },
+            {
+              "name": "permission",
+              "type": "string",
+              "optional": false,
+              "description": "Permission to update"
+            },
+            {
+              "name": "isChecked",
+              "type": "boolean",
+              "optional": false,
+              "description": "Whether to add or remove the permission"
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "optional": false,
+              "description": "User's role"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Updates permissions in user_management section"
+            }
+          ]
+        },
+        {
+          "name": "modifyPermissions",
+          "description": "Modifies permissions (placeholder)",
+          "parameters": [
+            {
+              "name": "userId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "optional": false,
+              "description": "User's role"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Handles permission modification in user_management section"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "category-management.js",
+      "type": "js_file",
+      "relative_location": "category-management.js",
+      "functions": [
+        {
+          "name": "createTreeNode",
+          "description": "Creates a treeview node for category display",
+          "parameters": [
+            {
+              "name": "category",
+              "type": "object",
+              "optional": false,
+              "description": "Category object"
+            },
+            {
+              "name": "level",
+              "type": "number",
+              "optional": true,
+              "description": "Nesting level"
+            },
+            {
+              "name": "isAdmin",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether in admin context"
+            },
+            {
+              "name": "savedCategories",
+              "type": "array",
+              "optional": true,
+              "description": "Saved categories for community"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Used in categoryTree for admin"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Used in categoryTree for community"
+            }
+          ]
+        },
+        {
+          "name": "loadCategories",
+          "description": "Loads category data for treeview",
+          "parameters": [
+            {
+              "name": "userId",
+              "type": "string",
+              "optional": true,
+              "description": "ID of the user"
+            },
+            {
+              "name": "isAdmin",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether in admin context"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Populates categoryTree in deal_listings"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Populates categoryTree in categories"
+            }
+          ]
+        },
+        {
+          "name": "toggleSubcategories",
+          "description": "Toggles visibility of subcategories",
+          "parameters": [
+            {
+              "name": "categoryId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the category"
+            },
+            {
+              "name": "toggle",
+              "type": "object",
+              "optional": false,
+              "description": "Toggle element"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Manages categoryTree in deal_listings"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Manages categoryTree in categories"
+            }
+          ]
+        },
+        {
+          "name": "saveCategories",
+          "description": "Saves updated category structure",
+          "parameters": [
+            {
+              "name": "userId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the user"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/community.html",
+              "relationship": "Saves categories in categories section"
+            }
+          ]
+        },
+        {
+          "name": "handleCategorySelection",
+          "description": "Handles category selection in admin context",
+          "parameters": [
+            {
+              "name": "categoryId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the category"
+            },
+            {
+              "name": "checkbox",
+              "type": "object",
+              "optional": false,
+              "description": "Checkbox element"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Loads products in deal_listings"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "common.js",
+      "type": "js_file",
+      "relative_location": "common.js",
+      "functions": [
+        {
+          "name": "setupToastr",
+          "description": "Configures Toastr for notifications",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/base.inc",
+              "relationship": "Sets up Toastr for all pages"
+            }
+          ]
+        },
+        {
+          "name": "waitForMarked",
+          "description": "Waits for marked library to load",
+          "parameters": [],
+          "related": [
+            {
+              "file": "static/js/marked.min.js",
+              "relationship": "Depends on marked library"
+            }
+          ]
+        },
+        {
+          "name": "renderMdPage",
+          "description": "Fetches and renders markdown content",
+          "parameters": [
+            {
+              "name": "mdPath",
+              "type": "string",
+              "optional": false,
+              "description": "Path to markdown file"
+            },
+            {
+              "name": "targetElementId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of target DOM element"
+            }
+          ],
+          "related": [
+            {
+              "file": "static/js/marked.min.js",
+              "relationship": "Uses marked to parse markdown"
+            },
+            {
+              "file": "templates/admin.html",
+              "relationship": "Renders markdown in affiliates section"
+            },
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Renders markdown in documentation section"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded early for Toastr setup"
+        }
+      ]
+    },
+    {
+      "name": "community-page.js",
+      "type": "js_file",
+      "relative_location": "community-page.js",
+      "functions": [
+        {
+          "name": "initializeCommunity",
+          "description": "Initializes the community page",
+          "parameters": [],
+          "related": [
+            {
+              "file": "site-navigation.js",
+              "function": "setupNavigation",
+              "relationship": "Sets up navigation"
+            },
+            {
+              "file": "page-load.js",
+              "function": "attachEventListeners",
+              "relationship": "Attaches event listeners"
+            },
+            {
+              "file": "user-management.js",
+              "function": "setupChangePassword",
+              "relationship": "Sets up password change logic"
+            },
+            {
+              "file": "page-load.js",
+              "function": "hideLoadingOverlay",
+              "relationship": "Hides loading overlay"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Renders community dashboard content"
+            }
+          ]
+        },
+        {
+          "name": "updateMenu",
+          "description": "Updates menu based on permissions",
+          "parameters": [],
+          "related": [
+            {
+              "file": "site-navigation.js",
+              "function": "initializeNavigation",
+              "relationship": "Reinitializes navigation"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Updates menu content"
+            }
+          ]
+        },
+        {
+          "name": "updateIntegrationCode",
+          "description": "Updates integration code for website platforms",
+          "parameters": [
+            {
+              "name": "section",
+              "type": "string",
+              "optional": false,
+              "description": "Section ID (e.g., wix)"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/community.html",
+              "relationship": "Updates iframe code in integration sections"
+            }
+          ]
+        },
+        {
+          "name": "loadVisits",
+          "description": "Loads referral visits",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/community.html",
+              "relationship": "Populates visits section"
+            }
+          ]
+        },
+        {
+          "name": "updateVisitsTable",
+          "description": "Updates visits table",
+          "parameters": [
+            {
+              "name": "tableId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the table"
+            },
+            {
+              "name": "visits",
+              "type": "array",
+              "optional": false,
+              "description": "Array of visit data"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/community.html",
+              "relationship": "Updates tables in visits section"
+            }
+          ]
+        },
+        {
+          "name": "loadOrders",
+          "description": "Loads referral orders",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/community.html",
+              "relationship": "Populates orders section"
+            }
+          ]
+        },
+        {
+          "name": "updateOrdersTable",
+          "description": "Updates orders table",
+          "parameters": [
+            {
+              "name": "tableId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the table"
+            },
+            {
+              "name": "orders",
+              "type": "array",
+              "optional": false,
+              "description": "Array of order data"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/community.html",
+              "relationship": "Updates tables in orders section"
+            }
+          ]
+        },
+        {
+          "name": "setupCollapsibleSections",
+          "description": "Sets up collapsible sections",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/community.html",
+              "relationship": "Handles collapsible sections in visits and orders"
+            }
+          ]
+        },
+        {
+          "name": "waitForTinyMCE",
+          "description": "Waits for TinyMCE to load",
+          "parameters": [
+            {
+              "name": "callback",
+              "type": "function",
+              "optional": false,
+              "description": "Callback to execute when TinyMCE is ready"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Initializes TinyMCE for site request form"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "marked.min.js",
+      "type": "js_file",
+      "relative_location": "marked.min.js",
+      "functions": [],
+      "related": [
+        {
+          "file": "common.js",
+          "function": "renderMdPage",
+          "relationship": "Used for markdown parsing"
+        },
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "merchant-page.js",
+      "type": "js_file",
+      "relative_location": "merchant-page.js",
+      "functions": [
+        {
+          "name": "initializeMerchant",
+          "description": "Initializes the merchant page",
+          "parameters": [],
+          "related": [
+            {
+              "file": "site-navigation.js",
+              "function": "setupNavigation",
+              "relationship": "Sets up navigation"
+            },
+            {
+              "file": "page-load.js",
+              "function": "attachEventListeners",
+              "relationship": "Attaches event listeners"
+            },
+            {
+              "file": "user-management.js",
+              "function": "setupChangePassword",
+              "relationship": "Sets up password change logic"
+            },
+            {
+              "file": "page-load.js",
+              "function": "hideLoadingOverlay",
+              "relationship": "Hides loading overlay"
+            },
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Renders merchant dashboard content"
+            }
+          ]
+        },
+        {
+          "name": "loadUserSettings",
+          "description": "Loads user settings",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Updates welcome-message with contact name"
+            }
+          ]
+        },
+        {
+          "name": "checkAdminPermission",
+          "description": "Checks admin permission for visibility",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Toggles back to admin button visibility"
+            }
+          ]
+        },
+        {
+          "name": "loadProducts",
+          "description": "Loads and displays merchant products",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Populates my-products section"
+            }
+          ]
+        },
+        {
+          "name": "createProductRow",
+          "description": "Creates a table row for a product",
+          "parameters": [
+            {
+              "name": "product",
+              "type": "object",
+              "optional": false,
+              "description": "Product data"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Generates rows in my-products table"
+            }
+          ]
+        },
+        {
+          "name": "loadStoreRequest",
+          "description": "Loads store request data",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Populates store request form"
+            },
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Displays store request in create-store section"
+            }
+          ]
+        },
+        {
+          "name": "loadApiKeys",
+          "description": "Loads and manages API keys",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Populates api-keys section"
+            }
+          ]
+        },
+        {
+          "name": "displayApiKeyFields",
+          "description": "Displays fields for selected API key",
+          "parameters": [
+            {
+              "name": "setting",
+              "type": "object",
+              "optional": false,
+              "description": "API key setting object"
+            },
+            {
+              "name": "fieldsContainer",
+              "type": "object",
+              "optional": false,
+              "description": "DOM container for fields"
+            },
+            {
+              "name": "form",
+              "type": "object",
+              "optional": false,
+              "description": "Form element"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Displays API key fields in api-keys section"
+            }
+          ]
+        },
+        {
+          "name": "loadDocumentationMenu",
+          "description": "Loads documentation submenu items",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Populates documentation-submenu"
+            },
+            {
+              "file": "site-navigation.js",
+              "function": "initializeNavigation",
+              "relationship": "Reinitializes navigation after menu update"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "page-load.js",
+      "type": "js_file",
+      "relative_location": "page-load.js",
+      "functions": [
+        {
+          "name": "showLoadingOverlay",
+          "description": "Shows the loading overlay",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/overlay.inc",
+              "relationship": "Displays loading overlay"
+            }
+          ]
+        },
+        {
+          "name": "hideLoadingOverlay",
+          "description": "Hides the loading overlay",
+          "parameters": [
+            {
+              "name": "minDelay",
+              "type": "number",
+              "optional": true,
+              "description": "Minimum delay in milliseconds"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/overlay.inc",
+              "relationship": "Hides loading overlay"
+            }
+          ]
+        },
+        {
+          "name": "waitForCssLoad",
+          "description": "Waits for icons.css to load",
+          "parameters": [],
+          "related": [
+            {
+              "file": "static/css/icons.css",
+              "relationship": "Waits for CSS to load"
+            }
+          ]
+        },
+        {
+          "name": "attachEventListeners",
+          "description": "Attaches event listeners for logoff",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/base.inc",
+              "relationship": "Attaches listeners to content-wrapper"
+            }
+          ]
+        },
+        {
+          "name": "initializePage",
+          "description": "Base initialization with permission checks",
+          "parameters": [
+            {
+              "name": "requiredPermissions",
+              "type": "array",
+              "optional": false,
+              "description": "Required permissions"
+            },
+            {
+              "name": "callback",
+              "type": "function",
+              "optional": false,
+              "description": "Callback to execute"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Initializes admin page"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Initializes community page"
+            },
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Initializes merchant page"
+            },
+            {
+              "file": "templates/partner.html",
+              "relationship": "Initializes partner page"
+            }
+          ]
+        },
+        {
+          "name": "dispatchInitialize",
+          "description": "Dispatches initialization based on page type",
+          "parameters": [
+            {
+              "name": "pageType",
+              "type": "string",
+              "optional": false,
+              "description": "Type of page"
+            }
+          ],
+          "related": [
+            {
+              "file": "admin-page.js",
+              "function": "initializeAdmin",
+              "relationship": "Dispatches for admin"
+            },
+            {
+              "file": "community-page.js",
+              "function": "initializeCommunity",
+              "relationship": "Dispatches for community"
+            },
+            {
+              "file": "merchant-page.js",
+              "function": "initializeMerchant",
+              "relationship": "Dispatches for merchant"
+            },
+            {
+              "file": "partner-page.js",
+              "function": "initializePartner",
+              "relationship": "Dispatches for partner"
+            }
+          ]
+        },
+        {
+          "name": "initialize",
+          "description": "Initializes page based on type",
+          "parameters": [
+            {
+              "name": "pageType",
+              "type": "string",
+              "optional": false,
+              "description": "Type of page"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/base.inc",
+              "relationship": "Triggers page initialization"
+            }
+          ]
+        },
+        {
+          "name": "performPageSetup",
+          "description": "Performs page setup after permission checks",
+          "parameters": [
+            {
+              "name": "pageType",
+              "type": "string",
+              "optional": false,
+              "description": "Type of page"
+            },
+            {
+              "name": "config",
+              "type": "object",
+              "optional": false,
+              "description": "Configuration object"
+            }
+          ],
+          "related": [
+            {
+              "file": "site-navigation.js",
+              "function": "showSection",
+              "relationship": "Shows initial section"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "partner-page.js",
+      "type": "js_file",
+      "relative_location": "partner-page.js",
+      "functions": [
+        {
+          "name": "initializePartner",
+          "description": "Initializes the partner page",
+          "parameters": [],
+          "related": [
+            {
+              "file": "site-navigation.js",
+              "function": "setupNavigation",
+              "relationship": "Sets up navigation"
+            },
+            {
+              "file": "page-load.js",
+              "function": "attachEventListeners",
+              "relationship": "Attaches event listeners"
+            },
+            {
+              "file": "user-management.js",
+              "function": "setupChangePassword",
+              "relationship": "Sets up password change logic"
+            },
+            {
+              "file": "page-load.js",
+              "function": "hideLoadingOverlay",
+              "relationship": "Hides loading overlay"
+            },
+            {
+              "file": "templates/partner.html",
+              "relationship": "Renders partner dashboard content"
+            }
+          ]
+        },
+        {
+          "name": "checkAdminPermission",
+          "description": "Checks admin permission for visibility",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/partner.html",
+              "relationship": "Toggles back to admin button visibility"
+            }
+          ]
+        },
+        {
+          "name": "loadPartnerIntegrations",
+          "description": "Loads partner-specific integrations",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/partner.html",
+              "relationship": "Populates site-requests and my-products sections"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "site-auth.js",
+      "type": "js_file",
+      "relative_location": "site-auth.js",
+      "functions": [
+        {
+          "name": "togglePassword",
+          "description": "Toggles password field visibility",
+          "parameters": [
+            {
+              "name": "fieldId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the password field"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/login.html",
+              "relationship": "Toggles password visibility in login form"
+            },
+            {
+              "file": "templates/signup.html",
+              "relationship": "Toggles password visibility in signup form"
+            },
+            {
+              "file": "templates/account_menu.inc",
+              "relationship": "Toggles password visibility in change_password section"
+            }
+          ]
+        },
+        {
+          "name": "logOff",
+          "description": "Logs the user out",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/account_menu.inc",
+              "relationship": "Triggered by logOffBtn"
+            },
+            {
+              "file": "madeira.py",
+              "endpoint_name": "logoff",
+              "relationship": "Calls /logoff endpoint"
+            }
+          ]
+        },
+        {
+          "name": "decodeJWT",
+          "description": "Decodes a JWT token client-side",
+          "parameters": [
+            {
+              "name": "token",
+              "type": "string",
+              "optional": false,
+              "description": "JWT token to decode"
+            }
+          ],
+          "related": [
+            {
+              "file": "page-load.js",
+              "function": "initializePage",
+              "relationship": "Used for permission checks"
+            }
+          ]
+        },
+        {
+          "name": "authenticatedFetch",
+          "description": "Performs authenticated fetch requests",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "string",
+              "optional": false,
+              "description": "URL to fetch"
+            },
+            {
+              "name": "options",
+              "type": "object",
+              "optional": true,
+              "description": "Fetch options"
+            }
+          ],
+          "related": [
+            {
+              "file": "admin-page.js",
+              "function": "loadInitialData",
+              "relationship": "Fetches deal listings"
+            },
+            {
+              "file": "community-page.js",
+              "function": "loadVisits",
+              "relationship": "Fetches referral visits"
+            },
+            {
+              "file": "merchant-page.js",
+              "function": "loadProducts",
+              "relationship": "Fetches merchant products"
+            },
+            {
+              "file": "partner-page.js",
+              "function": "loadPartnerIntegrations",
+              "relationship": "Fetches partner integrations"
+            }
+          ]
+        },
+        {
+          "name": "savePassword",
+          "description": "Saves an updated password",
+          "parameters": [
+            {
+              "name": "newPassword",
+              "type": "string",
+              "optional": false,
+              "description": "New password to save"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/account_menu.inc",
+              "relationship": "Triggered by savePassword button in change_password"
+            },
+            {
+              "file": "authentication_bp.py",
+              "endpoint_name": "update_password",
+              "relationship": "Calls /update_password endpoint"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "site-navigation.js",
+      "type": "js_file",
+      "relative_location": "site-navigation.js",
+      "functions": [
+        {
+          "name": "fetchProtectedPage",
+          "description": "Fetches content for a protected page",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "string",
+              "optional": false,
+              "description": "URL of the page"
+            }
+          ],
+          "related": [
+            {
+              "file": "page-load.js",
+              "function": "showLoadingOverlay",
+              "relationship": "Shows overlay during fetch"
+            },
+            {
+              "file": "page-load.js",
+              "function": "hideLoadingOverlay",
+              "relationship": "Hides overlay after fetch"
+            },
+            {
+              "file": "templates/admin.html",
+              "relationship": "Navigates to admin page"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Navigates to community page"
+            },
+            {
+              "file": "templates/merchant.html",
+              "relationship": "Navigates to merchant page"
+            },
+            {
+              "file": "templates/partner.html",
+              "relationship": "Navigates to partner page"
+            }
+          ]
+        },
+        {
+          "name": "loadSection",
+          "description": "Loads content for a section",
+          "parameters": [
+            {
+              "name": "sectionId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the section"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Loads sections like deal_listings"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Loads sections like visits"
+            }
+          ]
+        },
+        {
+          "name": "showSection",
+          "description": "Shows a specific section",
+          "parameters": [
+            {
+              "name": "sectionId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the section"
+            },
+            {
+              "name": "onSectionLoad",
+              "type": "function",
+              "optional": true,
+              "description": "Callback after section load"
+            }
+          ],
+          "related": [
+            {
+              "file": "page-load.js",
+              "function": "performPageSetup",
+              "relationship": "Shows initial section"
+            }
+          ]
+        },
+        {
+          "name": "toggleSubmenu",
+          "description": "Toggles visibility of a submenu",
+          "parameters": [
+            {
+              "name": "submenuId",
+              "type": "string",
+              "optional": false,
+              "description": "ID of the submenu"
+            },
+            {
+              "name": "action",
+              "type": "string",
+              "optional": true,
+              "description": "Action (open/close)"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Toggles submenus like userManagement"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Toggles submenus like my_website_submenu"
+            }
+          ]
+        },
+        {
+          "name": "closeAllTopLevelSubmenus",
+          "description": "Closes all top-level submenus",
+          "parameters": [
+            {
+              "name": "exceptSubmenuId",
+              "type": "string",
+              "optional": true,
+              "description": "ID of submenu to exclude"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Manages submenu visibility"
+            }
+          ]
+        },
+        {
+          "name": "closeAllSubmenus",
+          "description": "Closes all submenus in a container",
+          "parameters": [
+            {
+              "name": "container",
+              "type": "object",
+              "optional": false,
+              "description": "DOM container"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Manages submenu visibility"
+            }
+          ]
+        },
+        {
+          "name": "handleSectionClick",
+          "description": "Handles clicks on section buttons",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Triggers section display"
+            },
+            {
+              "file": "templates/community.html",
+              "relationship": "Triggers section display"
+            }
+          ]
+        },
+        {
+          "name": "initializeNavigation",
+          "description": "Initializes navigation functionality",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/base.inc",
+              "relationship": "Sets up navigation for all pages"
+            }
+          ]
+        },
+        {
+          "name": "handleLogoutClick",
+          "description": "Handles logout button clicks",
+          "parameters": [
+            {
+              "name": "e",
+              "type": "event",
+              "optional": false,
+              "description": "Click event"
+            }
+          ],
+          "related": [
+            {
+              "file": "site-auth.js",
+              "function": "logOff",
+              "relationship": "Triggers logout"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "site-request.js",
+      "type": "js_file",
+      "relative_location": "site-request.js",
+      "functions": [
+        {
+          "name": "addPage",
+          "description": "Adds a page to the site request form",
+          "parameters": [
+            {
+              "name": "type",
+              "type": "string",
+              "optional": false,
+              "description": "Type of request (community/merchant)"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Adds page to pagesContainer"
+            }
+          ]
+        },
+        {
+          "name": "removePage",
+          "description": "Removes a page from the site request form",
+          "parameters": [
+            {
+              "name": "pageNum",
+              "type": "number",
+              "optional": false,
+              "description": "Page number to remove"
+            },
+            {
+              "name": "type",
+              "type": "string",
+              "optional": false,
+              "description": "Type of request (community/merchant)"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Removes page from pagesContainer"
+            }
+          ]
+        },
+        {
+          "name": "addEmail",
+          "description": "Adds an email to the site request form",
+          "parameters": [
+            {
+              "name": "type",
+              "type": "string",
+              "optional": false,
+              "description": "Type of request (community/merchant)"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Adds email to emailsContainer"
+            }
+          ]
+        },
+        {
+          "name": "removeEmail",
+          "description": "Removes an email from the site request form",
+          "parameters": [
+            {
+              "name": "emailNum",
+              "type": "number",
+              "optional": false,
+              "description": "Email number to remove"
+            },
+            {
+              "name": "type",
+              "type": "string",
+              "optional": false,
+              "description": "Type of request (community/merchant)"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Removes email from emailsContainer"
+            }
+          ]
+        },
+        {
+          "name": "updateDomainPreview",
+          "description": "Updates domain preview in email sections",
+          "parameters": [
+            {
+              "name": "type",
+              "type": "string",
+              "optional": false,
+              "description": "Type of request (community/merchant)"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Updates email domain previews"
+            }
+          ]
+        },
+        {
+          "name": "checkDomainAvailability",
+          "description": "Checks if a domain is available",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Triggered by checkDomainAvailability button"
+            },
+            {
+              "file": "utility_bp.py",
+              "endpoint_name": "check_domain",
+              "relationship": "Calls /check_domain endpoint"
+            }
+          ]
+        },
+        {
+          "name": "loadTinyMCE",
+          "description": "Loads TinyMCE editor",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Initializes TinyMCE for page content"
+            }
+          ]
+        },
+        {
+          "name": "initializeTinyMCE",
+          "description": "Initializes TinyMCE for textareas",
+          "parameters": [
+            {
+              "name": "selector",
+              "type": "string",
+              "optional": true,
+              "description": "CSS selector for textareas"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Enhances page content textareas"
+            }
+          ]
+        },
+        {
+          "name": "getCurrentTimestamp",
+          "description": "Generates current timestamp",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/admin.html",
+              "relationship": "Used in page_visit_test and order_test forms"
+            }
+          ]
+        },
+        {
+          "name": "saveSiteRequest",
+          "description": "Saves the site request form data",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/siterequest.inc",
+              "relationship": "Triggered by saveSiteRequest button"
+            },
+            {
+              "file": "site_request_bp.py",
+              "endpoint_name": "save_site_request_endpoint",
+              "relationship": "Calls /save_site_request_endpoint"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "user-management.js",
+      "type": "js_file",
+      "relative_location": "user-management.js",
+      "functions": [
+        {
+          "name": "loadSettings",
+          "description": "Loads user settings into form",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/account_menu.inc",
+              "relationship": "Populates contact_details section"
+            },
+            {
+              "file": "user_settings_bp.py",
+              "endpoint_name": "manage_user_settings",
+              "relationship": "Fetches settings via GET /manage_user_settings"
+            }
+          ]
+        },
+        {
+          "name": "saveSettings",
+          "description": "Saves updated user settings",
+          "parameters": [
+            {
+              "name": "settings",
+              "type": "object",
+              "optional": false,
+              "description": "Updated settings"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/account_menu.inc",
+              "relationship": "Triggered by saveSettings button"
+            },
+            {
+              "file": "user_settings_bp.py",
+              "endpoint_name": "manage_user_settings",
+              "relationship": "Saves via PATCH /manage_user_settings"
+            }
+          ]
+        },
+        {
+          "name": "loadWixClientId",
+          "description": "Loads Wix client ID for partner",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/partner.html",
+              "relationship": "Populates merchantWixClientId in apiKeyModal"
+            }
+          ]
+        },
+        {
+          "name": "saveWixClientId",
+          "description": "Saves Wix client ID for partner",
+          "parameters": [
+            {
+              "name": "clientId",
+              "type": "string",
+              "optional": false,
+              "description": "Wix client ID"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/partner.html",
+              "relationship": "Triggered by saveMerchantWixClientId button"
+            }
+          ]
+        },
+        {
+          "name": "validatePassword",
+          "description": "Validates password complexity",
+          "parameters": [
+            {
+              "name": "password",
+              "type": "string",
+              "optional": false,
+              "description": "Password to validate"
+            }
+          ],
+          "related": [
+            {
+              "file": "templates/account_menu.inc",
+              "relationship": "Validates new password in change_password"
+            }
+          ]
+        },
+        {
+          "name": "setupChangePassword",
+          "description": "Sets up password change functionality",
+          "parameters": [],
+          "related": [
+            {
+              "file": "templates/account_menu.inc",
+              "relationship": "Handles change_password section"
+            },
+            {
+              "file": "site-auth.js",
+              "function": "savePassword",
+              "relationship": "Saves new password"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Loaded as part of base template scripts"
+        }
+      ]
+    },
+    {
+      "name": "account_menu.inc",
+      "type": "template_file",
+      "relative_location": "templates/account_menu.inc",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "templates/admin.html",
+          "relationship": "Included in admin dashboard"
+        },
+        {
+          "file": "templates/community.html",
+          "relationship": "Included in community dashboard"
+        },
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Included in merchant dashboard"
+        },
+        {
+          "file": "templates/partner.html",
+          "relationship": "Included in partner dashboard"
+        },
+        {
+          "file": "site-auth.js",
+          "function": "togglePassword",
+          "relationship": "Handles password visibility toggles"
+        },
+        {
+          "file": "user-management.js",
+          "function": "loadSettings",
+          "relationship": "Populates contact_details"
+        }
+      ]
+    },
+    {
+      "name": "admin.html",
+      "type": "template_file",
+      "relative_location": "templates/admin.html",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Extends base template"
+        },
+        {
+          "file": "templates/account_menu.inc",
+          "relationship": "Includes account menu"
+        },
+        {
+          "file": "templates/welcome.inc",
+          "relationship": "Includes welcome message"
+        },
+        {
+          "file": "admin-page.js",
+          "relationship": "JavaScript logic for admin page"
+        },
+        {
+          "file": "category-management.js",
+          "relationship": "Handles categoryTree in deal_listings"
+        }
+      ]
+    },
+    {
+      "name": "base.inc",
+      "type": "template_file",
+      "relative_location": "templates/base.inc",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "templates/roles.inc",
+          "relationship": "Includes role-specific headers"
+        },
+        {
+          "file": "templates/overlay.inc",
+          "relationship": "Includes loading overlay"
+        },
+        {
+          "file": "static/css/icons.css",
+          "relationship": "Loads icon styles"
+        },
+        {
+          "file": "static/js/site-auth.js",
+          "relationship": "Loads authentication scripts"
+        },
+        {
+          "file": "static/js/site-navigation.js",
+          "relationship": "Loads navigation scripts"
+        },
+        {
+          "file": "static/js/category-management.js",
+          "relationship": "Loads category management scripts"
+        },
+        {
+          "file": "static/js/site-request.js",
+          "relationship": "Loads site request scripts"
+        },
+        {
+          "file": "static/js/user-management.js",
+          "relationship": "Loads user management scripts"
+        },
+        {
+          "file": "static/js/admin-page.js",
+          "relationship": "Loads admin page scripts"
+        },
+        {
+          "file": "static/js/merchant-page.js",
+          "relationship": "Loads merchant page scripts"
+        },
+        {
+          "file": "static/js/partner-page.js",
+          "relationship": "Loads partner page scripts"
+        },
+        {
+          "file": "static/js/community-page.js",
+          "relationship": "Loads community page scripts"
+        },
+        {
+          "file": "static/js/page-load.js",
+          "relationship": "Loads page load scripts"
+        }
+      ]
+    },
+    {
+      "name": "community.html",
+      "type": "template_file",
+      "relative_location": "templates/community.html",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Extends base template"
+        },
+        {
+          "file": "templates/account_menu.inc",
+          "relationship": "Includes account menu"
+        },
+        {
+          "file": "templates/welcome.inc",
+          "relationship": "Includes welcome message"
+        },
+        {
+          "file": "templates/siterequest.inc",
+          "relationship": "Includes site request form"
+        },
+        {
+          "file": "community-page.js",
+          "relationship": "JavaScript logic for community page"
+        },
+        {
+          "file": "category-management.js",
+          "relationship": "Handles categoryTree in categories"
+        }
+      ]
+    },
+    {
+      "name": "login.html",
+      "type": "template_file",
+      "relative_location": "templates/login.html",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Extends base template"
+        },
+        {
+          "file": "site-auth.js",
+          "function": "togglePassword",
+          "relationship": "Handles password visibility"
+        },
+        {
+          "file": "authentication_bp.py",
+          "endpoint_name": "login",
+          "relationship": "Handles login form submission"
+        }
+      ]
+    },
+    {
+      "name": "merchant.html",
+      "type": "template_file",
+      "relative_location": "templates/merchant.html",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Extends base template"
+        },
+        {
+          "file": "templates/account_menu.inc",
+          "relationship": "Includes account menu"
+        },
+        {
+          "file": "templates/welcome.inc",
+          "relationship": "Includes welcome message"
+        },
+        {
+          "file": "templates/siterequest.inc",
+          "relationship": "Includes site request form"
+        },
+        {
+          "file": "merchant-page.js",
+          "relationship": "JavaScript logic for merchant page"
+        }
+      ]
+    },
+    {
+      "name": "overlay.inc",
+      "type": "template_file",
+      "relative_location": "templates/overlay.inc",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "page-load.js",
+          "function": "showLoadingOverlay",
+          "relationship": "Shows loading overlay"
+        },
+        {
+          "file": "page-load.js",
+          "function": "hideLoadingOverlay",
+          "relationship": "Hides loading overlay"
+        }
+      ]
+    },
+    {
+      "name": "partner.html",
+      "type": "template_file",
+      "relative_location": "templates/partner.html",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "templates/base.inc",
+          "relationship": "Extends base template"
+        },
+        {
+          "file": "templates/account_menu.inc",
+          "relationship": "Includes account menu"
+        },
+        {
+          "file": "templates/welcome.inc",
+          "relationship": "Includes welcome message"
+        },
+        {
+          "file": "partner-page.js",
+          "relationship": "JavaScript logic for partner page"
+        }
+      ]
+    },
+    {
+      "name": "roles.inc",
+      "type": "template_file",
+      "relative_location": "templates/roles.inc",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "static/css/icons.css",
+          "relationship": "Uses icon classes for branding"
+        },
+        {
+          "file": "role_pages_bp.py",
+          "endpoint_name": "get_branding",
+          "relationship": "Fetches branding data"
+        }
+      ]
+    },
+    {
+      "name": "signup.html",
+      "type": "template_file",
+      "relative_location": "templates/signup.html",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "site-auth.js",
+          "function": "togglePassword",
+          "relationship": "Handles password visibility"
+        },
+        {
+          "file": "authentication_bp.py",
+          "endpoint_name": "signup",
+          "relationship": "Handles signup form submission"
+        }
+      ]
+    },
+    {
+      "name": "siterequest.inc",
+      "type": "template_file",
+      "relative_location": "templates/siterequest.inc",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "site-request.js",
+          "relationship": "JavaScript logic for site request form"
+        },
+        {
+          "file": "site_request_bp.py",
+          "endpoint_name": "save_site_request_endpoint",
+          "relationship": "Saves form data"
+        }
+      ]
+    },
+    {
+      "name": "welcome.inc",
+      "type": "template_file",
+      "relative_location": "templates/welcome.inc",
+      "engine": "jinja2",
+      "related": [
+        {
+          "file": "templates/admin.html",
+          "relationship": "Displays welcome message"
+        },
+        {
+          "file": "templates/community.html",
+          "relationship": "Displays welcome message"
+        },
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Displays welcome message"
+        },
+        {
+          "file": "templates/partner.html",
+          "relationship": "Displays welcome message"
+        }
+      ]
+    },
+    {
+      "name": "madeira.py",
+      "type": "js_file",
+      "relative_location": "madeira.py",
+      "functions": [
+        {
+          "name": "load_config",
+          "description": "Loads application configuration",
+          "parameters": [],
+          "related": [
+            {
+              "file": "utils/config.py",
+              "function": "load_config",
+              "relationship": "Loads config data"
+            }
+          ]
+        },
+        {
+          "name": "setup_logging",
+          "description": "Sets up application logging",
+          "parameters": [],
+          "related": []
+        },
+        {
+          "name": "log_request",
+          "description": "Logs incoming requests",
+          "parameters": [],
+          "related": []
+        },
+        {
+          "name": "log_response",
+          "description": "Logs outgoing responses",
+          "parameters": [
+            {
+              "name": "response",
+              "type": "object",
+              "optional": false,
+              "description": "Response object"
+            }
+          ],
+          "related": []
+        },
+        {
+          "name": "home",
+          "description": "Handles root route (GET/POST)",
+          "parameters": [],
+          "related": [
+            {
+              "file": "utils/auth.py",
+              "function": "decode_token",
+              "relationship": "Decodes JWT token"
+            },
+            {
+              "file": "utils/auth.py",
+              "function": "generate_token",
+              "relationship": "Generates JWT token on login"
+            },
+            {
+              "file": "utils/users.py",
+              "function": "load_users_settings",
+              "relationship": "Loads user settings for authentication"
+            },
+            {
+              "file": "templates/login.html",
+              "relationship": "Renders login page on GET"
+            }
+          ]
+        },
+        {
+          "name": "logoff",
+          "description": "Handles user logoff",
+          "parameters": [],
+          "related": [
+            {
+              "file": "site-auth.js",
+              "function": "logOff",
+              "relationship": "Client-side logout triggers this endpoint"
+            }
+          ]
+        }
+      ],
+      "related": [
+        {
+          "file": "blueprints/authentication_bp.py",
+          "relationship": "Registers authentication blueprint"
+        },
+        {
+          "file": "blueprints/site_request_bp.py",
+          "relationship": "Registers site request blueprint"
+        },
+        {
+          "file": "blueprints/user_settings_bp.py",
+          "relationship": "Registers user settings blueprint"
+        },
+        {
+          "file": "blueprints/utility_bp.py",
+          "relationship": "Registers utility blueprint"
+        },
+        {
+          "file": "blueprints/role_pages_bp.py",
+          "relationship": "Registers role pages blueprint"
+        },
+        {
+          "file": "blueprints/content_bp.py",
+          "relationship": "Registers content blueprint"
+        },
+        {
+          "file": "blueprints/referral_bp.py",
+          "relationship": "Registers referral blueprint"
+        },
+        {
+          "file": "blueprints/manager_bp.py",
+          "relationship": "Registers manager blueprint"
+        }
+      ]
+    },
+    {
+      "name": "icons.css",
+      "type": "ccs_file",
+      "relative_location": "static/css/icons.css",
+      "styles": [
+        {
+          "style_name": ".branding-size",
+          "description": "Defines size for branding icons (width: 100px, height: 80px)"
+        },
+        {
+          "style_name": ".menu-size",
+          "description": "Defines size for menu icons (width: 24px, height: 24px)"
+        },
+        {
+          "style_name": ".icon-admin",
+          "description": "SVG icon for admin branding"
+        },
+        {
+          "style_name": ".icon-merchant",
+          "description": "SVG icon for merchant branding"
+        },
+        {
+          "style_name": ".icon-community",
+          "description": "SVG icon for community branding"
+        },
+        {
+          "style_name": ".icon-partner",
+          "description": "SVG icon for partner branding"
+        },
+        {
+          "style_name": ".icon-amazon-uk",
+          "description": "SVG icon for Amazon UK affiliate"
+        },
+        {
+          "style_name": ".icon-ebay-uk",
+          "description": "SVG icon for eBay UK affiliate"
+        },
+        {
+          "style_name": ".icon-awin",
+          "description": "SVG icon for Awin affiliate"
+        },
+        {
+          "style_name": ".icon-cj",
+          "description": "SVG icon for CJ affiliate"
+        },
+        {
+          "style_name": ".icon-wix",
+          "description": "SVG icon for Wix integration"
+        },
+        {
+          "style_name": ".icon-wordpress",
+          "description": "SVG icon for WordPress integration"
+        },
+        {
+          "style_name": ".icon-squarespace",
+          "description": "SVG icon for Squarespace integration"
+        },
+        {
+          "style_name": ".icon-weebly",
+          "description": "SVG icon for Weebly integration"
+        },
+        {
+          "style_name": ".icon-joomla",
+          "description": "SVG icon for Joomla integration"
+        },
+        {
+          "style_name": ".icon-bigcommerce",
+          "description": "SVG icon for BigCommerce integration"
+        },
+        {
+          "style_name": ".icon-woocommerce",
+          "description": "SVG icon for WooCommerce integration"
+        },
+        {
+          "style_name": ".icon-shopify",
+          "description": "SVG icon for Shopify integration"
+        },
+        {
+          "style_name": ".icon-magento",
+          "description": "SVG icon for Magento integration"
+        },
+        {
+          "style_name": ".icon-textmagic",
+          "description": "SVG icon for TextMagic integration"
+        },
+        {
+          "style_name": ".icon-tiny",
+          "description": "SVG icon for TinyMCE integration"
+        },
+        {
+          "style_name": ".woo-cart-icon",
+          "description": "SVG icon for WooCommerce cart"
+        },
+        {
+          "style_name": ".custom-icon",
+          "description": "Custom SVG icon"
+        }
+      ],
+      "related": [
+        {
+          "file": "templates/roles.inc",
+          "relationship": "Styles branding icons"
+        },
+        {
+          "file": "templates/admin.html",
+          "relationship": "Styles menu and affiliate icons"
+        },
+        {
+          "file": "templates/community.html",
+          "relationship": "Styles menu and integration icons"
+        },
+        {
+          "file": "templates/merchant.html",
+          "relationship": "Styles menu and API key icons"
+        },
+        {
+          "file": "templates/partner.html",
+          "relationship": "Styles menu icons"
+        }
+      ]
+    }
+  ],
+  "version": null,
+  "dependencies": [
+    "flask",
+    "jwt",
+    "bcrypt",
+    "requests",
+    "logging",
+    "json",
+    "os",
+    "datetime",
+    "random",
+    "string",
+    "re",
+    "markdown",
+    "whois"
+  ],
+  "technologies": [
+    "Python",
+    "Flask",
+    "JWT",
+    "Bcrypt"
+  ]
+}

@@ -9,124 +9,66 @@ import json
 # This is the control room—admin-only, like the bridge of the Heart of Gold, but with less improbability.
 manager_bp = Blueprint('manager_bp', __name__)
 
-@manager_bp.route('/users', methods=['GET'])
-@login_required(["admin"], require_all=True)
-def get_users():
-    users_settings = load_users_settings()
-    user_list = [{"USERid": user_id, "email_address": user["email_address"], "contact_name": user["contact_name"]} 
-                 for user_id, user in users_settings.items()]
-    return jsonify({"status": "success", "users": user_list}), 200
+from flask import jsonify, abort
+from utils.auth import login_required
+from utils.users import load_users_settings
 
-@manager_bp.route('/users/<user_id>', methods=['GET'])
-@login_required(["admin"], require_all=True)
-def get_user(user_id):
+@manager_bp.route('/permission', methods=['PATCH'])
+@login_required(required_permissions=['admin'])
+def patch_permission():
     """
-    Retrieves detailed user info for admins, faster than Trillian can calculate the meaning of life.
-    Purpose: Like the Holy Grail sought by the Knights Who Say Ni, this endpoint delivers a user’s full profile—admin eyes only!
-    Permissions: Restricted to "admin"—you must be the Messiah (or at least Brian) to wield this power!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user to fetch, e.g., "42".
-    Outputs:
-        - Success: JSON {"status": "success", "user": {"USERid": "<id>", "email_address": "<email>", ...}}, status 200—user data delivered!
-        - Errors:
-            - 404: {"status": "error", "message": "User not found"}—this user’s as dead as a parrot!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies lost the fork handles!
+    Add a permission for a user if it doesn't already exist.
+    Payload: {"USERid": "string", "permission": "string"}
     """
-    try:
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            logging.warning(f"UX Issue - User not found: {user_id}")
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        
-        user = users_settings[user_id]
-        user_data = {
-            "USERid": user_id,
-            "email_address": user.get("email_address", ""),
-            "contact_name": user.get("contact_name", ""),
-            "phone_number": user.get("phone_number", ""),
-            "permissions": user.get("permissions", []),
-            "website_url": user.get("website_url", ""),
-            "referrals": user.get("referrals", {"visits": [], "orders": []})
-        }
-        log_data = user_data.copy()
-        if "password" in log_data:
-            log_data["password"] = "[REDACTED]"
-        logging.debug(f"Retrieved user data for {user_id}: {json.dumps(log_data)}")
-        return jsonify({"status": "success", "user": user_data}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to retrieve user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    data = request.get_json()
+    if not data or 'USERid' not in data or 'permission' not in data:
+        return jsonify({"status": "error", "message": "USERid and permission are required"}), 400
+    
+    user_id = data['USERid']
+    new_permission = data['permission']
+    
+    users_data = load_users_settings()
+    user = users_data.get(user_id)
+    
+    if not user:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    
+    if 'permissions' not in user:
+        user['permissions'] = []
+    
+    if new_permission in user['permissions']:
+        return jsonify({"status": "error", "message": f"Permission {new_permission} already exists for user {user_id}"}), 400
+    
+    user['permissions'].append(new_permission)
+    save_users_settings(users_data)
+    return jsonify({"status": "success", "message": f"Permission {new_permission} added for user {user_id}"}), 200
 
-@manager_bp.route('/permissions/<user_id>', methods=['GET'])
-@login_required(["admin"], require_all=True)
-def get_permissions(user_id):
+@manager_bp.route('/permission', methods=['DELETE'])
+@login_required(required_permissions=['admin'])
+def delete_permission():
     """
-    Fetches a user’s permissions, like Zaphod checking his presidential privileges.
-    Purpose: Returns the list of permissions for a user—admin-only, because only the chosen one (or Brian) gets to peek!
-    Permissions: Restricted to "admin"—you’re either the Messiah or nobody!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user whose permissions are sought.
-    Outputs:
-        - Success: JSON {"status": "success", "permissions": [<permission_list>]}, status 200—rank revealed!
-        - Errors:
-            - 404: {"status": "error", "message": "User not found"}—this user’s not in the Guide!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
+    Remove a specific permission from a user.
+    Payload: {"USERid": "string", "permission": "string"}
     """
-    try:
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            logging.warning(f"UX Issue - User not found for permissions: {user_id}")
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        
-        permissions = users_settings[user_id].get('permissions', [])
-        logging.debug(f"Retrieved permissions for user {user_id}: {json.dumps(permissions)}")
-        return jsonify({"status": "success", "permissions": permissions}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to retrieve permissions for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@manager_bp.route('/permissions/<user_id>', methods=['POST'])
-@login_required(["admin"], require_all=True)
-def add_permission(user_id):
-    """
-    Adds a permission to a user, like giving Zaphod a third head (if only!).
-    Purpose: Grants a new permission to a user—admin-only, because only the chosen can wield this power!
-    Permissions: Restricted to "admin"—you’re the Messiah, not just a naughty boy!
-    Inputs: JSON payload with:
-        - permission (str): The permission to add, e.g., "merchant", "wixpro".
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Permission added"}, status 200—rank upgraded!
-        - Errors:
-            - 400: {"status": "error", "message": "Permission field is required"}—no permission, no fork handles!
-            - 404: {"status": "error", "message": "User not found"}—this user’s not in the galaxy!
-            - 400: {"status": "error", "message": "Permission already exists"}—already got it, Biggus Dickus!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the system’s gone to Judea!
-    """
-    try:
-        data = request.get_json()
-        if not data or 'permission' not in data:
-            logging.warning(f"UX Issue - Missing permission field in request for user {user_id}: {json.dumps(data)}")
-            return jsonify({"status": "error", "message": "Permission field is required"}), 400
-        
-        permission = data['permission']
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            logging.warning(f"UX Issue - User not found for adding permission: {user_id}")
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        
-        user_permissions = users_settings[user_id].get('permissions', [])
-        if permission in user_permissions:
-            logging.warning(f"UX Issue - Permission already exists for user {user_id}: {permission}")
-            return jsonify({"status": "error", "message": "Permission already exists"}), 400
-        
-        user_permissions.append(permission)
-        users_settings[user_id]['permissions'] = user_permissions
-        save_users_settings(users_settings)
-        logging.info(f"Added permission {permission} to user {user_id}")
-        return jsonify({"status": "success", "message": "Permission added"}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to add permission for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    data = request.get_json()
+    if not data or 'USERid' not in data or 'permission' not in data:
+        return jsonify({"status": "error", "message": "USERid and permission are required"}), 400
+    
+    user_id = data['USERid']
+    permission_to_remove = data['permission']
+    
+    users_data = load_users_settings()
+    user = users_data.get(user_id)
+    
+    if not user:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    
+    if 'permissions' not in user or permission_to_remove not in user['permissions']:
+        return jsonify({"status": "error", "message": f"Permission {permission_to_remove} not found for user {user_id}"}), 404
+    
+    user['permissions'].remove(permission_to_remove)
+    save_users_settings(users_data)
+    return jsonify({"status": "success", "message": f"Permission {permission_to_remove} removed from user {user_id}"}), 200
 
 # region settings/api - Manage settings_key and affiliate_key
 
@@ -149,13 +91,14 @@ def get_settings_key_settings():
         settings = []
         for key, value in config.items():
             if value.get('setting_type') == 'settings_key':
-                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link']}
+                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
                 setting = {
                     'key_type': key,
                     'fields': fields,
                     'icon': value.get('icon', 'icon-favicon'),
                     'doc_link': value.get('doc_link', ''),
-                    'comment': value.get('_comment', '')
+                    'comment': value.get('_comment', ''),
+                    'description': value.get('_description', '')
                 }
                 settings.append(setting)
         
@@ -193,9 +136,10 @@ def patch_settings_key(key_type):
         config = load_config()
         if key_type not in config or config[key_type].get('setting_type') != 'settings_key':
             return jsonify({"status": "error", "message": "Setting not found"}), 404
-
+        
+        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
         for field, value in data.items():
-            if field in config[key_type]:
+            if field in valid_fields:
                 config[key_type][field] = value
             else:
                 return jsonify({"status": "error", "message": f"Invalid field: {field}"}), 400
@@ -229,9 +173,19 @@ def put_settings_key(key_type):
 
         if data.get('setting_type') != 'settings_key':
             return jsonify({"status": "error", "message": "Invalid setting_type for this endpoint."}), 400
-
+        
         config = load_config()
-        config[key_type] = data
+        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']} if key_type in config else set()
+        if valid_fields:
+            temp_data = {k: v for k, v in data.items() if k in valid_fields}
+            temp_data['setting_type'] = 'settings_key'
+            temp_data['_comment'] = config[key_type].get('_comment', '')
+            temp_data['icon'] = config[key_type].get('icon', 'icon-favicon')
+            temp_data['doc_link'] = config[key_type].get('doc_link', '')
+            temp_data['_description'] = config[key_type].get('_description', '')
+            config[key_type] = temp_data
+        else:
+            config[key_type] = data
         save_config(config)
         logging.info(f"Replaced settings_key: {key_type}")
         return jsonify({"status": "success", "message": f"Setting {key_type} replaced"}), 200
@@ -244,7 +198,7 @@ def put_settings_key(key_type):
 def get_affiliate_key_settings():
     """
     Retrieves all settings of type 'affiliate_key' from the configuration.
-    Purpose: Provides admins with a list of affiliate key settings for management.
+    Purpose: Provides admins with a list of affiliate_key settings for management.
     Permissions: Restricted to "admin"—only the chosen can access this!
     Inputs: None
     Outputs:
@@ -258,13 +212,14 @@ def get_affiliate_key_settings():
         settings = []
         for key, value in config.items():
             if value.get('setting_type') == 'affiliate_key':
-                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link']}
+                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
                 setting = {
                     'key_type': key,
                     'fields': fields,
                     'icon': value.get('icon', 'icon-favicon'),
                     'doc_link': value.get('doc_link', ''),
-                    'comment': value.get('_comment', '')
+                    'comment': value.get('_comment', ''),
+                    'description': value.get('_description', '')
                 }
                 settings.append(setting)
         
@@ -302,9 +257,10 @@ def patch_affiliate_key(key_type):
         config = load_config()
         if key_type not in config or config[key_type].get('setting_type') != 'affiliate_key':
             return jsonify({"status": "error", "message": "Setting not found"}), 404
-
+        
+        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
         for field, value in data.items():
-            if field in config[key_type]:
+            if field in valid_fields:
                 config[key_type][field] = value
             else:
                 return jsonify({"status": "error", "message": f"Invalid field: {field}"}), 400
@@ -338,9 +294,19 @@ def put_affiliate_key(key_type):
 
         if data.get('setting_type') != 'affiliate_key':
             return jsonify({"status": "error", "message": "Invalid setting_type for this endpoint."}), 400
-
+        
         config = load_config()
-        config[key_type] = data
+        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']} if key_type in config else set()
+        if valid_fields:
+            temp_data = {k: v for k, v in data.items() if k in valid_fields}
+            temp_data['setting_type'] = 'affiliate_key'
+            temp_data['_comment'] = config[key_type].get('_comment', '')
+            temp_data['icon'] = config[key_type].get('icon', 'icon-favicon')
+            temp_data['doc_link'] = config[key_type].get('doc_link', '')
+            temp_data['_description'] = config[key_type].get('_description', '')
+            config[key_type] = temp_data
+        else:
+            config[key_type] = data
         save_config(config)
         logging.info(f"Replaced affiliate_key: {key_type}")
         return jsonify({"status": "success", "message": f"Setting {key_type} replaced"}), 200

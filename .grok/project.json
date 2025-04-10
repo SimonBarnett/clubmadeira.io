@@ -1,0 +1,49 @@
+{
+  "response": {
+    "name": "Club Madeira",
+    "description": "A Flask-based web application for managing community and seller websites, integrating with Wix for product display and referral tracking.",
+    "technology_stack": [
+      "Python",
+      "Flask",
+      "Wix Velo",
+      "Wix Stores",
+      "Wix Fetch",
+      "Wix Storage",
+      "Wix Location",
+      "FastCGI",
+      "IIS"
+    ],
+    "third_party_libraries": [
+      {
+        "name": "requests",
+        "version": "unknown"
+      },
+      {
+        "name": "json",
+        "version": "unknown"
+      },
+      {
+        "name": "bcrypt",
+        "version": "unknown"
+      },
+      {
+        "name": "jwt",
+        "version": "unknown"
+      },
+      {
+        "name": "wix-fetch",
+        "version": "unknown"
+      },
+      {
+        "name": "wix-location",
+        "version": "unknown"
+      }
+    ],
+    "configuration": {
+      "web_server": "IIS",
+      "python_version": "3.12",
+      "wsgi_handler": "madeira.app",
+      "python_path": "C:\\inetpub\\clubmadeira.io"
+    }
+  }
+}

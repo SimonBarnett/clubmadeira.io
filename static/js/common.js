@@ -5,6 +5,9 @@
 if (!window.commonInitialized) {
     window.commonInitialized = true;
 
+    // Initialize markdown cache
+    window.markdownCache = window.markdownCache || {};
+
     // Configures Toastr for consistent toast notifications across the application
     function setupToastr() {
         console.log('setupToastr - Initiating Toastr configuration');
@@ -76,48 +79,34 @@ if (!window.commonInitialized) {
         });
     }
 
-    // Function to fetch and render Markdown content from local server
+    // Function to fetch and render Markdown content using the /utility/render_md endpoint
     async function renderMdPage(mdPath, targetElementId) {
         try {
             // Wait for marked to be loaded
             await waitForMarked();
 
-            // Construct the URL to fetch the Markdown content from clubmadeira.io
-            const renderUrl = `https://clubmadeira.io${mdPath}`;
-            console.log(`renderMdPage - Fetching Markdown from: ${renderUrl}`);
-            
-            // Fetch the raw Markdown content
+            // Use the /utility/render_md endpoint to fetch and render markdown
+            const renderUrl = `/render-md${mdPath}`;
+            console.log(`render md page - Fetching Markdown from: ${renderUrl}`);
+
+            // Fetch the rendered markdown content
             const response = await fetch(renderUrl);
             if (!response.ok) {
-                throw new Error(`Failed to fetch MD content: ${response.status}`);
+                throw new Error(`Failed to fetch MD content: ${response.status} ${response.statusText}`);
             }
-            const mdContent = await response.text();
-            console.log(`renderMdPage - Markdown content fetched: ${mdContent.substring(0, 100)}...`);
+            const htmlContent = await response.text();
+            console.log(`render md page - Markdown content fetched and rendered: ${htmlContent.substring(0, 100)}...`);
 
-            // Convert Markdown to HTML using marked.js
-            let htmlContent;
-            try {
-                // Handle different versions of marked
-                if (typeof marked.parse === 'function') {
-                    htmlContent = marked.parse(mdContent);
-                } else {
-                    htmlContent = marked(mdContent); // Fallback for older versions
-                }
-            } catch (parseError) {
-                throw new Error(`Failed to parse Markdown: ${parseError.message}`);
-            }
-            
             // Insert the HTML into the specified DOM element
             const targetElement = document.getElementById(targetElementId);
             if (targetElement) {
                 targetElement.innerHTML = htmlContent;
-                console.log('renderMdPage - Markdown rendered successfully');
+                console.log('render md page - Markdown rendered successfully into:', targetElementId);
             } else {
-                console.error(`renderMdPage - Target element with ID "${targetElementId}" not found`);
+                console.error(`render md page - Target element with ID "${targetElementId}" not found`);
             }
         } catch (error) {
-            console.error('renderMdPage - Error rendering MD page:', error.message);
-            // Display a fallback message if the target element exists
+            console.error('render md page - Error rendering MD page:', error.message);
             const targetElement = document.getElementById(targetElementId);
             if (targetElement) {
                 targetElement.innerHTML = '<p>Sorry, the content could not be loaded: ' + error.message + '</p>';
@@ -132,5 +121,5 @@ if (!window.commonInitialized) {
 
     // Expose functions globally for manual invocation
     window.setupToastr = setupToastr;
-    window.renderMdPage = renderMdPage;  // Make renderMdPage globally accessible
+    window.renderMdPage = renderMdPage;
 }

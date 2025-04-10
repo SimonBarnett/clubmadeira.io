@@ -1,5 +1,7 @@
-
 {% extends "base.inc" %}
+
+{% block body_attributes %}data-page-type="admin"{% endblock %}
+
 {% block content %}
 <div class="main-container">
     <div class="menu-container">
@@ -44,7 +46,7 @@
                 <i class="fas fa-caret-right caret"></i>
             </button>
             <div id="testScripts" class="submenu">
-                <button data-href="/" data-role="partner">
+                <button data-href="/partner">
                     <span class="button-content">
                         <span class="icon-group">
                             <i class="icon-partner" style="height: 16px; width: 16px;"></i>
@@ -52,7 +54,7 @@
                         </span> Partner
                     </span>
                 </button>
-                <button data-href="/" data-role="community">
+                <button data-href="/community">
                     <span class="button-content">
                         <span class="icon-group">
                             <i class="icon-community" style="height: 16px; width: 16px;"></i>                            
@@ -60,7 +62,7 @@
                         </span> Community
                     </span>
                 </button>
-                <button data-href="/" data-role="merchant">
+                <button data-href="/merchant">
                     <span class="button-content">
                         <span class="icon-group">
                             <i class="icon-merchant" style="height: 16px; width: 16px;"></i>                            

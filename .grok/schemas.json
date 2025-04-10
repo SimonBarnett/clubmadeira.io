@@ -1,0 +1,959 @@
+{
+  "path_property": {
+    "type": "string",
+    "description": "The relative file path",
+    "minLength": 1
+  },
+  "description_property": {
+    "type": "string",
+    "description": "A brief description of the purpose or contents"
+  },
+  "last_modified_property": {
+    "type": "string",
+    "description": "Last modification timestamp",
+    "format": "date-time"
+  },
+  "requirements_schema": {
+    "type": "array",
+    "minItems": 1,
+    "items": {
+      "type": "object",
+      "properties": {
+        "requirementId": {
+          "type": "string",
+          "description": "Unique identifier for the requirement"
+        },
+        "description": {
+          "$ref": "#/definitions/description_property"
+        }
+      },
+      "required": [
+        "requirementId",
+        "description"
+      ]
+    }
+  },
+  "questions_schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "question": {
+          "type": "string",
+          "description": "The question text"
+        },
+        "relatedTo": {
+          "type": "string",
+          "pattern": "^(INT|REQ)[0-9]+$",
+          "description": "ID of intent/requirement"
+        },
+        "answers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Possible answers"
+        }
+      },
+      "required": [
+        "question",
+        "relatedTo"
+      ]
+    }
+  },
+  "content_item_schema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "$ref": "#/definitions/path_property"
+      },
+      "lastModified": {
+        "$ref": "#/definitions/last_modified_property"
+      },
+      "description": {
+        "$ref": "#/definitions/description_property"
+      },
+      "verbosity": {
+        "type": "integer",
+        "description": "Detail level (0=path, 1=metadata, 2=content, 3=basic functions/endpoints, 4=with params+relationships, 5=path+content default, optional modification by Grok)",
+        "minimum": 0,
+        "maximum": 5,
+        "default": 0
+      },
+      "content": {
+        "type": "string",
+        "description": "Escaped file content (verbosity 2+)"
+      },
+      "functions": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/base_func_schema"
+            },
+            {
+              "$ref": "#/definitions/func_with_parameters_schema"
+            }
+          ]
+        },
+        "description": "Functions in file (verbosity 3+)"
+      },
+      "endpoints": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/base_endpoint_schema"
+            },
+            {
+              "$ref": "#/definitions/endpoint_with_parameters_schema"
+            }
+          ]
+        },
+        "description": "Endpoints in file (verbosity 3+)"
+      },
+      "related": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/base_relative_schema"
+        },
+        "description": "Relationships (verbosity 4+)"
+      }
+    },
+    "required": [
+      "path",
+      "verbosity"
+    ]
+  },
+  "content_with_modifications_schema": {
+    "type": "array",
+    "description": "Files with modification details",
+    "items": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/content_item_schema"
+        },
+        {
+          "properties": {
+            "modified": {
+              "type": "boolean",
+              "description": "Updated (verbosity 5, triggers save if true)",
+              "default": false
+            },
+            "reason": {
+              "type": "string",
+              "description": "Reason for modification (optional, used if modified)"
+            }
+          },
+          "if": {
+            "properties": {
+              "verbosity": {
+                "const": 5
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "path",
+              "content",
+              "verbosity"
+            ]
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "modified": {
+                  "const": true
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "content",
+                "verbosity"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "schemas_array_schema": {
+    "type": "array",
+    "description": "Array of schema definitions",
+    "items": {
+      "type": "object",
+      "description": "A schema definition"
+    }
+  },
+  "base_file_schema": {},
+  "base_relative_schema": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "$ref": "#/definitions/description_property"
+      },
+      "relative_path": {
+        "type": "string",
+        "description": "Path of the related file or entity"
+      }
+    },
+    "required": [
+      "description",
+      "relative_path"
+    ],
+    "additionalProperties": false
+  },
+  "base_func_schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "$ref": "#/definitions/description_property"
+      },
+      "returnType": {
+        "type": "string",
+        "enum": [
+          "string",
+          "number",
+          "boolean",
+          "object",
+          "array",
+          "void",
+          "any"
+        ]
+      },
+      "related": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/base_relative_schema"
+        }
+      }
+    },
+    "required": [
+      "name",
+      "description"
+    ],
+    "additionalProperties": false
+  },
+  "base_endpoint_schema": {
+    "type": "object",
+    "properties": {
+      "endpoint_url": {
+        "type": "string",
+        "pattern": "^(/[a-zA-Z0-9-_]+)+/?$"
+      },
+      "description": {
+        "$ref": "#/definitions/description_property"
+      },
+      "method": {
+        "type": "string",
+        "enum": [
+          "GET",
+          "POST",
+          "PUT",
+          "DELETE",
+          "PATCH"
+        ]
+      },
+      "required_permissions": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "response_type": {
+        "type": "string",
+        "enum": [
+          "json",
+          "text",
+          "binary",
+          "html"
+        ]
+      },
+      "related": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/base_relative_schema"
+        }
+      }
+    },
+    "required": [
+      "endpoint_url",
+      "description",
+      "method"
+    ],
+    "additionalProperties": false
+  },
+  "parameter_schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Parameter name"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "string",
+          "number",
+          "boolean",
+          "object",
+          "array",
+          "integer",
+          "any"
+        ]
+      },
+      "description": {
+        "$ref": "#/definitions/description_property"
+      }
+    },
+    "required": [
+      "name",
+      "type"
+    ],
+    "additionalProperties": false
+  },
+  "func_with_parameters_schema": {
+    "type": "object",
+    "allOf": [
+      {
+        "$ref": "#/definitions/base_func_schema"
+      }
+    ],
+    "properties": {
+      "parameters": {
+        "type": "array",
+        "description": "List of function parameters",
+        "items": {
+          "$ref": "#/definitions/parameter_schema"
+        }
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "parameters"
+    ],
+    "additionalProperties": false
+  },
+  "endpoint_with_parameters_schema": {
+    "type": "object",
+    "allOf": [
+      {
+        "$ref": "#/definitions/base_endpoint_schema"
+      }
+    ],
+    "properties": {
+      "parameters": {
+        "type": "array",
+        "description": "List of endpoint parameters",
+        "items": {
+          "$ref": "#/definitions/parameter_schema"
+        }
+      }
+    },
+    "required": [
+      "endpoint_url",
+      "description",
+      "method",
+      "parameters"
+    ],
+    "additionalProperties": false
+  },
+  "good_relative_schema": {
+    "type": "object",
+    "allOf": [
+      {
+        "$ref": "#/definitions/base_relative_schema"
+      }
+    ],
+    "properties": {
+      "function": {
+        "type": "string",
+        "description": "Name of the function being called"
+      },
+      "source": {
+        "type": "string",
+        "description": "Relative path of the current file"
+      }
+    },
+    "required": [
+      "description",
+      "relative_path",
+      "source"
+    ],
+    "additionalProperties": false
+  },
+  "bad_relative_schema": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "$ref": "#/definitions/description_property"
+      },
+      "relative_path": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Path of the related file, null if unresolved"
+      },
+      "source": {
+        "type": "string",
+        "description": "Relative path of the file reporting the relationship"
+      },
+      "reason": {
+        "type": "string",
+        "description": "Reason the relationship is unresolved"
+      }
+    },
+    "required": [
+      "description",
+      "source",
+      "reason"
+    ],
+    "additionalProperties": false
+  },
+  "project_schema": {},
+  "issues_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Issue",
+    "type": "object",
+    "properties": {
+      "issueId": {
+        "type": "string",
+        "description": "Unique identifier for the issue"
+      },
+      "message": {
+        "type": "string",
+        "description": "Error text from log"
+      },
+      "severity": {
+        "type": "string",
+        "enum": [
+          "info",
+          "warning",
+          "error",
+          "fatal"
+        ],
+        "default": "warning"
+      },
+      "occurrences": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "properties": {
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Byte offset in log"
+            },
+            "timestamp": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time",
+              "description": "Log entry timestamp"
+            },
+            "snippet": {
+              "type": "string",
+              "description": "Log excerpt"
+            }
+          },
+          "required": [
+            "offset",
+            "snippet"
+          ]
+        }
+      },
+      "suspectedFiles": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/path_property"
+        },
+        "description": "Potentially related files"
+      }
+    },
+    "required": [
+      "issueId",
+      "message",
+      "occurrences"
+    ],
+    "additionalProperties": false
+  },
+  "intent_schema": {},
+  "intent_request_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Intent Request",
+    "type": "object",
+    "properties": {
+      "intent": {
+        "$ref": "#/definitions/intent_schema"
+      },
+      "understanding": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/definitions/base_understanding_schema"
+          }
+        ]
+      },
+      "schemas": {
+        "$ref": "#/definitions/schemas_array_schema"
+      },
+      "chat": {
+        "type": "string",
+        "description": "User message or command at the request level"
+      },
+      "content": {
+        "$ref": "#/definitions/content_with_modifications_schema"
+      }
+    },
+    "required": [
+      "intent",
+      "understanding",
+      "schemas",
+      "chat",
+      "content"
+    ],
+    "additionalProperties": false
+  },
+  "intent_response_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Intent Response",
+    "type": "object",
+    "properties": {
+      "chat": {
+        "type": "string",
+        "description": "Conversational text from Grok (e.g., questions, confirmations; blank when loading data)"
+      },
+      "project": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/project_schema"
+          }
+        ],
+        "description": "Project data returned by Grok, conforming to project_schema"
+      },
+      "intent": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/intent_schema"
+          }
+        ],
+        "description": "The intent data processed by Grok, conforming to intent_schema"
+      },
+      "schemas": {
+        "type": "array",
+        "description": "Array of schemas defining the structure of project and intent, as returned by Grok",
+        "minItems": 2,
+        "items": [
+          {
+            "$ref": "#/definitions/project_schema"
+          },
+          {
+            "$ref": "#/definitions/intent_schema"
+          }
+        ]
+      }
+    },
+    "required": [
+      "chat",
+      "project",
+      "intent",
+      "schemas"
+    ],
+    "additionalProperties": false
+  },
+  "base_understanding_schema": {
+    "properties": {
+      "project": {}
+    }
+  },
+  "understanding_file_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "path": {
+        "$ref": "#/definitions/path_property"
+      },
+      "description": {
+        "$ref": "#/definitions/description_property"
+      },
+      "functions": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/base_func_schema"
+            },
+            {
+              "$ref": "#/definitions/func_with_parameters_schema"
+            }
+          ]
+        },
+        "description": "Functions in file"
+      },
+      "endpoints": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/base_endpoint_schema"
+            },
+            {
+              "$ref": "#/definitions/endpoint_with_parameters_schema"
+            }
+          ]
+        },
+        "description": "Endpoints in file"
+      },
+      "related": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/base_relative_schema"
+        },
+        "description": "Relationships"
+      },
+      "lastModified": {
+        "$ref": "#/definitions/last_modified_property"
+      },
+      "content": {
+        "type": "string",
+        "description": "Escaped file content"
+      },
+      "modify": {
+        "type": "boolean",
+        "description": "Updated by Grok",
+        "default": false
+      },
+      "excluded": {
+        "type": "string",
+        "enum": [
+          "too large",
+          "not text",
+          null
+        ],
+        "default": null,
+        "description": "Exclusion reason"
+      }
+    },
+    "required": [
+      "path"
+    ],
+    "if": {
+      "properties": {
+        "modify": {
+          "const": true
+        }
+      }
+    },
+    "then": {
+      "required": [
+        "content"
+      ]
+    },
+    "additionalProperties": false
+  },
+  "understanding_schema": {},
+  "last_understanding_schema": {},
+  "file_system_schema": {
+    "type": "object",
+    "allOf": [
+      {
+        "$ref": "#/definitions/base_file_schema"
+      }
+    ],
+    "properties": {
+      "lastModified": {
+        "$ref": "#/definitions/last_modified_property"
+      },
+      "filesize": {
+        "type": "integer",
+        "description": "Size in bytes",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "path",
+      "lastModified",
+      "filesize"
+    ],
+    "additionalProperties": false
+  },
+  "request_file_schema": {},
+  "response_file_schema": {
+    "type": "object",
+    "allOf": [
+      {
+        "$ref": "#/definitions/base_file_schema"
+      }
+    ],
+    "properties": {
+      "description": {
+        "$ref": "#/definitions/description_property"
+      },
+      "lastModified": {
+        "$ref": "#/definitions/last_modified_property"
+      },
+      "content": {
+        "type": "string",
+        "description": "File content"
+      },
+      "modified": {
+        "type": "boolean",
+        "description": "Updated by Grok",
+        "default": false
+      },
+      "endpoints": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/base_endpoint_schema"
+            },
+            {
+              "$ref": "#/definitions/endpoint_with_parameters_schema"
+            }
+          ]
+        },
+        "default": [],
+        "description": "API endpoints"
+      },
+      "functions": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/base_func_schema"
+            },
+            {
+              "$ref": "#/definitions/func_with_parameters_schema"
+            }
+          ]
+        },
+        "default": [],
+        "description": "Functions"
+      },
+      "related": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/base_relative_schema"
+        },
+        "default": [],
+        "description": "Related files"
+      }
+    },
+    "required": [
+      "path"
+    ],
+    "additionalProperties": false
+  },
+  "excluded_file_schema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "$ref": "#/definitions/path_property"
+      },
+      "lastModified": {
+        "$ref": "#/definitions/last_modified_property"
+      },
+      "excluded": {
+        "type": "string",
+        "enum": [
+          "too large",
+          "not text"
+        ],
+        "description": "Reason for exclusion"
+      }
+    },
+    "required": [
+      "path",
+      "lastModified",
+      "excluded"
+    ],
+    "additionalProperties": false
+  },
+  "ignore_config_schema": {
+    "type": "object",
+    "properties": {
+      "dirs": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          ".git",
+          "__pycache__",
+          "node_modules",
+          ".grok"
+        ],
+        "description": "Directories to ignore"
+      },
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          ".gitignore",
+          "*.pyc",
+          "*.log"
+        ],
+        "description": "Files to ignore"
+      },
+      "prefixes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "temp_",
+          "test_"
+        ],
+        "description": "Prefixes to ignore"
+      },
+      "suffixes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "_backup",
+          "_old"
+        ],
+        "description": "Suffixes to ignore"
+      }
+    },
+    "additionalProperties": false
+  },
+  "peer_review_request_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Peer Review Request",
+    "type": "object",
+    "properties": {
+      "project_json": {
+        "type": "object",
+        "description": "Project data"
+      },
+      "project_json_schema": {
+        "$ref": "#/definitions/project_schema"
+      },
+      "intent_json": {
+        "type": "object",
+        "description": "Intent data"
+      },
+      "intent_json_schema": {
+        "$ref": "#/definitions/intent_schema"
+      },
+      "old_content": {
+        "type": "string",
+        "description": "Original file content"
+      },
+      "new_content": {
+        "type": "string",
+        "description": "Proposed updated content"
+      }
+    },
+    "required": [
+      "project_json",
+      "project_json_schema",
+      "intent_json",
+      "intent_json_schema",
+      "old_content",
+      "new_content"
+    ],
+    "additionalProperties": false
+  },
+  "peer_review_response_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Peer Review Response",
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string",
+        "description": "Validated file content"
+      },
+      "passed": {
+        "type": "boolean",
+        "description": "True if new_content is valid, False otherwise"
+      }
+    },
+    "required": [
+      "content",
+      "passed"
+    ],
+    "additionalProperties": false
+  },
+  "log_reader_request_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Log Reader Request",
+    "type": "object",
+    "properties": {
+      "project_json": {
+        "type": "object",
+        "description": "Project data"
+      },
+      "project_json_schema": {
+        "$ref": "#/definitions/project_schema"
+      },
+      "intent_json": {
+        "type": "object",
+        "description": "Intent JSON, empty initially"
+      },
+      "intent_json_schema": {
+        "$ref": "#/definitions/intent_schema"
+      },
+      "log_data": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Next 50KB of log content"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Starting byte offset",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "content",
+          "offset"
+        ]
+      }
+    },
+    "required": [
+      "project_json",
+      "project_json_schema",
+      "intent_json",
+      "intent_json_schema",
+      "log_data"
+    ],
+    "additionalProperties": false
+  },
+  "log_reader_response_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Log Reader Response",
+    "type": "object",
+    "properties": {
+      "intent_json_schema": {
+        "type": "object",
+        "description": "Schema for diagnostic data"
+      },
+      "intent_json": {
+        "type": "object",
+        "description": "Intent with diagnostic details"
+      }
+    },
+    "required": [
+      "intent_json_schema",
+      "intent_json"
+    ],
+    "additionalProperties": false
+  }
+}

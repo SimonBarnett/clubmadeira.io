@@ -17,8 +17,9 @@
         <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard empowers partners to collaborate with merchants and communities on clubmadeira.io.</p>
         <p>Use the menu to manage integrations, review site requests, access documentation, and update your account. Work together to create tailored solutions for our users.</p>
     {% else %}
-        <h2>Welcome</h2>
-        <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! Welcome to clubmadeira.io.</p>
-        <p>This is your starting point. Log in to access your personalized dashboard and explore the tools available to you based on your role.</p>
+        <h2>Login</h2>
+        <div class="custom-login-notice">
+            <span class="highlight">Please log in</span> to access your account. If you don’t have an account, click "Sign Up" below.
+        </div>
     {% endif %}
 </div>

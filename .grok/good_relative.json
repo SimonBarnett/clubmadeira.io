@@ -1,0 +1,8 @@
+[
+  {
+    "description": "References Flask backend API",
+    "relative_path": "/madeira.py",
+    "source": "/velo.clubdiscounts.js",
+    "function": "onReady"
+  }
+]

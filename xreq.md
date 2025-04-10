@@ -82,9 +82,9 @@ Here’s a deep dive into what each endpoint does, including its purpose, expect
   - **Permissions**: Public—anyone can sign up.  
   - **Details**: Validates input (e.g., email uniqueness), hashes the password, and stores the user in the database.  
   - **Example**:  
-    @json  
-    { "signup_type": "merchant", "contact_name": "John Doe", "signup_email": "john@example.com", "signup_password": "secure123" }  
-    @
+    `json  
+    { "signup_type": "merchant", "contact_name": "John Doe", "signup_email": "john`example.com", "signup_password": "secure123" }  
+    `
 
 - **`/reset-password` (POST)**  
   - **Purpose**: Starts the password reset process by sending a one-time password (OTP) to the user’s phone or email.  
@@ -140,7 +140,7 @@ Here’s a deep dive into what each endpoint does, including its purpose, expect
 - **`/user_id/orders` (GET)**  
   - **Purpose**: Lists orders from a user’s referral links.  
   - **Input**: None (user_id from URL).  
-  - **Output**: JSON `{ "orders": [{ "orderId": "123", "buyer": "user@example.com", "total": 50.00 }, ...] }`.  
+  - **Output**: JSON `{ "orders": [{ "orderId": "123", "buyer": "user`example.com", "total": 50.00 }, ...] }`.  
   - **Permissions**: `["self", "admin"]`—enforced via JWT.  
   - **Details**: Joins referral and order tables; restricted to authorized users.
 
@@ -199,7 +199,7 @@ Here’s a deep dive into what each endpoint does, including its purpose, expect
 - **`/users/user_id` (GET)**  
   - **Purpose**: Retrieves a user’s details.  
   - **Input**: None (user_id from URL).  
-  - **Output**: JSON `{ "user": { "id": "123", "email": "user@example.com" } }`.  
+  - **Output**: JSON `{ "user": { "id": "123", "email": "user`example.com" } }`.  
   - **Permissions**: `["admin"]`.  
   - **Details**: Admin tool for user inspection.
 
@@ -220,7 +220,7 @@ Here’s a deep dive into what each endpoint does, including its purpose, expect
 ### user_settings_bp Blueprint
 - **`/USERid/user` (PUT, PATCH)**  
   - **Purpose**: Updates user profile (PUT for full, PATCH for partial).  
-  - **Input**: JSON `{ "email": "new@example.com", "name": "New Name" }`.  
+  - **Input**: JSON `{ "email": "new`example.com", "name": "New Name" }`.  
   - **Output**: JSON `{ "success": true }`.  
   - **Permissions**: `["self", "admin"]` (PUT), `["self", "admin", "wixpro"]` (PATCH).  
   - **Details**: Validates and updates user data; wixpro has limited PATCH access.
@@ -325,7 +325,7 @@ Refactor the Flask application by splitting its functionality into separate blue
 
 Each blueprint must:  
 - Include Flask routes and necessary imports (e.g., `from flask import Blueprint, request, render_template`).  
-- Use the `@login_required` decorator with appropriate permission lists and `require_all` settings as specified (e.g., admin permissions for `manager_bp`, user-specific for `user_settings_bp`).  
+- Use the ``login_required` decorator with appropriate permission lists and `require_all` settings as specified (e.g., admin permissions for `manager_bp`, user-specific for `user_settings_bp`).  
 - Be structured for seamless integration into the main Flask app (`Madeira.py`) via blueprint registration.
 
 ---
@@ -336,7 +336,7 @@ In this session, we’ve made substantial progress toward completing the CREQ. H
 ### Created and Verified Blueprint Files
 - **`authentication_bp.py`**  
   - **Purpose**: Handles authentication-related routes (e.g., `/login`, `/logout`, `/register`).  
-  - **Details**: Uses `@login_required` for protected routes, with permissions like `["authenticated"]`. Includes imports for Flask and custom auth utilities.  
+  - **Details**: Uses ``login_required` for protected routes, with permissions like `["authenticated"]`. Includes imports for Flask and custom auth utilities.  
   - **Status**: Fully implemented and tested.  
 
 - **`content_bp.py`**  
@@ -346,7 +346,7 @@ In this session, we’ve made substantial progress toward completing the CREQ. H
 
 - **`manager_bp.py`**  
   - **Purpose**: Contains admin-level management routes (e.g., `/admin/users`, `/admin/settings`).  
-  - **Details**: Secured with `@login_required(["admin"], require_all=True)` to restrict access. Imports Flask and admin-specific utilities.  
+  - **Details**: Secured with ``login_required(["admin"], require_all=True)` to restrict access. Imports Flask and admin-specific utilities.  
   - **Status**: Complete and verified.  
 
 - **`referral_bp.py`**  
@@ -356,7 +356,7 @@ In this session, we’ve made substantial progress toward completing the CREQ. H
 
 - **`role_pages_bp.py`**  
   - **Purpose**: Controls role-specific page access (e.g., `/role/<role_name>`).  
-  - **Details**: Dynamic permissions based on role (e.g., `["manager"]`, `["editor"]`). Uses `@login_required` with flexible settings.  
+  - **Details**: Dynamic permissions based on role (e.g., `["manager"]`, `["editor"]`). Uses ``login_required` with flexible settings.  
   - **Status**: Prepared and tested.  
 
 - **`site_request_bp.py`**  
@@ -366,7 +366,7 @@ In this session, we’ve made substantial progress toward completing the CREQ. H
 
 - **`user_settings_bp.py`**  
   - **Purpose**: Manages user profile and settings (e.g., `/settings/profile`, `/settings/password`).  
-  - **Details**: Secured with `@login_required(["user"], require_all=True)`. Includes routes for updating user data.  
+  - **Details**: Secured with ``login_required(["user"], require_all=True)`. Includes routes for updating user data.  
   - **Status**: Fully operational.  
 
 - **`utility_bp.py`**  
@@ -376,7 +376,7 @@ In this session, we’ve made substantial progress toward completing the CREQ. H
 
 ### Why These Changes?
 - **Modularity**: Splitting the monolithic Flask app into blueprints enhances maintainability and scalability.  
-- **Security**: The `@login_required` decorator enforces role-based access control, tailored to each blueprint’s purpose.  
+- **Security**: The ``login_required` decorator enforces role-based access control, tailored to each blueprint’s purpose.  
 - **Documentation**: Each file includes comments—some with *Monty Python*-inspired humor or ASCII art—to make the code more approachable.  
 
 ### Current State
@@ -433,24 +433,24 @@ As of March 28, 2025, the requirement is to update the signup and lost password 
 - Ensured all logging in both files matches `madeira.py` verbosity (request/response details, redacted passwords/JWTs).
 
 **Updated curl Commands**:
-@/send-sms - POST
+`/send-sms - POST
 Permissions: Public
 Input: JSON { "email": "...", "message": "..." }
 Output: JSON {"status": "success", "message": "SMS sent"}
-curl -X POST https://madeira.io/send-sms -H "Content-Type: application/json" -d '{"email": "user@example.com", "message": "Your OTP is 123456"}'
+curl -X POST https://madeira.io/send-sms -H "Content-Type: application/json" -d '{"email": "user`example.com", "message": "Your OTP is 123456"}'
 
-@/signup - POST
+`/signup - POST
 Permissions: Public
 Input: JSON { "signup_type": "...", "contact_name": "...", "signup_email": "...", "signup_password": "...", "signup_phone": "..."}
 Output: JSON {"status": "success", "message": "User created, please verify OTP"}
-curl -X POST https://madeira.io/signup -H "Content-Type: application/json" -d '{"signup_type": "seller", "contact_name": "John Doe", "signup_email": "john@example.com", "signup_password": "secure123", "signup_phone": "+1234567890"}'
+curl -X POST https://madeira.io/signup -H "Content-Type: application/json" -d '{"signup_type": "seller", "contact_name": "John Doe", "signup_email": "john`example.com", "signup_password": "secure123", "signup_phone": "+1234567890"}'
 
-@/reset-password - POST
+`/reset-password - POST
 Permissions: Public
 Input: JSON { "email": "..." }
 Output: JSON {"status": "success", "message": "A one-time password has been sent to your phone"}
-curl -X POST https://madeira.io/reset-password -H "Content-Type: application/json" -d '{"email": "user@example.com"}'
-@
+curl -X POST https://madeira.io/reset-password -H "Content-Type: application/json" -d '{"email": "user`example.com"}'
+`
 
 **Pending**:
 - Add a `/verify-signup-code` endpoint to complete the signup OTP workflow.
@@ -630,7 +630,7 @@ Please restart the chat with another instance to continue optimizing the page-lo
       </div>
   </div>
   <style>
-      @keyframes spin {
+      `keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
       }
@@ -1049,7 +1049,7 @@ Please restart the chat with another instance to continue optimizing the Flask a
 
 ```html
 <!-- Load scripts in the correct order -->
-<script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked`4.0.12/marked.min.js"></script>
 <script src="/static/js/site-auth.js"></script>
 <script src="/static/js/site-navigation.js"></script>
 <script src="/static/js/site-request.js"></script>
@@ -1072,7 +1072,7 @@ Please restart the chat with another instance to continue optimizing the Flask a
 
 ```html
 <!-- Load scripts in the correct order with defer where appropriate -->
-<script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/marked`4.0.12/marked.min.js" defer></script>
 <script src="/static/js/site-auth.js" defer></script>
 <script src="/static/js/site-navigation.js" defer></script>
 <script src="/static/js/site-request.js" defer></script>
@@ -1101,7 +1101,7 @@ Please restart the chat with another instance to continue optimizing the Flask a
         </div>
     </div>
     <style>
-        @keyframes spin {
+        `keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
@@ -1256,9 +1256,9 @@ Please restart the chat with another instance to continue optimizing the Flask a
 **Before and After Code:**  
 For each file, the changes involved:  
 - **Before:** Each file had its own "My Account" menu buttons, submenu, "Back to Admin" button (if applicable), "Log Off" button, and corresponding content sections.  
-- **After:** Removed the aforementioned elements and added @html  
+- **After:** Removed the aforementioned elements and added `html  
 {% include 'account_menu.inc' with context %}  
-@ at the end of the menu section. This include file contains the standardized menu buttons and content sections.
+` at the end of the menu section. This include file contains the standardized menu buttons and content sections.
 
 **Observations for Code Improvement:**  
 - Ensure that the `page_type` variable is correctly passed in all relevant Flask routes to maintain the conditional logic for the "Back to Admin" button.  
@@ -1515,3 +1515,435 @@ In this session, I successfully created a concise and structured `xreq.md` file 
 
 *Signed,*  
 Assistant
+
+# XREQ: Transfer Request
+
+## Current Requirement
+The user is attempting to log in to `https://clubmadeira.io/` and expects to be redirected to the `/admin` role page after a successful login. The login process should:
+1. Submit a POST request to `/` with email and password.
+2. Receive a JWT token and a `redirect_url` (`/admin` for an admin user).
+3. Redirect to `/admin` using `fetchProtectedPage()` from `site-navigation.js`, which includes the token in the `Authorization` header.
+4. Load the `/admin` page without recursively loading the login page (`/`).
+
+## Progress Made
+- **Login Form Submission**:
+  - The login form in `login.html` submits a POST request to `/`, which succeeds, as evidenced by the token being generated and decoded:
+    ```
+    decodeJWT - Decoded JSON payload: {"userId":"232","permissions":["admin","validated","merchant","verified"],"exp":1743520574}
+    ```
+  - The server (`madeira.py`) returns a JSON response with the token and `redirect_url` (`/admin`).
+
+- **Client-Side Redirect Attempt**:
+  - The `redirectBasedOnPermissions()` function in `login.html` correctly determines the redirect path as `/admin` and attempts to navigate using `fetchProtectedPage()`:
+    ```
+    console.log('Redirecting to:', redirectPath);
+    showLoadingOverlay();
+    await window.siteNavigation.fetchProtectedPage(redirectPath);
+    ```
+
+- **Recursive Loading Issue**:
+  - Despite the redirect attempt, the browser navigates back to `/`, causing the login page to reload recursively:
+    ```
+    Navigated to https://clubmadeira.io/
+    ```
+  - This indicates the redirect to `/admin` is being overridden, likely by a server-side redirect from `login_required` in `utils/auth.py`.
+
+- **Fixes Applied**:
+  - Updated `login.html` to use `fetchProtectedPage()` instead of `window.location.href`, ensuring the token is sent in the `Authorization` header.
+  - Added a `redirecting` flag in `localStorage` to prevent recursive redirects.
+  - Removed the initial call to `redirectBasedOnPermissions()` on page load to avoid recursive loading.
+
+## Files Changed
+- **File: `templates/login.html`**
+  - **Before**:
+    ```
+    function redirectBasedOnPermissions(data) {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            console.log('No token found, staying on login');
+            showLogin();
+            return;
+        }
+
+        try {
+            const decoded = decodeJWT(token);
+            const permissions = decoded.permissions || [];
+            let redirectPath = data.redirect_url;
+
+            if (!redirectPath) {
+                if (permissions.includes('admin')) redirectPath = '/admin';
+                else if (permissions.includes('wixpro')) redirectPath = '/partner';
+                else if (permissions.includes('merchant')) redirectPath = '/merchant';
+                else if (permissions.includes('community')) redirectPath = '/community';
+                else redirectPath = '/dashboard';
+            }
+
+            if (window.location.pathname === redirectPath) {
+                console.log('Already on correct role page:', redirectPath);
+                hideLoadingOverlay();
+                return;
+            }
+
+            if (localStorage.getItem('redirecting') === 'true') {
+                console.log('Redirect already in progress, aborting to prevent loop');
+                hideLoadingOverlay();
+                return;
+            }
+
+            localStorage.setItem('redirecting', 'true');
+            console.log('Redirecting to:', redirectPath);
+            showLoadingOverlay();
+            window.location.href = redirectPath;
+        } catch (e) {
+            console.error('Invalid token:', e.message);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('redirecting');
+            toastr.error('Session expired or invalid. Please log in again.');
+            showLogin();
+        }
+    }
+    ```
+  - **After**:
+    ```
+    async function redirectBasedOnPermissions(data) {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            console.log('No token found, staying on login');
+            showLogin();
+            return;
+        }
+
+        try {
+            const decoded = decodeJWT(token);
+            const permissions = decoded.permissions || [];
+            let redirectPath = data.redirect_url;
+
+            if (!redirectPath) {
+                if (permissions.includes('admin')) redirectPath = '/admin';
+                else if (permissions.includes('wixpro')) redirectPath = '/partner';
+                else if (permissions.includes('merchant')) redirectPath = '/merchant';
+                else if (permissions.includes('community')) redirectPath = '/community';
+                else redirectPath = '/dashboard';
+            }
+
+            if (window.location.pathname === redirectPath) {
+                console.log('Already on correct role page:', redirectPath);
+                hideLoadingOverlay();
+                return;
+            }
+
+            if (localStorage.getItem('redirecting') === 'true') {
+                console.log('Redirect already in progress, aborting to prevent loop');
+                hideLoadingOverlay();
+                return;
+            }
+
+            localStorage.setItem('redirecting', 'true');
+            console.log('Redirecting to:', redirectPath);
+            showLoadingOverlay();
+            await window.siteNavigation.fetchProtectedPage(redirectPath);
+        } catch (e) {
+            console.error('Navigation error:', e.message);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('redirecting');
+            toastr.error('Failed to navigate to role page: ' + e.message);
+            showLogin();
+        }
+    }
+    ```
+
+## Observations for Code Improvement
+- **Token Handling**:
+  - The `login_required` decorator in `utils/auth.py` relies solely on the `Authorization` header for the token. After a successful login, the token is stored in `localStorage`, but browser navigations (e.g., GET to `/admin`) don’t include the token in the header, causing a redirect to `/`. Consider modifying `login_required` to check the session for the token if the header is not present, as the session is set during login in `madeira.py`.
+
+- **Recursive Loading Prevention**:
+  - The `redirecting` flag in `localStorage` helps prevent recursive redirects, but it’s not sufficient if the server keeps redirecting to `/`. Ensure the server-side logic (`login_required`) aligns with the client-side token storage mechanism.
+
+- **Related Field Updates**:
+  - For `templates/login.html`, the `related` field in the Comprehensive Project Schema should include:
+    - `site-navigation.js` (due to the use of `fetchProtectedPage()`).
+    - `site-auth.js` (due to the use of `decodeJWT()`).
+    - `madeira.py` (due to the POST request to `/`).
+    - `utils/auth.py` (due to the dependency on `login_required` for `/admin`).
+    - `role_pages_bp.py` (due to the `/admin` endpoint).
+
+
+#Current Requirement:
+Modify the `home()` function in `madeira.py` so that if a user has a valid JWT token (checked in both session and Authorization header), the root endpoint (`/`) redirects them to their default role page based on permissions. If no token is present or the token is expired/invalid, return the `/login` page (via `login.html`).
+
+#Progress Made:
+- Updated `madeira.py` with token validation logic in the GET handler of the `home()` function.
+- Checks for token in session (`session['user']['token']`) and Authorization header (`Bearer <token>`).
+- Uses `decode_token` (assumed in `utils/auth.py`) to validate the token and extract `user_id` and `permissions`.
+- Redirects to role-specific pages (admin, merchant, community, wixpro) or `/dashboard` if no specific role is found.
+- Falls back to rendering `login.html` if no token or token is invalid/expired.
+- Amended file submitted via `AMD madeira.py` with full code, maintaining existing POST logic and schema relationships.
+
+#Next Steps:
+- Confirm if `decode_token` implementation in `utils/auth.py` meets expectations or needs adjustment.
+- Test edge cases (e.g., malformed tokens, missing permissions) to ensure robust behavior.
+
+
+# Transfer Request
+
+## Current Requirement
+The requirement is to modify the `/community` page so that:
+1. The API fields (e.g., `API_TOKEN`, `SITE_ID`, `API_KEY`) are not displayed for community users in the "My Web Site" section.
+2. Clicking the documentation icon (readme link) for a provider loads the corresponding Markdown content into a `div` below the description, using the `renderMdPage` function from `/static/js/common.js`.
+3. Ensure the provider icons in the "My Web Site" section are clickable and display the provider data correctly.
+
+## Progress Made
+- **API Fields Removal**: The `displayClientApiSettings` function in `/static/js/community-page.js` was updated to exclude API fields, displaying only the `_description` field.
+- **Markdown Loading**: The documentation icon's click event was modified to toggle the visibility of a `div` containing Markdown content, loaded via `renderMdPage`. The icon toggles between `fa-book` and `fa-book-open` to indicate the state.
+- **Icons Clickability**: The `setupProviderIconListeners` function was updated to ensure it runs after the DOM is fully loaded, addressing the issue of icons not being clickable. Additional debugging logs were added to confirm the event listeners are attached.
+- **Styling**: Optional styling for the Markdown content was added to `/templates/community.html` to improve readability.
+
+## Files Changed
+1. **`/static/js/community-page.js`**
+   - **Before**:
+     ```
+     function displayClientApiSettings(setting, fieldsContainer) {
+         console.log('displayClientApiSettings - Displaying settings for:', setting.key_type);
+         fieldsContainer.innerHTML = '';
+
+         // Add selected setting icon
+         const selectedIcon = document.createElement('i');
+         selectedIcon.className = `selected-setting-icon ${setting.icon}`;
+         selectedIcon.style.fontSize = '16px';
+         selectedIcon.style.color = 'currentColor';
+         selectedIcon.style.marginRight = '10px';
+         selectedIcon.style.verticalAlign = 'middle';
+         fieldsContainer.appendChild(selectedIcon);
+
+         // Add heading with comment
+         const heading = document.createElement('h3');
+         heading.textContent = setting.comment || 'Client API Settings';
+         heading.className = 'client-api-comment-heading';
+         heading.style.display = 'inline-block';
+         heading.style.verticalAlign = 'middle';
+         fieldsContainer.appendChild(heading);
+
+         // Add URL icons
+         const apiLink = setting.doc_link.find(link => link.title === 'api')?.link;
+         if (apiLink) {
+             const apiIcon = document.createElement('a');
+             apiIcon.href = apiLink;
+             apiIcon.className = 'client-api-link';
+             apiIcon.style.marginLeft = '10px';
+             apiIcon.style.display = 'inline-block';
+             apiIcon.style.verticalAlign = 'middle';
+             apiIcon.style.color = 'currentColor';
+             apiIcon.innerHTML = '<i class="fas fa-link" style="font-size: 16px;"></i>';
+             apiIcon.target = '_blank';
+             fieldsContainer.appendChild(apiIcon);
+         }
+
+         const signupLink = setting.doc_link.find(link => link.title === 'signup')?.link;
+         if (signupLink) {
+             const signupIcon = document.createElement('a');
+             signupIcon.href = signupLink;
+             apiIcon.className = 'client-api-signup-link';
+             signupIcon.style.marginLeft = '10px';
+             signupIcon.style.display = 'inline-block';
+             apiIcon.style.verticalAlign = 'middle';
+             apiIcon.style.color = 'currentColor';
+             apiIcon.innerHTML = '<i class="fas fa-user-plus" style="font-size: 16px;"></i>';
+             apiIcon.target = '_blank';
+             fieldsContainer.appendChild(apiIcon);
+         }
+
+         const readmeLink = setting.doc_link.find(link => link.title === 'readme')?.link;
+         if (readmeLink) {
+             const readmeIcon = document.createElement('a');
+             readmeIcon.href = readmeLink;
+             readmeIcon.className = 'client-api-readme-link';
+             readmeIcon.style.marginLeft = '10px';
+             readmeIcon.style.display = 'inline-block';
+             readmeIcon.style.verticalAlign = 'middle';
+             readmeIcon.style.color = 'currentColor';
+             readmeIcon.innerHTML = '<i class="fas fa-book" style="font-size: 16px;"></i>';
+             readmeIcon.target = '_blank';
+             fieldsContainer.appendChild(readmeIcon);
+         }
+
+         // Add description
+         const description = document.createElement('p');
+         description.textContent = setting.fields._description || '';
+         description.className = 'client-api-description';
+         description.style.marginBottom = '15px';
+         fieldsContainer.appendChild(description);
+
+         // Add input fields for API settings (excluding _description)
+         Object.entries(setting.fields).forEach(([name, value]) => {
+             if (name !== '_description') {
+                 const div = document.createElement('div');
+                 div.style.marginBottom = '10px';
+                 div.innerHTML = `
+                     <label for="${name}">${name}:</label>
+                     <input type="text" id="${name}" name="${name}" value="${value}" style="width: 300px;" readonly>
+                 `;
+                 fieldsContainer.appendChild(div);
+             }
+         });
+     }
+     ```
+   - **After**:
+     ```
+     function displayClientApiSettings(setting, fieldsContainer) {
+         console.log('displayClientApiSettings - Displaying settings for:', setting.key_type);
+         fieldsContainer.innerHTML = '';
+
+         // Add selected setting icon
+         const selectedIcon = document.createElement('i');
+         selectedIcon.className = `selected-setting-icon ${setting.icon}`;
+         selectedIcon.style.fontSize = '16px';
+         selectedIcon.style.color = 'currentColor';
+         selectedIcon.style.marginRight = '10px';
+         selectedIcon.style.verticalAlign = 'middle';
+         fieldsContainer.appendChild(selectedIcon);
+
+         // Add heading with comment
+         const heading = document.createElement('h3');
+         heading.textContent = setting.comment || 'Client API Settings';
+         heading.className = 'client-api-comment-heading';
+         heading.style.display = 'inline-block';
+         heading.style.verticalAlign = 'middle';
+         fieldsContainer.appendChild(heading);
+
+         // Add URL icons
+         const apiLink = setting.doc_link.find(link => link.title === 'api')?.link;
+         if (apiLink) {
+             const apiIcon = document.createElement('a');
+             apiIcon.href = apiLink;
+             apiIcon.className = 'client-api-link';
+             apiIcon.style.marginLeft = '10px';
+             apiIcon.style.display = 'inline-block';
+             apiIcon.style.verticalAlign = 'middle';
+             apiIcon.style.color = 'currentColor';
+             apiIcon.innerHTML = '<i class="fas fa-link" style="font-size: 16px;"></i>';
+             apiIcon.target = '_blank';
+             fieldsContainer.appendChild(apiIcon);
+         }
+
+         const signupLink = setting.doc_link.find(link => link.title === 'signup')?.link;
+         if (signupLink) {
+             const signupIcon = document.createElement('a');
+             signupIcon.href = signupLink;
+             signupIcon.className = 'client-api-signup-link';
+             signupIcon.style.marginLeft = '10px';
+             signupIcon.style.display = 'inline-block';
+             signupIcon.style.verticalAlign = 'middle';
+             signupIcon.style.color = 'currentColor';
+             signupIcon.innerHTML = '<i class="fas fa-user-plus" style="font-size: 16px;"></i>';
+             signupIcon.target = '_blank';
+             fieldsContainer.appendChild(signupIcon);
+         }
+
+         const readmeLink = setting.doc_link.find(link => link.title === 'readme')?.link;
+         if (readmeLink) {
+             const readmeIcon = document.createElement('a');
+             readmeIcon.href = '#';
+             readmeIcon.className = 'client-api-readme-link';
+             readmeIcon.style.marginLeft = '10px';
+             readmeIcon.style.display = 'inline-block';
+             readmeIcon.style.verticalAlign = 'middle';
+             readmeIcon.style.color = 'currentColor';
+             readmeIcon.innerHTML = '<i class="fas fa-book" style="font-size: 16px;"></i>';
+             fieldsContainer.appendChild(readmeIcon);
+
+             // Create a div for Markdown content
+             const mdContentContainer = document.createElement('div');
+             mdContentContainer.id = `md-content-${setting.key_type}`;
+             mdContentContainer.className = 'client-api-md-content';
+             mdContentContainer.style.display = 'none'; // Initially hidden
+             mdContentContainer.style.marginTop = '15px';
+             fieldsContainer.appendChild(mdContentContainer);
+
+             readmeIcon.addEventListener('click', async (e) => {
+                 e.preventDefault();
+                 console.log('displayClientApiSettings - Readme icon clicked for:', setting.key_type);
+                 if (mdContentContainer.style.display === 'none') {
+                     // Load Markdown content if not already loaded
+                     if (!mdContentContainer.innerHTML) {
+                         await renderMdPage(readmeLink, `md-content-${setting.key_type}`);
+                     }
+                     mdContentContainer.style.display = 'block';
+                     readmeIcon.innerHTML = '<i class="fas fa-book-open" style="font-size: 16px;"></i>'; // Change icon to indicate open state
+                 } else {
+                     mdContentContainer.style.display = 'none';
+                     readmeIcon.innerHTML = '<i class="fas fa-book" style="font-size: 16px;"></i>'; // Revert icon
+                 }
+             });
+         }
+
+         // Add description
+         const description = document.createElement('p');
+         description.textContent = setting.fields._description || 'No description available.';
+         description.className = 'client-api-description';
+         description.style.marginBottom = '15px';
+         fieldsContainer.appendChild(description);
+     }
+     ```
+
+2. **`/templates/community.html`**
+   - **Before** (relevant section):
+     ```
+     <div id="my_website_intro_section" class="section" style="display: none;">
+         <h2>My Web Site</h2>
+         <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
+         <!-- Horizontal icons with responsive styling -->
+         <div id="website-provider-icons" style="display: flex; gap: 20px; margin-bottom: 20px;">
+             <i class="icon-wix" data-section="wix" title="Wix: Easy drag-and-drop builder" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="icon-wordpress" data-section="wordpress" title="WordPress: Flexible CMS" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="icon-squarespace" data-section="squarespace" title="Squarespace: Stylish solution" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="icon-weebly" data-section="weebly" title="Weebly: Simple builder" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="icon-joomla" data-section="joomla" title="Joomla: Robust CMS" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="fas fa-question-circle" data-section="no_website" title="I Don’t Have a Website Yet: Request a site setup" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+         </div>
+         <!-- Container for client API settings -->
+         <div id="client-api-settings"></div>
+         <style>
+             @media (max-width: 600px) {
+                 #website-provider-icons {
+                     flex-wrap: wrap;
+                 }
+             }
+         </style>
+     </div>
+     ```
+   - **After** (relevant section):
+     ```
+     <div id="my_website_intro_section" class="section" style="display: none;">
+         <h2>My Web Site</h2>
+         <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
+         <!-- Horizontal icons with responsive styling -->
+         <div id="website-provider-icons" style="display: flex; gap: 20px; margin-bottom: 20px;">
+             <i class="icon-wix" data-section="wix" title="Wix: Easy drag-and-drop builder" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="icon-wordpress" data-section="wordpress" title="WordPress: Flexible CMS" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="icon-squarespace" data-section="squarespace" title="Squarespace: Stylish solution" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="icon-weebly" data-section="weebly" title="Weebly: Simple builder" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="icon-joomla" data-section="joomla" title="Joomla: Robust CMS" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+             <i class="fas fa-question-circle" data-section="no_website" title="I Don’t Have a Website Yet: Request a site setup" style="cursor: pointer; width: 48px; height: 48px; font-size: 48px; color: #C0C0C0;"></i>
+         </div>
+         <!-- Container for client API settings -->
+         <div id="client-api-settings"></div>
+         <style>
+             @media (max-width: 600px) {
+                 #website-provider-icons {
+                     flex-wrap: wrap;
+                 }
+             }
+             .client-api-md-content {
+                 border-left: 3px solid #ccc;
+                 padding-left: 15px;
+                 margin-top: 15px;
+             }
+             .client-api-md-content p {
+                 margin: 5px 0;
+             }
+         </style>
+     </div>
+     ```
+
+## Observations for Code Improvement
+- **Clickability Confirmation**: The `setupProviderIconListeners` function now runs after the DOM is loaded, which should resolve the issue of icons not being clickable. However, testing is needed to confirm this. If the issue persists, consider adding a `pointer-events: auto !important` rule to `/static/css/icons.css` to ensure the icons are clickable:

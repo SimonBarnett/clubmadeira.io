@@ -12,14 +12,6 @@
         <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
     </button>
 </div>
-{% if page_type in ['community', 'merchant', 'partner'] %}
-    <button data-href="/admin" style="background-color: #dc3545;">
-        <span class="button-content"><i class="fas fa-arrow-left"></i> Back to Admin</span>
-    </button>
-{% endif %}
-<button id="logOffBtn" style="background-color: #dc3545;">
-    <span class="button-content"><i class="fas fa-sign-out-alt"></i> Log Off</span>
-</button>
 
 <!-- Content Sections -->
 <div id="contact_details" class="section" style="display: none;">

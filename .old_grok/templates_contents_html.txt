@@ -75,6 +75,7 @@ account_menu.inc
     </div>
 </div>
 admin.html
+
 {% extends "base.inc" %}
 {% block content %}
 <div class="main-container">
@@ -83,52 +84,35 @@ admin.html
             <button data-section="deal_listings">
                 <span class="button-content"><i class="fas fa-tags"></i> Deal Listings</span>
             </button>
-            <button data-submenu="affiliatePrograms" data-section="affiliateProgramsIntro">
+            <button data-section="affiliates">
                 <span class="button-content"><i class="fas fa-handshake"></i> Affiliate Programs</span>
-                <i class="fas fa-caret-right caret"></i>
             </button>
-            <div id="affiliatePrograms" class="submenu">
-                <button data-section="amazon_uk">
-                    <span class="button-content">
-                        <span class="icon-amazon-uk menu-size"></span> Amazon UK
-                    </span>
-                </button>
-                <button data-section="ebay_uk">
-                    <span class="button-content">
-                        <span class="icon-ebay-uk menu-size"></span> eBay UK
-                    </span>
-                </button>
-                <button data-section="awin">
-                    <span class="button-content"><i class="fas fa-network-wired"></i> Awin</span>
-                </button>
-                <button data-section="cj">
-                    <span class="button-content"><i class="fas fa-link"></i> CJ</span>
-                </button>
-                <button data-section="textmagic">
-                    <span class="button-content"><i class="fas fa-sms"></i> TextMagic</span>
-                </button>
-                <button data-section="tiny">
-                    <span class="button-content"><i class="fas fa-pen"></i> tiny</span>
-                </button>
-            </div>
+            <button data-section="site_settings">
+                <span class="button-content"><i class="fas fa-tools"></i> Site Settings</span>
+            </button>
             <button data-submenu="userManagement" data-section="userManagementIntro">
                 <span class="button-content"><i class="fas fa-users"></i> User Management</span>
                 <i class="fas fa-caret-right caret"></i>
             </button>
             <div id="userManagement" class="submenu">
-                <button data-section="partners">
+                <button data-section="user_management" data-role="admin">
                     <span class="button-content">
-                        <span class="menu-size icon-partner"></span> Partners
+                        <i class="icon-admin" style="height: 16px; width: 16px;"></i> Admin
                     </span>
                 </button>
-                <button data-section="communities">
+                <button data-section="user_management" data-role="wixpro">
                     <span class="button-content">
-                        <span class="menu-size icon-community"></span> Communities
+                        <i class="icon-partner" style="height: 16px; width: 16px;"></i> Partners
                     </span>
                 </button>
-                <button data-section="merchants">
+                <button data-section="user_management" data-role="community">
                     <span class="button-content">
-                        <span class="menu-size icon-merchant"></span> Merchants
+                        <i class="icon-community" style="height: 16px; width: 16px;"></i> Communities
+                    </span>
+                </button>
+                <button data-section="user_management" data-role="merchant">
+                    <span class="button-content">
+                        <i class="icon-merchant" style="height: 16px; width: 16px;"></i> Merchants
                     </span>
                 </button>
             </div>
@@ -137,26 +121,26 @@ admin.html
                 <i class="fas fa-caret-right caret"></i>
             </button>
             <div id="testScripts" class="submenu">
-                <button data-href="/partner">
+                <button data-href="/" data-role="partner">
                     <span class="button-content">
                         <span class="icon-group">
-                            <span class="menu-size icon-partner"></span>
+                            <i class="icon-partner" style="height: 16px; width: 16px;"></i>
                             <i class="fas fa-flask small-icon"></i>
                         </span> Partner
                     </span>
                 </button>
-                <button data-href="/community">
+                <button data-href="/" data-role="community">
                     <span class="button-content">
                         <span class="icon-group">
-                            <span class="menu-size icon-community"></span>
+                            <i class="icon-community" style="height: 16px; width: 16px;"></i>                            
                             <i class="fas fa-flask small-icon"></i>
                         </span> Community
                     </span>
                 </button>
-                <button data-href="/merchant">
+                <button data-href="/" data-role="merchant">
                     <span class="button-content">
                         <span class="icon-group">
-                            <span class="menu-size icon-merchant"></span>
+                            <i class="icon-merchant" style="height: 16px; width: 16px;"></i>                            
                             <i class="fas fa-flask small-icon"></i>
                         </span> Merchant
                     </span>
@@ -206,164 +190,64 @@ admin.html
                 </div>
             </div>
         </div>
-        <div id="affiliateProgramsIntro" class="section" style="display: none;">
+        <div id="affiliates" class="section" style="display: none;">
             <h2>Affiliate Programs</h2>
             <p>Use this section to manage your affiliate program credentials.</p>
-            <p>Select an affiliate program from the menu to enter or update your API keys, access tokens, or other necessary credentials.</p>
+            <div id="affiliate-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+            <form id="affiliate-form" style="display: none;">
+                <div id="affiliate-fields">
+                    <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
+                    <h3 class="affiliate-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
+                    <a href="#" class="affiliate-api-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-link" style="font-size: 16px;"></i></a>
+                    <a href="#" class="affiliate-signup-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-user-plus" style="font-size: 16px;"></i></a>
+                    <a href="#" class="affiliate-readme-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-book" style="font-size: 16px;"></i></a>
+                    <a href="#" class="affiliate-keys-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-key" style="font-size: 16px;"></i></a>
+                    <p class="affiliate-description" style="margin-bottom: 15px;"></p>
+                    <div id="affiliate-readme-content" style="display: none;"></div>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;"><i class="fas fa-save" style="margin-right: 5px;"></i>Save Settings</button>
+            </form>
         </div>
-        <div id="amazon_uk" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <span class="icon-amazon-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
-                <h2>Amazon UK Credentials</h2>
-            </div>
-            <div class="form" style="margin: 0; max-width: 400px;">
-                <label for="amazonAccessKey">Access Key:</label>
-                <input type="text" id="amazonAccessKey" placeholder="Enter Access Key">
-                <label for="amazonSecretKey">Secret Key:</label>
-                <input type="text" id="amazonSecretKey" placeholder="Enter Secret Key">
-                <label for="amazonAssociateTag">Associate Tag:</label>
-                <input type="text" id="amazonAssociateTag" placeholder="Enter Associate Tag">
-                <label for="amazonCountry">Country:</label>
-                <input type="text" id="amazonCountry" placeholder="Enter Country (e.g., UK)">
-                <button data-affiliate="amazon_uk">Update Credentials</button>
-            </div>
-            <div class="signup-instructions">
-                <strong>Sign Up:</strong> Visit <a href="https://affiliate-program.amazon.com/" target="_blank">Amazon Associates</a>.
-            </div>
-        </div>
-        <div id="ebay_uk" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <span class="icon-ebay-uk" style="width: 32px; height: 32px; margin-right: 10px;"></span>
-                <h2>eBay UK Credentials</h2>
-            </div>
-            <div class="form" style="margin: 0; max-width: 400px;">
-                <label for="ebayAppId">App ID:</label>
-                <input type="text" id="ebayAppId" placeholder="Enter App ID">
-                <button data-affiliate="ebay_uk">Update Credentials</button>
-            </div>
-            <div class="signup-instructions">
-                <strong>Sign Up:</strong> Go to <a href="https://partnernetwork.ebay.com/" target="_blank">eBay Partner Network</a>.
-            </div>
-        </div>
-        <div id="awin" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <i class="fas fa-network-wired" style="font-size: 32px; margin-right: 10px; color: white;"></i>
-                <h2>Awin Credentials</h2>
-            </div>
-            <div class="form" style="margin: 0; max-width: 400px;">
-                <label for="awinApiToken">API Token:</label>
-                <input type="text" id="awinApiToken" placeholder="Enter API Token">
-                <button data-affiliate="awin">Update Credentials</button>
-            </div>
-            <div class="signup-instructions">
-                <strong>Sign Up:</strong> Visit <a href="https://www.awin.com/" target="_blank">Awin</a>.
-            </div>
-        </div>
-        <div id="cj" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <i class="fas fa-link" style="font-size: 32px; margin-right: 10px; color: white;"></i>
-                <h2>CJ Credentials</h2>
-            </div>
-            <div class="form" style="margin: 0; max-width: 400px;">
-                <label for="cjApiKey">API Key:</label>
-                <input type="text" id="cjApiKey" placeholder="Enter API Key">
-                <label for="cjWebsiteId">Website ID:</label>
-                <input type="text" id="cjWebsiteId" placeholder="Enter Website ID">
-                <button data-affiliate="cj">Update Credentials</button>
-            </div>
-            <div class="signup-instructions">
-                <strong>Sign Up:</strong> Go to <a href="https://www.cj.com/" target="_blank">CJ Affiliate</a>.
-            </div>
-        </div>
-        <div id="textmagic" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <i class="fas fa-sms" style="font-size: 32px; margin-right: 10px; color: white;"></i>
-                <h2>TextMagic Credentials</h2>
-            </div>
-            <div class="form" style="margin: 0; max-width: 400px;">
-                <label for="textmagicUsername">Username:</label>
-                <input type="text" id="textmagicUsername" placeholder="Enter Username">
-                <label for="textmagicApiKey">API Key:</label>
-                <input type="text" id="textmagicApiKey" placeholder="Enter API Key">
-                <button data-affiliate="textmagic">Update Credentials</button>
-            </div>
-            <div class="signup-instructions">
-                <strong>Sign Up:</strong> Visit <a href="https://www.textmagic.com/" target="_blank">TextMagic</a>.
-            </div>
-        </div>
-        <div id="tiny" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <i class="fas fa-pen" style="font-size: 32px; margin-right: 10px; color: white;"></i>
-                <h2>tiny Credentials</h2>
-            </div>
-            <div class="form" style="margin: 0; max-width: 400px;">
-                <label for="tinyApiKey">API Key:</label>
-                <input type="text" id="tinyApiKey" placeholder="Enter API Key">
-                <button data-affiliate="tiny">Update Credentials</button>
-            </div>
-            <div class="signup-instructions">
-                <strong>Sign Up:</strong> Visit <a href="https://www.tiny.cloud/" target="_blank">tiny</a>.
-            </div>
+        <div id="site_settings" class="section" style="display: none;">
+            <h2>Site Settings</h2>
+            <p>Use this section to manage site-wide settings and API credentials.</p>
+            <div id="site-settings-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+            <form id="site-settings-form" style="display: none;">
+                <div id="site-settings-fields">
+                    <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
+                    <h3 class="site-settings-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
+                    <a href="#" class="site-settings-api-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-link" style="font-size: 16px;"></i></a>
+                    <p class="site-settings-description" style="margin-bottom: 15px;"></p>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;"><i class="fas fa-save" style="margin-right: 5px;"></i>Save Settings</button>
+            </form>
         </div>
         <div id="userManagementIntro" class="section" style="display: none;">
             <h2>User Management</h2>
             <p>This section allows you to manage different types of users in your system.</p>
             <p>Select a user type from the menu to view their details or modify their permissions:</p>
             <ul>
-                <li><strong>Partners:</strong> Manage users with Partner permissions.</li>
+                <li><strong>Admin:</strong> Manage users with Admin permissions.</li>
+                <li><strong>Partners:</strong> Manage users with WixPro permissions.</li>
                 <li><strong>Communities:</strong> Manage community users.</li>
                 <li><strong>Merchants:</strong> Manage merchant users.</li>
             </ul>
         </div>
-        <div id="merchants" class="section" style="display: none;">
-            <h2>Merchant Management</h2>
+        <div id="user_management" class="section" style="display: none;">
+            <h2><span id="user_role_icon" class="menu-size"></span> <span id="user_role_title"></span></h2>
             <table>
                 <thead>
                     <tr>
                         <th>USERid</th>
                         <th>Contact Name</th>
+                        <th>Website URL</th>
                         <th>Email</th>
                         <th>Phone Number</th>
+                        <th>Permissions</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="merchantsList">
-                    <!-- Dynamically populated by updateUserTable -->
-                </tbody>
-            </table>
-        </div>
-        <div id="communities" class="section" style="display: none;">
-            <h2>Communities Management</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>USERid</th>
-                        <th>Contact Name</th>
-                        <th>Email</th>
-                        <th>Phone Number</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="communitiesList">
-                    <!-- Dynamically populated by updateUserTable -->
-                </tbody>
-            </table>
-        </div>
-        <div id="partners" class="section" style="display: none;">
-            <h2>Partner Management</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>USERid</th>
-                        <th>Contact Name</th>
-                        <th>Email</th>
-                        <th>Phone Number</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="partnersList">
-                    <!-- Dynamically populated by updateUserTable -->
-                </tbody>
+                <tbody id="user_list"></tbody>
             </table>
         </div>
         <div id="testScriptsIntro" class="section" style="display: none;">
@@ -445,7 +329,7 @@ base.inc
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Local CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css?v=1.0.1') }}">
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Fallback for browsers that don't support SVG favicons -->
@@ -529,215 +413,256 @@ base.inc
 </html>
 community.html
 {% extends "base.inc" %}
+
+{% block body_attributes %}data-page-type="admin"{% endblock %}
+
 {% block content %}
-    <div class="main-container">
-        <div class="menu-container">
-            <div class="menu">
-                <button data-section="info">
-                    <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
-                </button>
-                <button data-submenu="my_website_submenu" data-section="my_website_intro_section">
-                    <span class="button-content"><i class="fas fa-globe"></i> My Web Site</span>
-                    <i class="fas fa-caret-right caret"></i>
-                </button>
-                <div id="my_website_submenu" class="submenu">
-                    <button data-section="wix">
-                        <span class="button-content"><span class="icon-wix menu-size"></span> Wix</span>
-                    </button>
-                    <button data-section="wordpress">
-                        <span class="button-content"><span class="icon-wordpress menu-size"></span> WordPress</span>
-                    </button>
-                    <button data-section="squarespace">
-                        <span class="button-content"><span class="icon-squarespace menu-size"></span> Squarespace</span>
-                    </button>
-                    <button data-section="weebly">
-                        <span class="button-content"><span class="icon-weebly menu-size"></span> Weebly</span>
-                    </button>
-                    <button data-section="joomla">
-                        <span class="button-content"><span class="icon-joomla menu-size"></span> Joomla</span>
-                    </button>
-                    <button data-section="no_website">
-                        <span class="button-content"><i class="fas fa-question-circle menu-size"></i> I Don’t Have a Website Yet</span>
-                    </button>
-                </div>
-                <button data-section="categories">
-                    <span class="button-content"><i class="fas fa-list"></i> My Categories</span>
-                </button>
-                <button data-submenu="referrals_submenu" data-section="referrals_intro_section">
+<div class="main-container">
+    <div class="menu-container">
+        <div class="menu">
+            <button data-section="deal_listings">
+                <span class="button-content"><i class="fas fa-tags"></i> Deal Listings</span>
+            </button>
+            <button data-section="affiliates">
+                <span class="button-content"><i class="fas fa-handshake"></i> Affiliate Programs</span>
+            </button>
+            <button data-section="site_settings">
+                <span class="button-content"><i class="fas fa-tools"></i> Site Settings</span>
+            </button>
+            <button data-submenu="userManagement" data-section="userManagementIntro">
+                <span class="button-content"><i class="fas fa-users"></i> User Management</span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="userManagement" class="submenu">
+                <button data-section="user_management" data-role="admin">
                     <span class="button-content">
-                        <span class="icon-community menu-size"></span> My Referrals
+                        <i class="icon-admin" style="height: 16px; width: 16px;"></i> Admin
                     </span>
+                </button>
+                <button data-section="user_management" data-role="wixpro">
+                    <span class="button-content">
+                        <i class="icon-partner" style="height: 16px; width: 16px;"></i> Partners
+                    </span>
+                </button>
+                <button data-section="user_management" data-role="community">
+                    <span class="button-content">
+                        <i class="icon-community" style="height: 16px; width: 16px;"></i> Communities
+                    </span>
+                </button>
+                <button data-section="user_management" data-role="merchant">
+                    <span class="button-content">
+                        <i class="icon-merchant" style="height: 16px; width: 16px;"></i> Merchants
+                    </span>
+                </button>
+            </div>
+            <button data-submenu="testScripts" data-section="testScriptsIntro">
+                <span class="button-content"><i class="fas fa-flask"></i> Test Scripts</span>
+                <i class="fas fa-caret-right caret"></i>
+            </button>
+            <div id="testScripts" class="submenu">
+                <button data-href="/partner">
+                    <span class="button-content">
+                        <span class="icon-group">
+                            <i class="icon-partner" style="height: 16px; width: 16px;"></i>
+                            <i class="fas fa-flask small-icon"></i>
+                        </span> Partner
+                    </span>
+                </button>
+                <button data-href="/community">
+                    <span class="button-content">
+                        <span class="icon-group">
+                            <i class="icon-community" style="height: 16px; width: 16px;"></i>                            
+                            <i class="fas fa-flask small-icon"></i>
+                        </span> Community
+                    </span>
+                </button>
+                <button data-href="/merchant">
+                    <span class="button-content">
+                        <span class="icon-group">
+                            <i class="icon-merchant" style="height: 16px; width: 16px;"></i>                            
+                            <i class="fas fa-flask small-icon"></i>
+                        </span> Merchant
+                    </span>
+                </button>
+                <button data-submenu="referralTests" data-section="referralTestsIntro">
+                    <span class="button-content"><i class="fas fa-link"></i> Referral Tests</span>
                     <i class="fas fa-caret-right caret"></i>
                 </button>
-                <div id="referrals_submenu" class="submenu">
-                    <button data-section="visits">
-                        <span class="button-content"><i class="fas fa-eye"></i> Visits</span>
+                <div id="referralTests" class="submenu">
+                    <button data-section="page_visit_test">
+                        <span class="button-content"><i class="fas fa-eye"></i> Page Visit Referral Test</span>
                     </button>
-                    <button data-section="orders">
-                        <span class="button-content"><i class="fas fa-shopping-cart"></i> Orders</span>
+                    <button data-section="order_test">
+                        <span class="button-content"><i class="fas fa-shopping-cart"></i> Order Referral Test</span>
                     </button>
                 </div>
-                {% include 'account_menu.inc' with context %}
+            </div>
+            {% include 'account_menu.inc' with context %}
+        </div>
+    </div>
+    <div class="content-wrapper">
+        {% include 'welcome.inc' with context %}
+        <div id="deal_listings" class="section" style="display: none;">
+            <h2>Discounted Deal Listings</h2>
+            <p>This section displays all currently active deal listings available across your affiliate programs.</p>
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1; max-width: 300px;">
+                    <h3>Categories</h3>
+                    <div class="treeview" id="categoryTree"></div>
+                </div>
+                <div style="flex: 2;">
+                    <table class="deals-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Title</th>
+                                <th>URL</th>
+                                <th>Price</th>
+                                <th>Original</th>
+                                <th>Discount %</th>
+                                <th>Image</th>
+                                <th>QTY</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dealList"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div class="content-wrapper">
-            {% include 'welcome.inc' with context %}
-            <div id="categories" class="section" style="display: none;">
-                <h2>My Categories</h2>
-                <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
-                <div class="treeview" id="categoryTree"></div>
-            </div>
-            <div id="referrals_intro_section" class="section" style="display: none;">
-                <h2>My Referrals</h2>
-                <p>This section allows you to track your referral activity.</p>
-                <p>Select from the submenu options:</p>
-                <ul>
-                    <li><strong>Visits:</strong> View pages visited through your referral links.</li>
-                    <li><strong>Orders:</strong> See orders placed via your referrals.</li>
-                </ul>
-            </div>
-            <div id="visits" class="section" style="display: none;">
-                <h2>Visits</h2>
-                <div class="toggle-section" data-toggle="visits_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
-                <div id="visits_this_month" class="toggle-content open">
-                    <table id="visitsTableThisMonth">
-                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                        <tbody id="visitsListThisMonth"></tbody>
+        <div id="affiliates" class="section" style="display: none;">
+            <h2>Affiliate Programs</h2>
+            <p>Use this section to manage your affiliate program credentials.</p>
+            <div id="affiliate-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+            <form id="affiliate-form" style="display: none;">
+                <div id="affiliate-fields">
+                    <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
+                    <h3 class="affiliate-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
+                    <a href="#" class="affiliate-api-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-link" style="font-size: 16px;"></i></a>
+                    <a href="#" class="affiliate-signup-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-user-plus" style="font-size: 16px;"></i></a>
+                    <a href="#" class="affiliate-readme-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-book" style="font-size: 16px;"></i></a>
+                    <a href="#" class="affiliate-keys-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-key" style="font-size: 16px;"></i></a>
+                    <p class="affiliate-description" style="margin-bottom: 15px;"></p>
+                    <div id="affiliate-readme-content" style="display: none;"></div>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;"><i class="fas fa-save" style="margin-right: 5px;"></i>Save Settings</button>
+            </form>
+        </div>
+        <div id="site_settings" class="section" style="display: none;">
+            <h2>Site Settings</h2>
+            <p>Use this section to manage site-wide settings and API credentials.</p>
+            <div id="site-settings-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+            <form id="site-settings-form" style="display: none;">
+                <div id="site-settings-fields">
+                    <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
+                    <h3 class="site-settings-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
+                    <a href="#" class="site-settings-api-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-link" style="font-size: 16px;"></i></a>
+                    <p class="site-settings-description" style="margin-bottom: 15px;"></p>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;"><i class="fas fa-save" style="margin-right: 5px;"></i>Save Settings</button>
+            </form>
+        </div>
+        <div id="userManagementIntro" class="section" style="display: none;">
+            <h2>User Management</h2>
+            <p>This section allows you to manage different types of users in your system.</p>
+            <p>Select a user type from the menu to view their details or modify their permissions:</p>
+            <ul>
+                <li><strong>Admin:</strong> Manage users with Admin permissions.</li>
+                <li><strong>Partners:</strong> Manage users with WixPro permissions.</li>
+                <li><strong>Communities:</strong> Manage community users.</li>
+                <li><strong>Merchants:</strong> Manage merchant users.</li>
+            </ul>
+        </div>
+        <div id="user_management" class="section" style="display: none;">
+            <h2><span id="user_role_icon" class="menu-size"></span> <span id="user_role_title"></span></h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>USERid</th>
+                        <th>Contact Name</th>
+                        <th>Website URL</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Permissions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user_list"></tbody>
+            </table>
+        </div>
+        <div id="testScriptsIntro" class="section" style="display: none;">
+            <h2>Test Scripts</h2>
+            <p>Use this section to test referral tracking and other scripts.</p>
+            <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
+        </div>
+        <div id="referralTestsIntro" class="section" style="display: none;">
+            <h2>Referral Tests</h2>
+            <p>This section contains tools to test referral tracking functionality.</p>
+            <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
+        </div>
+        <div id="page_visit_test" class="section" style="display: none;">
+            <h2>Page Visit Referral Test</h2>
+            <div class="form">
+                <form id="pageVisitForm">
+                    <table>
+                        <tr>
+                            <td><label for="pageReferer">Referer:</label></td>
+                            <td><select id="pageReferer" name="referer"></select></td>
+                        </tr>
+                        <tr>
+                            <td><label for="page">Page:</label></td>
+                            <td><input type="text" id="page" name="page" value="/home"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="pageTimestamp">Timestamp:</label></td>
+                            <td><input type="text" id="pageTimestamp" name="timestamp"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><button type="submit">Submit Page Visit</button></td>
+                        </tr>
                     </table>
-                </div>
-                <div class="toggle-section" data-toggle="visits_last_month"><i class="fas fa-calendar-alt"></i> Last Month</div>
-                <div id="visits_last_month" class="toggle-content">
-                    <table id="visitsTableLastMonth">
-                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                        <tbody id="visitsListLastMonth"></tbody>
+                </form>
+            </div>
+        </div>
+        <div id="order_test" class="section" style="display: none;">
+            <h2>Order Referral Test</h2>
+            <div class="form">
+                <form id="orderForm">
+                    <table>
+                        <tr>
+                            <td><label for="orderReferer">Referer:</label></td>
+                            <td><select id="orderReferer" name="referer"></select></td>
+                        </tr>
+                        <tr>
+                            <td><label for="orderId">Order ID:</label></td>
+                            <td><input type="text" id="orderId" name="orderId" value="ORD12345"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="buyer">Buyer Name:</label></td>
+                            <td><input type="text" id="buyer" name="buyer" value="John Doe"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="total">Total Amount (£):</label></td>
+                            <td><input type="number" id="total" name="total" value="99.99" step="0.01"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="orderTimestamp">Timestamp:</label></td>
+                            <td><input type="text" id="orderTimestamp" name="timestamp"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><button type="submit">Submit Order</button></td>
+                        </tr>
                     </table>
-                </div>
-                <div class="toggle-section" data-toggle="visits_earlier"><i class="fas fa-history"></i> Earlier</div>
-                <div id="visits_earlier" class="toggle-content">
-                    <table id="visitsTableEarlier">
-                        <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                        <tbody id="visitsListEarlier"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="orders" class="section" style="display: none;">
-                <h2>Orders</h2>
-                <div class="toggle-section" data-toggle="orders_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
-                <div id="orders_this_month" class="toggle-content open">
-                    <table id="ordersTableThisMonth">
-                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                        <tbody id="ordersListThisMonth"></tbody>
-                    </table>
-                </div>
-                <div class="toggle-section" data-toggle="orders_last_month"><i class="fas fa-calendar-alt"></i> Last Month</div>
-                <div id="orders_last_month" class="toggle-content">
-                    <table id="ordersTableLastMonth">
-                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                        <tbody id="ordersListLastMonth"></tbody>
-                    </table>
-                </div>
-                <div class="toggle-section" data-toggle="orders_earlier"><i class="fas fa-history"></i> Earlier</div>
-                <div id="orders_earlier" class="toggle-content">
-                    <table id="ordersTableEarlier">
-                        <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                        <tbody id="ordersListEarlier"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="my_website_intro_section" class="section" style="display: none;">
-                <h2>My Web Site</h2>
-                <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
-                <ul>
-                    <li><strong>Wix:</strong> Easy drag-and-drop builder.</li>
-                    <li><strong>WordPress:</strong> Flexible CMS.</li>
-                    <li><strong>Squarespace:</strong> Stylish solution.</li>
-                    <li><strong>Weebly:</strong> Simple builder.</li>
-                    <li><strong>Joomla:</strong> Robust CMS.</li>
-                    <li><strong>I Don’t Have a Website Yet:</strong> Request a site setup.</li>
-                </ul>
-            </div>
-            <div id="wix" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <span class="icon-wix section-icon"></span>
-                    <h2>Wix Integration</h2>
-                </div>
-                <p>Add discounts to your Wix site:</p>
-                <ol>
-                    <li>Log in to Wix and open the Editor.</li>
-                    <li>Click "+" > "Embed" > "Embed a Widget".</li>
-                    <li>Paste: <code id="wixCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Publish.</li>
-                </ol>
-            </div>
-            <div id="wordpress" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <span class="icon-wordpress section-icon"></span>
-                    <h2>WordPress Integration</h2>
-                </div>
-                <p>Add discounts to WordPress:</p>
-                <ol>
-                    <li>Log in to WordPress admin.</li>
-                    <li>Go to "Pages" > "Add New".</li>
-                    <li>Add "Custom HTML" block: <code id="wordpressCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Publish.</li>
-                </ol>
-            </div>
-            <div id="squarespace" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <span class="icon-squarespace section-icon"></span>
-                    <h2>Squarespace Integration</h2>
-                </div>
-                <p>Integrate discounts into Squarespace:</p>
-                <ol>
-                    <li>Log in to Squarespace editor.</li>
-                    <li>Add a new page.</li>
-                    <li>Add "Code" block: <code id="squarespaceCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Update site.</li>
-                </ol>
-            </div>
-            <div id="weebly" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <span class="icon-weebly section-icon"></span>
-                    <h2>Weebly Integration</h2>
-                </div>
-                <p>Add discounts to Weebly:</p>
-                <ol>
-                    <li>Log in to Weebly editor.</li>
-                    <li>Drag "Embed Code" onto page.</li>
-                    <li>Paste: <code id="weeblyCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Publish.</li>
-                </ol>
-            </div>
-            <div id="joomla" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <span class="icon-joomla section-icon"></span>
-                    <h2>Joomla Integration</h2>
-                </div>
-                <p>Integrate discounts into Joomla:</p>
-                <ol>
-                    <li>Log in to Joomla admin.</li>
-                    <li>Go to "Content" > "Articles" > "Add New".</li>
-                    <li>Paste in "Code" view: <code id="joomlaCode"><iframe src="https://clubmadeira.io/discounts?referrer=[YourUserID]" width="100%" height="600"></iframe></code></li>
-                    <li>Save.</li>
-                </ol>
-            </div>
-            <div id="no_website" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <i class="fas fa-question-circle section-icon"></i>
-                    <h2>I Don’t Have a Website Yet</h2>
-                </div>
-                <p>Request a custom Wix website for your community from our Wix Professionals. Fill out the form below to specify your needs:</p>
-                {% with user_type='community' %}
-                    {% include 'siterequest.inc' %}
-                {% endwith %}
+                </form>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
 login.html
 {% extends "base.inc" %}
+{% block body_attributes %}data-page-type="login"{% endblock %}
 {% block content %}
-<!-- Deployed 2025-03-30 v8 -->
+<!-- Deployed 2025-03-31 v11 -->
 <div class="login-page">
     <div id="loadingOverlay" class="hidden">
         <div class="multicircle-loader">
@@ -753,7 +678,7 @@ login.html
         <div class="custom-login-notice">
             <span class="highlight">Please log in</span> to access your account. If you don’t have an account, click "Sign Up" below.
         </div>
-        <form id="loginForm" class="form">
+        <form id="loginForm" class="form" method="POST" action="/">
             <div class="form-group">
                 <label for="loginEmail">Email:</label>
                 <div class="input-container">
@@ -777,7 +702,7 @@ login.html
 
     <div class="container hidden" id="forgotPasswordContainer">
         <h2>Forgot Password</h2>
-        <form id="forgotPasswordForm" class="form">
+        <form id="forgotPasswordForm" class="form" method="POST" action="/reset-password">
             <div class="form-group">
                 <label for="forgotEmail">Email:</label>
                 <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
@@ -791,7 +716,7 @@ login.html
 
     <div class="container hidden" id="verifyOtpContainer">
         <h2>Verify OTP</h2>
-        <form id="verifyOtpForm" class="form">
+        <form id="verifyOtpForm" class="form" method="POST" action="/verify-reset-code">
             <div class="form-group">
                 <label for="verifyEmail">Email:</label>
                 <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required>
@@ -818,10 +743,17 @@ login.html
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Login script loaded - Version: v8 - Timestamp:', new Date().toISOString());
+        console.log('Login script loaded - Version: v11 - Timestamp:', new Date().toISOString());
 
-        if (!window.siteNavigation || !window.siteNavigation.fetchProtectedPage || !window.decodeJWT || !window.initialize) {
-            console.error('Required scripts (site-navigation.js, site-auth.js, or page-load.js) not loaded');
+        if (!window.apiUrl) {
+            console.error('window.apiUrl is not defined. Form will submit natively.');
+            showLogin();
+            return;
+        }
+
+        if (!window.siteNavigation || !window.decodeJWT || !window.initialize) {
+            console.error('Required scripts not loaded. Falling back to native form submission.');
+            toastr.error('Failed to load required scripts. Please refresh the page.');
             showLogin();
             return;
         }
@@ -861,43 +793,35 @@ login.html
             hideLoadingOverlay();
         }
 
-        function redirectBasedOnPermissions() {
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                showLogin();
-                return;
+        // Utility to set a cookie
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
             }
-
-            try {
-                const decoded = decodeJWT(token);
-                const permissions = decoded.permissions || [];
-                let redirectPath;
-                if (permissions.includes('admin')) redirectPath = '/admin';
-                else if (permissions.includes('wixpro')) redirectPath = '/partner';
-                else if (permissions.includes('merchant')) redirectPath = '/merchant';
-                else if (permissions.includes('community')) redirectPath = '/community';
-                else redirectPath = '/';
-
-                if (window.location.pathname !== redirectPath) {
-                    console.log('Redirecting to:', redirectPath);
-                    showLoadingOverlay();
-                    window.siteNavigation.fetchProtectedPage(redirectPath)
-                        .then(() => {
-                            const pageType = redirectPath.slice(1) || 'default';
-                            window.initialize(pageType);
-                        });
-                } else {
-                    showLogin();
-                }
-            } catch (e) {
-                console.error('Invalid token:', e.message);
-                localStorage.removeItem('authToken');
-                showLogin();
-            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax; Secure";
+            console.log('setCookie - Set cookie:', name, 'Value:', value);
         }
 
-        // Initial check
-        redirectBasedOnPermissions();
+        // Utility to get a cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Utility to delete a cookie
+        function deleteCookie(name) {
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; SameSite=Lax; Secure';
+            console.log('deleteCookie - Deleted cookie:', name);
+        }
 
         document.querySelectorAll('.toggle-password').forEach(toggle => {
             toggle.addEventListener('click', function() {
@@ -913,154 +837,168 @@ login.html
         if (loginForm) {
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                console.log('Login form submitted');
                 const email = document.getElementById('loginEmail').value.trim();
                 const password = document.getElementById('loginPassword').value;
 
+                if (!email || !password) {
+                    toastr.error('Please enter both email and password.');
+                    return;
+                }
+
                 showLoadingOverlay();
                 try {
-                    const response = await fetch(`${window.apiUrl}/login`, {
+                    const response = await fetch('/', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                        body: JSON.stringify({ email, password })
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'Accept': 'application/json' 
+                        },
+                        body: JSON.stringify({ email, password }),
+                        credentials: 'include' // Ensure cookies are sent
                     });
-                    if (!response.ok) throw new Error((await response.json()).message || 'Login failed');
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Login failed');
+                    }
 
                     const data = await response.json();
                     if (data.status !== 'success') throw new Error(data.message || 'Login failed');
 
                     localStorage.setItem('authToken', data.token);
-                    if (data.userId) localStorage.setItem('userId', data.userId);
-
-                    const decoded = decodeJWT(data.token);
-                    const permissions = decoded.permissions || [];
-                    const needsVerification = (permissions.includes('merchant') || permissions.includes('community')) && !permissions.includes('verified');
-
-                    if (needsVerification) {
-                        const otpResponse = await fetch(`${window.apiUrl}/reset-password`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email })
-                        });
-                        const otpData = await otpResponse.json();
-                        if (!otpResponse.ok) throw new Error(otpData.message || 'Failed to send OTP');
-
-                        toastr.success('OTP sent to your phone. Please enter it below.');
-                        const loginContainer = document.getElementById('loginContainer');
-                        loginContainer.innerHTML = `
-                            <h2>Verify OTP</h2>
-                            <form id="loginOtpForm" class="form">
-                                <div class="form-group">
-                                    <label for="loginOtp">One-Time Password:</label>
-                                    <input type="text" id="loginOtp" name="otp" placeholder="Enter OTP" required>
-                                </div>
-                                <button type="submit">Verify OTP</button>
-                            </form>
-                        `;
-                        hideLoadingOverlay();
-
-                        document.getElementById('loginOtpForm').addEventListener('submit', async (e) => {
-                            e.preventDefault();
-                            const otp = document.getElementById('loginOtp').value.trim();
-                            if (!otp) {
-                                toastr.error('Please enter the OTP.');
-                                return;
-                            }
-
-                            showLoadingOverlay();
-                            const verifyResponse = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ email, code: otp, new_password: password })
-                            });
-                            const verifyData = await verifyResponse.json();
-                            if (!verifyResponse.ok) throw new Error(verifyData.message || 'OTP verification failed');
-
-                            localStorage.setItem('authToken', verifyData.token);
-                            toastr.success('Verification successful! Redirecting...');
-                            redirectBasedOnPermissions();
-                        });
-                    } else {
-                        redirectBasedOnPermissions();
-                    }
+                    if (data.user_id) localStorage.setItem('userId', data.user_id);  // Already "user_id", kept for consistency
+                    localStorage.setItem('expectedPageType', data['x-role']);
+                    setCookie('authToken', data.token, 7); // Explicitly set cookie before redirect
+                    console.log('Login success - Token:', data.token, 'Redirecting to:', data.redirect_url);
+                    window.location.href = data.redirect_url;
                 } catch (error) {
+                    console.error('Login error:', error.message);
                     toastr.error(error.message || 'Unable to connect to server.');
+                    hideLoadingOverlay();
+                    showLogin();
+                }
+            });
+        }
+
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('forgotEmail').value.trim();
+
+                showLoadingOverlay();
+                try {
+                    const response = await fetch(`${window.apiUrl}/reset-password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || 'Reset request failed');
+
+                    toastr.success('A one-time password has been sent to your phone.');
+                    showVerifyOtp(email);
+                } catch (error) {
+                    toastr.error(error.message || 'Error sending OTP');
                     hideLoadingOverlay();
                 }
             });
         }
 
-        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('forgotEmail').value.trim();
+        const verifyOtpForm = document.getElementById('verifyOtpForm');
+        if (verifyOtpForm) {
+            verifyOtpForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('verifyEmail').value.trim();
+                const code = document.getElementById('otpCode').value.trim();
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
 
-            showLoadingOverlay();
-            try {
-                const response = await fetch(`${window.apiUrl}/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'Reset request failed');
+                const passwordRegex = /^(?=.*\d).{8,}$/;
+                if (!passwordRegex.test(newPassword)) {
+                    toastr.error('New password must be at least 8 characters long and include numbers');
+                    return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                    toastr.error('New password and confirmation do not match');
+                    return;
+                }
 
-                toastr.success('A one-time password has been sent to your phone.');
-                showVerifyOtp(email);
-            } catch (error) {
-                toastr.error(error.message || 'Error sending OTP');
-                hideLoadingOverlay();
-            }
-        });
+                showLoadingOverlay();
+                try {
+                    const response = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, code, new_password: newPassword })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.message || 'Verification failed');
 
-        document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('verifyEmail').value.trim();
-            const code = document.getElementById('otpCode').value.trim();
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+                    toastr.success('Password updated successfully!');
+                    showLogin();
+                } catch (error) {
+                    toastr.error(error.message || 'Error verifying OTP');
+                    hideLoadingOverlay();
+                }
+            });
+        }
 
-            const passwordRegex = /^(?=.*\d).{8,}$/;
-            if (!passwordRegex.test(newPassword)) {
-                toastr.error('New password must be at least 8 characters long and include numbers');
-                return;
-            }
-            if (newPassword !== confirmNewPassword) {
-                toastr.error('New password and confirmation do not match');
-                return;
-            }
+        // Check if already logged in on page load
+        const token = localStorage.getItem('authToken');
+        const currentPageType = document.body.getAttribute('data-page-type') || 'login';
+        const expectedPageType = localStorage.getItem('expectedPageType') || 'login';
+        const redirectCount = parseInt(localStorage.getItem('loginRedirectCount') || '0');
+        const xPageType = document.head.querySelector('meta[name="x-page-type"]')?.content || currentPageType;
 
-            showLoadingOverlay();
-            try {
-                const response = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, code, new_password: newPassword })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'Verification failed');
+        console.log('Page load check - Token:', token ? '[present]' : 'null', 'Current Page Type:', currentPageType, 'Expected Page Type:', expectedPageType, 'X-Page-Type:', xPageType, 'Redirect Count:', redirectCount);
 
-                toastr.success('Password updated successfully!');
+        if (token && currentPageType === 'login' && expectedPageType !== 'login') {
+            if (redirectCount > 2) {
+                console.error('Login redirect loop detected, clearing token');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('expectedPageType');
+                localStorage.setItem('loginRedirectCount', '0');
+                deleteCookie('authToken');
                 showLogin();
-            } catch (error) {
-                toastr.error(error.message || 'Error verifying OTP');
-                hideLoadingOverlay();
+            } else if (xPageType === 'login') {
+                console.error('Server returned login page despite valid token, possible session mismatch');
+                toastr.error('Session issue detected, please log in again');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('expectedPageType');
+                localStorage.setItem('loginRedirectCount', '0');
+                deleteCookie('authToken');
+                showLogin();
+            } else {
+                console.log('Redirecting to / with token, incrementing redirect count');
+                localStorage.setItem('loginRedirectCount', redirectCount + 1);
+                setCookie('authToken', token, 7);
+                window.location.href = '/';
             }
-        });
+        } else {
+            localStorage.setItem('loginRedirectCount', '0');
+            localStorage.removeItem('expectedPageType');
+            showLogin();
+        }
     });
 </script>
 {% endblock %}
 merchant.html
 {% extends 'base.inc' %}
-
+{% block body_attributes %}data-page-type="merchant"{% endblock %}
 {% block content %}
     <div class="main-container" style="margin-top: 0; padding-top: 0;">
         <!-- Menu Container -->
         <div class="menu-container">
             <div class="menu">
+                <input type="text" id="userId" style="display: none;" value="{{ user.user_id if user else '' }}">
                 <button data-section="info">
                     <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
                 </button>
-                <button data-submenu="my-store-submenu" data-section="my-store-info">
-                    <span class="button-content"><i class="fas fa-store"></i> My Store</span>
+                <button data-section="my-products">
+                    <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
+                </button>
+                <button data-submenu="my-store-submenu" data-section="store-request">
+                    <span class="button-content"><i class="fas fa-store"></i> My Store Request</span>
                     <i class="fas fa-caret-right caret"></i>
                 </button>
                 <div id="my-store-submenu" class="submenu">
@@ -1071,9 +1009,6 @@ merchant.html
                         <span class="button-content"><i class="fas fa-store-alt"></i> Create Store</span>
                     </button>
                 </div>
-                <button data-section="my-products">
-                    <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
-                </button>
                 <button data-submenu="documentation-submenu" data-section="documentation-content">
                     <span class="button-content"><i class="fas fa-book"></i> Documentation</span>
                     <i class="fas fa-caret-right caret"></i>
@@ -1088,9 +1023,9 @@ merchant.html
         <!-- Content Wrapper -->
         <div class="content-wrapper" style="margin-top: 0;">  
             {% include 'welcome.inc' with context %}       
-            <div id="my-store-info" class="section" style="display: none;">
-                <h2>My Store</h2>
-                <p>Manage your store settings and integrations here.</p>
+            <div id="store-request" class="section" style="display: none;">
+                <h2>My Store Request</h2>
+                <p>Manage your store request details here.</p>
             </div>
             <div id="api-keys" class="section" style="display: none;">
                 <h2>API Keys</h2>
@@ -1127,6 +1062,9 @@ merchant.html
             </div>
         </div>
     </div>
+    <script>
+        console.log('merchant.html - Template loaded');
+    </script>
 {% endblock %}
 overlay.inc
 <div id="loadingOverlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 1); justify-content: center; align-items: center; z-index: 9999;">
@@ -1145,12 +1083,17 @@ overlay.inc
 </style>
 partner.html
 {% extends "base.inc" %}
+{% block body_attributes %}data-page-type="partner"{% endblock %}
 {% block content %}
     <div class="main-container">
         <div class="menu-container">
             <div class="menu">
+                <input type="text" id="userId" style="display: none;" value="{{ user.user_id if user else '' }}">
                 <button data-section="info">
                     <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
+                </button>
+                <button data-section="integrations">
+                    <span class="button-content"><i class="fas fa-plug"></i> Integrations</span>
                 </button>
                 <button data-submenu="my-account-submenu" data-section="my-account">
                     <span class="button-content"><i class="fas fa-cog"></i> My Account</span>
@@ -1164,77 +1107,15 @@ partner.html
                         <span class="button-content"><i class="fas fa-key"></i> Change Password</span>
                     </button>
                 </div>
-                <button data-section="my-products">
-                    <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
-                </button>
-                <button data-section="site-requests">
-                    <span class="button-content"><i class="fas fa-file-alt"></i> Site Requests</span>
-                </button>
-                <button data-section="documentation">
-                    <span class="button-content"><i class="fas fa-book"></i> Documentation</span>
-                </button>
                 {% include 'account_menu.inc' with context %}
             </div>
         </div>
         <div class="content-wrapper">
             {% include 'welcome.inc' with context %}
-            <div id="my-products" class="section" style="display: none;">
-                <h2>My Products</h2>
-                <p>These are the products from your parts feed.</p>
-                <table id="productTable">
-                    <thead>
-                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
-                    </thead>
-                    <tbody id="productList"></tbody>
-                </table>
-            </div>
-            <div id="site-requests" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <i class="fas fa-file-alt" style="font-size: 32px; margin-right: 10px;"></i>
-                    <h2>Site Requests</h2>
-                </div>
-                <p>View and manage site requests from merchants and communities. Click a row to see details.</p>
-                <table id="siteRequestsTable">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Received At</th>
-                            <th>Contact Name</th>
-                            <th>Email</th>
-                            <th>Organisation</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="siteRequestsList"></tbody>
-                </table>
-                <div id="apiKeyModal" class="modal" style="display: none;">
-                    <div class="modal-content">
-                        <span class="close" data-action="closeApiKeyModal"><i class="fas fa-times"></i></span>
-                        <h3><i class="fas fa-key"></i> Enter API Key</h3>
-                        <label for="merchantWixClientId">Wix Client ID:</label>
-                        <input type="text" id="merchantWixClientId" placeholder="Enter Wix Client ID">
-                        <button data-action="saveMerchantWixClientId"><i class="fas fa-save"></i> Save</button>
-                    </div>
-                </div>
-            </div>
-            <div id="site-request-detail" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <i class="fas fa-info-circle" style="font-size: 32px; margin-right: 10px;"></i>
-                    <h2>Site Request Details</h2>
-                </div>
-                <div class="settings-form">
-                    <button data-section="site-requests"><i class="fas fa-arrow-left"></i> Back to Site Requests</button>
-                    <div id="siteRequestContent"></div>
-                </div>
-            </div>
-            <div id="documentation" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <i class="fas fa-book" style="font-size: 32px; margin-right: 10px;"></i>
-                    <h2>Documentation</h2>
-                </div>
-                <div id="documentation-content">
-                    <p>This section provides documentation for integrating with clubmadeira.io. Select a specific topic from the submenu.</p>
-                </div>
+            <div id="integrations" class="section" style="display: none;">
+                <h2>Integrations</h2>
+                <p>View your integration statuses below.</p>
+                <ul id="integrationList"></ul>
             </div>
             <div id="my-account" class="section" style="display: none;">
                 <h2>My Account</h2>
@@ -1248,6 +1129,9 @@ partner.html
             </div>
         </div>
     </div>
+    <script>
+        console.log('partner.html - Template loaded');
+    </script>
 {% endblock %}
 roles.inc
 <!-- templates/roles.inc -->

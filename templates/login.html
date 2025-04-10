@@ -1,6 +1,7 @@
 {% extends "base.inc" %}
+{% block body_attributes %}data-page-type="login"{% endblock %}
 {% block content %}
-<!-- Deployed 2025-03-30 v8 -->
+<!-- Deployed 2025-03-31 v11, Updated 2025-04-09 -->
 <div class="login-page">
     <div id="loadingOverlay" class="hidden">
         <div class="multicircle-loader">
@@ -10,13 +11,10 @@
             <div class="circle circle4"></div>
         </div>
     </div>
-
-    <div class="container hidden" id="loginContainer">
-        <h2>Login</h2>
-        <div class="custom-login-notice">
-            <span class="highlight">Please log in</span> to access your account. If you don’t have an account, click "Sign Up" below.
-        </div>
-        <form id="loginForm" class="form">
+    
+    <div class="container" id="loginContainer">
+        {% include 'welcome.inc' with context %}
+        <form id="loginForm" class="form" method="POST" action="/">
             <div class="form-group">
                 <label for="loginEmail">Email:</label>
                 <div class="input-container">
@@ -34,13 +32,13 @@
         </form>
         <div class="toggle-link">
             <a href="{{ url_for('authentication_bp.signup') }}">Need an account? Sign Up</a><br>
-            <a onclick="showForgotPassword()">Forgot Password?</a>
+            <a href="#" onclick="showForgotPassword(); return false;">Forgot Password?</a>
         </div>
     </div>
 
     <div class="container hidden" id="forgotPasswordContainer">
         <h2>Forgot Password</h2>
-        <form id="forgotPasswordForm" class="form">
+        <form id="forgotPasswordForm" class="form" method="POST" action="/reset-password">
             <div class="form-group">
                 <label for="forgotEmail">Email:</label>
                 <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
@@ -48,13 +46,13 @@
             <button type="submit">Send OTP via SMS</button>
         </form>
         <div class="toggle-link">
-            <a onclick="showLogin()">Back to Login</a>
+            <a href="#" onclick="showLogin(); return false;">Back to Login</a>
         </div>
     </div>
 
     <div class="container hidden" id="verifyOtpContainer">
         <h2>Verify OTP</h2>
-        <form id="verifyOtpForm" class="form">
+        <form id="verifyOtpForm" class="form" method="POST" action="/verify-reset-code">
             <div class="form-group">
                 <label for="verifyEmail">Email:</label>
                 <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required>
@@ -74,240 +72,8 @@
             <button type="submit">Update Password</button>
         </form>
         <div class="toggle-link">
-            <a onclick="showLogin()">Back to Login</a>
+            <a href="#" onclick="showLogin(); return false;">Back to Login</a>
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Login script loaded - Version: v8 - Timestamp:', new Date().toISOString());
-
-        if (!window.siteNavigation || !window.siteNavigation.fetchProtectedPage || !window.decodeJWT || !window.initialize) {
-            console.error('Required scripts (site-navigation.js, site-auth.js, or page-load.js) not loaded');
-            showLogin();
-            return;
-        }
-
-        function showLoadingOverlay() {
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) overlay.classList.remove('hidden');
-        }
-
-        function hideLoadingOverlay() {
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) overlay.classList.add('hidden');
-        }
-
-        function showLogin() {
-            const loginContainer = document.getElementById('loginContainer');
-            const forgotContainer = document.getElementById('forgotPasswordContainer');
-            const verifyContainer = document.getElementById('verifyOtpContainer');
-            if (loginContainer) loginContainer.classList.remove('hidden');
-            if (forgotContainer) forgotContainer.classList.add('hidden');
-            if (verifyContainer) verifyContainer.classList.add('hidden');
-            hideLoadingOverlay();
-        }
-
-        function showForgotPassword() {
-            document.getElementById('loginContainer').classList.add('hidden');
-            document.getElementById('forgotPasswordContainer').classList.remove('hidden');
-            document.getElementById('verifyOtpContainer').classList.add('hidden');
-            hideLoadingOverlay();
-        }
-
-        function showVerifyOtp(email) {
-            document.getElementById('loginContainer').classList.add('hidden');
-            document.getElementById('forgotPasswordContainer').classList.add('hidden');
-            document.getElementById('verifyOtpContainer').classList.remove('hidden');
-            document.getElementById('verifyEmail').value = email;
-            hideLoadingOverlay();
-        }
-
-        function redirectBasedOnPermissions() {
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                showLogin();
-                return;
-            }
-
-            try {
-                const decoded = decodeJWT(token);
-                const permissions = decoded.permissions || [];
-                let redirectPath;
-                if (permissions.includes('admin')) redirectPath = '/admin';
-                else if (permissions.includes('wixpro')) redirectPath = '/partner';
-                else if (permissions.includes('merchant')) redirectPath = '/merchant';
-                else if (permissions.includes('community')) redirectPath = '/community';
-                else redirectPath = '/';
-
-                if (window.location.pathname !== redirectPath) {
-                    console.log('Redirecting to:', redirectPath);
-                    showLoadingOverlay();
-                    window.siteNavigation.fetchProtectedPage(redirectPath)
-                        .then(() => {
-                            const pageType = redirectPath.slice(1) || 'default';
-                            window.initialize(pageType);
-                        });
-                } else {
-                    showLogin();
-                }
-            } catch (e) {
-                console.error('Invalid token:', e.message);
-                localStorage.removeItem('authToken');
-                showLogin();
-            }
-        }
-
-        // Initial check
-        redirectBasedOnPermissions();
-
-        document.querySelectorAll('.toggle-password').forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                const input = this.parentElement.querySelector('input');
-                const icon = this.querySelector('i');
-                input.type = input.type === 'password' ? 'text' : 'password';
-                icon.classList.toggle('fa-eye');
-                icon.classList.toggle('fa-eye-slash');
-            });
-        });
-
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const email = document.getElementById('loginEmail').value.trim();
-                const password = document.getElementById('loginPassword').value;
-
-                showLoadingOverlay();
-                try {
-                    const response = await fetch(`${window.apiUrl}/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-                    if (!response.ok) throw new Error((await response.json()).message || 'Login failed');
-
-                    const data = await response.json();
-                    if (data.status !== 'success') throw new Error(data.message || 'Login failed');
-
-                    localStorage.setItem('authToken', data.token);
-                    if (data.userId) localStorage.setItem('userId', data.userId);
-
-                    const decoded = decodeJWT(data.token);
-                    const permissions = decoded.permissions || [];
-                    const needsVerification = (permissions.includes('merchant') || permissions.includes('community')) && !permissions.includes('verified');
-
-                    if (needsVerification) {
-                        const otpResponse = await fetch(`${window.apiUrl}/reset-password`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email })
-                        });
-                        const otpData = await otpResponse.json();
-                        if (!otpResponse.ok) throw new Error(otpData.message || 'Failed to send OTP');
-
-                        toastr.success('OTP sent to your phone. Please enter it below.');
-                        const loginContainer = document.getElementById('loginContainer');
-                        loginContainer.innerHTML = `
-                            <h2>Verify OTP</h2>
-                            <form id="loginOtpForm" class="form">
-                                <div class="form-group">
-                                    <label for="loginOtp">One-Time Password:</label>
-                                    <input type="text" id="loginOtp" name="otp" placeholder="Enter OTP" required>
-                                </div>
-                                <button type="submit">Verify OTP</button>
-                            </form>
-                        `;
-                        hideLoadingOverlay();
-
-                        document.getElementById('loginOtpForm').addEventListener('submit', async (e) => {
-                            e.preventDefault();
-                            const otp = document.getElementById('loginOtp').value.trim();
-                            if (!otp) {
-                                toastr.error('Please enter the OTP.');
-                                return;
-                            }
-
-                            showLoadingOverlay();
-                            const verifyResponse = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ email, code: otp, new_password: password })
-                            });
-                            const verifyData = await verifyResponse.json();
-                            if (!verifyResponse.ok) throw new Error(verifyData.message || 'OTP verification failed');
-
-                            localStorage.setItem('authToken', verifyData.token);
-                            toastr.success('Verification successful! Redirecting...');
-                            redirectBasedOnPermissions();
-                        });
-                    } else {
-                        redirectBasedOnPermissions();
-                    }
-                } catch (error) {
-                    toastr.error(error.message || 'Unable to connect to server.');
-                    hideLoadingOverlay();
-                }
-            });
-        }
-
-        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('forgotEmail').value.trim();
-
-            showLoadingOverlay();
-            try {
-                const response = await fetch(`${window.apiUrl}/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'Reset request failed');
-
-                toastr.success('A one-time password has been sent to your phone.');
-                showVerifyOtp(email);
-            } catch (error) {
-                toastr.error(error.message || 'Error sending OTP');
-                hideLoadingOverlay();
-            }
-        });
-
-        document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('verifyEmail').value.trim();
-            const code = document.getElementById('otpCode').value.trim();
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-
-            const passwordRegex = /^(?=.*\d).{8,}$/;
-            if (!passwordRegex.test(newPassword)) {
-                toastr.error('New password must be at least 8 characters long and include numbers');
-                return;
-            }
-            if (newPassword !== confirmNewPassword) {
-                toastr.error('New password and confirmation do not match');
-                return;
-            }
-
-            showLoadingOverlay();
-            try {
-                const response = await window.siteNavigation.authenticatedFetch(`${window.apiUrl}/verify-reset-code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, code, new_password: newPassword })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'Verification failed');
-
-                toastr.success('Password updated successfully!');
-                showLogin();
-            } catch (error) {
-                toastr.error(error.message || 'Error verifying OTP');
-                hideLoadingOverlay();
-            }
-        });
-    });
-</script>
 {% endblock %}
