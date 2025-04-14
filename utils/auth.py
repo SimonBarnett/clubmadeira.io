@@ -85,6 +85,10 @@ def login_user():
         permissions = user.get("permissions", [])
         token = generate_token(user_id, permissions)
         
+        # Store user_id and token in session
+        session['user_id'] = user_id
+        session['user'] = {'token': token}
+
         redirect_url = None
         if "admin" in permissions:
             redirect_url = url_for('role_pages.admin')
@@ -109,7 +113,7 @@ def login_user():
     except Exception as e:
         logging.error(f"UX Issue - Login processing error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
+    
 def signup_user():
     data = request.get_json()
     required_fields = ['signup_type', 'contact_name', 'signup_email', 'signup_password']

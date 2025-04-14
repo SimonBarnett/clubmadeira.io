@@ -2,17 +2,11 @@
 {% block body_attributes %}data-page-type="partner"{% endblock %}
 {% block content %}
     <div class="layout-wrapper">
-        <div class="menu-container">
-            <div id="menu" class="menu">
-                <input type="text" id="userId" style="display: none;" value="{{ user.user_id if user else '' }}">
-                <button data-section="integrations">
-                    <span class="button-content"><i class="fas fa-plug"></i> Integrations</span>
-                </button>
-                {% include 'account_menu.inc' with context %}
-            </div>
-        </div>
-        <div class="content-wrapper">
-            {% include 'welcome.inc' with context %}
+        <!-- Menu Container (dynamically populated by site-navigation.js) -->
+        <div id="menu" class="menu"></div>
+
+        <!-- Content Wrapper -->
+        <div class="content">
             <div id="integrations" class="section" style="display: none;">
                 <h2>Integrations</h2>
                 <p>View your integration statuses below.</p>

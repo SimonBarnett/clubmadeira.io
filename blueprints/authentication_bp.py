@@ -350,6 +350,10 @@ def verify_reset_code():
 @login_required(["self"], require_all=True)
 def update_password():
     try:
+        # **Added**: Log raw request body to see exactly what the client sends
+        # logging.debug(f"Raw request body: {request.get_data(as_text=True)}")
+
+        # Log request details (existing, modified to avoid redacting passwords temporarily)
         request_data = {
             "method": request.method,
             "url": request.full_path,
@@ -360,36 +364,73 @@ def update_password():
         log_data = request_data.copy()
         if "Authorization" in log_data["headers"]:
             log_data["headers"]["Authorization"] = "[REDACTED]"
-        if isinstance(log_data["body"], dict) and "password" in log_data["body"]:
-            log_data["body"]["password"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
+        # Note: Not redacting passwords in log_data["body"] for debugging
+        #logging.debug(f"Request: {json.dumps(log_data)}")
 
+        # Validate request payload (existing)
         data = request_data["body"]
-        if not data or 'email' not in data or 'password' not in data:
-            logging.warning(f"UX Issue - Update password attempt missing email or password: {json.dumps(data)}")
-            response_data = {"status": "error", "message": "Email and password required"}
+        if not data or 'current_password' not in data or 'new_password' not in data:
+            logging.warning("UX Issue - Update password attempt missing current_password or new_password")
+            response_data = {"status": "error", "message": "Current password and new password are required"}
             logging.debug(f"Response: {json.dumps(response_data)}")
             return jsonify(response_data), 400
-        
-        email = data["email"].strip().lower()
-        new_password = data["password"].strip()
+
+        # Extract and clean input (existing with added logging)
+        current_password = data["current_password"].strip()
+        new_password = data["new_password"].strip()
+        # **Added**: Log stripped passwords and their byte representation
+        #logging.debug(f"Stripped current_password: {current_password}")
+        logging.debug(f"Provided current_password bytes: {list(current_password.encode('utf-8'))}")
+        # logging.debug(f"Stripped new_password: {new_password}")
+
+        # Load user settings and get the authenticated user (existing with added logging)
         users_settings = load_users_settings()
-        logging.debug(f"Loaded users: {json.dumps({k: {**v, 'password': '[REDACTED]'} for k, v in users_settings.items()})}")
-        user_id = next((uid for uid, u in users_settings.items() if u["email_address"].lower() == email), None)
-        
-        if not user_id or user_id != request.user_id:
-            logging.warning(f"Security Issue - Unauthorized password update attempt for {email} by {request.user_id}")
-            response_data = {"status": "error", "message": "Unauthorized"}
+        user_id = request.user_id
+        user = users_settings.get(user_id)
+        if user:
+            logging.debug(f"Loaded user {user_id}: email={user['email_address']}, "
+                         f"password_hash_starts_with={user['password'][:10]}, "
+                         f"password_hash_length={len(user['password'])}")
+        else:
+            logging.debug(f"No user found for user_id: {user_id}")
+
+        # Check if user exists (existing)
+        if not user:
+            logging.warning(f"Security Issue - User {user_id} not found")
+            response_data = {"status": "error", "message": "User not found"}
+            logging.debug(f"Response: {json.dumps(response_data)}")
+            return jsonify(response_data), 404
+
+        # Verify the current password (existing with enhanced logging)
+        stored_password = user["password"]
+        # **Added**: Log stored hash and manual verification
+        logging.debug(f"Stored password hash: {stored_password}")
+        salt = stored_password[:29].encode('utf-8')  # Extract salt (e.g., $2b$12$...)
+        hashed_provided = bcrypt.hashpw(current_password.encode('utf-8'), salt).decode('utf-8')
+        logging.debug(f"Manual hash of provided password: {hashed_provided}")
+        if hashed_provided == stored_password:
+            logging.debug("Manual verification: Password matches")
+        else:
+            logging.debug("Manual verification: Password does not match")
+
+        if not bcrypt.checkpw(current_password.encode('utf-8'), stored_password.encode('utf-8')):
+            # **Added**: Log failure with provided password
+            logging.warning(f"bcrypt.checkpw failed for user {user_id}. Provided password: {current_password}")
+            response_data = {"status": "error", "message": "Current password is incorrect"}
             logging.debug(f"Response: {json.dumps(response_data)}")
             return jsonify(response_data), 403
-        
+        else:
+            logging.debug(f"bcrypt.checkpw succeeded for user {user_id}")
+
+        # Update the password (existing)
         hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         users_settings[user_id]["password"] = hashed_password
         save_users_settings(users_settings)
         logging.info(f"Password updated for user {user_id}")
-        response_data = {"status": "success", "message": f"Password updated for {email}", "user_id": user_id}  # Changed "userId" to "user_id"
+        response_data = {"status": "success", "message": "Password updated successfully", "user_id": user_id}
         logging.debug(f"Response: {json.dumps(response_data)}")
         return jsonify(response_data), 200
+
     except Exception as e:
         logging.error(f"UX Issue - Update password error: {str(e)}", exc_info=True)
         response_data = {"status": "error", "message": "Server error"}

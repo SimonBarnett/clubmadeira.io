@@ -15,7 +15,7 @@ def manage_user_settings():
     """
     Manage the authenticated user's top-level settings based on the HTTP method.
     
-    - GET: Retrieve the user's top-level settings as an array of fields and values.
+    - GET: Retrieve the user's top-level settings as a flat object of fields and values.
     - PUT: Replace the entire top-level settings with the provided fields and values.
     - PATCH: Update specific fields in the user's top-level settings.
     """
@@ -26,20 +26,23 @@ def manage_user_settings():
         if user_id not in users_settings:
             return jsonify({"status": "error", "message": "User not found"}), 404
         
+        # Ensure expected fields exist with default values
+        expected_fields = ["contact_name", "website_url", "email_address", "phone_number"]
+        for field in expected_fields:
+            if field not in users_settings[user_id]:
+                users_settings[user_id][field] = ""
+        
         if request.method == 'GET':
+            # Return a flat object of field-value pairs
             top_level_settings = {k: v for k, v in users_settings[user_id].items()}
-            response = [{"field": key, "value": value} for key, value in top_level_settings.items()]
-            return jsonify({"status": "success", "settings": response}), 200
+            return jsonify({"status": "success", "settings": top_level_settings}), 200
         
         elif request.method == 'PUT':
             data = request.get_json()
             if not data:
                 return jsonify({"status": "error", "message": "No data provided"}), 400
             
-            required_fields = ["email", "notifications", "theme"]
-            if not all(field in data for field in required_fields):
-                return jsonify({"status": "error", "message": "Missing required fields"}), 400
-            
+            # Allow any fields provided by the client
             users_settings[user_id] = data
             save_users_settings(users_settings)
             logging.info(f"Top-level settings replaced for user {user_id}")
@@ -51,18 +54,15 @@ def manage_user_settings():
                 return jsonify({"status": "error", "message": "No data provided"}), 400
             
             for field, value in data.items():
-                if field in users_settings[user_id]:
-                    users_settings[user_id][field] = value
-                else:
-                    return jsonify({"status": "error", "message": f"Invalid field: {field}"}), 400
+                users_settings[user_id][field] = value
             
             save_users_settings(users_settings)
             logging.info(f"Top-level settings updated for user {user_id}")
             return jsonify({"status": "success", "message": "Settings updated"}), 200
     
     except Exception as e:
-        logging.error(f"Error managing user settings: {str(e)}")
-        return jsonify({"status": "error", "message": "Server error"}), 500
+        logging.error(f"Error managing user settings for user {request.user_id}: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 # endregion <settings/user> GET, PUT, PATCH
 
 # region settings/api - Manage client_api and api_key settings
@@ -77,10 +77,11 @@ def get_client_api_settings():
         settings = [
             {
                 "key_type": key,
-                "fields": {k: v for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment"]},
+                "fields": {k: v for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment","_description"]},                
                 "icon": value.get("icon", "icon-favicon"),
                 "doc_link": value.get("doc_link", ""),
-                "comment": value.get("_comment", "")
+                "comment": value.get("_comment", ""),
+                "description": value.get("_description", "")
             }
             for key, value in config.items()
             if value.get("setting_type") == "client_api"
@@ -88,7 +89,7 @@ def get_client_api_settings():
         return jsonify({"status": "success", "settings": settings}), 200
     except Exception as e:
         logging.error(f"Error retrieving client_api settings: {str(e)}")
-        return jsonify({"status": "error", "message": "Server error"}), 500
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 @user_settings_bp.route('/settings/client_api/<key>', methods=['PUT', 'POST'])
 @login_required(["self"], require_all=True)
@@ -118,8 +119,8 @@ def put_client_api_setting(key):
         save_users_settings(users_settings)
         return jsonify({"status": "success", "message": f"Setting {key} replaced"}), 200
     except Exception as e:
-        logging.error(f"Error replacing client_api setting: {str(e)}")
-        return jsonify({"status": "error", "message": "Server error"}), 500
+        logging.error(f"Error replacing client_api setting for user {request.user_id}: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 @user_settings_bp.route('/settings/client_api/<key>', methods=['PATCH'])
 @login_required(["self"], require_all=True)
@@ -150,8 +151,8 @@ def patch_client_api_setting(key):
         save_users_settings(users_settings)
         return jsonify({"status": "success", "message": f"Setting {key} updated"}), 200
     except Exception as e:
-        logging.error(f"Error updating client_api setting: {str(e)}")
-        return jsonify({"status": "error", "message": "Server error"}), 500
+        logging.error(f"Error updating client_api setting for user {request.user_id}: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 @user_settings_bp.route('/settings/api_key', methods=['GET'])
 @login_required(["allauth"], require_all=False)
@@ -174,7 +175,7 @@ def get_api_key_settings():
         for key, value in config.items():
             if value.get("setting_type") == "api_key":
                 # Extract default fields, excluding metadata
-                default_fields = {k: v for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment"]}
+                default_fields = {k: v for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment", "_description"]}
                 # Get user's saved fields for this key, defaulting to an empty dict
                 user_fields = user_api_keys.get(key, {})
                 # Merge defaults with user settings, prioritizing user data
@@ -184,14 +185,15 @@ def get_api_key_settings():
                     "fields": merged_fields,
                     "icon": value.get("icon", "icon-favicon"),
                     "doc_link": value.get("doc_link", ""),
-                    "comment": value.get("_comment", "")
+                    "comment": value.get("_comment", ""),
+                    "description": value.get("_desctiption", "")
                 }
                 settings.append(setting)
         
         return jsonify({"status": "success", "settings": settings}), 200
     except Exception as e:
-        logging.error(f"Error retrieving api_key settings: {str(e)}")
-        return jsonify({"status": "error", "message": "Server error"}), 500
+        logging.error(f"Error retrieving api_key settings for user {request.user_id}: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 @user_settings_bp.route('/settings/api_key/<key>', methods=['PUT', 'POST'])
 @login_required(["self"], require_all=True)
@@ -221,8 +223,8 @@ def put_api_key_setting(key):
         save_users_settings(users_settings)
         return jsonify({"status": "success", "message": f"Setting {key} replaced"}), 200
     except Exception as e:
-        logging.error(f"Error replacing api_key setting: {str(e)}")
-        return jsonify({"status": "error", "message": "Server error"}), 500
+        logging.error(f"Error replacing api_key setting for user {request.user_id}: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 @user_settings_bp.route('/settings/api_key/<key>', methods=['PATCH'])
 @login_required(["self"], require_all=True)
@@ -269,8 +271,8 @@ def patch_api_key_setting(key):
         save_users_settings(users_settings)
         return jsonify({"status": "success", "message": f"Setting {key} updated"}), 200
     except Exception as e:
-        logging.error(f"Error updating api_key setting: {str(e)}")
-        return jsonify({"status": "error", "message": "Server error"}), 500
+        logging.error(f"Error updating api_key setting for user {request.user_id}: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 # endregion settings/api
 
@@ -285,3 +287,4 @@ def get_user_products():
     except Exception as e:
         logging.error(f"Error fetching products for user {request.user_id}: {str(e)}")
         return jsonify({"status": "error", "message": "Failed to fetch products"}), 500
+    

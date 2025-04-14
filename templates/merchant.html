@@ -1,82 +1,57 @@
 {% extends 'base.inc' %}
 {% block body_attributes %}data-page-type="merchant"{% endblock %}
 {% block content %}
-    <div class="main-container" style="margin-top: 0; padding-top: 0;">
-        <!-- Menu Container -->
-        <div class="menu-container">
-            <div class="menu" id="menu">
-                <input type="text" id="userId" style="display: none;" value="{{ user.user_id if user else '' }}">
-                <button data-section="info">
-                    <span class="button-content"><i class="fas fa-home"></i> Dashboard</span>
-                </button>
-                <button data-section="my-products">
-                    <span class="button-content"><i class="fas fa-box-open"></i> My Products</span>
-                </button>
-                <button data-submenu="my-store-submenu" data-section="store-request">
-                    <span class="button-content"><i class="fas fa-store"></i> My Store Request</span>
-                    <i class="fas fa-caret-right caret"></i>
-                </button>
-                <div id="my-store-submenu" class="submenu">
-                    <button data-section="api-keys">
-                        <span class="button-content"><i class="fas fa-key"></i> API Keys</span>
-                    </button>
-                    <button data-section="create-store">
-                        <span class="button-content"><i class="fas fa-store-alt"></i> Create Store</span>
-                    </button>
-                </div>
-                <button data-submenu="documentation-submenu" data-section="documentation-content">
-                    <span class="button-content"><i class="fas fa-book"></i> Documentation</span>
-                    <i class="fas fa-caret-right caret"></i>
-                </button>
-                <div id="documentation-submenu" class="submenu">
-                    <!-- Submenu items will be dynamically inserted here via JavaScript -->
-                </div>
-                {% include 'account_menu.inc' with context %}
-                <!-- Role-switching buttons will be appended here dynamically -->
+    <!-- Menu Container (dynamically populated by navigation.js) -->
+    <div id="menu" class="menu"></div>
+    <!-- Content Wrapper (already inside base.inc's layout-wrapper) -->
+    <div class="content">
+        <!-- API Keys Section -->
+        <div id="api-keys" class="section" style="display: none;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">                
+                <h2>API Keys</h2>
             </div>
+            <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>            
+            <form id="api-keys-form" style="display: none;">
+                <div id="api-keys-fields"></div>                
+            </form>
+            <style>
+                #api-keys-icons i {
+                    display: inline-block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    font-size: 24px;
+                    color: #000;
+                }
+            </style>
         </div>
 
-        <!-- Content Wrapper -->
-        <div class="content-wrapper" style="margin-top: 0;">  
-            {% include 'welcome.inc' with context %}       
-            <div id="store-request" class="section" style="display: none;">
-                <h2>My Store Request</h2>
-                <p>Manage your store request details here.</p>
+        <!-- Create Store Section -->
+        <div id="create-store" class="section" style="display: none;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
+                <h2>Create Store</h2>
             </div>
-            <div id="api-keys" class="section" style="display: none;">
-                <h2>API Keys</h2>
-                <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
-                <form id="api-keys-form" style="display: none;">
-                    <div id="api-keys-fields"></div>
-                    <button type="submit" class="btn" style="margin-top: 10px;">Submit</button>
-                </form>
-            </div>
-            <div id="create-store" class="section" style="display: none;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
-                    <h2>Create Store</h2>
-                </div>
-                <p>Request a custom Wix store to sell your products online. Provide details below to set up your store (minimum: Home and Returns Policy pages).</p>
-                {% with user_type='merchant' %}
-                    {% include 'siterequest.inc' %}
-                {% endwith %}
-            </div>
-            <div id="my-products" class="section" style="display: none;">
-                <h2>My Products</h2>
-                <p>These are the products from your parts feed.</p>
-                <table id="productTable">
-                    <thead>
-                        <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
-                    </thead>
-                    <tbody id="productList"></tbody>
-                </table>
-            </div>
-            <div id="documentation-content" class="section" style="display: none;">                
-                <div id="md-render-target">
-                    <p>Select a documentation item from the menu to view the details.</p>
-                </div>
-            </div>
+            <p>Request a custom Wix store to sell your products online. Provide details below to set up your store (minimum: Home and Returns Policy pages).</p>
+            {% with user_type='merchant' %}
+                {% include 'siterequest.inc' %}
+            {% endwith %}
         </div>
+
+        <!-- My Products Section -->
+        <div id="my-products" class="section" style="display: none;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-box-open" style="font-size: 32px; margin-right: 10px;"></i>
+                <h2>My Products</h2>
+            </div>
+            <p>These are the products from your parts feed.</p>
+            <table id="productTable">
+                <thead>
+                    <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
+                </thead>
+                <tbody id="productList"></tbody>
+            </table>
+        </div>
+
     </div>
     <script>
         console.log('merchant.html - Template loaded');

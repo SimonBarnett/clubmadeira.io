@@ -1,244 +1,280 @@
-
 {% extends "base.inc" %}
 {% block content %}
-<div class="main-container">
-    <div class="menu-container">
-        <div class="menu">
-            <button data-section="deal_listings">
-                <span class="button-content"><i class="fas fa-tags"></i> Deal Listings</span>
-            </button>
-            <button data-section="affiliates">
-                <span class="button-content"><i class="fas fa-handshake"></i> Affiliate Programs</span>
-            </button>
-            <button data-section="site_settings">
-                <span class="button-content"><i class="fas fa-tools"></i> Site Settings</span>
-            </button>
-            <button data-submenu="userManagement" data-section="userManagementIntro">
-                <span class="button-content"><i class="fas fa-users"></i> User Management</span>
-                <i class="fas fa-caret-right caret"></i>
-            </button>
-            <div id="userManagement" class="submenu">
-                <button data-section="user_management" data-role="admin">
-                    <span class="button-content">
-                        <i class="icon-admin" style="height: 16px; width: 16px;"></i> Admin
-                    </span>
-                </button>
-                <button data-section="user_management" data-role="wixpro">
-                    <span class="button-content">
-                        <i class="icon-partner" style="height: 16px; width: 16px;"></i> Partners
-                    </span>
-                </button>
-                <button data-section="user_management" data-role="community">
-                    <span class="button-content">
-                        <i class="icon-community" style="height: 16px; width: 16px;"></i> Communities
-                    </span>
-                </button>
-                <button data-section="user_management" data-role="merchant">
-                    <span class="button-content">
-                        <i class="icon-merchant" style="height: 16px; width: 16px;"></i> Merchants
-                    </span>
-                </button>
+    <!-- Admin Role Sections -->
+    <div id="userManagementIntro" class="section" style="display: none;">
+        <h2>User Management</h2>
+        <p>This section allows you to manage different types of users in your system.</p>
+        <p>Select a user type from the menu to view their details or modify their permissions:</p>
+        <ul>
+            <li><strong>Admin:</strong> Manage users with Admin permissions.</li>
+            <li><strong>Partners:</strong> Manage users with WixPro permissions.</li>
+            <li><strong>Communities:</strong> Manage community users.</li>
+            <li><strong>Merchants:</strong> Manage merchant users.</li>
+        </ul>
+    </div>
+
+    <div id="user_management" class="section" style="display: none;">
+        <h2><span id="user_role_icon" class="menu-size"></span> <span id="user_role_title"></span></h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>USERid</th>
+                    <th>Contact Name</th>
+                    <th>Website URL</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                    <th>Permissions</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="user_list"></tbody>
+        </table>
+    </div>
+
+    <!-- New Deals Section for Admin -->
+    <div id="deals" class="section" style="display: none;">
+        <h2>Discounted Deal Listings</h2>
+        <p>This section displays all currently active deal listings available across your affiliate programs for administrative oversight.</p>
+        <div style="display: flex; gap: 20px;">
+            <div style="flex: 1; max-width: 300px;">
+                <h3>Categories</h3>
+                <div class="treeview" id="categoryTreeAdmin"></div>
             </div>
-            <button data-submenu="testScripts" data-section="testScriptsIntro">
-                <span class="button-content"><i class="fas fa-flask"></i> Test Scripts</span>
-                <i class="fas fa-caret-right caret"></i>
-            </button>
-            <div id="testScripts" class="submenu">
-                <button data-href="/" data-role="partner">
-                    <span class="button-content">
-                        <span class="icon-group">
-                            <i class="icon-partner" style="height: 16px; width: 16px;"></i>
-                            <i class="fas fa-flask small-icon"></i>
-                        </span> Partner
-                    </span>
-                </button>
-                <button data-href="/" data-role="community">
-                    <span class="button-content">
-                        <span class="icon-group">
-                            <i class="icon-community" style="height: 16px; width: 16px;"></i>                            
-                            <i class="fas fa-flask small-icon"></i>
-                        </span> Community
-                    </span>
-                </button>
-                <button data-href="/" data-role="merchant">
-                    <span class="button-content">
-                        <span class="icon-group">
-                            <i class="icon-merchant" style="height: 16px; width: 16px;"></i>                            
-                            <i class="fas fa-flask small-icon"></i>
-                        </span> Merchant
-                    </span>
-                </button>
-                <button data-submenu="referralTests" data-section="referralTestsIntro">
-                    <span class="button-content"><i class="fas fa-link"></i> Referral Tests</span>
-                    <i class="fas fa-caret-right caret"></i>
-                </button>
-                <div id="referralTests" class="submenu">
-                    <button data-section="page_visit_test">
-                        <span class="button-content"><i class="fas fa-eye"></i> Page Visit Referral Test</span>
-                    </button>
-                    <button data-section="order_test">
-                        <span class="button-content"><i class="fas fa-shopping-cart"></i> Order Referral Test</span>
-                    </button>
-                </div>
+            <div style="flex: 2;">
+                <table class="deals-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Title</th>
+                            <th>URL</th>
+                            <th>Price</th>
+                            <th>Original</th>
+                            <th>Discount %</th>
+                            <th>Image</th>
+                            <th>QTY</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dealList"></tbody>
+                </table>
             </div>
-            {% include 'account_menu.inc' with context %}
         </div>
     </div>
-    <div class="content-wrapper">
-        {% include 'welcome.inc' with context %}
-        <div id="deal_listings" class="section" style="display: none;">
-            <h2>Discounted Deal Listings</h2>
-            <p>This section displays all currently active deal listings available across your affiliate programs.</p>
-            <div style="display: flex; gap: 20px;">
-                <div style="flex: 1; max-width: 300px;">
-                    <h3>Categories</h3>
-                    <div class="treeview" id="categoryTree"></div>
-                </div>
-                <div style="flex: 2;">
-                    <table class="deals-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Title</th>
-                                <th>URL</th>
-                                <th>Price</th>
-                                <th>Original</th>
-                                <th>Discount %</th>
-                                <th>Image</th>
-                                <th>QTY</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dealList"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div id="affiliates" class="section" style="display: none;">
-            <h2>Affiliate Programs</h2>
-            <p>Use this section to manage your affiliate program credentials.</p>
-            <div id="affiliate-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
-            <form id="affiliate-form" style="display: none;">
-                <div id="affiliate-fields">
-                    <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
-                    <h3 class="affiliate-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
-                    <a href="#" class="affiliate-api-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-link" style="font-size: 16px;"></i></a>
-                    <a href="#" class="affiliate-signup-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-user-plus" style="font-size: 16px;"></i></a>
-                    <a href="#" class="affiliate-readme-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-book" style="font-size: 16px;"></i></a>
-                    <a href="#" class="affiliate-keys-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-key" style="font-size: 16px;"></i></a>
-                    <p class="affiliate-description" style="margin-bottom: 15px;"></p>
-                    <div id="affiliate-readme-content" style="display: none;"></div>
-                </div>
-                <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;"><i class="fas fa-save" style="margin-right: 5px;"></i>Save Settings</button>
-            </form>
-        </div>
-        <div id="site_settings" class="section" style="display: none;">
-            <h2>Site Settings</h2>
-            <p>Use this section to manage site-wide settings and API credentials.</p>
-            <div id="site-settings-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
-            <form id="site-settings-form" style="display: none;">
-                <div id="site-settings-fields">
-                    <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
-                    <h3 class="site-settings-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
-                    <a href="#" class="site-settings-api-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;"><i class="fas fa-link" style="font-size: 16px;"></i></a>
-                    <p class="site-settings-description" style="margin-bottom: 15px;"></p>
-                </div>
-                <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;"><i class="fas fa-save" style="margin-right: 5px;"></i>Save Settings</button>
-            </form>
-        </div>
-        <div id="userManagementIntro" class="section" style="display: none;">
-            <h2>User Management</h2>
-            <p>This section allows you to manage different types of users in your system.</p>
-            <p>Select a user type from the menu to view their details or modify their permissions:</p>
-            <ul>
-                <li><strong>Admin:</strong> Manage users with Admin permissions.</li>
-                <li><strong>Partners:</strong> Manage users with WixPro permissions.</li>
-                <li><strong>Communities:</strong> Manage community users.</li>
-                <li><strong>Merchants:</strong> Manage merchant users.</li>
-            </ul>
-        </div>
-        <div id="user_management" class="section" style="display: none;">
-            <h2><span id="user_role_icon" class="menu-size"></span> <span id="user_role_title"></span></h2>
-            <table>
-                <thead>
+
+    <div id="testScriptsIntro" class="section" style="display: none;">
+        <h2>Test Scripts</h2>
+        <p>Use this section to test referral tracking and other scripts.</p>
+        <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
+    </div>
+
+    <div id="referralTestsIntro" class="section" style="display: none;">
+        <h2>Referral Tests</h2>
+        <p>This section contains tools to test referral tracking functionality.</p>
+        <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
+    </div>
+
+    <div id="page_visit_test" class="section" style="display: none;">
+        <h2>Page Visit Referral Test</h2>
+        <div class="form">
+            <form id="pageVisitForm">
+                <table>
                     <tr>
-                        <th>USERid</th>
-                        <th>Contact Name</th>
-                        <th>Website URL</th>
-                        <th>Email</th>
-                        <th>Phone Number</th>
-                        <th>Permissions</th>
-                        <th>Actions</th>
+                        <td><label for="pageReferer">Referer:</label></td>
+                        <td><select id="pageReferer" name="referer"></select></td>
                     </tr>
-                </thead>
-                <tbody id="user_list"></tbody>
-            </table>
+                    <tr>
+                        <td><label for="page">Page:</label></td>
+                        <td><input type="text" id="page" name="page" value="/home"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="pageTimestamp">Timestamp:</label></td>
+                        <td><input type="text" id="pageTimestamp" name="timestamp"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><button type="submit">Submit Page Visit</button></td>
+                    </tr>
+                </table>
+            </form>
         </div>
-        <div id="testScriptsIntro" class="section" style="display: none;">
-            <h2>Test Scripts</h2>
-            <p>Use this section to test referral tracking and other scripts.</p>
-            <p>Select an option from the menu to visit endpoints or run referral tests under "Referral Tests."</p>
+    </div>
+
+    <div id="order_test" class="section" style="display: none;">
+        <h2>Order Referral Test</h2>
+        <div class="form">
+            <form id="orderForm">
+                <table>
+                    <tr>
+                        <td><label for="orderReferer">Referer:</label></td>
+                        <td><select id="orderReferer" name="referer"></select></td>
+                    </tr>
+                    <tr>
+                        <td><label for="orderId">Order ID:</label></td>
+                        <td><input type="text" id="orderId" name="orderId" value="ORD12345"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="buyer">Buyer Name:</label></td>
+                        <td><input type="text" id="buyer" name="buyer" value="John Doe"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="total">Total Amount (£):</label></td>
+                        <td><input type="number" id="total" name="total" value="99.99" step="0.01"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="orderTimestamp">Timestamp:</label></td>
+                        <td><input type="text" id="orderTimestamp" name="timestamp"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><button type="submit">Submit Order</button></td>
+                    </tr>
+                </table>
+            </form>
         </div>
-        <div id="referralTestsIntro" class="section" style="display: none;">
-            <h2>Referral Tests</h2>
-            <p>This section contains tools to test referral tracking functionality.</p>
-            <p>Choose "Page Visit Referral Test" or "Order Referral Test" to submit test data and verify tracking behavior.</p>
-        </div>
-        <div id="page_visit_test" class="section" style="display: none;">
-            <h2>Page Visit Referral Test</h2>
-            <div class="form">
-                <form id="pageVisitForm">
-                    <table>
-                        <tr>
-                            <td><label for="pageReferer">Referer:</label></td>
-                            <td><select id="pageReferer" name="referer"></select></td>
-                        </tr>
-                        <tr>
-                            <td><label for="page">Page:</label></td>
-                            <td><input type="text" id="page" name="page" value="/home"></td>
-                        </tr>
-                        <tr>
-                            <td><label for="pageTimestamp">Timestamp:</label></td>
-                            <td><input type="text" id="pageTimestamp" name="timestamp"></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2"><button type="submit">Submit Page Visit</button></td>
-                        </tr>
-                    </table>
-                </form>
+    </div>
+
+    <div id="test_partner" class="section" style="display: none;">
+        <h2>Test Partner</h2>
+        <p>Test partner-related functionality here.</p>
+    </div>
+
+    <div id="test_merchant" class="section" style="display: none;">
+        <h2>Test Merchant</h2>
+        <p>Test merchant-related functionality here.</p>
+    </div>
+
+    <div id="test_community" class="section" style="display: none;">
+        <h2>Test Community</h2>
+        <p>Test community-related functionality here.</p>
+    </div>
+
+    <!-- New API Keys Section for Admin -->
+    <div id="api_keys" class="section" style="display: none;">
+        <h2>API Keys</h2>
+        <p>Manage API keys for various services.</p>
+        <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+        <form id="api-keys-form" style="display: none;">
+            <div id="api-keys-fields">
+                <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
+                <h3 class="api-keys-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
+                <p class="api-keys-description" style="margin-bottom: 15px;"></p>
             </div>
-        </div>
-        <div id="order_test" class="section" style="display: none;">
-            <h2>Order Referral Test</h2>
-            <div class="form">
-                <form id="orderForm">
-                    <table>
+            <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;">
+                <i class="fas fa-save" style="margin-right: 5px;"></i>Save API Key
+            </button>
+        </form>
+    </div>
+
+    <!-- Merchant Role Sections -->
+    <div id="deal_listings" class="section" style="display: none;">
+        <h2>Discounted Deal Listings</h2>
+        <p>This section displays all currently active deal listings available across your affiliate programs.</p>
+        <div style="display: flex; gap: 20px;">
+            <div style="flex: 1; max-width: 300px;">
+                <h3>Categories</h3>
+                <div class="treeview" id="categoryTree"></div>
+            </div>
+            <div style="flex: 2;">
+                <table class="deals-table">
+                    <thead>
                         <tr>
-                            <td><label for="orderReferer">Referer:</label></td>
-                            <td><select id="orderReferer" name="referer"></select></td>
+                            <th>Category</th>
+                            <th>Title</th>
+                            <th>URL</th>
+                            <th>Price</th>
+                            <th>Original</th>
+                            <th>Discount %</th>
+                            <th>Image</th>
+                            <th>QTY</th>
                         </tr>
-                        <tr>
-                            <td><label for="orderId">Order ID:</label></td>
-                            <td><input type="text" id="orderId" name="orderId" value="ORD12345"></td>
-                        </tr>
-                        <tr>
-                            <td><label for="buyer">Buyer Name:</label></td>
-                            <td><input type="text" id="buyer" name="buyer" value="John Doe"></td>
-                        </tr>
-                        <tr>
-                            <td><label for="total">Total Amount (£):</label></td>
-                            <td><input type="number" id="total" name="total" value="99.99" step="0.01"></td>
-                        </tr>
-                        <tr>
-                            <td><label for="orderTimestamp">Timestamp:</label></td>
-                            <td><input type="text" id="orderTimestamp" name="timestamp"></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2"><button type="submit">Submit Order</button></td>
-                        </tr>
-                    </table>
-                </form>
+                    </thead>
+                    <tbody id="dealList"></tbody>
+                </table>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Community Role Sections -->
+    <div id="posts" class="section" style="display: none;">
+        <h2>Posts</h2>
+        <p>Manage community posts here.</p>
+    </div>
+
+    <!-- Partner Role Sections -->
+    <div id="referrals" class="section" style="display: none;">
+        <h2>Referrals</h2>
+        <p>Manage referrals here.</p>
+    </div>
+
+    <div id="affiliates" class="section" style="display: none;">
+        <h2>Affiliate Programs</h2>
+        <p>Use this section to manage your affiliate program credentials.</p>
+        <div id="affiliate-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+        
+        <!-- Static content (always visible) -->
+        <div id="affiliate-static-content" style="display: none;">
+            <div id="affiliate-header" style="display: flex; align-items: center; margin-bottom: 15px;">
+                <i class="selected-affiliate-icon" style="font-size: 16px; color: currentColor; margin-right: 10px;"></i>
+                <h3 class="affiliate-comment-heading" style="display: inline-block; vertical-align: middle; margin: 0;"></h3>
+                <div style="margin-left: auto; display: flex; gap: 10px;">
+                    <a href="#" class="affiliate-api-link" style="display: none; color: currentColor;">
+                        <i class="fas fa-link" style="font-size: 16px;"></i>
+                    </a>
+                    <a href="#" class="affiliate-signup-link" style="display: none; color: currentColor;">
+                        <i class="fas fa-user-plus" style="font-size: 16px;"></i>
+                    </a>
+                    <a href="#" class="affiliate-readme-link" style="display: none; color: currentColor;">
+                        <i class="fas fa-book" style="font-size: 16px;"></i>
+                    </a>
+                    <a href="#" class="affiliate-keys-link" style="display: none; color: currentColor;">
+                        <i class="fas fa-key" style="font-size: 16px;"></i>
+                    </a>
+                </div>
+            </div>                        
+        </div>
+    
+        <div id="affiliate-settings-container" style="display: none;">
+            <form id="affiliate-form" style="display: none;">
+                <!-- Fields will be dynamically added here -->
+                <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;">
+                    <i class="fas fa-save" style="margin-right: 5px;"></i>Save Settings
+                </button>
+            </form>
+        </div>
+        <div id="affiliate-readme-content" style="display: none;"></div>
+        
+    </div>
+
+    <div id="site_settings" class="section" style="display: none;">
+        <h2>Site Settings</h2>
+        <p>Use this section to manage site-wide settings and API credentials.</p>
+        <div id="site-settings-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+        <form id="site-settings-form" style="display: none;">
+            <div id="site-settings-fields">
+                <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
+                <h3 class="site-settings-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
+                <a href="#" class="site-settings-api-link" style="margin-left: 10px; display: none; vertical-align: middle; color: currentColor;">
+                    <i class="fas fa-link" style="font-size: 16px;"></i>
+                </a>
+                <p class="site-settings-description" style="margin-bottom: 15px;"></p>
+            </div>
+            <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;">
+                <i class="fas fa-save" style="margin-right: 5px;"></i>Save Settings
+            </button>
+        </form>
+    </div>
+
+    <div id="settings" class="section" style="display: none;">
+        <h2>Settings</h2>
+        <p>Configure settings specific to your role here.</p>
+        <form id="settings-form">
+            <input type="text" id="userId" name="userId" placeholder="User ID">
+            <input type="text" id="contactName" name="contactName" placeholder="Contact Name">
+            <input type="text" id="websiteUrl" name="websiteUrl" placeholder="Website URL">
+            <input type="email" id="emailAddress" name="emailAddress" placeholder="Email Address">
+            <button type="submit">Save Settings</button>
+        </form>
+    </div>
+
+    <div id="categories" class="section" style="display: none;">
+        <h2>Categories</h2>
+        <p>Manage categories here.</p>
+    </div>
 {% endblock %}

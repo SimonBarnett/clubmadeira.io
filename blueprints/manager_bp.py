@@ -70,6 +70,41 @@ def delete_permission():
     save_users_settings(users_data)
     return jsonify({"status": "success", "message": f"Permission {permission_to_remove} removed from user {user_id}"}), 200
 
+# New endpoint for listing users by role
+@manager_bp.route('/users/<role>', methods=['GET'])
+@login_required(required_permissions=['admin'])
+def get_users_by_role(role):
+    """
+    Retrieves a list of users who have the specified role in their permissions.
+    Purpose: Allows admins to view users based on their roles.
+    Permissions: Restricted to "admin".
+    Inputs: 
+        - role (string): The role to filter users by (e.g., 'admin', 'partner').
+    Outputs:
+        - Success: JSON {"status": "success", "role": "<role>", "users": [<list_of_users>]}, status 200
+        - Info: JSON {"status": "info", "message": "No users found with role '<role>'"}, status 200 if no users are found
+        - Errors:
+            - 500: {"status": "error", "message": "Server error: <reason>"}
+    """
+    try:
+        users_data = load_users_settings()
+        users_with_role = []
+        for user_id, user in users_data.items():
+            if 'permissions' in user and role in user['permissions']:
+                user_copy = user.copy()
+                user_copy['USERid'] = user_id
+                users_with_role.append(user_copy)
+        
+        if not users_with_role:
+            logging.info(f"No users found with role '{role}'")
+            return jsonify({"status": "info", "message": f"No users found with role '{role}'"}), 200
+        
+        logging.debug(f"Retrieved users with role '{role}': {len(users_with_role)} users found")
+        return jsonify({"status": "success", "role": role, "users": users_with_role}), 200
+    except Exception as e:
+        logging.error(f"Failed to retrieve users with role '{role}': {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
 # region settings/api - Manage settings_key and affiliate_key
 
 @manager_bp.route('/settings/settings_key', methods=['GET'])

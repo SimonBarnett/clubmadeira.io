@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, request, jsonify, make_response
+from flask import Flask, render_template, session, request, jsonify, make_response, send_from_directory, redirect
 from flask_cors import CORS
 from blueprints.authentication_bp import authentication_bp
 from blueprints.site_request_bp import site_request_bp
@@ -8,6 +8,7 @@ from blueprints.content_bp import content_bp
 from blueprints.referral_bp import referral_bp
 from blueprints.manager_bp import manager_bp
 from utils.auth import login_required, load_users_settings, generate_token, decode_token
+from functools import wraps
 import json
 import os
 import logging
@@ -56,6 +57,26 @@ def setup_logging():
     logger.addHandler(handler)
 
 setup_logging()
+
+# Function to fetch site settings from config
+def fetch_site_settings():
+    try:
+        config = load_config()
+        settings_dict = {}
+        for key, value in config.items():
+            if value.get('setting_type') == 'settings_key':
+                fields = {k: v for k, v in value.items() if k not in ['_comment', '_description', 'setting_type', 'icon', 'doc_link']}
+                settings_dict[key] = fields
+        return settings_dict
+    except Exception as e:
+        logging.error(f"Error fetching site settings from config: {str(e)}", exc_info=True)
+        return {}
+
+# Add site settings to the template context for all routes
+@app.context_processor
+def inject_site_settings():
+    site_settings = fetch_site_settings()
+    return dict(site_settings=site_settings)
 
 def get_authenticated_user():
     token = None
@@ -165,19 +186,25 @@ def home():
             if not decoded:
                 logging.debug("No valid authentication, serving login page")
                 response = make_response(render_template('login.html', title='clubmadeira.io | Login', page_type='login', base_url=request.url_root.rstrip('/')))
-                # Remove X-Page-Type since page-load.js ignores it
+                response.headers['X-Page-Type'] = 'login'
                 return response
 
             user_id = decoded.get('user_id')
             permissions = decoded.get('permissions', [])
-            x_role = decoded.get('x-role') or session['user'].get('x-role') or ('admin' if 'admin' in permissions else next((r for r in ['merchant', 'community', 'partner'] if r in permissions), 'login'))
+            x_role_header = request.headers.get('X-Role', '').lower()
+            x_role = x_role_header if x_role_header in ['admin', 'community', 'merchant', 'partner'] else \
+                     decoded.get('x-role') or session['user'].get('x-role') or \
+                     ('admin' if 'admin' in permissions else next((r for r in ['merchant', 'community', 'partner'] if r in permissions), 'login'))
             
             if 'user' in session:
                 session['user']['x-role'] = x_role
                 session.modified = True
             
             users_settings = load_users_settings()
-            user = users_settings.get(user_id, {})
+            user_data = users_settings.get(user_id, {})
+            if 'contact_name' not in user_data:
+                user_data['contact_name'] = ''
+            user = {**user_data, 'user_id': user_id}
             role_pages = {
                 'admin': ('admin.html', 'Admin', 'admin'),
                 'community': ('community.html', 'Community', 'community'),
@@ -185,10 +212,24 @@ def home():
                 'partner': ('partner.html', 'Partner', 'partner')
             }
             template, title_suffix, page_type = role_pages.get(x_role, ('login.html', 'Login', 'login'))
-            logging.debug(f"Serving {page_type} page for user {user_id} from {source}")
-            response = make_response(render_template(template, title=f'clubmadeira.io | {title_suffix}', page_type=page_type, user=user))
-            # Remove X-Page-Type, keep X-Role for debugging
+            logging.debug(f"Serving {page_type} page for user {user_id} from {source} with template {template}")
+            logging.debug(f"Template context - x_role: {x_role}, page_type: {page_type}, user: {user}")
+            
+            # Define context with default values to prevent undefined variable errors
+            context = {
+                'title': f'clubmadeira.io | {title_suffix}',
+                'page_type': page_type,
+                'user': user,
+                'x_role': x_role,
+                'deselected': [],           # Default empty list
+                'previous_deselected': [],  # Default empty list
+                'selected': [],             # Default empty list
+                'prompt': '',               # Default empty string
+                'categories': {}            # Default empty dict
+            }
+            response = make_response(render_template(template, **context))
             response.headers['X-Role'] = x_role
+            response.headers['X-Page-Type'] = page_type
             response.set_cookie('authToken', token, secure=True, max_age=604800, path='/')
             return response
 
@@ -238,7 +279,6 @@ def home():
                     "token": token,
                     "user_id": user_id,
                     "x-role": x_role
-                    # Remove redirect_url since page-load.js handles x-role directly
                 })
                 response.set_cookie('authToken', token, secure=True, max_age=604800, path='/')
                 return response, 200
@@ -308,16 +348,45 @@ def logoff():
         decoded, _, source = get_authenticated_user()
         if decoded:
             logging.debug(f"Logging off user {decoded['user_id']} authenticated via {source}")
+        
+        if 'user' in session:
+            session['user'].pop('x-role', None)
+            logging.debug("x-role cleared from session")
         session.clear()
         logging.debug("Server-side session cleared during logoff")
-        response = jsonify({"status": "success", "message": "Logged off successfully", "redirect_url": '/'})
-        response.delete_cookie('authToken')
-        return response, 200
+
+        response = redirect('/')
+        response.delete_cookie('authToken', path='/')
+        response.delete_cookie('session', path='/')
+        return response
+
     except Exception as e:
         logging.error(f"UX Issue - Failed to process logoff request: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Logoff error: {str(e)}"}), 500
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Logoff Error</title>
+        </head>
+        <body>
+            <p>Error during logoff: {str(e)}</p>
+        </body>
+        </html>
+        """
+        response = make_response(html_content, 500)
+        response.headers['Content-Type'] = 'text/html'
+        return response
 
-from functools import wraps
+@app.route('/static/js/<path:filename>')
+def serve_js(filename):
+    response = send_from_directory('static/js', filename, mimetype='text/javascript')
+    response.headers['Content-Type'] = 'text/javascript'
+    return response
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
 
 def login_required(required_permissions=None, require_all=False):
     def decorator(f):

@@ -1,758 +1,322 @@
-// admin-page.js
+// /static/js/admin-page.js
+console.log('admin-page.js - Script loaded at:', new Date().toISOString());
+
+// Initialize window.markdownCache
+window.markdownCache = window.markdownCache || {};
+
+import { authenticatedFetch } from './core/auth.js';
+import { loadInitialData } from './admin/deals.js';
+import { loadUserData, updatePermission, modifyPermissions } from './admin/users.js';
+import { loadAffiliates, displayAffiliateFields } from './admin/affiliates.js';
+import { loadSiteSettings, displaySiteSettingsFields } from './admin/site-settings.js';
+import { loadApiKeys, displayApiKeyFields } from './admin/api-keys.js';
+
 try {
-    // Initialize Admin page using unified site-navigation.js function
-    window.initializeAdmin = function(pageType) {
-        console.log('initializeAdmin - Initializing admin page with type: ' + pageType);
-        window.siteNavigation.initializePage('Admin', ['admin'], [
+    console.log('admin-page.js - Script execution started at:', new Date().toISOString());
+
+    // Common error handler
+    function handleError(fnName, error, toastrMessage) {
+        console.error(`${fnName} - Error:`, error.message, error.stack);
+        toastr.error(toastrMessage || `Error in ${fnName}: ${error.message}`);
+    }
+
+    // Common API fetch wrapper
+    async function fetchData(endpoint, options = {}) {
+        try {
+            const response = await authenticatedFetch(`${window.apiUrl}${endpoint}`, {
+                headers: { 'Content-Type': 'application/json' },
+                ...options,
+            });
+            if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // Common settings form submission
+    async function submitSettingsForm(formId, endpoint, keyType, successMessage, reloadFn) {
+        const form = document.getElementById(formId);
+        if (!form) {
+            console.warn(`submitSettingsForm - ${formId} not found`);
+            return;
+        }
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fields = {};
+            Array.from(form.querySelectorAll('input')).forEach(input => {
+                fields[input.name] = input.value;
+            });
+            try {
+                await fetchData(`${endpoint}/${keyType}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(fields),
+                });
+                toastr.success(successMessage);
+                if (reloadFn) reloadFn();
+            } catch (error) {
+                handleError('submitSettingsForm', error, `Failed to update ${keyType}`);
+            }
+        });
+    }
+
+    // Common settings UI renderer
+    function renderSettingsFields(setting, fieldsContainer, form, type, extraLinks = []) {
+        fieldsContainer.innerHTML = '';
+        form.style.display = 'block';
+        form.dataset.keyType = setting.key_type;
+
+        const container = document.createElement('div');
+        container.className = `${type}-settings`;
+        fieldsContainer.appendChild(container);
+
+        const heading = document.createElement('h3');
+        heading.textContent = setting.comment || `${type} Settings`;
+        heading.className = `${type}-comment-heading`;
+        container.appendChild(heading);
+
+        extraLinks.forEach(link => container.appendChild(link));
+
+        const description = document.createElement('p');
+        description.textContent = setting.description || '';
+        description.className = `${type}-description`;
+        container.appendChild(description);
+
+        Object.entries(setting.fields).forEach(([name, value]) => {
+            const div = document.createElement('div');
+            div.className = `${type}-field`;
+            div.innerHTML = `
+                <label for="${name}">${name}:</label>
+                <input type="text" id="${name}" name="${name}" value="${value}">
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // Common markdown rendering
+    async function renderMarkdown(readmePath, contentId, toggleLinks) {
+        const contentContainer = document.getElementById(contentId);
+        const { mdLink, keysLink, settingsContainer, form } = toggleLinks;
+        try {
+            if (!window.markdownCache) {
+                window.markdownCache = {};
+            }
+            if (!window.markdownCache[readmePath]) {
+                const response = await fetch(readmePath);
+                if (!response.ok) throw new Error(`Failed to fetch markdown: ${response.status}`);
+                const markdownText = await response.text();
+                contentContainer.innerHTML = marked.parse(markdownText);
+                window.markdownCache[readmePath] = contentContainer.innerHTML;
+            } else {
+                contentContainer.innerHTML = window.markdownCache[readmePath];
+            }
+            // Toggle visibility of dynamic content only
+            form.style.display = 'block';
+            settingsContainer.style.display = 'none';
+            contentContainer.style.display = 'block';
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.style.display = 'none';
+            }
+            mdLink.style.display = 'none';
+            keysLink.style.display = 'inline-block';
+            // Ensure static content remains visible
+            const staticContentContainer = form.parentElement.querySelector('#affiliate-static-content');
+            if (staticContentContainer) {
+                staticContentContainer.style.display = 'block';
+            }
+        } catch (error) {
+            console.error(`renderMarkdown - Error rendering ${readmePath}:`, error.message, error.stack);
+            contentContainer.innerHTML = `<p>Error rendering markdown: ${error.message}</p>`;
+            handleError('renderMarkdown', error, 'Failed to render documentation');
+            // Reset visibility on error
+            form.style.display = 'block';
+            settingsContainer.style.display = 'block';
+            contentContainer.style.display = 'none';
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.style.display = 'block';
+            }
+            mdLink.style.display = 'inline-block';
+            keysLink.style.display = 'none';
+            // Ensure static content remains visible
+            const staticContentContainer = form.parentElement.querySelector('#affiliate-static-content');
+            if (staticContentContainer) {
+                staticContentContainer.style.display = 'block';
+            }
+        }
+    }
+
+    // Initialize admin page
+    window.initializeAdmin = async function (pageType) {
+        console.log('initializeAdmin - Initializing admin page with type:', pageType);
+        const initFunctions = [
             loadInitialData,
-            setupEventListeners,
-            loadAffiliates,
+            () => loadUserData('admin'),
+            // Removed loadAffiliates to prevent loading affiliate programs on initial setup
             loadSiteSettings,
-            loadApiKeys
-        ]);
+            loadApiKeys,
+            setupEventListeners,
+        ];
+        for (const fn of initFunctions) {
+            try {
+                await fn();
+            } catch (error) {
+                console.error(`initializeAdmin - Error in ${fn.name}:`, error.message, error.stack);
+                handleError(fn.name, error);
+            }
+        }
     };
 
-    // Handle user management clicks (moved from setupNavigation)
-    function handleUserManagementClick(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        const button = event.currentTarget;
-        const sectionId = button.getAttribute('data-section');
-        const role = button.getAttribute('data-role');
-
-        console.log(`handleUserManagementClick - Button clicked: sectionId=${sectionId}, role=${role}`);
-        if (sectionId === 'user_management' && role) {
-            document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
-            const section = document.getElementById(sectionId);
-            if (section) {
-                section.style.display = 'block';
-                const titleSpan = document.getElementById('user_role_title');
-                const iconSpan = document.getElementById('user_role_icon');
-                const title = button.querySelector('.button-content').textContent.trim();
-                const iconElement = button.querySelector('.button-content i[class*="icon-"]');
-                let iconClass = iconElement ? Array.from(iconElement.classList).find(cls => cls.startsWith('icon-')) : `icon-${role}`;
-                if (titleSpan && iconSpan) {
-                    titleSpan.textContent = title;
-                    iconSpan.className = `menu-size ${iconClass}`;
-                }
-                loadUserData(role);
-            }
-        }
-    }
-
-    // Handle other section clicks (moved from setupNavigation)
-    function handleOtherClick(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        const button = event.currentTarget;
-        const sectionId = button.getAttribute('data-section');
-        const submenuId = button.getAttribute('data-submenu');
-
-        console.log(`handleOtherClick - Button clicked: sectionId=${sectionId}, submenuId=${submenuId}`);
-        if (sectionId) {
-            document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
-            const section = document.getElementById(sectionId);
-            if (section) {
-                section.style.display = 'block';
-                console.log(`handleOtherClick - Section ${sectionId} shown`);
-                if (sectionId === 'api_keys') {
-                    const form = document.getElementById('api-keys-form');
-                    form.style.display = 'none';
-                    document.getElementById('api-keys-icons').style.display = 'flex';
-                }
-            }
-        }
-    }
-
-    // Attach custom listeners for admin-specific navigation
-    function attachAdminListeners() {
-        console.log('attachAdminListeners - Setting up admin-specific navigation listeners');
-        const userManagementButtons = document.querySelectorAll('#userManagement button[data-section="user_management"]');
-        console.log('attachAdminListeners - Found userManagement buttons:', userManagementButtons.length);
-        userManagementButtons.forEach(button => {
-            button.removeEventListener('click', handleUserManagementClick);
-            button.addEventListener('click', handleUserManagementClick);
-            console.log('attachAdminListeners - Attached click listener to button:', {
-                section: button.dataset.section,
-                role: button.dataset.role
-            });
-        });
-
-        const otherButtons = document.querySelectorAll('.menu button[data-section]:not([data-section="user_management"])');
-        otherButtons.forEach(button => {
-            button.removeEventListener('click', handleOtherClick);
-            button.addEventListener('click', handleOtherClick);
-            console.log('attachAdminListeners - Attached click listener to other button:', {
-                section: button.dataset.section,
-                submenu: button.dataset.submenu
-            });
-        });
-
-        // Role-switching handled by site-navigation.js, no need for handleTestScriptClick
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOMContentLoaded - Attaching admin listeners');
-            attachAdminListeners();
-        });
-    } else {
-        console.log('Document already loaded - Attaching admin listeners immediately');
-        attachAdminListeners();
-    }
-
-    function loadInitialData() {
-        console.log('loadInitialData - Loading initial data');
-        authenticatedFetch(`${window.apiUrl}/categories`)
-            .then(response => response.json())
-            .then(categories => {
-                const categoryId = categories[0]?.id || 'default';
-                return authenticatedFetch(`${window.apiUrl}/deals?category_id=${categoryId}`);
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('loadInitialData - Deals fetched:', data);
-                const dealList = document.getElementById('dealList');
-                if (dealList) {
-                    dealList.innerHTML = data.map(deal => `
-                        <tr>
-                            <td>${deal.category}</td>
-                            <td>${deal.title}</td>
-                            <td><a href="${deal.url}" target="_blank">Link</a></td>
-                            <td>${deal.price}</td>
-                            <td>${deal.original}</td>
-                            <td>${deal.discount}</td>
-                            <td><img src="${deal.image}" alt="Product Image" style="width: 50px;"></td>
-                            <td>${deal.quantity}</td>
-                        </tr>
-                    `).join('');
-                }
-            })
-            .catch(error => {
-                console.error('loadInitialData - Failed to load deal listings:', error);
-                toastr.error('Failed to load deal listings');
-            });
-    }
-
+    // Setup event listeners
     function setupEventListeners() {
-        const saveSettingsButton = document.querySelector('button[data-action="saveSettings"]');
-        if (saveSettingsButton) {
-            saveSettingsButton.addEventListener('click', function() {
+        console.log('setupEventListeners - Setting up admin event listeners');
+
+        // Generic settings form
+        const settingsForm = document.getElementById('settings-form');
+        if (settingsForm) {
+            settingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
                 const userId = document.getElementById('userId')?.value || '';
                 const contactName = document.getElementById('contactName')?.value || '';
                 const websiteUrl = document.getElementById('websiteUrl')?.value || '';
                 const emailAddress = document.getElementById('emailAddress')?.value || '';
-
-                console.log('setupEventListeners - Saving settings for user:', userId);
-                authenticatedFetch(`${window.apiUrl}/settings/user`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contact_name: contactName, website_url: websiteUrl, email_address: emailAddress })
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Failed to save settings');
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('setupEventListeners - Settings saved:', data);
+                try {
+                    await fetchData('/settings/user', {
+                        method: 'PATCH',
+                        body: JSON.stringify({ contact_name: contactName, website_url: websiteUrl, email_address: emailAddress }),
+                    });
                     toastr.success('Settings updated successfully');
-                })
-                .catch(error => {
-                    console.error('setupEventListeners - Error saving settings:', error);
-                    toastr.error('Failed to save settings');
-                });
-            });
-        }
-
-        const apiKeysForm = document.getElementById('api-keys-form');
-        if (apiKeysForm) {
-            apiKeysForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const keyType = apiKeysForm.dataset.keyType;
-                const fields = {};
-                Array.from(apiKeysForm.querySelectorAll('input')).forEach(input => {
-                    fields[input.name] = input.value;
-                });
-                try {
-                    const response = await authenticatedFetch(`${window.apiUrl}/settings/api_key/${keyType}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(fields)
-                    });
-                    if (!response.ok) throw new Error('Failed to update API key');
-                    toastr.success(`API key ${keyType} updated successfully`);
-                    loadApiKeys();
                 } catch (error) {
-                    console.error('setupEventListeners - Error updating API key:', error);
-                    toastr.error('Failed to update API key');
+                    handleError('setupEventListeners', error, 'Failed to save settings');
                 }
             });
+        } else {
+            console.warn('setupEventListeners - settings-form not found');
         }
 
-        const affiliateForm = document.getElementById('affiliate-form');
-        if (affiliateForm) {
-            affiliateForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const keyType = affiliateForm.dataset.keyType;
-                const fields = {};
-                Array.from(affiliateForm.querySelectorAll('input')).forEach(input => {
-                    fields[input.name] = input.value;
-                });
-                try {
-                    const response = await authenticatedFetch(`${window.apiUrl}/settings/affiliate_key/${keyType}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(fields)
-                    });
-                    if (!response.ok) throw new Error(`Failed to patch affiliate: ${response.status}`);
-                    toastr.success(`Affiliate settings for ${keyType} updated successfully`);
-                    loadAffiliates();
-                } catch (error) {
-                    console.error('setupEventListeners - Error updating affiliate:', error);
-                    toastr.error('Failed to update affiliate');
-                }
-            });
-        }
+        // Feature-specific form submissions
+        submitSettingsForm('api-keys-form', '/settings/api_key', document.getElementById('api-keys-form')?.dataset.keyType, 'API key updated successfully', loadApiKeys);
+        submitSettingsForm('affiliate-form', '/settings/affiliate_key', document.getElementById('affiliate-form')?.dataset.keyType, 'Affiliate settings updated successfully', loadAffiliates);
+        submitSettingsForm('site-settings-form', '/settings/settings_key', document.getElementById('site-settings-form')?.dataset.keyType, 'Site settings updated successfully', loadSiteSettings);
 
-        const siteSettingsForm = document.getElementById('site-settings-form');
-        if (siteSettingsForm) {
-            siteSettingsForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const keyType = siteSettingsForm.dataset.keyType;
-                const fields = {};
-                Array.from(siteSettingsForm.querySelectorAll('input')).forEach(input => {
-                    fields[input.name] = input.value;
-                });
-                try {
-                    const response = await authenticatedFetch(`${window.apiUrl}/settings/settings_key/${keyType}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(fields)
-                    });
-                    if (!response.ok) throw new Error(`Failed to patch site settings: ${response.status}`);
-                    toastr.success(`Site settings for ${keyType} updated successfully`);
-                    loadSiteSettings();
-                } catch (error) {
-                    console.error('setupEventListeners - Error updating site settings:', error);
-                    toastr.error('Failed to update site settings');
-                }
-            });
-        }
+        // User management events
+        document.addEventListener('change', (e) => {
+            if (e.target.matches('#user_list input[data-userid][data-permission]')) {
+                const { userid, permission, role } = e.target.dataset;
+                updatePermission(userid, permission, e.target.checked, role);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('#user_list .modify-permissions')) {
+                const { userid, role } = e.target.dataset;
+                modifyPermissions(userid, role);
+            }
+        });
     }
 
-    async function loadAffiliates() {
-        console.log('loadAffiliates - Loading affiliate programs');
+    // Set up sectionChange listener immediately
+    console.log('admin-page.js - Setting up sectionChange listener at:', new Date().toISOString());
+    let pendingSectionChanges = [];
+    const handleSectionChange = async (e) => {
+        const { section, role } = e.detail || {};
+        console.log(`sectionChange - Section: ${section}, Role: ${role}, Timestamp:`, new Date().toISOString());
         try {
-            const response = await authenticatedFetch(`${window.apiUrl}/settings/affiliate_key`);
-            if (!response.ok) throw new Error(`Failed to fetch affiliates: ${response.status}`);
-            const data = await response.json();
-            const iconsContainer = document.getElementById('affiliate-icons');
-            const fieldsContainer = document.getElementById('affiliate-fields');
-            const form = document.getElementById('affiliate-form');
-            if (!iconsContainer || !fieldsContainer || !form) return;
-
-            iconsContainer.innerHTML = '';
-            data.settings.forEach(setting => {
-                const icon = document.createElement('i');
-                icon.className = setting.icon;
-                icon.title = setting.comment;
-                icon.dataset.keyType = setting.key_type;
-                icon.style.cursor = 'pointer';
-                icon.style.width = '48px';
-                icon.style.height = '48px';
-                icon.style.fontSize = '48px';
-                icon.style.color = '#C0C0C0';
-                icon.addEventListener('click', () => {
-                    Array.from(iconsContainer.children).forEach(i => i.style.color = '#C0C0C0');
-                    icon.style.color = 'currentColor';
-                    displayAffiliateFields(setting, fieldsContainer, form);
-                });
-                iconsContainer.appendChild(icon);
-            });
-        } catch (error) {
-            console.error('loadAffiliates - Error loading affiliates:', error.message);
-            toastr.error(`Error loading affiliates: ${error.message}`);
-        }
-    }
-
-    function displayAffiliateFields(setting, fieldsContainer, form) {
-        console.log('displayAffiliateFields - Displaying fields for:', setting.key_type);
-        fieldsContainer.innerHTML = '';
-        form.style.display = 'block';
-        form.dataset.keyType = setting.key_type;
-
-        const keySettingsContainer = document.createElement('div');
-        keySettingsContainer.className = 'affiliate-key-settings';
-        keySettingsContainer.style.display = 'block';
-        fieldsContainer.appendChild(keySettingsContainer);
-
-        const readmeContentContainer = document.createElement('div');
-        readmeContentContainer.id = 'affiliate-readme-content';
-        readmeContentContainer.style.display = 'none';
-        fieldsContainer.appendChild(readmeContentContainer);
-
-        const selectedIcon = document.createElement('i');
-        selectedIcon.className = `selected-setting-icon ${setting.icon}`;
-        selectedIcon.style.fontSize = '16px';
-        selectedIcon.style.color = 'currentColor';
-        selectedIcon.style.marginRight = '10px';
-        selectedIcon.style.verticalAlign = 'middle';
-        fieldsContainer.insertBefore(selectedIcon, keySettingsContainer);
-
-        const heading = document.createElement('h3');
-        heading.textContent = setting.comment || 'Affiliate Settings';
-        heading.className = 'affiliate-comment-heading';
-        heading.style.display = 'inline-block';
-        heading.style.verticalAlign = 'middle';
-        fieldsContainer.insertBefore(heading, keySettingsContainer);
-
-        const apiLink = setting.doc_link?.find(link => link.title === 'api')?.link;
-        if (apiLink) {
-            const apiIcon = document.createElement('a');
-            apiIcon.href = apiLink;
-            apiIcon.className = 'affiliate-api-link';
-            apiIcon.style.marginLeft = '10px';
-            apiIcon.style.display = 'inline-block';
-            apiIcon.style.verticalAlign = 'middle';
-            apiIcon.style.color = 'currentColor';
-            apiIcon.innerHTML = '<i class="fas fa-link" style="font-size: 16px;"></i>';
-            apiIcon.target = '_blank';
-            fieldsContainer.insertBefore(apiIcon, keySettingsContainer);
-        }
-
-        const signupLink = setting.doc_link?.find(link => link.title === 'signup')?.link;
-        if (signupLink) {
-            const signupIcon = document.createElement('a');
-            signupIcon.href = signupLink;
-            signupIcon.className = 'affiliate-signup-link';
-            signupIcon.style.marginLeft = '10px';
-            signupIcon.style.display = 'inline-block';
-            signupIcon.style.verticalAlign = 'middle';
-            signupIcon.style.color = 'currentColor';
-            signupIcon.innerHTML = '<i class="fas fa-user-plus" style="font-size: 16px;"></i>';
-            signupIcon.target = '_blank';
-            fieldsContainer.insertBefore(signupIcon, keySettingsContainer);
-        }
-
-        const readmeLink = setting.doc_link?.find(link => link.title === 'readme')?.link;
-        const readmeIcon = document.createElement('a');
-        readmeIcon.href = '#';
-        readmeIcon.className = 'affiliate-readme-link';
-        readmeIcon.style.marginLeft = '10px';
-        readmeIcon.style.display = 'inline-block';
-        readmeIcon.style.verticalAlign = 'middle';
-        readmeIcon.style.color = 'currentColor';
-        readmeIcon.innerHTML = '<i class="fas fa-book" style="font-size: 16px;"></i>';
-        readmeIcon.title = setting.comment || 'View Documentation';
-
-        const keysIcon = document.createElement('a');
-        keysIcon.href = '#';
-        keysIcon.className = 'affiliate-keys-link';
-        keysIcon.style.marginLeft = '10px';
-        keysIcon.style.display = 'none';
-        keysIcon.style.verticalAlign = 'middle';
-        keysIcon.style.color = 'currentColor';
-        keysIcon.innerHTML = '<i class="fas fa-key" style="font-size: 16px;"></i>';
-
-        readmeIcon.addEventListener('click', async (e) => {
-            e.preventDefault();
-            keySettingsContainer.style.display = 'none';
-            readmeContentContainer.style.display = 'block';
-            form.querySelector('button[type="submit"]').style.display = 'none';
-            readmeIcon.style.display = 'none';
-            keysIcon.style.display = 'inline-block';
-            if (!window.markdownCache[readmeLink]) {
-                await renderMdPage(readmeLink, 'affiliate-readme-content');
-                window.markdownCache[readmeLink] = readmeContentContainer.innerHTML;
+            if (section === 'user_management' && role) {
+                console.log(`sectionChange - Calling loadUserData for role: ${role}`);
+                if (typeof loadUserData !== 'function') {
+                    console.warn('sectionChange - loadUserData not available, adding to pending events');
+                    pendingSectionChanges.push({ section, role });
+                    return;
+                }
+                await loadUserData(role);
+                console.log(`sectionChange - loadUserData completed for role: ${role}`);
+            } else if (section === 'affiliates') {
+                console.log('sectionChange - Calling loadAffiliates');
+                if (typeof loadAffiliates !== 'function') {
+                    console.warn('sectionChange - loadAffiliates not available, adding to pending events');
+                    pendingSectionChanges.push({ section, role });
+                    return;
+                }
+                await loadAffiliates();
+                console.log('sectionChange - loadAffiliates completed');
+            } else if (section === 'site_settings') {
+                console.log('sectionChange - Calling loadSiteSettings');
+                if (typeof loadSiteSettings !== 'function') {
+                    console.warn('sectionChange - loadSiteSettings not available, adding to pending events');
+                    pendingSectionChanges.push({ section, role });
+                    return;
+                }
+                await loadSiteSettings();
+                console.log('sectionChange - loadSiteSettings completed');
+            } else if (section === 'api_keys') {
+                console.log('sectionChange - Calling loadApiKeys');
+                if (typeof loadApiKeys !== 'function') {
+                    console.warn('sectionChange - loadApiKeys not available, adding to pending events');
+                    pendingSectionChanges.push({ section, role });
+                    return;
+                }
+                await loadApiKeys();
+                console.log('sectionChange - loadApiKeys completed');
+            } else if (section === 'deals') {
+                console.log('sectionChange - Calling loadInitialData');
+                if (typeof loadInitialData !== 'function') {
+                    console.warn('sectionChange - loadInitialData not available, adding to pending events');
+                    pendingSectionChanges.push({ section, role });
+                    return;
+                }
+                await loadInitialData();
+                console.log('sectionChange - loadInitialData completed');
             } else {
-                readmeContentContainer.innerHTML = window.markdownCache[readmeLink];
+                console.warn(`sectionChange - Unhandled section: ${section}`);
             }
-        });
-
-        keysIcon.addEventListener('click', (e) => {
-            e.preventDefault();
-            keySettingsContainer.style.display = 'block';
-            readmeContentContainer.style.display = 'none';
-            form.querySelector('button[type="submit"]').style.display = 'block';
-            keysIcon.style.display = 'none';
-            readmeIcon.style.display = 'inline-block';
-        });
-
-        if (readmeLink) {
-            fieldsContainer.insertBefore(readmeIcon, keySettingsContainer);
-        }
-        fieldsContainer.insertBefore(keysIcon, keySettingsContainer);
-
-        const description = document.createElement('p');
-        description.textContent = setting.description || '';
-        description.className = 'affiliate-description';
-        description.style.marginBottom = '15px';
-        keySettingsContainer.appendChild(description);
-
-        Object.entries(setting.fields).forEach(([name, value]) => {
-            const div = document.createElement('div');
-            div.style.marginBottom = '10px';
-            div.innerHTML = `
-                <label for="${name}">${name}:</label>
-                <input type="text" id="${name}" name="${name}" value="${value}" style="width: 300px;">
-            `;
-            keySettingsContainer.appendChild(div);
-        });
-
-        document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
-        document.getElementById('affiliates').style.display = 'block';
-    }
-
-    async function loadSiteSettings() {
-        console.log('loadSiteSettings - Loading site settings');
-        try {
-            const response = await authenticatedFetch(`${window.apiUrl}/settings/settings_key`);
-            if (!response.ok) throw new Error(`Failed to fetch site settings: ${response.status}`);
-            const data = await response.json();
-            console.log('loadSiteSettings - Site settings fetched:', data);
-            const iconsContainer = document.getElementById('site-settings-icons');
-            const fieldsContainer = document.getElementById('site-settings-fields');
-            const form = document.getElementById('site-settings-form');
-            if (!iconsContainer || !fieldsContainer || !form) {
-                console.warn('loadSiteSettings - Required DOM elements not found:', {
-                    iconsContainer: !!iconsContainer,
-                    fieldsContainer: !!fieldsContainer,
-                    form: !!form
-                });
-                return;
-            }
-
-            iconsContainer.innerHTML = '';
-            data.settings.forEach(setting => {
-                const icon = document.createElement('i');
-                icon.className = setting.icon;
-                icon.title = setting.comment;
-                icon.dataset.keyType = setting.key_type;
-                icon.style.cursor = 'pointer';
-                icon.style.width = '48px';
-                icon.style.height = '48px';
-                icon.style.fontSize = '48px';
-                icon.style.color = '#C0C0C0';
-                icon.addEventListener('click', () => {
-                    Array.from(iconsContainer.children).forEach(i => i.style.color = '#C0C0C0');
-                    icon.style.color = 'currentColor';
-                    displaySiteSettingsFields(setting, fieldsContainer, form);
-                });
-                iconsContainer.appendChild(icon);
-            });
         } catch (error) {
-            console.error('loadSiteSettings - Error loading site settings:', error.message);
-            toastr.error(`Error loading site settings: ${error.message}`);
+            console.error(`sectionChange - Error handling section ${section} with role ${role}:`, error.message, error.stack);
+            handleError('sectionChange', error, `Failed to load section ${section}`);
         }
-    }
+    };
 
-    function displaySiteSettingsFields(setting, fieldsContainer, form) {
-        console.log('displaySiteSettingsFields - Displaying fields for:', setting.key_type);
-        fieldsContainer.innerHTML = '';
-        form.style.display = 'block';
-        form.dataset.keyType = setting.key_type;
+    document.addEventListener('sectionChange', handleSectionChange);
+    console.log('admin-page.js - sectionChange listener setup completed at:', new Date().toISOString());
 
-        const selectedIcon = document.createElement('i');
-        selectedIcon.className = `selected-setting-icon ${setting.icon}`;
-        selectedIcon.style.fontSize = '16px';
-        selectedIcon.style.color = 'currentColor';
-        selectedIcon.style.marginRight = '10px';
-        selectedIcon.style.verticalAlign = 'middle';
-        fieldsContainer.appendChild(selectedIcon);
-
-        const heading = document.createElement('h3');
-        heading.textContent = setting.comment || 'Site Settings';
-        heading.className = 'site-settings-comment-heading';
-        heading.style.display = 'inline-block';
-        heading.style.verticalAlign = 'middle';
-        fieldsContainer.appendChild(heading);
-
-        const apiLink = setting.doc_link?.find(link => link.title === 'api')?.link;
-        if (apiLink) {
-            const apiIcon = document.createElement('a');
-            apiIcon.href = apiLink;
-            apiIcon.className = 'site-settings-api-link';
-            apiIcon.style.marginLeft = '10px';
-            apiIcon.style.display = 'inline-block';
-            apiIcon.style.verticalAlign = 'middle';
-            apiIcon.style.color = 'currentColor';
-            apiIcon.innerHTML = '<i class="fas fa-link" style="font-size: 16px;"></i>';
-            apiIcon.target = '_blank';
-            fieldsContainer.appendChild(apiIcon);
-        }
-
-        const description = document.createElement('p');
-        description.textContent = setting.description || '';
-        description.className = 'site-settings-description';
-        description.style.marginBottom = '15px';
-        fieldsContainer.appendChild(description);
-
-        Object.entries(setting.fields).forEach(([name, value]) => {
-            const div = document.createElement('div');
-            div.style.marginBottom = '10px';
-            div.innerHTML = `
-                <label for="${name}">${name}:</label>
-                <input type="text" id="${name}" name="${name}" value="${value}" style="width: 300px;">
-            `;
-            fieldsContainer.appendChild(div);
-        });
-
-        document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
-        document.getElementById('site_settings').style.display = 'block';
-    }
-
-    async function loadApiKeys() {
-        console.log('loadApiKeys - Loading API keys');
-        try {
-            const response = await authenticatedFetch(`${window.apiUrl}/settings/api_key`);
-            if (!response.ok) throw new Error(`Failed to fetch API keys: ${response.status}`);
-            const data = await response.json();
-            console.log('loadApiKeys - API keys fetched:', data);
-            const iconsContainer = document.getElementById('api-keys-icons');
-            const fieldsContainer = document.getElementById('api-keys-fields');
-            const form = document.getElementById('api-keys-form');
-            if (!iconsContainer || !fieldsContainer || !form) {
-                console.warn('loadApiKeys - Required DOM elements not found:', {
-                    iconsContainer: !!iconsContainer,
-                    fieldsContainer: !!fieldsContainer,
-                    form: !!form
-                });
-                return;
-            }
-
-            iconsContainer.innerHTML = '';
-            data.settings.forEach(setting => {
-                const icon = document.createElement('i');
-                icon.className = setting.icon || `icon-${setting.key_type}`;
-                icon.title = setting.comment || setting.key_type;
-                icon.dataset.key = setting.key_type;
-                icon.style.cursor = 'pointer';
-                icon.style.width = '48px';
-                icon.style.height = '48px';
-                icon.style.fontSize = '48px';
-                icon.style.color = '#C0C0C0';
-                icon.addEventListener('click', () => {
-                    Array.from(iconsContainer.children).forEach(i => i.style.color = '#C0C0C0');
-                    icon.style.color = 'currentColor';
-                    displayApiKeyFields(setting, fieldsContainer, form);
-                });
-                iconsContainer.appendChild(icon);
-            });
-        } catch (error) {
-            console.error('loadApiKeys - Error loading API keys:', error.message);
-            toastr.error(`Error loading API keys: ${error.message}`);
-        }
-    }
-
-    function displayApiKeyFields(setting, fieldsContainer, form) {
-        console.log('displayApiKeyFields - Displaying fields for:', setting.key_type);
-        fieldsContainer.innerHTML = '';
-        form.style.display = 'block';
-        form.dataset.keyType = setting.key_type;
-
-        const keySettingsContainer = document.createElement('div');
-        keySettingsContainer.className = 'api-keys-settings';
-        keySettingsContainer.style.display = 'block';
-        fieldsContainer.appendChild(keySettingsContainer);
-
-        const mdContentContainer = document.createElement('div');
-        mdContentContainer.id = 'api-keys-md-content';
-        mdContentContainer.style.display = 'none';
-        fieldsContainer.appendChild(mdContentContainer);
-
-        const selectedIcon = document.createElement('i');
-        selectedIcon.className = `selected-setting-icon ${setting.icon || 'fas fa-key'}`;
-        selectedIcon.style.fontSize = '16px';
-        selectedIcon.style.color = 'currentColor';
-        selectedIcon.style.marginRight = '10px';
-        selectedIcon.style.verticalAlign = 'middle';
-        fieldsContainer.insertBefore(selectedIcon, keySettingsContainer);
-
-        const heading = document.createElement('h3');
-        heading.textContent = setting.comment || setting.key_type || 'API Key Settings';
-        heading.className = 'api-keys-comment-heading';
-        heading.style.display = 'inline-block';
-        heading.style.verticalAlign = 'middle';
-        fieldsContainer.insertBefore(heading, keySettingsContainer);
-
-        const mdLink = document.createElement('a');
-        mdLink.href = '#';
-        mdLink.className = 'api-keys-md-link';
-        mdLink.style.marginLeft = '10px';
-        mdLink.style.display = 'inline-block';
-        mdLink.style.verticalAlign = 'middle';
-        mdLink.style.color = 'currentColor';
-        mdLink.innerHTML = '<i class="fas fa-book" style="font-size: 16px;"></i>';
-        mdLink.title = setting.comment || 'View Documentation';
-
-        const keysLink = document.createElement('a');
-        keysLink.href = '#';
-        keysLink.className = 'api-keys-keys-link';
-        keysLink.style.marginLeft = '10px';
-        keysLink.style.display = 'none';
-        keysLink.style.verticalAlign = 'middle';
-        keysLink.style.color = 'currentColor';
-        keysLink.innerHTML = '<i class="fas fa-key" style="font-size: 16px;"></i>';
-
-        mdLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            keySettingsContainer.style.display = 'none';
-            mdContentContainer.style.display = 'block';
-            form.querySelector('button[type="submit"]').style.display = 'none';
-            mdLink.style.display = 'none';
-            keysLink.style.display = 'inline-block';
-            const readmePath = setting.readme_path || `/static/docs/api-keys/${setting.key_type}.md`;
-            if (!window.markdownCache[readmePath]) {
-                await renderMdPage(readmePath, 'api-keys-md-content');
-                window.markdownCache[readmePath] = mdContentContainer.innerHTML;
-            } else {
-                mdContentContainer.innerHTML = window.markdownCache[readmePath];
-            }
-        });
-
-        keysLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            keySettingsContainer.style.display = 'block';
-            mdContentContainer.style.display = 'none';
-            form.querySelector('button[type="submit"]').style.display = 'block';
-            keysLink.style.display = 'none';
-            mdLink.style.display = 'inline-block';
-        });
-
-        fieldsContainer.insertBefore(mdLink, keySettingsContainer);
-        fieldsContainer.insertBefore(keysLink, keySettingsContainer);
-
-        const description = document.createElement('p');
-        description.textContent = setting.description || '';
-        description.className = 'api-keys-description';
-        description.style.marginBottom = '15px';
-        keySettingsContainer.appendChild(description);
-
-        Object.entries(setting.fields).forEach(([name, value]) => {
-            const div = document.createElement('div');
-            div.style.marginBottom = '10px';
-            div.innerHTML = `
-                <label for="${name}">${name}:</label>
-                <input type="text" id="${name}" name="${name}" value="${value}" style="width: 300px;">
-            `;
-            keySettingsContainer.appendChild(div);
-        });
-
-        const saveButton = form.querySelector('button[type="submit"]');
-        saveButton.style.display = 'block';
-
-        document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
-        document.getElementById('api_keys').style.display = 'block';
-    }
-
-    function loadUserData(role) {
-        console.log(`loadUserData - Fetching users for role: ${role}`);
-        const permissionLists = {
-            'admin': ['admin', 'validated', 'debug'],
-            'partner': ['partner', 'validated', 'verified'], // Updated from 'wixpro' to 'partner'
-            'community': ['community', 'validated'],
-            'merchant': ['merchant', 'validated', 'verified']
-        };
-        const allowedPermissions = permissionLists[role] || [];
-
-        authenticatedFetch(`${window.apiUrl}/users/${role}`)
-            .then(response => {
-                if (!response.ok) throw new Error(`Failed to fetch users for ${role}: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                console.log(`loadUserData - Users fetched for role ${role}:`, data);
-                const userList = document.getElementById('user_list');
-                if (userList) {
-                    userList.innerHTML = data.users.map(user => {
-                        const fields = user.fields.reduce((acc, field) => {
-                            acc[field.field_name] = field.field_value;
-                            return acc;
-                        }, {});
-                        const userPermissions = Array.isArray(fields.permissions) ? fields.permissions : [];
-                        const permissionsHtml = allowedPermissions.map(perm => `
-                            <label style="margin-right: 10px;">
-                                <input type="checkbox" 
-                                       name="permission-${user.USERid}-${perm}" 
-                                       ${userPermissions.includes(perm) ? 'checked' : ''} 
-                                       onchange="updatePermission('${user.USERid}', '${perm}', this.checked, '${role}')">
-                                ${perm}
-                            </label>
-                        `).join('');
-                        let actions = `<button onclick="modifyPermissions('${user.USERid}', '${role}')">Modify Permissions</button>`;
-                        return `
-                            <tr data-userid="${user.USERid}">
-                                <td>${user.USERid}</td>
-                                <td>${fields.contact_name || ''}</td>
-                                <td>${fields.website_url || ''}</td>
-                                <td>${fields.email_address || ''}</td>
-                                <td>${fields.phone_number || ''}</td>
-                                <td>${permissionsHtml}</td>
-                                <td>${actions}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                }
-            })
-            .catch(error => {
-                console.error(`loadUserData - Error fetching users for ${role}:`, error.message);
-                toastr.error(`Failed to load users for ${role}`);
-                const userList = document.getElementById('user_list');
-                if (userList) userList.innerHTML = '<tr><td colspan="7">Error loading data</td></tr>';
-            });
-    }
-
-    function updatePermission(userId, permission, isChecked, role) {
-        console.log(`updatePermission - Updating permission ${permission} for user ${userId} (role: ${role}): ${isChecked ? 'add' : 'remove'}`);
-        const method = isChecked ? 'PATCH' : 'DELETE';
-        authenticatedFetch(`${window.apiUrl}/permission`, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ USERid: userId, permission: permission })
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`Failed to ${isChecked ? 'add' : 'remove'} permission: ${response.status}`);
-            return response.json();
-        })
-        .then(data => {
-            console.log(`updatePermission - Success:`, data);
-            toastr.success(data.message);
-            if (!isChecked && permission === role) {
-                const userRow = document.querySelector(`#user_list tr[data-userid="${userId}"]`);
-                if (userRow) userRow.remove();
-            }
-        })
-        .catch(error => {
-            console.error(`updatePermission - Error:`, error.message);
-            toastr.error(`Failed to update permission: ${error.message}`);
-            const checkbox = document.querySelector(`input[name="permission-${userId}-${permission}"]`);
-            if (checkbox) checkbox.checked = !isChecked;
-        });
-    }
-
-    function modifyPermissions(userId, role) {
-        console.log(`modifyPermissions - Modifying permissions for user ${userId} with role ${role}`);
-        toastr.info(`Additional permission modification for ${userId} (role: ${role}) not yet implemented`);
-    }
-
-    // Export functions
-    window.initializeAdmin = window.initializeAdmin; // Already assigned above
-    window.loadInitialData = loadInitialData;
+    // Export common functions for features
+    window.handleError = handleError;
+    window.fetchData = fetchData;
+    window.renderSettingsFields = renderSettingsFields;
+    window.renderMarkdown = renderMarkdown;
+    window.initializeAdmin = window.initializeAdmin;
     window.setupEventListeners = setupEventListeners;
-    window.loadAffiliates = loadAffiliates;
-    window.displayAffiliateFields = displayAffiliateFields;
-    window.loadSiteSettings = loadSiteSettings;
-    window.displaySiteSettingsFields = displaySiteSettingsFields;
-    window.loadUserData = loadUserData;
-    window.updatePermission = updatePermission;
-    window.modifyPermissions = modifyPermissions;
-    window.loadApiKeys = loadApiKeys;
-    window.displayApiKeyFields = displayApiKeyFields;
-    window.handleUserManagementClick = handleUserManagementClick; // Export for external use if needed
-    window.handleOtherClick = handleOtherClick; // Export for external use if needed
+
+    // Auto-initialize and handle pending events
+    console.log('admin-page.js - Initializing admin at:', new Date().toISOString());
+    const initialize = async () => {
+        await window.initializeAdmin('admin');
+        if (pendingSectionChanges.length > 0) {
+            console.log('admin-page.js - Handling pending sectionChanges:', pendingSectionChanges);
+            for (const pending of pendingSectionChanges) {
+                const event = new CustomEvent('sectionChange', { detail: pending });
+                document.dispatchEvent(event);
+            }
+            pendingSectionChanges = [];
+        }
+    };
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        console.log('admin-page.js - Document already loaded, initializing immediately');
+        initialize();
+    } else {
+        console.log('admin-page.js - Waiting for DOMContentLoaded to initialize');
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('admin-page.js - DOMContentLoaded fired, initializing');
+            initialize();
+        });
+    }
+
+    console.log('admin-page.js - Script execution completed at:', new Date().toISOString());
 } catch (error) {
     console.error('Error in admin-page.js:', error.message, error.stack);
-    window.initializeAdmin = function() {
+    window.initializeAdmin = function () {
         console.error('initializeAdmin - Failed to initialize due to an error:', error.message);
     };
 }

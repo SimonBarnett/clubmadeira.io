@@ -14,9 +14,9 @@ async function loadSettings() {
     }
 
     try {
-        console.log('loadSettings - Fetching settings via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/user`);
+        console.log('loadSettings - Fetching settings via authenticatedFetch - URL:', `${window.apiUrl}/settings/user`);
         const startTime = Date.now();
-        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/user`);
+        const response = await authenticatedFetch(`${window.apiUrl}/settings/user`);
         const duration = Date.now() - startTime;
 
         if (!response.ok) {
@@ -48,11 +48,15 @@ async function loadSettings() {
             emailAddress: data.email_address || '',
             phoneNumber: data.phone_number || ''
         });
+
+        return data; // Return the settings data for use in site-navigation.js
     } catch (error) {
         console.error('loadSettings - Error loading settings - Error:', error.message, 'Stack:', error.stack);
         toastr.error(`Error loading settings: ${error.message}`);
+        throw error; // Re-throw the error to be handled by the caller (e.g., site-navigation.js)
+    } finally {
+        console.log('loadSettings - Settings load completed');
     }
-    console.log('loadSettings - Settings load completed');
 }
 
 // Saves user settings from the DOM.
@@ -68,9 +72,9 @@ async function saveSettings(settings) {
     }
 
     try {
-        console.log('saveSettings - Sending settings via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/user`);
+        console.log('saveSettings - Sending settings via authenticatedFetch - URL:', `${window.apiUrl}/settings/user`);
         const startTime = Date.now();
-        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/user`, {
+        const response = await authenticatedFetch(`${window.apiUrl}/settings/user`, {
             method: 'PUT',
             body: JSON.stringify(settings)
         });
@@ -105,9 +109,9 @@ async function loadWixClientId() {
     }
 
     try {
-        console.log('loadWixClientId - Fetching Wix client ID via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/wix-client-id`);
+        console.log('loadWixClientId - Fetching Wix client ID via authenticatedFetch - URL:', `${window.apiUrl}/settings/wix-client-id`);
         const startTime = Date.now();
-        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/wix-client-id`);
+        const response = await authenticatedFetch(`${window.apiUrl}/settings/wix-client-id`);
         const duration = Date.now() - startTime;
 
         if (!response.ok) {
@@ -147,9 +151,9 @@ async function saveWixClientId(clientId) {
     }
 
     try {
-        console.log('saveWixClientId - Sending Wix client ID via authenticatedFetch - URL:', `${window.apiUrl}/${userId}/wix-client-id`);
+        console.log('saveWixClientId - Sending Wix client ID via authenticatedFetch - URL:', `${window.apiUrl}/settings/wix-client-id`);
         const startTime = Date.now();
-        const response = await authenticatedFetch(`${window.apiUrl}/${userId}/wix-client-id`, {
+        const response = await authenticatedFetch(`${window.apiUrl}/settings/wix-client-id`, {
             method: 'POST',
             body: JSON.stringify({ clientId })
         });

@@ -13,7 +13,6 @@ try {
                 } else {
                     console.warn('initializePartner - userId input element not found');
                 }
-                // Align with page-load.js initialSection: 'clients'
                 window.siteNavigation.showSection('clients');
             },
             checkAdminPermission,

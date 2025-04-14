@@ -91,7 +91,6 @@ if (!window.pageLoadInitialized) {
         const domPageType = document.body.getAttribute('data-page-type') || 'login';
         if (domPageType !== pageType) {
             log('performPageSetup - DOM mismatch detected - DOM:', domPageType, 'Expected:', pageType);
-            // Fix: Trust the server's rendering based on x-role; no redirect needed if role matches
             const token = localStorage.getItem('authToken');
             const decoded = token ? window.decodeJWT(token) : null;
             const currentRole = decoded?.['x-role'] || 'login';
@@ -121,6 +120,14 @@ if (!window.pageLoadInitialized) {
             log('performPageSetup - Login-specific steps completed');
         }
 
+        // Ensure the role is passed to initializeNavigation
+        if (typeof window.siteNavigation?.initializeNavigation === 'function') {
+            log('performPageSetup - Calling initializeNavigation with role:', pageType);
+            window.siteNavigation.initializeNavigation(pageType);
+        } else {
+            log('performPageSetup - siteNavigation.initializeNavigation not available');
+        }
+
         log('performPageSetup - Page setup completed for:', pageType);
     }
 
@@ -145,6 +152,14 @@ if (!window.pageLoadInitialized) {
             localStorage.setItem('fetchRedirectCount', '0');
             window.siteNavigation.deleteCookie('authToken');
             initialize('login');
+        }
+
+        // Additional call to initializeNavigation to ensure menu updates
+        if (typeof window.siteNavigation?.initializeNavigation === 'function') {
+            log('DOMContentLoaded - Ensuring menu updates with role:', currentRole);
+            window.siteNavigation.initializeNavigation(currentRole);
+        } else {
+            log('DOMContentLoaded - siteNavigation.initializeNavigation not available');
         }
     });
 
