@@ -1,7 +1,8 @@
+<!-- templates/login.html -->
 {% extends "base.inc" %}
 {% block body_attributes %}data-page-type="login"{% endblock %}
 {% block content %}
-<!-- Deployed 2025-03-31 v11, Updated 2025-04-09 -->
+<!-- Deployed 2025-04-19 v12, Consolidated login and signup -->
 <div class="login-page">
     <div id="loadingOverlay" class="hidden">
         <div class="multicircle-loader">
@@ -11,28 +12,51 @@
             <div class="circle circle4"></div>
         </div>
     </div>
-    
-    <div class="container" id="loginContainer">
+
+    <nav class="login-menu">
+        <a href="#" data-section="info" class="menu-item active">Info</a>
+        <a href="#" data-section="forgot-password" class="menu-item"><i class="fas fa-lock"></i> Forgot Password</a>
+        <a href="#" data-section="signup" class="menu-item"><i class="fas fa-user-plus"></i> Sign Up</a>
+    </nav>
+
+    <div class="container" id="infoContainer">
+        {% include 'welcome.inc' with context %}
         <form id="loginForm" class="form" method="POST" action="/">
             <div class="form-group">
                 <label for="loginEmail">Email:</label>
                 <div class="input-container">
-                    <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
+                    <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required autocomplete="off">
                 </div>
             </div>
             <div class="form-group">
                 <label for="loginPassword">Password:</label>
                 <div class="input-container">
-                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="new-password">
                     <span class="toggle-password"><i class="fas fa-eye"></i></span>
                 </div>
             </div>
             <button type="submit">Login</button>
         </form>
-        <div class="toggle-link">
-            <a href="{{ url_for('authentication_bp.signup') }}">Need an account? Sign Up</a><br>
-            <a href="#" onclick="showForgotPassword(); return false;">Forgot Password?</a>
-        </div>
+    </div>
+
+    <div class="container hidden" id="loginContainer">
+        <h2>Login</h2>
+        <form id="loginForm" class="form" method="POST" action="/">
+            <div class="form-group">
+                <label for="loginEmail">Email:</label>
+                <div class="input-container">
+                    <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required autocomplete="off">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <div class="input-container">
+                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="new-password">
+                    <span class="toggle-password"><i class="fas fa-eye"></i></span>
+                </div>
+            </div>
+            <button type="submit">Login</button>
+        </form>
     </div>
 
     <div class="container hidden" id="forgotPasswordContainer">
@@ -40,39 +64,115 @@
         <form id="forgotPasswordForm" class="form" method="POST" action="/reset-password">
             <div class="form-group">
                 <label for="forgotEmail">Email:</label>
-                <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
+                <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required autocomplete="off">
             </div>
             <button type="submit">Send OTP via SMS</button>
         </form>
-        <div class="toggle-link">
-            <a href="#" onclick="showLogin(); return false;">Back to Login</a>
+        <div class="otp-section hidden" id="verifyOtpSection">
+            <h2>Verify OTP</h2>
+            <form id="verifyOtpForm" class="form" method="POST" action="/verify-reset-code">
+                <div class="form-group">
+                    <label for="verifyEmail">Email:</label>
+                    <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="otpCode">One-Time Password:</label>
+                    <input type="text" id="otpCode" name="code" placeholder="Enter the OTP from SMS" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password:</label>
+                    <input type="password" id="newPassword" name="new_password" placeholder="Enter new password" required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword">Confirm New Password:</label>
+                    <input type="password" id="confirmNewPassword" name="confirm_new_password" placeholder="Confirm new password" required autocomplete="new-password">
+                </div>
+                <button type="submit">Update Password</button>
+            </form>
         </div>
     </div>
 
-    <div class="container hidden" id="verifyOtpContainer">
-        <h2>Verify OTP</h2>
-        <form id="verifyOtpForm" class="form" method="POST" action="/verify-reset-code">
-            <div class="form-group">
-                <label for="verifyEmail">Email:</label>
-                <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required>
+    <div class="container hidden" id="signupContainer">
+        <h2>Sign Up - I am a...</h2>
+        <form id="signupForm" class="form" method="POST" action="/signup" autocomplete="off">
+            <!-- Dummy fields to trick autofill -->
+            <input type="text" class="hidden" autocomplete="off">
+            <input type="text" class="hidden" autocomplete="off">
+            <div class="options">
+                <label class="option selected">
+                    <input type="radio" name="signup_type" value="community" checked>
+                    <img src="{{ url_for('static', filename='img/community.jpg') }}" alt="Scout leader in uniform, neck down">
+                    <span>Community Group</span>
+                </label>
+                <label class="option">
+                    <input type="radio" name="signup_type" value="seller">
+                    <img src="{{ url_for('static', filename='img/merchant.jpg') }}" alt="White man in business suit, neck down">
+                    <span>Merchant</span>
+                </label>
+                <label class="option">
+                    <input type="radio" name="signup_type" value="wixpro">
+                    <img src="{{ url_for('static', filename='img/wixpro.jpg') }}" alt="Female ethnic web designer in casual dress, neck down">
+                    <span>Partner</span>
+                </label>
             </div>
-            <div class="form-group">
-                <label for="otpCode">One-Time Password:</label>
-                <input type="text" id="otpCode" name="code" placeholder="Enter the OTP from SMS" required>
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="contact_name">Contact Name:</label>
+                    <div class="input-container">
+                        <input type="text" id="contact_name" name="contact_name" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup_phone">Phone Number:</label>
+                    <div class="input-container">
+                        <input type="tel" id="signup_phone" name="signup_phone" autocomplete="off" pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup_email">Email:</label>
+                    <div class="input-container">
+                        <input type="email" id="signup_email" name="signup_email" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup_password">Password:</label>
+                    <div class="input-container">
+                        <input type="password" id="signup_password" name="signup_password" required autocomplete="new-password">
+                        <i class="fas fa-eye toggle-password" data-target="signup_password"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup_confirm_password">Confirm Password:</label>
+                    <div class="input-container">
+                        <input type="password" id="signup_confirm_password" name="signup_confirm_password" required autocomplete="new-password">
+                        <i class="fas fa-eye toggle-password" data-target="signup_confirm_password"></i>
+                    </div>
+                </div>
+                <button type="submit">Sign Me Up</button>
             </div>
-            <div class="form-group">
-                <label for="newPassword">New Password:</label>
-                <input type="password" id="newPassword" name="new_password" placeholder="Enter new password" required>
+            <div class="otp-section hidden" id="signupOtpSection">
+                <div class="form-group">
+                    <label for="signupOtp">Enter OTP:</label>
+                    <input type="text" id="signupOtp" name="otp" placeholder="Enter OTP" required>
+                </div>
+                <button id="verifySignupOtpBtn">Verify OTP</button>
             </div>
-            <div class="form-group">
-                <label for="confirmNewPassword">Confirm New Password:</label>
-                <input type="password" id="confirmNewPassword" name="confirm_new_password" placeholder="Confirm new password" required>
-            </div>
-            <button type="submit">Update Password</button>
         </form>
-        <div class="toggle-link">
-            <a href="#" onclick="showLogin(); return false;">Back to Login</a>
-        </div>
     </div>
 </div>
+
+<script>
+    // Inline script for minimal initialization
+    window.onload = function() {
+        // Clear fields to prevent autofill
+        ['signup_email', 'signup_password', 'signup_confirm_password', 'signup_phone', 'loginEmail', 'loginPassword', 'forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) input.value = '';
+        });
+
+        // Set Community Group as default
+        document.querySelectorAll('.option').forEach(option => option.classList.remove('selected'));
+        document.querySelector('input[value="community"]').closest('.option').classList.add('selected');
+    };
+</script>
 {% endblock %}

@@ -1,85 +1,79 @@
-// notifications.js
-import { log as loggerLog, error as loggerError, warn as loggerWarn } from './logger.js';
+// /static/js/core/notifications.js
+// Purpose: Manages UI notifications for success, error, and operation results.
 
-export function setup() {
-    loggerLog('notifications.js - Setting up Toastr');
-    if (typeof toastr === 'undefined') {
-        loggerError('notifications.js - Toastr library not loaded');
-        return;
-    }
+import { log } from './logger.js';
+import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
+import { withScriptLogging } from '../utils/initialization.js';
 
-    const originalSuccess = toastr.success;
-    const originalError = toastr.error;
-    const originalInfo = toastr.info;
-    const originalWarning = toastr.warning;
-
-    toastr.success = (message, title, options) => {
-        loggerLog(`Toastr Success: ${title ? title + ' - ' : ''}${message}`);
-        return originalSuccess.call(toastr, message, title, options);
-    };
-    toastr.error = (message, title, options) => {
-        loggerLog(`Toastr Error: ${title ? title + ' - ' : ''}${message}`);
-        return originalError.call(toastr, message, title, options);
-    };
-    toastr.info = (message, title, options) => {
-        loggerLog(`Toastr Info: ${title ? title + ' - ' : ''}${message}`);
-        return originalInfo.call(toastr, message, title, options);
-    };
-    toastr.warning = (message, title, options) => {
-        loggerLog(`Toastr Warning: ${title ? title + ' - ' : ''}${message}`);
-        return originalWarning.call(toastr, message, title, options);
-    };
-
-    toastr.options = {
-        closeButton: true,
-        progressBar: true,
-        positionClass: 'toast-top-right',
-        timeOut: 5000,
-        showMethod: 'slideDown',
-        hideMethod: 'slideUp'
-    };
-
-    loggerLog('notifications.js - Toastr configured:', toastr.options);
+/**
+ * Displays a success notification.
+ * @param {string} context - The context or module name.
+ * @param {string} message - The success message.
+ */
+export function success(context, message) {
+  log(context, `Displaying success notification: ${message}`);
+  withElement(context, 'notification', element => {
+    element.textContent = message;
+    element.classList.remove('error');
+    element.classList.add('success');
+    toggleViewState(context, { notification: true });
+    setTimeout(() => toggleViewState(context, { notification: false }), 3000);
+  }, 10, 100, false);
 }
 
-export function success(message, title, options) {
-    if (typeof toastr !== 'undefined') {
-        toastr.success(message, title, options);
-    } else {
-        loggerWarn('notifications.js - Toastr not available, fallback to alert:', message);
-        alert(`Success: ${title ? title + ' - ' : ''}${message}`);
-    }
+/**
+ * Displays an error notification.
+ * @param {string} context - The context or module name.
+ * @param {string} message - The error message.
+ */
+export function error(context, message) {
+  log(context, `Displaying error notification: ${message}`);
+  withElement(context, 'notification', element => {
+    element.textContent = message;
+    element.classList.remove('success');
+    element.classList.add('error');
+    toggleViewState(context, { notification: true });
+    setTimeout(() => toggleViewState(context, { notification: false }), 5000);
+  }, 10, 100, false);
 }
 
-export function error(message, title, options) {
-    if (typeof toastr !== 'undefined') {
-        toastr.error(message, title, options);
-    } else {
-        loggerWarn('notifications.js - Toastr not available, fallback to alert:', message);
-        alert(`Error: ${title ? title + ' - ' : ''}${message}`);
-    }
+/**
+ * Notifies the result of an operation, handling success or error states.
+ * @param {string} context - The context or module name.
+ * @param {Object} options - Notification options.
+ * @param {boolean} options.success - Whether the operation was successful.
+ * @param {string} options.message - The notification message.
+ * @param {string} [options.defaultSuccess] - Default success message if none provided.
+ * @param {string} [options.defaultError] - Default error message if none provided.
+ */
+export function notifyOperationResult(context, { success, message, defaultSuccess = SUCCESS_MESSAGES.DEFAULT, defaultError = ERROR_MESSAGES.DEFAULT }) {
+  log(context, `Notifying operation result: ${success ? 'success' : 'error'}, message: ${message}`);
+  const notificationMessage = success ? (message || defaultSuccess) : (message || defaultError);
+  if (success) {
+    success(context, notificationMessage);
+  } else {
+    error(context, notificationMessage);
+  }
 }
 
-export function info(message, title, options) {
-    if (typeof toastr !== 'undefined') {
-        toastr.info(message, title, options);
-    } else {
-        loggerWarn('notifications.js - Toastr not available, fallback to alert:', message);
-        alert(`Info: ${title ? title + ' - ' : ''}${message}`);
-    }
+/**
+ * Initializes the notifications module for use with the module registry.
+ * @param {Object} registry - The module registry instance.
+ * @returns {Object} Notifications instance with public methods.
+ */
+export function initializeNotificationsModule(registry) {
+  const context = 'notifications.js';
+  log(context, 'Initializing notifications module for module registry');
+  return {
+    success: (ctx, ...args) => success(ctx, ...args),
+    error: (ctx, ...args) => error(ctx, ...args),
+    notifyOperationResult: (ctx, ...args) => notifyOperationResult(ctx, ...args),
+  };
 }
 
-export function warning(message, title, options) {
-    if (typeof toastr !== 'undefined') {
-        toastr.warning(message, title, options);
-    } else {
-        loggerWarn('notifications.js - Toastr not available, fallback to alert:', message);
-        alert(`Warning: ${title ? title + ' - ' : ''}${message}`);
-    }
-}
-
-if (!window.notificationsInitialized) {
-    window.notificationsInitialized = true;
-    loggerLog('notifications.js - Loaded successfully');
-    loggerLog('notifications.js - Notifications utility initialized');
-}
+// Initialize module with lifecycle logging
+const context = 'notifications.js';
+withScriptLogging(context, () => {
+  log(context, 'Module initialized');
+});

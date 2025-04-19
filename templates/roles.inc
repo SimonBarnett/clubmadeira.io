@@ -32,11 +32,11 @@
     </div>
 </button>
 {% else %}
-<div style="color: currentcolor; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 15px; height: 120px; box-sizing: border-box; overflow: visible;">
+<button data-section="info" style="color: currentcolor; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 15px; height: 120px; box-sizing: border-box; overflow: visible; background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
     <span class="icon-community" style="width: 50px; height: 50px;"></span>
     <div>
         <h1 style="margin: 0; font-size: 24px; color: currentcolor;">Welcome to clubmadeira.io</h1>
         <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9; color: currentcolor;">Log in to access your dashboard.</p>
     </div>
-</div>
+</button>
 {% endif %}

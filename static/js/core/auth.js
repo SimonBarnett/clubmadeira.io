@@ -1,279 +1,87 @@
-// auth.js
-import { log as loggerLog, error as loggerError } from './logger.js';
-import { getCookie as cookiesGetCookie, setCookie as cookiesSetCookie, deleteCookie as cookiesDeleteCookie } from './cookies.js';
-import { success as notificationsSuccess, error as notificationsError } from './notifications.js';
+// /static/js/core/auth.js
+// Purpose: Manages authentication-related operations, including token handling and authenticated requests.
 
-let token = null;
-let decoded = null;
-let redirectCount = 0;
-const maxRedirects = 2;
+import { log } from './logger.js';
+import { withErrorHandling } from '../utils/error.js';
+import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
+import { withScriptLogging } from '../utils/initialization.js';
 
-export function tokenManagerGetToken() {
-    if (!token) {
-        token = localStorage.getItem('authToken') || cookiesGetCookie('authToken') || sessionStorage.getItem('authToken');
-        loggerLog(`tokenManagerGetToken - Token: ${token ? '[present]' : 'none'}`);
-    }
-    return token;
+/**
+ * Sets the authentication token in localStorage.
+ * @param {string} token - The authentication token.
+ */
+export function tokenManagerSetToken(token) {
+  const context = 'auth.js';
+  log(context, 'Setting auth token');
+  localStorage.setItem('authToken', token);
 }
 
+/**
+ * Decodes the authentication token from localStorage.
+ * @returns {Object|null} The decoded token data or null if invalid.
+ */
 export function tokenManagerDecode() {
-    if (!decoded && tokenManagerGetToken()) {
-        try {
-            const parts = token.split('.');
-            if (parts.length !== 3) {
-                throw new Error('Invalid JWT format');
-            }
-            const base64Url = parts[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(
-                atob(base64)
-                    .split('')
-                    .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                    .join('')
-            );
-            decoded = JSON.parse(jsonPayload);
-            loggerLog('tokenManagerDecode - Decoded JWT:', decoded);
-        } catch (error) {
-            loggerError('tokenManagerDecode - Error decoding JWT:', error, 'Token:', token);
-            decoded = null;
-        }
-    } else if (!tokenManagerGetToken()) {
-        // Reset decoded if no token is present
-        decoded = null;
-        loggerLog('tokenManagerDecode - No token present, resetting decoded state');
+  const context = 'auth.js';
+  log(context, 'Decoding auth token');
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    log(context, 'No auth token found');
+    return null;
+  }
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    log(context, 'Token decoded successfully');
+    return payload;
+  } catch (err) {
+    log(context, 'Failed to decode token:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Performs an authenticated fetch request with the auth token.
+ * @param {string} context - The context or module name.
+ * @param {string} url - The API endpoint URL.
+ * @param {Object} [options={}] - Fetch options.
+ * @returns {Promise<Response>} The fetch response.
+ */
+export async function authenticatedFetch(context, url, options = {}) {
+  log(context, `Performing authenticated fetch to ${url}`);
+  return await withErrorHandling(`${context}:authenticatedFetch`, async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No authentication token found');
     }
-    return decoded;
-}
-
-export function tokenManagerSetToken(newToken) {
-    token = newToken;
-    localStorage.setItem('authToken', newToken);
-    sessionStorage.setItem('authToken', newToken); // Also store in sessionStorage for redundancy
-    cookiesSetCookie('authToken', newToken, 7);
-    decoded = null;
-    loggerLog('tokenManagerSetToken - Token updated');
-}
-
-export function tokenManagerClear() {
-    // Clear from localStorage
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('redirectCount');
-    
-    // Clear from sessionStorage
-    sessionStorage.removeItem('authToken');
-    sessionStorage.removeItem('userId');
-    sessionStorage.removeItem('redirectCount');
-    
-    // Clear from cookies
-    cookiesDeleteCookie('authToken');
-    cookiesDeleteCookie('session');
-    
-    // Reset internal state
-    token = null;
-    decoded = null;
-    redirectCount = 0;
-    
-    loggerLog('tokenManagerClear - Auth data cleared from localStorage, sessionStorage, and cookies');
-}
-
-export function tokenManagerIncrementRedirect() {
-    redirectCount++;
-    localStorage.setItem('redirectCount', redirectCount);
-    sessionStorage.setItem('redirectCount', redirectCount); // Also store in sessionStorage
-    loggerLog(`tokenManagerIncrementRedirect - Count: ${redirectCount}`);
-    return redirectCount;
-}
-
-export function tokenManagerResetRedirect() {
-    redirectCount = 0;
-    localStorage.setItem('redirectCount', redirectCount);
-    sessionStorage.setItem('redirectCount', redirectCount); // Also store in sessionStorage
-    loggerLog('tokenManagerResetRedirect - Count reset');
-}
-
-export function tokenManagerCanRedirect() {
-    const can = redirectCount <= maxRedirects;
-    loggerLog(`tokenManagerCanRedirect - Count: ${redirectCount}, Max: ${maxRedirects}, Can: ${can}`);
-    return can;
-}
-
-export async function authenticatedFetch(url, options = {}) {
-    loggerLog(`authenticatedFetch - Fetching: ${url}`);
-    const publicEndpoints = ['/', '/signup', '/logoff']; // Added /logoff to public endpoints
-    const isPublic = publicEndpoints.some(endpoint => url.includes(endpoint));
-    loggerLog(`authenticatedFetch - Is public: ${isPublic}`);
-
-    const token = tokenManagerGetToken();
-    if (!token && !isPublic) {
-        if (!tokenManagerCanRedirect()) {
-            loggerError('authenticatedFetch - Redirect loop detected, clearing token');
-            tokenManagerClear();
-            window.location.href = '/';
-            return null;
-        }
-        tokenManagerIncrementRedirect();
-        loggerError('authenticatedFetch - No token, redirecting to /');
-        notificationsError('Please log in to continue');
-        window.location.href = '/';
-        return null;
-    }
-
-    const headers = new Headers(options.headers || {});
-    if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-    }
-    headers.set('Content-Type', 'application/json');
-
-    const fetchOptions = {
-        ...options,
-        headers
+    const headers = {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     };
-
-    try {
-        const response = await fetch(url, fetchOptions);
-        loggerLog(`authenticatedFetch - Response status: ${response.status}`);
-        if (!response.ok && !isPublic) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Request failed with status ${response.status}`);
-        }
-        tokenManagerResetRedirect();
-        return response;
-    } catch (error) {
-        loggerError('authenticatedFetch - Error:', error);
-        if (!isPublic && tokenManagerCanRedirect()) {
-            tokenManagerIncrementRedirect();
-            notificationsError('Session expired, please log in');
-            window.location.href = '/';
-            return null;
-        }
-        throw error;
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok) {
+      throw new Error(`Fetch failed: ${response.status}`);
     }
+    return response;
+  }, ERROR_MESSAGES.FETCH_FAILED('authenticated request'));
 }
 
-export async function logout() {
-    loggerLog('logout - Initiating');
-    const confirmed = confirm('Are you sure you want to log off?');
-    if (!confirmed) {
-        loggerLog('logout - Cancelled by user');
-        return;
-    }
-
-    try {
-        loggerLog('logout - Sending /logoff request');
-        const response = await fetch('/logoff', { method: 'GET' });
-        const data = await response.json();
-        if (data.status === 'success') {
-            loggerLog('logout - Server confirmed logout');
-            tokenManagerClear();
-            sessionStorage.clear();
-            notificationsSuccess('Logged off successfully');
-            setTimeout(() => {
-                window.location.href = data.redirect_url || '/';
-                loggerLog('logout - Redirected to:', data.redirect_url || '/');
-            }, 1000);
-        } else {
-            loggerError('logout - Server error:', data.message);
-            notificationsError(data.message || 'Logout failed');
-        }
-    } catch (error) {
-        loggerError('logout - Error:', error);
-        notificationsError('Logout failed: ' + error.message);
-        tokenManagerClear();
-        window.location.href = '/';
-    }
+/**
+ * Initializes the auth module for use with the module registry.
+ * @param {Object} registry - The module registry instance.
+ * @returns {Object} Auth instance with public methods.
+ */
+export function initializeAuthModule(registry) {
+  const context = 'auth.js';
+  log(context, 'Initializing auth module for module registry');
+  return {
+    tokenManagerSetToken,
+    tokenManagerDecode,
+    authenticatedFetch: (ctx, ...args) => authenticatedFetch(ctx, ...args),
+  };
 }
 
-export function togglePassword(fieldId) {
-    loggerLog(`togglePassword - Toggling field: ${fieldId}`);
-    const input = document.getElementById(fieldId);
-    const icon = input?.nextElementSibling;
-
-    if (!input) {
-        loggerError(`togglePassword - Input not found: ${fieldId}`);
-        return;
-    }
-    if (!icon) {
-        loggerError(`togglePassword - Icon not found for: ${fieldId}`);
-        return;
-    }
-
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
-    icon.classList.toggle('fa-eye', !isPassword);
-    icon.classList.toggle('fa-eye-slash', isPassword);
-    loggerLog(`togglePassword - Set type to: ${input.type}`);
-}
-
-export async function savePassword() {
-    loggerLog('savePassword - Starting');
-    const newPassword = document.getElementById('changeNewPassword')?.value;
-    const confirmPassword = document.getElementById('changeConfirmPassword')?.value;
-
-    if (!newPassword || typeof newPassword !== 'string') {
-        loggerError('savePassword - Invalid new password');
-        notificationsError('Please enter a valid new password');
-        return;
-    }
-    if (newPassword !== confirmPassword) {
-        loggerError('savePassword - Passwords do not match');
-        notificationsError('Passwords do not match');
-        return;
-    }
-
-    try {
-        loggerLog('savePassword - Sending update');
-        const response = await authenticatedFetch('/update-password', {
-            method: 'POST',
-            body: JSON.stringify({ password: newPassword })
-        });
-        if (!response) {
-            loggerError('savePassword - No response');
-            notificationsError('Failed to save password');
-            return;
-        }
-        const result = await response.json();
-        loggerLog('savePassword - Response:', result);
-        if (result.status === 'success') {
-            loggerLog('savePassword - Success');
-            notificationsSuccess('Password updated successfully');
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('changeNewPassword').value = '';
-            document.getElementById('changeConfirmPassword').value = '';
-        } else {
-            loggerError('savePassword - Failed:', result.message);
-            notificationsError(result.message || 'Failed to save password');
-        }
-    } catch (error) {
-        loggerError('savePassword - Error:', error);
-        notificationsError('Failed to save password: ' + error.message);
-    }
-}
-
-export function setupEventListeners() {
-    loggerLog('setupEventListeners - Adding auth-related listeners');
-    document.querySelectorAll('.password-toggle').forEach(toggle => {
-        toggle.addEventListener('click', () => {
-            const targetId = toggle.getAttribute('data-target');
-            togglePassword(targetId);
-        });
-    });
-
-    const savePasswordBtn = document.querySelector('[data-action="savePassword"]');
-    if (savePasswordBtn) {
-        savePasswordBtn.addEventListener('click', savePassword);
-        loggerLog('setupEventListeners - Added savePassword listener');
-    } else {
-        loggerLog('setupEventListeners - Save password button not found');
-    }
-}
-
-if (!window.authInitialized) {
-    window.authInitialized = true;
-    document.addEventListener('DOMContentLoaded', () => {
-        setupEventListeners();
-    });
-
-    window.dispatchEvent(new Event('siteAuthReady'));
-    loggerLog('auth.js - Auth utility initialized');
-}
+// Initialize module with lifecycle logging
+const context = 'auth.js';
+withScriptLogging(context, () => {
+  log(context, 'Module initialized');
+});

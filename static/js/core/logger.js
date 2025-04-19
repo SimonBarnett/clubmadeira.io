@@ -1,23 +1,52 @@
-// logger.js
-const ENABLE_LOGGING = true;
+// /static/js/core/logger.js
+// Purpose: Provides centralized logging functionality for the application.
 
-export function log(...args) {
-    if (ENABLE_LOGGING) console.log(...args);
+import { withScriptLogging } from '../utils/initialization.js';
+
+/**
+ * Logs a message to the console with the specified context.
+ * @param {string} context - The context or module name.
+ * @param {...any} args - Arguments to log.
+ */
+export function log(context, ...args) {
+  console.log(`[${context}]`, ...args);
 }
 
-export function error(...args) {
-    if (ENABLE_LOGGING) console.error(...args);
+/**
+ * Logs a warning to the console with the specified context.
+ * @param {string} context - The context or module name.
+ * @param {...any} args - Arguments to log.
+ */
+export function warn(context, ...args) {
+  console.warn(`[${context}]`, ...args);
 }
 
-export function warn(...args) {
-    if (ENABLE_LOGGING) console.warn(...args);
+/**
+ * Logs an error to the console with the specified context.
+ * @param {string} context - The context or module name.
+ * @param {...any} args - Arguments to log.
+ */
+export function error(context, ...args) {
+  console.error(`[${context}]`, ...args);
 }
 
-export function info(...args) {
-    if (ENABLE_LOGGING) console.info(...args);
+/**
+ * Initializes the logger module for use with the module registry.
+ * @param {Object} registry - The module registry instance.
+ * @returns {Object} Logger instance with public methods.
+ */
+export function initializeLoggerModule(registry) {
+  const context = 'logger.js';
+  log(context, 'Initializing logger module for module registry');
+  return {
+    log,
+    warn,
+    error,
+  };
 }
 
-if (!window.loggerInitialized) {
-    window.loggerInitialized = true;
-    log('logger.js - Logger initialized');
-}
+// Initialize module with lifecycle logging
+const context = 'logger.js';
+withScriptLogging(context, () => {
+  log(context, 'Module initialized');
+});

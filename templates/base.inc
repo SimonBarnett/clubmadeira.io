@@ -1,3 +1,4 @@
+<!-- templates/base.inc -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,13 +45,10 @@
         <div class="content">
             <!-- Menu Container (dynamically populated by navigation.js) -->
             <div id="menu" class="menu"></div>
-            <!-- Info Section (includes welcome.inc) -->
-            <div id="info" class="section" style="display: none;">
-                {% include 'welcome.inc' with context %}
-            </div>
             <!-- Role-specific sections (corresponding to navigation menu buttons) -->
             {% block content %}{% endblock %}
-            <!-- My Account Sections (shared across all roles) -->
+            {% if page_type != 'login' %}
+            <!-- My Account Sections (shared across authenticated roles) -->
             <div id="my-account" class="section" style="display: none;">
                 <h2>My Account</h2>
             </div>
@@ -69,7 +67,6 @@
                         <label for="phone_number">Phone Number:</label>
                         <input type="tel" id="phone_number" name="phone_number">
                     </div>
-                    <!-- Additional fields can be added here with matching id and name -->
                     <button type="submit"><i class="fas fa-address-card"></i> Save Details</button>
                 </form>
             </div>
@@ -100,6 +97,7 @@
                     <button type="submit"><i class="fas fa-key"></i> Update Password</button>
                 </form>
             </div>
+            {% endif %}
         </div>
     </div>
 
