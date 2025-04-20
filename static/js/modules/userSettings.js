@@ -6,7 +6,7 @@ import { renderSettings } from '../utils/settings-renderer.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setupEventListeners } from '../utils/event-listeners.js';
 import { SETTINGS } from '../config/settings.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from '../utils/initialization.js';
 
 /**

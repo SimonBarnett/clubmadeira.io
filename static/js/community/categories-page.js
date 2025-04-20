@@ -9,7 +9,7 @@ import { withAuthenticatedUser } from '../utils/auth.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
 import { getElements } from '../utils/dom-manipulation.js';
 import { initializeTinyMCE } from '../core/mce.js'; // Added for TinyMCE
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withErrorHandling } from '../utils/error.js';
 import { withScriptLogging } from '../utils/initialization.js';
 

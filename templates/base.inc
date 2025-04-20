@@ -1,4 +1,3 @@
-<!-- templates/base.inc -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,8 +9,7 @@
     <!-- Local CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css?v=1.0.1') }}">
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">    
     <!-- Dynamic API URL -->
     <script>
         window.apiUrl = 'https://clubmadeira.io';
@@ -23,18 +21,27 @@
     <script src="https://cdn.tiny.cloud/1/{{ site_settings.tiny.API_KEY | default('YOUR_VALID_API_KEY') }}/tinymce/6/tinymce.min.js" defer></script>
 </head>
 <body {% block body_attributes %}{% endblock %}>
+    <!-- Notification DIV for fallback (optional) -->
+    <div id="notification" style="display: none;"></div>
     <!-- Hidden input for userId -->
     <input type="text" id="userId" style="display: none;" value="{{ user.user_id if user and user.user_id is defined else '' }}">
 
     <!-- Debug script to log template variables -->
-    <script>
-        const xRole = {{ x_role | tojson if x_role is defined else '"undefined"' }};
-        const pageType = {{ page_type | tojson if page_type is defined else '"undefined"' }};
-        const user = {{ user | tojson if user is defined else '"undefined"' }};
+    <script type="text/template" id="debug-script">
+        (function() {
+            // Use safe filter and ensure valid JSON output
+            const xRole = {{ x_role | tojson | safe if x_role is defined else '"undefined"' }};
+            const pageType = {{ page_type | tojson | safe if page_type is defined else '"undefined"' }};
+            const user = {{ user | tojson | safe if user is defined and user is not none else '"undefined"' }};
 
-        console.log('base.inc - Template variables - x_role:', xRole);
-        console.log('base.inc - Template variables - page_type:', pageType);
-        console.log('base.inc - Template variables - user:', user);
+            console.log('base.inc - Template variables - x_role:', xRole);
+            console.log('base.inc - Template variables - page_type:', pageType);
+            console.log('base.inc - Template variables - user:', user);
+        })();
+    </script>
+    <script>
+        const scriptContent = document.getElementById('debug-script').textContent;
+        eval(scriptContent);
     </script>
 
     <div class="layout-wrapper">
@@ -48,6 +55,11 @@
             <!-- Role-specific sections (corresponding to navigation menu buttons) -->
             {% block content %}{% endblock %}
             {% if page_type != 'login' %}
+            <!-- Default section for authenticated users -->
+            <div id="info" class="section" style="display: none;">
+                <h2>Dashboard</h2>
+                <p>Welcome to your dashboard. Select an option from the menu to get started.</p>
+            </div>
             <!-- My Account Sections (shared across authenticated roles) -->
             <div id="my-account" class="section" style="display: none;">
                 <h2>My Account</h2>
@@ -110,14 +122,13 @@
     {% elif page_type == 'admin' %}
         <script type="module" src="{{ url_for('static', filename='js/admin-page.js') }}" defer></script>
     {% elif page_type == 'merchant' %}
-        <script type="module" src="{{ url_for('static', filename='js/category-management.js') }}" defer></script>
-        <script type="module" src="{{ url_for('static', filename='js/site-request.js') }}" defer></script>
         <script type="module" src="{{ url_for('static', filename='js/merchant-page.js') }}" defer></script>
+        <script type="module" src="{{ url_for('static', filename='js/modules/site-request.js') }}" defer></script>
     {% elif page_type == 'partner' %}
         <script type="module" src="{{ url_for('static', filename='js/partner-page.js') }}" defer></script>
-    {% elif page_type == 'community' %}        
-        <script type="module" src="{{ url_for('static', filename='js/site-request.js') }}" defer></script>
+    {% elif page_type == 'community' %}
         <script type="module" src="{{ url_for('static', filename='js/community-page.js') }}" defer></script>
+        <script type="module" src="{{ url_for('static', filename='js/modules/site-request.js') }}" defer></script>
     {% endif %}
 
     <script>

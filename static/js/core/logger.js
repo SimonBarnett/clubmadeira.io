@@ -1,6 +1,4 @@
 // /static/js/core/logger.js
-// Purpose: Provides centralized logging functionality for the application.
-
 import { withScriptLogging } from '../utils/initialization.js';
 
 /**
@@ -9,7 +7,7 @@ import { withScriptLogging } from '../utils/initialization.js';
  * @param {...any} args - Arguments to log.
  */
 export function log(context, ...args) {
-  console.log(`[${context}]`, ...args);
+    console.log(`[${context}]`, ...args);
 }
 
 /**
@@ -18,7 +16,7 @@ export function log(context, ...args) {
  * @param {...any} args - Arguments to log.
  */
 export function warn(context, ...args) {
-  console.warn(`[${context}]`, ...args);
+    console.warn(`[${context}]`, ...args);
 }
 
 /**
@@ -27,7 +25,7 @@ export function warn(context, ...args) {
  * @param {...any} args - Arguments to log.
  */
 export function error(context, ...args) {
-  console.error(`[${context}]`, ...args);
+    console.error(`[${context}]`, ...args);
 }
 
 /**
@@ -36,17 +34,20 @@ export function error(context, ...args) {
  * @returns {Object} Logger instance with public methods.
  */
 export function initializeLoggerModule(registry) {
-  const context = 'logger.js';
-  log(context, 'Initializing logger module for module registry');
-  return {
-    log,
-    warn,
-    error,
-  };
+    const context = 'logger.js';
+    log(context, 'Initializing logger module for module registry');
+    return {
+        log,
+        warn,
+        error,
+    };
 }
 
-// Initialize module with lifecycle logging
-const context = 'logger.js';
-withScriptLogging(context, () => {
-  log(context, 'Module initialized');
-});
+/**
+ * Initializes the logger module.
+ */
+export function initializeLogger() {
+    withScriptLogging('logger.js', () => {
+        log('logger.js', 'Module initialized');
+    });
+}

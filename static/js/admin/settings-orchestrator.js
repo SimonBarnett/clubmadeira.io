@@ -4,7 +4,7 @@
 import { log } from '../core/logger.js';
 import { loadAdminSettings } from './settings.js';
 import { withErrorHandling } from '../utils/error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from '../utils/initialization.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 

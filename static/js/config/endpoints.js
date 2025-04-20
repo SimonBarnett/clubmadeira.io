@@ -62,8 +62,11 @@ export function initializeEndpointsModule(registry) {
   };
 }
 
-// Initialize module with lifecycle logging
-const context = 'endpoints.js';
-withScriptLogging(context, () => {
-  log(context, 'Module initialized');
-});
+/**
+ * Initializes the endpoints module.
+ */
+export function initializeEndpoints() {
+  withScriptLogging('endpoints.js', () => {
+    log('endpoints.js', 'Module initialized');
+  });
+}

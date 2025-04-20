@@ -6,7 +6,7 @@ import { renderSettingsForm } from '../utils/settings-renderer.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 import { renderMarkdownContent } from '../utils/form-rendering.js';
 import { withErrorHandling } from '../utils/error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from '../utils/initialization.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 

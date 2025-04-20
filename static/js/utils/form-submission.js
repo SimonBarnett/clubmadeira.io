@@ -6,7 +6,7 @@ import { fetchData } from './data-fetch.js';
 import { getFormConfig } from '../config/form-configs.js';
 import { success, error as notifyError } from '../core/notifications.js';
 import { withErrorHandling } from './error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from './initialization.js';
 
 /**

@@ -3,7 +3,7 @@
 
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { loadIntegrations } from './integrations-data.js';
 import { renderIntegrations } from './integrations-ui.js';
 import { setupPartnerEvents } from './partner-events.js';

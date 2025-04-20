@@ -6,7 +6,7 @@ import { hasAdminPermission } from '../config/menus.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 import { initializeSiteRequest } from '../modules/site-request.js';
 import { withErrorHandling } from '../utils/error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from '../utils/initialization.js';
 
 /**

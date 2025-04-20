@@ -4,7 +4,7 @@
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { withAuthenticatedUser } from '../utils/auth.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { loadClientApiSettings } from './providers-data.js';
 import { renderProviderSettings } from './providers-events.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';

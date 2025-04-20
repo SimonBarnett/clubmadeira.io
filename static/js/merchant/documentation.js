@@ -6,7 +6,7 @@ import { fetchData } from '../utils/data-fetch.js';
 import { renderMarkdownContent } from '../utils/form-rendering.js';
 import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
 import { withErrorHandling } from '../utils/error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { API_ENDPOINTS } from '../config/api-endpoints.js';
 
 /**

@@ -1,116 +1,82 @@
 // /static/js/config/menus.js
+// Purpose: Defines navigation menus for different roles and provides menu retrieval functionality.
+
 import { log } from '../core/logger.js';
-import { tokenManagerDecode } from '../core/auth.js';
-import { withErrorHandling } from '../utils/error.js';
-import { ROLES, ADMIN_MENU } from './roles.js';
 import { withScriptLogging } from '../utils/initialization.js';
+import { ROLES } from './roles.js';
+
+// Define menu configurations for each role
+export const MENUS = {
+    [ROLES.ADMIN]: [
+        { id: 'info', label: 'Dashboard', section: 'info' },
+        { id: 'users', label: 'Users', section: 'usersSection' },
+        { id: 'deals', label: 'Deals', section: 'dealsSection' },
+        { id: 'settings', label: 'Settings', section: 'settingsSection' },
+        { id: 'my-account', label: 'My Account', section: 'my-account' },
+        { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
+        { id: 'change-password', label: 'Change Password', section: 'change-password' },
+    ],
+    [ROLES.MERCHANT]: [
+        { id: 'info', label: 'Dashboard', section: 'info' },
+        { id: 'store-request', label: 'Store Request', section: 'storeRequestSection' },
+        { id: 'api-keys', label: 'API Keys', section: 'apiKeysSection' },
+        { id: 'products', label: 'Products', section: 'productsSection' },
+        { id: 'documentation', label: 'Documentation', section: 'documentationSection' },
+        { id: 'my-account', label: 'My Account', section: 'my-account' },
+        { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
+        { id: 'change-password', label: 'Change Password', section: 'change-password' },
+    ],
+    [ROLES.COMMUNITY]: [
+        { id: 'info', label: 'Dashboard', section: 'info' },
+        { id: 'site-request', label: 'Site Request', section: 'siteRequestSection' },
+        { id: 'categories', label: 'Categories', section: 'categoriesSection' },
+        { id: 'providers', label: 'Providers', section: 'providersSection' },
+        { id: 'referrals', label: 'Referrals', section: 'referralsSection' },
+        { id: 'my-account', label: 'My Account', section: 'my-account' },
+        { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
+        { id: 'change-password', label: 'Change Password', section: 'change-password' },
+    ],
+    [ROLES.PARTNER]: [
+        { id: 'info', label: 'Dashboard', section: 'info' },
+        { id: 'integrations', label: 'Integrations', section: 'integrationsSection' },
+        { id: 'my-account', label: 'My Account', section: 'my-account' },
+        { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
+        { id: 'change-password', label: 'Change Password', section: 'change-password' },
+    ],
+    [ROLES.LOGIN]: [
+        { id: 'info', label: 'Login', section: 'info' },
+    ],
+};
 
 /**
- * Common menu items for authenticated roles.
- * @type {Array}
+ * Retrieves the menu configuration for a given role.
+ * @param {string} role - The role for which to retrieve the menu.
+ * @returns {Array} The menu configuration for the role, or an empty array if not found.
  */
-export const COMMON_MENU = [
-  {
-    section: 'info',
-    label: 'Info',
-    icons: ['fas fa-info-circle'],
-  },
-  {
-    section: 'my-account',
-    label: 'My Account',
-    icons: ['fas fa-user'],
-  },
-  {
-    section: 'contact-details',
-    label: 'Contact Details',
-    icons: ['fas fa-address-book'],
-  },
-  {
-    section: 'change-password',
-    label: 'Change Password',
-    icons: ['fas fa-key'],
-  },
-];
-
-/**
- * Checks if the user has admin permission.
- * @param {string} context - The context or module name.
- * @returns {boolean} True if the user has admin permission, false otherwise.
- */
-export function hasAdminPermission(context) {
-  log(context, 'Checking admin permission');
-  const decoded = tokenManagerDecode();
-  const hasPermission = decoded && decoded.permissions && decoded.permissions.includes('admin');
-  log(context, `Admin permission: ${hasPermission}`);
-  return hasPermission;
-}
-
-/**
- * Retrieves the admin menu structure.
- * @param {string} context - The context or module name.
- * @returns {Array} The admin menu configuration.
- */
-export function getAdminMenu(context) {
-  log(context, 'Retrieving admin menu');
-  return ADMIN_MENU;
-}
-
-/**
- * Retrieves the menu structure for a given role.
- * @param {string} context - The context or module name.
- * @param {string} role - The role (e.g., 'admin', 'merchant', 'community', 'partner', 'login').
- * @returns {Array} The menu configuration.
- */
-export function getMenuForRole(context, role) {
-  log(context, `Retrieving menu for role: ${role}`);
-  if (role === 'login') {
-    return []; // Inline nav used in login.html
-  }
-  const baseMenu = [...COMMON_MENU];
-  if (role === 'admin') {
-    return [...baseMenu, ...ADMIN_MENU];
-  } else if (role === 'merchant') {
-    return [
-      ...baseMenu,
-      { section: 'api_keys', label: 'API Keys', icons: ['fas fa-key'] },
-      { section: 'products', label: 'Products', icons: ['fas fa-shopping-cart'] },
-      { section: 'user_settings', label: 'User Settings', icons: ['fas fa-cog'] },
-      { section: 'documentation', label: 'Documentation', icons: ['fas fa-book'] },
-      { section: 'store-request', label: 'Store Request', icons: ['fas fa-store'] },
-    ];
-  } else if (role === 'community') {
-    return [
-      ...baseMenu,
-      { section: 'categories', label: 'Categories', icons: ['fas fa-tags'] },
-      { section: 'providers', label: 'Providers', icons: ['fas fa-plug'] },
-      { section: 'referrals', label: 'Referrals', icons: ['fas fa-share-alt'] },
-    ];
-  } else if (role === 'partner') {
-    return [
-      ...baseMenu,
-      { section: 'integrations', label: 'Integrations', icons: ['fas fa-plug'] },
-    ];
-  }
-  return baseMenu;
+export function getMenu(role) {
+    log(`menus.js - Retrieving menu for role: ${role}`);
+    const menu = MENUS[role] || [];
+    if (!menu.length) {
+        log(`menus.js - No menu found for role: ${role}`);
+    }
+    return menu;
 }
 
 /**
  * Initializes the menus module for use with the module registry.
- * @param {Object} registry - The module registry instance.
- * @returns {Object} Menus instance with public methods.
+ * @param {Map} registry - The module registry instance.
+ * @returns {Object} Module instance with public methods.
  */
 export function initializeMenusModule(registry) {
-  const context = 'menus.js';
-  log(context, 'Initializing menus module for module registry');
-  return {
-    hasAdminPermission: ctx => hasAdminPermission(ctx),
-    getAdminMenu: ctx => getAdminMenu(ctx),
-    getMenuForRole: (ctx, role) => getMenuForRole(ctx, role),
-  };
+    const context = 'menus.js';
+    log(context, 'Initializing menus module for module registry');
+    return {
+        getMenu: (role) => getMenu(role),
+    };
 }
 
-// Initialize module with lifecycle logging
+// Initialize the module with lifecycle logging
 const context = 'menus.js';
 withScriptLogging(context, () => {
-  log(context, 'Module initialized');
+    log(context, 'Module initialized');
 });

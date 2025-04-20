@@ -2,7 +2,7 @@
 import { log } from '../core/logger.js';
 import { defineSectionHandlers } from '../modules/navigation.js';
 import { withErrorHandling } from '../utils/error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from '../utils/initialization.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 

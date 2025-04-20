@@ -1,11 +1,13 @@
 // /static/js/utils/initialization.js
+// Purpose: Provides utilities for module initialization, page setup, and navigation.
+
 import { log } from '../core/logger.js';
-import { withAuthenticatedUser } from './auth.js';
+import { withAuthenticatedUser } from '../core/auth.js'; // Updated import to core/auth.js
 import { withErrorHandling } from './error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js'; // Updated import to messages.js
 import { defineSectionHandlers } from '../modules/navigation.js';
-import { withScriptLogging } from './initialization.js';
-import { createModuleInitializer } from './initialization.js';
+
+const context = 'initialization.js';
 
 /**
  * Wraps a module initialization function with lifecycle logging.
@@ -14,11 +16,11 @@ import { createModuleInitializer } from './initialization.js';
  * @returns {void}
  */
 export function withScriptLogging(context, initFunction) {
-  log(context, 'Starting module initialization');
-  withErrorHandling(`${context}:withScriptLogging`, () => {
-    initFunction();
-    log(context, 'Module initialization completed');
-  }, ERROR_MESSAGES.MODULE_INIT_FAILED);
+    log(context, 'Starting module initialization');
+    withErrorHandling(`${context}:withScriptLogging`, () => {
+        initFunction();
+        log(context, 'Module initialization completed');
+    }, ERROR_MESSAGES.MODULE_INIT_FAILED);
 }
 
 /**
@@ -28,11 +30,11 @@ export function withScriptLogging(context, initFunction) {
  * @returns {Object} Module instance with wrapped methods.
  */
 export function createModuleInitializer(context, methods) {
-  log(context, `Initializing ${context} module for module registry`);
-  return Object.keys(methods).reduce((acc, key) => {
-    acc[key] = (ctx, ...args) => methods[key](ctx, ...args);
-    return acc;
-  }, {});
+    log(context, `Initializing ${context} module for module registry`);
+    return Object.keys(methods).reduce((acc, key) => {
+        acc[key] = (ctx, ...args) => methods[key](ctx, ...args);
+        return acc;
+    }, {});
 }
 
 /**
@@ -43,11 +45,11 @@ export function createModuleInitializer(context, methods) {
  * @returns {string} The parsed page type.
  */
 export function parsePageType(context, param, defaultType) {
-  log(context, `Parsing page type from param: ${param}`);
-  return withErrorHandling(`${context}:parsePageType`, () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param) || defaultType;
-  }, ERROR_MESSAGES.DEFAULT, () => defaultType);
+    log(context, `Parsing page type from param: ${param}`);
+    return withErrorHandling(`${context}:parsePageType`, () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param) || defaultType;
+    }, ERROR_MESSAGES.DEFAULT, () => defaultType);
 }
 
 /**
@@ -58,47 +60,47 @@ export function parsePageType(context, param, defaultType) {
  * @returns {Promise<void>}
  */
 export async function initializeRoleNavigation(context, role, defaultSection) {
-  log(context, `Initializing navigation for role: ${role}, default section: ${defaultSection}`);
-  await withErrorHandling(`${context}:initializeRoleNavigation`, async () => {
-    if (role === 'login') {
-      // Define handlers for login page
-      defineSectionHandlers(context, 'login', [
-        {
-          id: 'info',
-          handler: async () => {
-            log(context, 'Loading info section with login form');
-            await import('../login/login.js').then(m => m.initializeLogin(context, 'info'));
-          },
-        },
-        {
-          id: 'signup',
-          handler: async () => {
-            log(context, 'Loading signup section');
-            await import('../login/signup.js').then(m => m.initializeSignup(context));
-          },
-        },
-        {
-          id: 'forgot-password',
-          handler: async () => {
-            log(context, 'Loading forgot-password section');
-            await import('../login/forgot-password.js').then(m => m.initializeForgotPassword(context));
-          },
-        },
-      ]);
-    }
-    const navElement = document.querySelector(`nav[data-role="${role}"]`);
-    if (!navElement) {
-      log(context, `Navigation element not found for role: ${role}`);
-      return;
-    }
-    const sectionLink = navElement.querySelector(`[data-section="${defaultSection}"]`) || 
-                       document.querySelector(`.section-link[data-section="${defaultSection}"]`);
-    if (sectionLink) {
-      sectionLink.click();
-    } else {
-      log(context, `Section link not found for default section: ${defaultSection}`);
-    }
-  }, ERROR_MESSAGES.NAVIGATION_INIT_FAILED);
+    log(context, `Initializing navigation for role: ${role}, default section: ${defaultSection}`);
+    await withErrorHandling(`${context}:initializeRoleNavigation`, async () => {
+        if (role === 'login') {
+            // Define handlers for login page
+            defineSectionHandlers(context, 'login', [
+                {
+                    id: 'info',
+                    handler: async () => {
+                        log(context, 'Loading info section with login form');
+                        await import('../login-page.js').then(m => m.initializeLoginPage({ registry: new Map() }));
+                    },
+                },
+                {
+                    id: 'signup',
+                    handler: async () => {
+                        log(context, 'Loading signup section');
+                        await import('../login/signup.js').then(m => m.initializeSignup(context));
+                    },
+                },
+                {
+                    id: 'forgot-password',
+                    handler: async () => {
+                        log(context, 'Loading forgot-password section');
+                        await import('../login/forgot-password.js').then(m => m.initializeForgotPassword(context));
+                    },
+                },
+            ]);
+        }
+        const navElement = document.querySelector(`nav[data-role="${role}"]`);
+        if (!navElement) {
+            log(context, `Navigation element not found for role: ${role}`);
+            return;
+        }
+        const sectionLink = navElement.querySelector(`[data-section="${defaultSection}"]`) || 
+                           document.querySelector(`.section-link[data-section="${defaultSection}"]`);
+        if (sectionLink) {
+            sectionLink.click();
+        } else {
+            log(context, `Section link not found for default section: ${defaultSection}`);
+        }
+    }, ERROR_MESSAGES.NAVIGATION_INIT_FAILED);
 }
 
 /**
@@ -110,23 +112,23 @@ export async function initializeRoleNavigation(context, role, defaultSection) {
  * @returns {Promise<void>}
  */
 export async function initializeRolePage(context, role, pageType, callback) {
-  log(context, `Initializing ${role} page with type: ${pageType}`);
-  if (role === 'login') {
-    // Login page does not require authentication
-    await withErrorHandling(`${context}:initializeRolePage`, async () => {
-      const userIdInput = document.getElementById('userId');
-      if (userIdInput) userIdInput.value = localStorage.getItem('userId') || '';
-      await callback();
-    }, ERROR_MESSAGES.MODULE_INIT_FAILED);
-  } else {
-    await withAuthenticatedUser(async userId => {
-      await withErrorHandling(`${context}:initializeRolePage`, async () => {
-        const userIdInput = document.getElementById('userId');
-        if (userIdInput) userIdInput.value = userId;
-        await callback();
-      }, ERROR_MESSAGES.MODULE_INIT_FAILED);
-    });
-  }
+    log(context, `Initializing ${role} page with type: ${pageType}`);
+    if (role === 'login') {
+        // Login page does not require authentication
+        await withErrorHandling(`${context}:initializeRolePage`, async () => {
+            const userIdInput = document.getElementById('userId');
+            if (userIdInput) userIdInput.value = localStorage.getItem('userId') || '';
+            await callback();
+        }, ERROR_MESSAGES.MODULE_INIT_FAILED);
+    } else {
+        await withAuthenticatedUser(context, async () => {
+            await withErrorHandling(`${context}:initializeRolePage`, async () => {
+                const userIdInput = document.getElementById('userId');
+                if (userIdInput) userIdInput.value = localStorage.getItem('userId') || '';
+                await callback();
+            }, ERROR_MESSAGES.MODULE_INIT_FAILED);
+        }, 'initializeRolePage');
+    }
 }
 
 /**
@@ -135,17 +137,16 @@ export async function initializeRolePage(context, role, pageType, callback) {
  * @returns {Object} Initialization instance with public methods.
  */
 export function initializeInitializationModule(registry) {
-  return createModuleInitializer('initialization.js', {
-    withScriptLogging,
-    createModuleInitializer,
-    parsePageType,
-    initializeRoleNavigation,
-    initializeRolePage,
-  });
+    return createModuleInitializer('initialization.js', {
+        withScriptLogging,
+        createModuleInitializer,
+        parsePageType,
+        initializeRoleNavigation,
+        initializeRolePage,
+    });
 }
 
 // Initialize module with lifecycle logging
-const context = 'initialization.js';
 withScriptLogging(context, () => {
-  log(context, 'Module initialized');
+    log(context, 'Module initialized');
 });

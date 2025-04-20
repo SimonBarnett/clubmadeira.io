@@ -4,8 +4,22 @@
 import { log } from '../core/logger.js';
 import { renderMarkdown } from '../core/markdown.js';
 import { withErrorHandling } from './error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from './initialization.js';
+
+/**
+ * Generates a style string or object for form elements.
+ * @param {string} type - The type of form element (e.g., 'categories').
+ * @param {Object} styles - Style properties to apply.
+ * @returns {string} A CSS style string.
+ */
+export function renderStyles(type, styles) {
+    const context = 'form-rendering.js';
+    log(context, `Rendering styles for type: ${type}`);
+    return Object.entries(styles)
+      .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
+      .join('; ');
+  }
 
 /**
  * Renders a form based on the provided configuration.

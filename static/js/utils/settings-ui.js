@@ -6,7 +6,7 @@ import { createLinkIcons } from './ui-components.js';
 import { setupSettingsEvents } from './settings-events.js';
 import { withElement } from './dom-manipulation.js';
 import { withErrorHandling } from './error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from './initialization.js';
 
 /**

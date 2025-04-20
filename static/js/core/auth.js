@@ -1,87 +1,93 @@
 // /static/js/core/auth.js
-// Purpose: Manages authentication-related operations, including token handling and authenticated requests.
+// Purpose: Manages authentication tokens, authenticated requests, and user authentication checks.
 
 import { log } from './logger.js';
-import { withErrorHandling } from '../utils/error.js';
-import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
+import { setCookie, getCookie, removeCookie } from './cookies.js';
 import { withScriptLogging } from '../utils/initialization.js';
+import { API_ENDPOINTS } from '../config/endpoints.js';
+
+const context = 'auth.js';
 
 /**
- * Sets the authentication token in localStorage.
+ * Sets the authentication token in a cookie.
  * @param {string} token - The authentication token.
  */
-export function tokenManagerSetToken(token) {
-  const context = 'auth.js';
-  log(context, 'Setting auth token');
-  localStorage.setItem('authToken', token);
+export function setAuthToken(token) {
+    log(context, 'Setting auth token');
+    setCookie('auth_token', token, 7);
 }
 
 /**
- * Decodes the authentication token from localStorage.
- * @returns {Object|null} The decoded token data or null if invalid.
+ * Retrieves the authentication token from a cookie.
+ * @returns {string|null} The authentication token, or null if not found.
  */
-export function tokenManagerDecode() {
-  const context = 'auth.js';
-  log(context, 'Decoding auth token');
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    log(context, 'No auth token found');
-    return null;
-  }
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    log(context, 'Token decoded successfully');
-    return payload;
-  } catch (err) {
-    log(context, 'Failed to decode token:', err.message);
-    return null;
-  }
+export function getAuthToken() {
+    log(context, 'Getting auth token');
+    return getCookie('auth_token');
 }
 
 /**
- * Performs an authenticated fetch request with the auth token.
- * @param {string} context - The context or module name.
- * @param {string} url - The API endpoint URL.
+ * Removes the authentication token from cookies.
+ */
+export function removeAuthToken() {
+    log(context, 'Removing auth token');
+    removeCookie('auth_token');
+}
+
+/**
+ * Makes an authenticated fetch request using the stored token.
+ * @param {string} endpoint - The API endpoint to fetch from.
  * @param {Object} [options={}] - Fetch options.
  * @returns {Promise<Response>} The fetch response.
  */
-export async function authenticatedFetch(context, url, options = {}) {
-  log(context, `Performing authenticated fetch to ${url}`);
-  return await withErrorHandling(`${context}:authenticatedFetch`, async () => {
-    const token = localStorage.getItem('authToken');
+export async function authenticatedFetch(endpoint, options = {}) {
+    log(context, `Making authenticated fetch to ${endpoint}`);
+    const token = getAuthToken();
     if (!token) {
-      throw new Error('No authentication token found');
+        throw new Error('No auth token found');
     }
+
     const headers = {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
     };
-    const response = await fetch(url, { ...options, headers });
+
+    const response = await fetch(`${API_ENDPOINTS.BASE}${endpoint}`, {
+        ...options,
+        headers,
+    });
+
     if (!response.ok) {
-      throw new Error(`Fetch failed: ${response.status}`);
+        throw new Error(`Authenticated fetch failed: ${response.statusText}`);
     }
+
     return response;
-  }, ERROR_MESSAGES.FETCH_FAILED('authenticated request'));
 }
 
 /**
- * Initializes the auth module for use with the module registry.
- * @param {Object} registry - The module registry instance.
- * @returns {Object} Auth instance with public methods.
+ * Wraps a function to ensure it runs only for an authenticated user.
+ * @param {string} context - The context or module name.
+ * @param {Function} fn - The function to execute if authenticated.
+ * @param {string} operation - The operation name for logging.
+ * @returns {*} The result of the function execution.
+ * @throws {Error} If the user is not authenticated.
  */
-export function initializeAuthModule(registry) {
-  const context = 'auth.js';
-  log(context, 'Initializing auth module for module registry');
-  return {
-    tokenManagerSetToken,
-    tokenManagerDecode,
-    authenticatedFetch: (ctx, ...args) => authenticatedFetch(ctx, ...args),
-  };
+export function withAuthenticatedUser(context, fn, operation) {
+    log(context, `Checking authentication for ${operation || 'operation'}`);
+    const token = getAuthToken();
+    if (!token) {
+        log(context, 'User not authenticated');
+        throw new Error('User not authenticated');
+    }
+    return fn();
 }
 
-// Initialize module with lifecycle logging
-const context = 'auth.js';
-withScriptLogging(context, () => {
-  log(context, 'Module initialized');
-});
+/**
+ * Initializes the auth module.
+ */
+export function initializeAuth() {
+    withScriptLogging(context, () => {
+        log(context, 'Module initialized');
+    });
+}

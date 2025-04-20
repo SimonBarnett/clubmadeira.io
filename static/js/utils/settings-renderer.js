@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { renderSettingsFields } from './settings-ui.js';
 import { setupSettingsEvents } from './settings-events.js';
 import { withErrorHandling } from './error.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from './initialization.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 

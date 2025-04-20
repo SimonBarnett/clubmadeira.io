@@ -1,9 +1,9 @@
 // /static/js/config/form-configs.js
 import { log } from '../core/logger.js';
 import { validateRequiredFields, validatePassword, validatePhoneNumber } from '../utils/form-validation.js';
-import { renderStyles } from '../utils/rendering.js';
+import { renderStyles } from '../utils/form-rendering.js';
 import { renderCheckboxList } from '../utils/ui-components.js';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from './constants.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from './messages.js';
 import { withScriptLogging } from '../utils/initialization.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 import { isValidEmail } from '../utils/form-validation-utils.js';
