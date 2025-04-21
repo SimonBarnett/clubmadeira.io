@@ -21,6 +21,21 @@
     <script src="https://cdn.tiny.cloud/1/{{ site_settings.tiny.API_KEY | default('YOUR_VALID_API_KEY') }}/tinymce/6/tinymce.min.js" defer></script>
 </head>
 <body {% block body_attributes %}{% endblock %}>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 1); justify-content: center; align-items: center; z-index: 9999;">
+        <div style="position: relative; width: 200px; height: 200px;">
+            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 120px; height: 120px; border-top-color: #ff6f61; top: 40px; left: 40px; animation-delay: 0s;"></div>
+            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 90px; height: 90px; border-top-color: #6bff61; top: 55px; left: 55px; animation-delay: 0.3s;"></div>
+            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 60px; height: 60px; border-top-color: #61cfff; top: 70px; left: 70px; animation-delay: 0.6s;"></div>
+            <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 30px; height: 30px; border-top-color: #ff61ff; top: 85px; left: 85px; animation-delay: 0.9s;"></div>
+        </div>
+    </div>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
     <!-- Notification DIV for fallback (optional) -->
     <div id="notification" style="display: none;"></div>
     <!-- Hidden input for userId -->
@@ -44,22 +59,21 @@
         eval(scriptContent);
     </script>
 
-    <div class="layout-wrapper">
+    <!-- Main content wrapper, hidden initially -->
+    <div class="layout-wrapper" style="display: none;">
         <div class="header">
             {% include 'roles.inc' %}            
-        </div>        
-        {% include 'overlay.inc' %}
+        </div>                
         <div class="content">
             <!-- Menu Container (dynamically populated by navigation.js) -->
             <div id="menu" class="menu"></div>
             <!-- Role-specific sections (corresponding to navigation menu buttons) -->
             {% block content %}{% endblock %}
-            {% if page_type != 'login' %}
-            <!-- Default section for authenticated users -->
             <div id="info" class="section" style="display: none;">
-                <h2>Dashboard</h2>
-                <p>Welcome to your dashboard. Select an option from the menu to get started.</p>
+                {% include 'welcome.inc' with context %}
             </div>
+
+            {% if page_type != 'login' %}
             <!-- My Account Sections (shared across authenticated roles) -->
             <div id="my-account" class="section" style="display: none;">
                 <h2>My Account</h2>
@@ -134,9 +148,6 @@
     <script>
         // Minimal DOMContentLoaded handler for markdown links only
         document.addEventListener('DOMContentLoaded', function() {
-            const layoutWrapper = document.querySelector('.layout-wrapper');
-            layoutWrapper.style.display = 'none'; // Hide initially until initialized by pageSetup.js
-
             // Add event listeners for markdown rendering
             if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
                 document.querySelectorAll('.md-link').forEach(link => {

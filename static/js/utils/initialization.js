@@ -10,6 +10,21 @@ import { defineSectionHandlers } from '../modules/navigation.js';
 const context = 'initialization.js';
 
 /**
+ * Shows the specified section and hides others.
+ * @param {string} sectionId - The ID of the section to show.
+ */
+async function showSection(sectionId) {
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(section => {
+        if (section.id === sectionId) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+}
+
+/**
  * Wraps a module initialization function with lifecycle logging.
  * @param {string} context - The context or module name.
  * @param {Function} initFunction - The initialization function to wrap.
@@ -62,28 +77,28 @@ export function parsePageType(context, param, defaultType) {
 export async function initializeRoleNavigation(context, role, defaultSection) {
     log(context, `Initializing navigation for role: ${role}, default section: ${defaultSection}`);
     await withErrorHandling(`${context}:initializeRoleNavigation`, async () => {
+        let sectionHandlers = {};
         if (role === 'login') {
-            // Define handlers for login page
-            defineSectionHandlers(context, 'login', [
+            sectionHandlers = defineSectionHandlers(context, 'login', [
                 {
                     id: 'info',
-                    handler: async () => {
-                        log(context, 'Loading info section with login form');
-                        await import('../login-page.js').then(m => m.initializeLoginPage({ registry: new Map() }));
+                    handler: () => {
+                        log(context, 'Showing info section');
+                        showSection('info');
                     },
                 },
                 {
                     id: 'signup',
-                    handler: async () => {
-                        log(context, 'Loading signup section');
-                        await import('../login/signup.js').then(m => m.initializeSignup(context));
+                    handler: () => {
+                        log(context, 'Showing signup section');
+                        showSection('signupContainer');
                     },
                 },
                 {
                     id: 'forgot-password',
-                    handler: async () => {
-                        log(context, 'Loading forgot-password section');
-                        await import('../login/forgot-password.js').then(m => m.initializeForgotPassword(context));
+                    handler: () => {
+                        log(context, 'Showing forgot-password section');
+                        showSection('forgotPasswordContainer');
                     },
                 },
             ]);
@@ -145,6 +160,24 @@ export function initializeInitializationModule(registry) {
         initializeRolePage,
     });
 }
+
+export function hideOverlay() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const layoutWrapper = document.querySelector('.layout-wrapper');
+    if (loadingOverlay && layoutWrapper) {
+        loadingOverlay.style.display = 'none';
+        layoutWrapper.style.display = '';
+    }
+}
+
+// Global event listener for the button in roles.inc
+document.addEventListener('click', (event) => {
+    const infoButton = event.target.closest('button[data-section="info"]');
+    if (infoButton) {
+        console.log('Info button clicked');
+        showSection('info');
+    }
+});
 
 // Initialize module with lifecycle logging
 withScriptLogging(context, () => {

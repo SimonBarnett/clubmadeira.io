@@ -90,6 +90,29 @@ export function validatePhoneNumber(context, formData, phoneField, typeField) {
 }
 
 /**
+ * Validates the forgot password form.
+ * @param {string} context - The context or module name.
+ * @param {FormData} formData - The form data.
+ * @returns {boolean} True if the form is valid, false otherwise.
+ */
+export function validateForgotPassword(context, formData) {
+  log(context, 'Validating forgot password form');
+  return validateRequiredFields(context, formData, ['email']);
+}
+
+/**
+ * Validates the OTP verification form.
+ * @param {string} context - The context or module name.
+ * @param {FormData} formData - The form data.
+ * @returns {boolean} True if the form is valid, false otherwise.
+ */
+export function validateVerifyOtp(context, formData) {
+  log(context, 'Validating OTP verification form');
+  return validateRequiredFields(context, formData, ['email', 'otp', 'new_password', 'confirm_new_password']) &&
+         validatePassword(context, formData, 'new_password', 'confirm_new_password');
+}
+
+/**
  * Initializes the form-validation module for use with the module registry.
  * @param {Object} registry - The module registry instance.
  * @returns {Object} FormValidation instance with public methods.
@@ -101,6 +124,8 @@ export function initializeFormValidationModule(registry) {
     validateRequiredFields: (ctx, ...args) => validateRequiredFields(ctx, ...args),
     validatePassword: (ctx, ...args) => validatePassword(ctx, ...args),
     validatePhoneNumber: (ctx, ...args) => validatePhoneNumber(ctx, ...args),
+    validateForgotPassword: (ctx, ...args) => validateForgotPassword(ctx, ...args),
+    validateVerifyOtp: (ctx, ...args) => validateVerifyOtp(ctx, ...args),
   };
 }
 

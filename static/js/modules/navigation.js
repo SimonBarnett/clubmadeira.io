@@ -1,6 +1,4 @@
 // /static/js/modules/navigation.js
-// Purpose: Handles navigation setup and section toggling for different roles.
-
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
@@ -11,26 +9,59 @@ const context = 'navigation.js';
 
 /**
  * Defines section handlers for a given role.
+ * @param {string} context - The context or module name.
  * @param {string} role - The role for which to define section handlers.
+ * @param {Array} handlers - Array of handler configurations.
  * @returns {Object} An object mapping section IDs to handler functions.
  */
-export function defineSectionHandlers(role) {
+export function defineSectionHandlers(context, role, handlers = []) {
     log(context, `Defining section handlers for role: ${role}`);
     const menu = getMenu(role);
-    const handlers = {};
+    const sectionHandlers = {};
 
+    // Map menu items to handlers based on section IDs
     menu.forEach(item => {
-        handlers[item.section] = () => {
-            log(context, `Handling navigation to section: ${item.section}`);
-            const viewState = {};
-            menu.forEach(menuItem => {
-                viewState[menuItem.section] = menuItem.section === item.section;
-            });
-            toggleViewState(context, viewState);
-        };
+        // Find the handler whose ID matches the menu item's ID
+        const handlerConfig = handlers.find(h => h.id === item.id);
+        if (handlerConfig && handlerConfig.handler) {
+            // Map the section from the menu to the handler
+            sectionHandlers[item.section] = async () => {
+                log(context, `Navigating to section ${item.section}, hiding others`);
+                // Hide all other sections and show the target section
+                toggleViewState(context, {
+                    [item.section]: true,
+                    ...menu.reduce((acc, menuItem) => {
+                        if (menuItem.section !== item.section) {
+                            acc[menuItem.section] = false;
+                        }
+                        return acc;
+                    }, {}),
+                    info: item.section === 'info' ? true : false,
+                });
+                await handlerConfig.handler();
+            };
+        }
     });
 
-    return handlers;
+    // Add a handler for the 'info' section if not already present
+    if (!sectionHandlers['info']) {
+        const infoHandler = handlers.find(h => h.id === 'info');
+        if (infoHandler) {
+            sectionHandlers['info'] = async () => {
+                log(context, `Navigating to section info, hiding others`);
+                toggleViewState(context, {
+                    info: true,
+                    forgotPasswordContainer: false,
+                    signupContainer: false,
+                });
+                await infoHandler.handler();
+            };
+        }
+    }
+
+    // Log the defined handlers for debugging
+    log(context, `Section handlers defined for role ${role}:`, Object.keys(sectionHandlers));
+    return sectionHandlers;
 }
 
 /**
@@ -49,10 +80,10 @@ export function initializeRoleNavigation(element, menu, { sectionHandlers, defau
         return;
     }
 
-    // Render menu buttons
+    // Render menu buttons with icons sized to 16x16 pixels
     element.innerHTML = menu.map(item => `
         <button data-section="${item.section}">
-            ${item.label}
+            ${item.icon ? `<i class="${item.icon}" style="width: 16px; height: 16px; font-size: 16px; margin-right: 5px;"></i>` : ''} ${item.label}
         </button>
     `).join('');
 
@@ -92,7 +123,7 @@ export function initializeRoleNavigation(element, menu, { sectionHandlers, defau
 export function initializeNavigationModule(registry) {
     log(context, 'Initializing navigation module for module registry');
     return {
-        defineSectionHandlers: (role) => defineSectionHandlers(role),
+        defineSectionHandlers: (ctx, role, handlers) => defineSectionHandlers(ctx, role, handlers),
         initializeRoleNavigation: (element, menu, options) => initializeRoleNavigation(element, menu, options),
     };
 }

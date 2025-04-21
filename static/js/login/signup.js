@@ -2,10 +2,10 @@
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setupFormFieldEvents } from '../utils/event-listeners.js';
-import { toggleViewState } from '../utils/dom-manipulation.js';
-import { renderForm } from '../utils/form-rendering.js';
-import { getFormConfig } from '../config/form-configs.js';
+import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
 import { withScriptLogging } from '../utils/initialization.js';
+
+const context = 'signup';
 
 /**
  * Initializes the signup page.
@@ -13,44 +13,70 @@ import { withScriptLogging } from '../utils/initialization.js';
  * @returns {Promise<void>}
  */
 export async function initializeSignup(context) {
-  log(context, 'Initializing signup page');
-  await withElement(context, 'signup', async (section) => {
-    // Render signup form
-    section.innerHTML = renderForm(getFormConfig(context, 'signup'));
-    // Hide other sections, including info
-    document.querySelectorAll('.section').forEach(s => {
-      if (s.id !== 'signup') s.style.display = 'none';
-    });
-    toggleViewState(context, { signup: true });
+    log(context, 'Initializing signup page');
 
-    // Set up form submission
-    submitConfiguredForm(context, 'signupForm', '/signup', 'signup', {
-      onSuccess: async () => {
-        log(context, 'Signup successful, showing OTP section');
-        toggleViewState(context, { signupOtpSection: true });
-      },
-    });
-
-    // Set up OTP verification
-    submitConfiguredForm(context, 'signupOtpSection', '/verify-reset-code', 'verifySignupOtp', {
-      onSuccess: () => {
-        log(context, 'OTP verified, redirecting to login');
-        window.location.href = '/';
-      },
-    });
-
-    // Set up radio button events
-    setupFormFieldEvents(context, {
-      selector: 'input[name="signup_type"]',
-      eventType: 'change',
-      handler: e => {
-        document.querySelectorAll('.option').forEach(option => {
-          option.classList.toggle('selected', option.contains(e.target));
+    await withElement(context, 'signupContainer', async (section) => {
+        // Hide other sections and show signupContainer
+        document.querySelectorAll('.section').forEach(s => {
+            if (s.id !== 'signupContainer') s.style.display = 'none';
         });
-        log(context, 'Selected signup type:', e.target.value);
-      },
-    });
-  });
+        toggleViewState(context, { signupContainer: true });
+
+        // Configure the signup form submission
+        await withElement(context, 'signupForm', async (form) => {
+            // Clear fields to prevent autofill
+            ['signup_email', 'signup_phone', 'contact_name', 'website'].forEach(id => {
+                const input = form.querySelector(`#${id}`);
+                if (input) input.value = '';
+            });
+
+            // Ensure "Community" is the default signup type
+            document.querySelectorAll('.option').forEach(option => option.classList.remove('selected'));
+            const communityOption = form.querySelector('input[value="community"]');
+            if (communityOption) {
+                communityOption.checked = true;
+                communityOption.closest('.option').classList.add('selected');
+            }
+
+            log(context, 'Configuring signup form submission');
+            submitConfiguredForm(context, 'signupForm', '/signup', 'signup', {
+                onSuccess: async (response) => {
+                    log(context, 'Signup successful, response:', response);
+                    if (response.signup_type === 'partner') {
+                        log(context, 'Showing verifyOtpSection for partner');
+                        toggleViewState(context, {
+                            signupContainer: false,
+                            verifyOtpSection: true,
+                            forgotPasswordContainer: false,
+                            info: false
+                        });
+                        const otpTokenInput = document.getElementById('otpToken');
+                        if (otpTokenInput) otpTokenInput.value = response.otp_token || '';
+                        const verifyForm = document.getElementById('verifyOtpForm');
+                        if (verifyForm) verifyForm.action = '/verify-signup-otp';
+                    } else {
+                        log(context, 'Redirecting to Stripe:', response.account_link);
+                        window.location.href = response.account_link;
+                    }
+                },
+                onError: (err) => {
+                    log(context, 'Signup error:', err.message);
+                }
+            });
+
+            // Set up radio button events for signup type selection
+            setupFormFieldEvents(context, {
+                selector: 'input[name="signup_type"]',
+                eventType: 'change',
+                handler: e => {
+                    document.querySelectorAll('.option').forEach(option => {
+                        option.classList.toggle('selected', option.contains(e.target));
+                    });
+                    log(context, 'Selected signup type:', e.target.value);
+                },
+            });
+        }, 10, 100, false);
+    }, 10, 100, false);
 }
 
 /**
@@ -59,15 +85,13 @@ export async function initializeSignup(context) {
  * @returns {Object} Signup instance with public methods.
  */
 export function initializeSignupModule(registry) {
-  const context = 'signup.js';
-  log(context, 'Initializing signup module for module registry');
-  return {
-    initializeSignup: ctx => initializeSignup(ctx),
-  };
+    log(context, 'Initializing signup module for module registry');
+    return {
+        initializeSignup: ctx => initializeSignup(ctx),
+    };
 }
 
 // Initialize module with lifecycle logging
-const context = 'signup.js';
 withScriptLogging(context, () => {
-  log(context, 'Module initialized');
+    log(context, 'Module initialized');
 });

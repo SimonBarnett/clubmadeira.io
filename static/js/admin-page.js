@@ -1,12 +1,12 @@
 // /static/js/admin-page.js
 // Purpose: Orchestrates the admin page, coordinating navigation, events, and module initialization.
-
+const context = 'admin-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
 import { defineAdminSectionHandlers } from './admin/navigation.js';
 import { setupAdminEvents } from './admin/admin-events.js';
 import { initializeAdminModules } from './admin/initializer.js';
-import { withScriptLogging } from './utils/initialization.js';
+import { withScriptLogging ,hideOverlay} from './utils/initialization.js';
 
 /**
  * Initializes the admin page.
@@ -37,7 +37,8 @@ export function initializeAdminPageModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'admin-page.js';
-withScriptLogging(context, () => {
-  initializeAdminPage(context);
+withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeLoginPage({ registry: new Map() });
+    hideOverlay();
 });

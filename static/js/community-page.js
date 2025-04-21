@@ -1,13 +1,13 @@
 // /static/js/community-page.js
 // Purpose: Orchestrates the community page, coordinating navigation, events, and module initialization.
-
+const context = 'community-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
 import { setupCategoriesNavigation } from './community/categories-navigation.js';
 import { initializeCategoriesPage } from './community/categories-page.js';
 import { initializeProvidersPage } from './community/providers-page.js';
 import { initializeReferralsPage } from './community/referrals-page.js';
-import { withScriptLogging } from './utils/initialization.js';
+import { withScriptLogging ,hideOverlay } from './utils/initialization.js';
 
 /**
  * Initializes the community page.
@@ -49,7 +49,8 @@ export function initializeCommunityPageModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'community-page.js';
-withScriptLogging(context, () => {
-  initializeCommunityPage(context);
+withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeLoginPage({ registry: new Map() });
+    hideOverlay();
 });

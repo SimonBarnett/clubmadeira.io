@@ -16,9 +16,24 @@
     <h2>Partner Info</h2>
     <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard empowers partners to collaborate with merchants and communities on clubmadeira.io.</p>
     <p>Use the menu to manage integrations, review site requests, access documentation, and update your account. Work together to create tailored solutions for our users.</p>
-{% else %}
-    <h2>Login</h2>
-    <div class="custom-login-notice">
-        <span class="highlight">Please log in</span> to access your account. If you don’t have an account, click "Sign Up" below.
-    </div>
+{% else %}        
+    <p>Log in to access your dashboard.</p>
+    <form id="loginForm" class="form" method="POST" action="/">
+        <div class="form-group">
+            <label for="loginEmail">Email:</label>
+            <div class="input-container">
+                <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required autocomplete="off">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Password:</label>
+            <div class="password-wrapper">
+                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="off">
+                <i class="fas fa-eye toggle-password"></i>
+            </div>
+        </div>
+        <div>
+            <button type="submit">Login</button>
+        </div>
+    </form>
 {% endif %}

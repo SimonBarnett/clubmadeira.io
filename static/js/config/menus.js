@@ -1,14 +1,13 @@
 // /static/js/config/menus.js
-// Purpose: Defines navigation menus for different roles and provides menu retrieval functionality.
-
 import { log } from '../core/logger.js';
 import { withScriptLogging } from '../utils/initialization.js';
 import { ROLES } from './roles.js';
 
-// Define menu configurations for each role
+log('menus.js', 'ROLES at import:', ROLES, 'ROLES.login:', ROLES.login);
+
+// Define menu configurations for each role using string keys
 export const MENUS = {
-    [ROLES.ADMIN]: [
-        { id: 'info', label: 'Dashboard', section: 'info' },
+    'admin': [
         { id: 'users', label: 'Users', section: 'usersSection' },
         { id: 'deals', label: 'Deals', section: 'dealsSection' },
         { id: 'settings', label: 'Settings', section: 'settingsSection' },
@@ -16,8 +15,7 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.MERCHANT]: [
-        { id: 'info', label: 'Dashboard', section: 'info' },
+    'merchant': [
         { id: 'store-request', label: 'Store Request', section: 'storeRequestSection' },
         { id: 'api-keys', label: 'API Keys', section: 'apiKeysSection' },
         { id: 'products', label: 'Products', section: 'productsSection' },
@@ -26,8 +24,7 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.COMMUNITY]: [
-        { id: 'info', label: 'Dashboard', section: 'info' },
+    'community': [
         { id: 'site-request', label: 'Site Request', section: 'siteRequestSection' },
         { id: 'categories', label: 'Categories', section: 'categoriesSection' },
         { id: 'providers', label: 'Providers', section: 'providersSection' },
@@ -36,15 +33,15 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.PARTNER]: [
-        { id: 'info', label: 'Dashboard', section: 'info' },
+    'partner': [
         { id: 'integrations', label: 'Integrations', section: 'integrationsSection' },
         { id: 'my-account', label: 'My Account', section: 'my-account' },
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.LOGIN]: [
-        { id: 'info', label: 'Login', section: 'info' },
+    'login': [
+        { id: 'forgot-password', label: 'Forgot Password', section: 'forgotPasswordContainer', icon: 'fas fa-lock' },
+        { id: 'signup', label: 'Sign Up', section: 'signupContainer', icon: 'fas fa-user-plus' },
     ],
 };
 

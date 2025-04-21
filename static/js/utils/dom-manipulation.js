@@ -83,7 +83,7 @@ async function waitForElement(context, elementId, maxAttempts, retryDelay) {
 }
 
 /**
- * Toggles the visibility of elements based on a state object.
+ * Toggles the visibility of elements based on a state object, hiding all other sections with class '.section'.
  * @param {string} context - The context or module name.
  * @param {Object.<string, boolean>} state - Object mapping element IDs to visibility states.
  * @returns {void}
@@ -91,13 +91,15 @@ async function waitForElement(context, elementId, maxAttempts, retryDelay) {
 export function toggleViewState(context, state) {
   log(context, 'Toggling view state:', state);
   withErrorHandling(`${context}:toggleViewState`, () => {
-    Object.entries(state).forEach(([elementId, isVisible]) => {
-      const element = document.getElementById(elementId);
-      if (element) {
-        element.style.display = isVisible ? '' : 'none';
-        log(context, `Set ${elementId} display to ${isVisible ? 'visible' : 'hidden'}`);
+    const allSections = document.querySelectorAll('.section');
+    allSections.forEach(section => {
+      const id = section.id;
+      if (state.hasOwnProperty(id)) {
+        section.style.display = state[id] ? 'block' : 'none';
+        log(context, `Set ${id} display to ${state[id] ? 'visible' : 'hidden'}`);
       } else {
-        log(context, `Element not found for toggle: ${elementId}`);
+        section.style.display = 'none';
+        log(context, `Hid section ${id} as it's not in the state object`);
       }
     });
   }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);

@@ -1,143 +1,198 @@
-<!-- templates/login.html -->
 {% extends "base.inc" %}
 {% block body_attributes %}data-page-type="login"{% endblock %}
 {% block content %}
 <!-- Deployed 2025-04-19 v12, Consolidated login and signup -->
-<div class="login-page">
-    <div id="loadingOverlay" class="hidden">
-        <div class="multicircle-loader">
-            <div class="circle circle1"></div>
-            <div class="circle circle2"></div>
-            <div class="circle circle3"></div>
-            <div class="circle circle4"></div>
+<!-- Updated 2025-04-20 v12.4, Removed justify-content to allow main stylesheet alignment -->
+<!-- Updated 2025-04-21 v12.5, Fixed flashing border on default Community selection -->
+<!-- Updated 2025-04-22 v12.6, Fixed signupOtpSection and formData.get errors -->
+
+<style>
+    /* Hide radio buttons */
+    .option input[type="radio"] {
+        display: none;
+    }
+
+    /* Fallback rule for options container */
+    .options {
+        display: flex;
+        flex-direction: row;
+        gap: 15px; /* Spacing between options */
+    }
+
+    /* Style the options container to display items horizontally with specific ID selector */
+    #signupContainer .options {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 15px !important;
+    }
+
+    /* Style the option label as a vertical stack for icon and text */
+    .option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        padding: 10px;
+        text-align: center;
+    }
+
+    /* Apply flashing border to the entire option when selected */
+    .option.selected {
+        border: 3px solid #007BFF;
+        border-radius: 5px;
+        animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    /* Ensure the text span is below the icon */
+    .option span:not(.icon-community):not(.icon-merchant):not(.icon-partner) {
+        display: block;
+        margin-top: 5px;
+    }
+
+    /* Pulse animation keyframes */
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+        }
+    }
+</style>
+
+<div class="section" id="signupContainer" style="display: none;">
+    <h2>Sign Up - I am a...</h2>
+    <form id="signupForm" class="form" method="POST" autocomplete="off">
+        <!-- Dummy fields to trick autofill -->
+        <input type="text" class="hidden" autocomplete="off">
+        <input type="text" class="hidden" autocomplete="off">
+        <div class="options">
+            <label class="option selected">
+                <input type="radio" name="signup_type" value="community" checked>
+                <i class="fas fa-users icon-community" style="width: 50px; height: 50px; font-size: 50px;"></i>
+                <span>Community</span>
+            </label>
+            <label class="option">
+                <input type="radio" name="signup_type" value="seller">
+                <i class="fas fa-store icon-merchant" style="width: 50px; height: 50px; font-size: 50px;"></i>
+                <span>Merchant</span>
+            </label>
+            <label class="option">
+                <input type="radio" name="signup_type" value="partner">
+                <i class="fas fa-handshake icon-partner" style="width: 50px; height: 50px; font-size: 50px;"></i>
+                <span>Partner</span>
+            </label>
         </div>
-    </div>
-
-    <nav class="login-menu">
-        <a href="#" data-section="info" class="menu-item active">Info</a>
-        <a href="#" data-section="forgot-password" class="menu-item"><i class="fas fa-lock"></i> Forgot Password</a>
-        <a href="#" data-section="signup" class="menu-item"><i class="fas fa-user-plus"></i> Sign Up</a>
-    </nav>
-
-    <div class="container" id="infoContainer">
-        {% include 'welcome.inc' with context %}
-        <!-- Removed duplicate login form, as roles.inc provides it -->
-    </div>
-
-    <div class="container hidden" id="forgotPasswordContainer">
-        <h2>Forgot Password</h2>
-        <form id="forgotPasswordForm" class="form" method="POST" action="/reset-password">
+        <div class="form-section">
             <div class="form-group">
-                <label for="forgotEmail">Email:</label>
-                <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required autocomplete="off">
+                <label for="contact_name">Contact Name:</label>
+                <div class="input-container">
+                    <input type="text" id="contact_name" name="contact_name" required autocomplete="off">
+                </div>
             </div>
-            <button type="submit">Send OTP via SMS</button>
-        </form>
-        <div class="otp-section hidden" id="verifyOtpSection">
-            <h2>Verify OTP</h2>
-            <form id="verifyOtpForm" class="form" method="POST" action="/verify-reset-code">
-                <div class="form-group">
-                    <label for="verifyEmail">Email:</label>
-                    <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required autocomplete="off">
+            <div class="form-group">
+                <label for="signup_phone">Phone Number:</label>
+                <div class="input-container">
+                    <input type="tel" id="signup_phone" name="signup_phone" autocomplete="off" pattern="[0-9]{10,11}" title="Please enter a 10 or 11-digit UK phone number" required>
                 </div>
-                <div class="form-group">
-                    <label for="otpCode">One-Time Password:</label>
-                    <input type="text" id="otpCode" name="code" placeholder="Enter the OTP from SMS" required>
+            </div>
+            <div class="form-group">
+                <label for="signup_email">Email:</label>
+                <div class="input-container">
+                    <input type="email" id="signup_email" name="signup_email" required autocomplete="off">
                 </div>
-                <div class="form-group">
-                    <label for="newPassword">New Password:</label>
-                    <input type="password" id="newPassword" name="new_password" placeholder="Enter new password" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label for="website">Website (optional):</label>
+                <div class="input-container">
+                    <input type="url" id="website" name="website" autocomplete="off">
                 </div>
-                <div class="form-group">
-                    <label for="confirmNewPassword">Confirm New Password:</label>
-                    <input type="password" id="confirmNewPassword" name="confirm_new_password" placeholder="Confirm new password" required autocomplete="new-password">
-                </div>
-                <button type="submit">Update Password</button>
-            </form>
+            </div>
+            <button type="submit">Sign Me Up</button>
         </div>
-    </div>
+    </form>
+</div>
 
-    <div class="container hidden" id="signupContainer">
-        <h2>Sign Up - I am a...</h2>
-        <form id="signupForm" class="form" method="POST" action="/signup" autocomplete="off">
-            <!-- Dummy fields to trick autofill -->
-            <input type="text" class="hidden" autocomplete="off">
-            <input type="text" class="hidden" autocomplete="off">
-            <div class="options">
-                <label class="option selected">
-                    <input type="radio" name="signup_type" value="community" checked>
-                    <img src="{{ url_for('static', filename='img/community.jpg') }}" alt="Scout leader in uniform, neck down">
-                    <span>Community Group</span>
-                </label>
-                <label class="option">
-                    <input type="radio" name="signup_type" value="seller">
-                    <img src="{{ url_for('static', filename='img/merchant.jpg') }}" alt="White man in business suit, neck down">
-                    <span>Merchant</span>
-                </label>
-                <label class="option">
-                    <input type="radio" name="signup_type" value="wixpro">
-                    <img src="{{ url_for('static', filename='img/wixpro.jpg') }}" alt="Female ethnic web designer in casual dress, neck down">
-                    <span>Partner</span>
-                </label>
+<div class="section" id="forgotPasswordContainer" style="display: none;">
+    <h2>Forgot Password</h2>
+    <form id="forgotPasswordForm" class="form" method="POST" action="/reset-password">
+        <div class="form-group">
+            <label for="forgotEmail">Email:</label>
+            <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required autocomplete="off">
+        </div>
+        <button type="submit">Send OTP via SMS</button>
+    </form>
+</div>
+
+<div class="section" id="verifyOtpSection" style="display: none;">
+    <h2>Verify OTP</h2>
+    <form id="verifyOtpForm" class="form" method="POST">
+        <div class="form-group">
+            <label for="verifyEmail">Email:</label>
+            <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="otpCode">One-Time Password:</label>
+            <input type="text" id="otpCode" name="otp" placeholder="Enter the OTP from SMS" required>
+        </div>
+        <div class="form-group">
+            <label for="newPassword">New Password:</label>
+            <div class="password-wrapper">
+                <input type="password" id="newPassword" name="new_password" placeholder="Enter new password" required autocomplete="new-password">
+                <i class="fas fa-eye toggle-password"></i>
             </div>
-            <div class="form-section">
-                <div class="form-group">
-                    <label for="contact_name">Contact Name:</label>
-                    <div class="input-container">
-                        <input type="text" id="contact_name" name="contact_name" required autocomplete="off">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_phone">Phone Number:</label>
-                    <div class="input-container">
-                        <input type="tel" id="signup_phone" name="signup_phone" autocomplete="off" pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_email">Email:</label>
-                    <div class="input-container">
-                        <input type="email" id="signup_email" name="signup_email" required autocomplete="off">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_password">Password:</label>
-                    <div class="input-container">
-                        <input type="password" id="signup_password" name="signup_password" required autocomplete="new-password">
-                        <i class="fas fa-eye toggle-password" data-target="signup_password"></i>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="signup_confirm_password">Confirm Password:</label>
-                    <div class="input-container">
-                        <input type="password" id="signup_confirm_password" name="signup_confirm_password" required autocomplete="new-password">
-                        <i class="fas fa-eye toggle-password" data-target="signup_confirm_password"></i>
-                    </div>
-                </div>
-                <button type="submit">Sign Me Up</button>
+        </div>
+        <div class="form-group">
+            <label for="confirmNewPassword">Confirm New Password:</label>
+            <div class="password-wrapper">
+                <input type="password" id="confirmNewPassword" name="confirm_new_password" placeholder="Confirm new password" required autocomplete="new-password">
+                <i class="fas fa-eye toggle-password"></i>
             </div>
-            <div class="otp-section hidden" id="signupOtpSection">
-                <div class="form-group">
-                    <label for="signupOtp">Enter OTP:</label>
-                    <input type="text" id="signupOtp" name="otp" placeholder="Enter OTP" required>
-                </div>
-                <button id="verifySignupOtpBtn">Verify OTP</button>
-            </div>
-        </form>
-    </div>
+        </div>
+        <input type="hidden" id="otpToken" name="otp_token">
+        <button type="submit">Set Password</button>
+    </form>
 </div>
 
 <script>
-    // Inline script for minimal initialization
     window.onload = function() {
         // Clear fields to prevent autofill
-        ['signup_email', 'signup_password', 'signup_confirm_password', 'signup_phone', 'loginEmail', 'loginPassword', 'forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
+        ['signup_email', 'signup_phone', 'contact_name', 'website', 'forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
             const input = document.getElementById(id);
             if (input) input.value = '';
         });
 
-        // Set Community Group as default
-        document.querySelectorAll('.option').forEach(option => option.classList.remove('selected'));
-        document.querySelector('input[value="community"]').closest('.option').classList.add('selected');
+        // Ensure default Community selection has .selected class
+        const defaultOption = document.querySelector('input[name="signup_type"]:checked').closest('.option');
+        if (defaultOption) defaultOption.classList.add('selected');
+
+        // Handle click events to toggle .selected class
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                option.querySelector('input').checked = true;
+            });
+        });
+
+        // Toggle password visibility for OTP form
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const input = toggle.previousElementSibling;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    toggle.classList.remove('fa-eye');
+                    toggle.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    toggle.classList.remove('fa-eye-slash');
+                    toggle.classList.add('fa-eye');
+                }
+            });
+        });
     };
 </script>
 {% endblock %}

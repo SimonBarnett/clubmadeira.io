@@ -1,11 +1,11 @@
 // /static/js/merchant-page.js
 // Purpose: Orchestrates the merchant page, coordinating navigation, events, and module initialization.
-
+const context = 'merchant-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
 import { defineMerchantSectionHandlers } from './merchant/navigation.js';
 import { initializeMerchantModules } from './merchant/setup.js';
-import { withScriptLogging } from './utils/initialization.js';
+import { withScriptLogging , hideOverlay } from './utils/initialization.js';
 
 /**
  * Initializes the merchant page.
@@ -35,7 +35,8 @@ export function initializeMerchantPageModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'merchant-page.js';
-withScriptLogging(context, () => {
-  initializeMerchantPage(context);
+withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeLoginPage({ registry: new Map() });
+    hideOverlay();
 });

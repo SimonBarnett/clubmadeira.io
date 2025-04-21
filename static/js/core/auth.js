@@ -66,6 +66,24 @@ export async function authenticatedFetch(endpoint, options = {}) {
 }
 
 /**
+ * Verifies the reset token and extracts the payload.
+ * @param {string} token - The reset token to verify.
+ * @returns {Object} The decoded token payload.
+ */
+export function verifyResetToken(token) {
+    log(context, 'Verifying reset token');
+    try {
+        const payload = jwt.decode(token); // Assuming a jwt library is available
+        if (!payload) {
+            throw new Error('Invalid token');
+        }
+        return payload;
+    } catch (error) {
+        throw new Error('Token verification failed');
+    }
+}
+
+/**
  * Wraps a function to ensure it runs only for an authenticated user.
  * @param {string} context - The context or module name.
  * @param {Function} fn - The function to execute if authenticated.

@@ -1,20 +1,13 @@
 {% extends "base.inc" %}
 {% block body_attributes %}data-page-type="partner"{% endblock %}
 {% block content %}
-    <div class="layout-wrapper">
-        <!-- Menu Container (dynamically populated by site-navigation.js) -->
-        <div id="menu" class="menu"></div>
-
-        <!-- Content Wrapper -->
-        <div class="content">
-            <div id="integrations" class="section" style="display: none;">
-                <h2>Integrations</h2>
-                <p>View your integration statuses below.</p>
-                <ul id="integrationList"></ul>
-            </div>
-        </div>
+    <div id="integrations" class="section" style="display: none;">
+        <h2>Integrations</h2>
+        <p>View your integration statuses below.</p>
+        <ul id="integrationList"></ul>
     </div>
-    <script>
+
+<script>
         console.log('partner.html - Template loaded');
     </script>
 {% endblock %}

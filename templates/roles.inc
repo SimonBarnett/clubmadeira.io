@@ -48,22 +48,5 @@
             <h1 style="margin: 0; font-size: 24px; color: currentcolor;">Welcome to clubmadeira.io</h1>
             <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9; color: currentcolor;">Log in to access your dashboard.</p>
         </div>
-    </button>
-    <div id="info" class="section" style="display: none;">
-        <h2>Login</h2>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="text" id="email" name="email">
-            </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="password" name="password">
-                    <span class="toggle-password"><i class="fa fa-eye"></i></span>
-                </div>
-            </div>
-            <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
-        </form>
-    </div>
+    </button>    
 {% endif %}

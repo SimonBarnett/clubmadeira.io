@@ -1,58 +1,54 @@
 {% extends 'base.inc' %}
 {% block body_attributes %}data-page-type="merchant"{% endblock %}
 {% block content %}
-    <!-- Menu Container (dynamically populated by navigation.js) -->
-    <div id="menu" class="menu"></div>
-    <!-- Content Wrapper (already inside base.inc's layout-wrapper) -->
-    <div class="content">
-        <!-- API Keys Section -->
-        <div id="api-keys" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">                
-                <h2>API Keys</h2>
-            </div>
-            <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>            
-            <form id="api-keys-form" style="display: none;">
-                <div id="api-keys-fields"></div>                
-            </form>
-            <style>
-                #api-keys-icons i {
-                    display: inline-block !important;
-                    visibility: visible !important;
-                    opacity: 1 !important;
-                    font-size: 24px;
-                    color: #000;
-                }
-            </style>
-        </div>
 
-        <!-- Create Store Section -->
-        <div id="create-store" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
-                <h2>Create Store</h2>
-            </div>
-            <p>Request a custom Wix store to sell your products online. Provide details below to set up your store (minimum: Home and Returns Policy pages).</p>
-            {% with user_type='merchant' %}
-                {% include 'siterequest.inc' %}
-            {% endwith %}
+    <!-- API Keys Section -->
+    <div id="api-keys" class="section" style="display: none;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">                
+            <h2>API Keys</h2>
         </div>
-
-        <!-- My Products Section -->
-        <div id="my-products" class="section" style="display: none;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <i class="fas fa-box-open" style="font-size: 32px; margin-right: 10px;"></i>
-                <h2>My Products</h2>
-            </div>
-            <p>These are the products from your parts feed.</p>
-            <table id="productTable">
-                <thead>
-                    <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
-                </thead>
-                <tbody id="productList"></tbody>
-            </table>
-        </div>
-
+        <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>            
+        <form id="api-keys-form" style="display: none;">
+            <div id="api-keys-fields"></div>                
+        </form>
+        <style>
+            #api-keys-icons i {
+                display: inline-block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                font-size: 24px;
+                color: #000;
+            }
+        </style>
     </div>
+
+    <!-- Create Store Section -->
+    <div id="create-store" class="section" style="display: none;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <i class="fas fa-store" style="font-size: 32px; margin-right: 10px;"></i>
+            <h2>Create Store</h2>
+        </div>
+        <p>Request a custom Wix store to sell your products online. Provide details below to set up your store (minimum: Home and Returns Policy pages).</p>
+        {% with user_type='merchant' %}
+            {% include 'siterequest.inc' %}
+        {% endwith %}
+    </div>
+
+    <!-- My Products Section -->
+    <div id="my-products" class="section" style="display: none;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <i class="fas fa-box-open" style="font-size: 32px; margin-right: 10px;"></i>
+            <h2>My Products</h2>
+        </div>
+        <p>These are the products from your parts feed.</p>
+        <table id="productTable">
+            <thead>
+                <tr><th class="hidden">ID</th><th>Category</th><th>Title</th><th>URL</th><th>Price</th><th>Original</th><th>Image</th><th>QTY</th></tr>
+            </thead>
+            <tbody id="productList"></tbody>
+        </table>
+    </div>
+    
     <script>
         console.log('merchant.html - Template loaded');
     </script>

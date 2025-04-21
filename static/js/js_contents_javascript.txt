@@ -773,13 +773,13 @@ withScriptLogging(context, () => {
 admin-page.js
 // /static/js/admin-page.js
 // Purpose: Orchestrates the admin page, coordinating navigation, events, and module initialization.
-
+const context = 'admin-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
 import { defineAdminSectionHandlers } from './admin/navigation.js';
 import { setupAdminEvents } from './admin/admin-events.js';
 import { initializeAdminModules } from './admin/initializer.js';
-import { withScriptLogging } from './utils/initialization.js';
+import { withScriptLogging ,hideOverlay} from './utils/initialization.js';
 
 /**
  * Initializes the admin page.
@@ -810,9 +810,10 @@ export function initializeAdminPageModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'admin-page.js';
-withScriptLogging(context, () => {
-  initializeAdminPage(context);
+withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeLoginPage({ registry: new Map() });
+    hideOverlay();
 });
 community/categories-data.js
 // /static/js/community/categories-data.js
@@ -1969,14 +1970,14 @@ withScriptLogging(context, () => {
 community-page.js
 // /static/js/community-page.js
 // Purpose: Orchestrates the community page, coordinating navigation, events, and module initialization.
-
+const context = 'community-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
 import { setupCategoriesNavigation } from './community/categories-navigation.js';
 import { initializeCategoriesPage } from './community/categories-page.js';
 import { initializeProvidersPage } from './community/providers-page.js';
 import { initializeReferralsPage } from './community/referrals-page.js';
-import { withScriptLogging } from './utils/initialization.js';
+import { withScriptLogging ,hideOverlay } from './utils/initialization.js';
 
 /**
  * Initializes the community page.
@@ -2018,9 +2019,10 @@ export function initializeCommunityPageModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'community-page.js';
-withScriptLogging(context, () => {
-  initializeCommunityPage(context);
+withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeLoginPage({ registry: new Map() });
+    hideOverlay();
 });
 config/constants.js
 // /static/js/config/constants.js
@@ -2254,6 +2256,38 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'email',
+        name: 'email',
+        label: 'Email',
+        required: true,
+        attributes: { placeholder: 'Enter your email', id: 'loginEmail', autocomplete: 'off' },
+      },
+      {
+        type: 'password',
+        name: 'password',
+        label: 'Password',
+        required: true,
+        attributes: {
+          placeholder: 'Enter your password',
+          id: 'loginPassword',
+          autocomplete: 'off',
+        },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+    ],
   },
   signup: {
     id: 'signupForm',
@@ -2287,6 +2321,74 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'text',
+        name: 'signup_type',
+        label: 'Signup Type',
+        required: true,
+        attributes: { id: 'signup_type', autocomplete: 'off' },
+      },
+      {
+        type: 'text',
+        name: 'contact_name',
+        label: 'Contact Name',
+        required: true,
+        attributes: { id: 'contact_name', autocomplete: 'off' },
+      },
+      {
+        type: 'tel',
+        name: 'signup_phone',
+        label: 'Phone Number',
+        required: true,
+        attributes: { id: 'signup_phone', autocomplete: 'off', pattern: '[0-9]{10}', title: 'Please enter a 10-digit phone number' },
+      },
+      {
+        type: 'email',
+        name: 'signup_email',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'signup_email', autocomplete: 'off' },
+      },
+      {
+        type: 'password',
+        name: 'signup_password',
+        label: 'Password',
+        required: true,
+        attributes: { id: 'signup_password', autocomplete: 'new-password' },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+      {
+        type: 'password',
+        name: 'signup_confirm_password',
+        label: 'Confirm Password',
+        required: true,
+        attributes: { id: 'signup_confirm_password', autocomplete: 'new-password' },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+    ],
   },
   forgotPassword: {
     id: 'forgotPasswordForm',
@@ -2308,6 +2410,15 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'email',
+        name: 'email',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'forgotEmail', autocomplete: 'off' },
+      },
+    ],
   },
   verifyOtp: {
     id: 'verifyOtpForm',
@@ -2338,6 +2449,60 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'email',
+        name: 'email',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'verifyEmail', autocomplete: 'off' },
+      },
+      {
+        type: 'text',
+        name: 'code',
+        label: 'One-Time Password',
+        required: true,
+        attributes: { id: 'otpCode' },
+      },
+      {
+        type: 'password',
+        name: 'new_password',
+        label: 'New Password',
+        required: true,
+        attributes: { id: 'newPassword', autocomplete: 'new-password' },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+      {
+        type: 'password',
+        name: 'confirm_new_password',
+        label: 'Confirm New Password',
+        required: true,
+        attributes: { id: 'confirmNewPassword', autocomplete: 'new-password' },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+    ],
   },
   verifySignupOtp: {
     id: 'signupOtpSection',
@@ -2359,6 +2524,15 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'text',
+        name: 'otp',
+        label: 'Enter OTP',
+        required: true,
+        attributes: { id: 'signupOtp' },
+      },
+    ],
   },
   userSettings: {
     id: 'userSettingsForm',
@@ -2387,6 +2561,29 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'text',
+        name: 'contact_name',
+        label: 'Name',
+        required: true,
+        attributes: { id: 'contact_name' },
+      },
+      {
+        type: 'email',
+        name: 'email_address',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'email_address' },
+      },
+      {
+        type: 'tel',
+        name: 'phone_number',
+        label: 'Phone Number',
+        required: true,
+        attributes: { id: 'phone_number' },
+      },
+    ],
   },
   categories: getCategoriesFormConfig,
 };
@@ -2436,10 +2633,11 @@ import { log } from '../core/logger.js';
 import { withScriptLogging } from '../utils/initialization.js';
 import { ROLES } from './roles.js';
 
-// Define menu configurations for each role
+log('menus.js', 'ROLES at import:', ROLES, 'ROLES.login:', ROLES.login);
+
+// Define menu configurations for each role using ROLES constants
 export const MENUS = {
-    [ROLES.ADMIN]: [
-        { id: 'info', label: 'Dashboard', section: 'info' },
+    [ROLES.admin]: [
         { id: 'users', label: 'Users', section: 'usersSection' },
         { id: 'deals', label: 'Deals', section: 'dealsSection' },
         { id: 'settings', label: 'Settings', section: 'settingsSection' },
@@ -2447,8 +2645,7 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.MERCHANT]: [
-        { id: 'info', label: 'Dashboard', section: 'info' },
+    [ROLES.merchant]: [
         { id: 'store-request', label: 'Store Request', section: 'storeRequestSection' },
         { id: 'api-keys', label: 'API Keys', section: 'apiKeysSection' },
         { id: 'products', label: 'Products', section: 'productsSection' },
@@ -2457,8 +2654,7 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.COMMUNITY]: [
-        { id: 'info', label: 'Dashboard', section: 'info' },
+    [ROLES.community]: [
         { id: 'site-request', label: 'Site Request', section: 'siteRequestSection' },
         { id: 'categories', label: 'Categories', section: 'categoriesSection' },
         { id: 'providers', label: 'Providers', section: 'providersSection' },
@@ -2467,15 +2663,15 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.PARTNER]: [
-        { id: 'info', label: 'Dashboard', section: 'info' },
+    [ROLES.partner]: [
         { id: 'integrations', label: 'Integrations', section: 'integrationsSection' },
         { id: 'my-account', label: 'My Account', section: 'my-account' },
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.LOGIN]: [
-        { id: 'info', label: 'Login', section: 'info' },
+    [ROLES.login]: [
+        { id: 'forgot-password', label: 'Forgot Password', section: 'forgotPasswordContainer', icon: 'fas fa-lock' },
+        { id: 'signup', label: 'Sign Up', section: 'signupContainer', icon: 'fas fa-user-plus' },
     ],
 };
 
@@ -2485,7 +2681,7 @@ export const MENUS = {
  * @returns {Array} The menu configuration for the role, or an empty array if not found.
  */
 export function getMenu(role) {
-    log(`menus.js - Retrieving menu for role: ${role}`);
+    log(`menus.js - Retrieving menu for role: ${role}, ROLES.login: ${ROLES.login}, ROLES:`, ROLES);
     const menu = MENUS[role] || [];
     if (!menu.length) {
         log(`menus.js - No menu found for role: ${role}`);
@@ -3343,63 +3539,71 @@ login/forgot-password.js
 // /static/js/login/forgot-password.js
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
-import { setupEventListeners } from '../utils/event-listeners.js';
-import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
-import { renderForm } from '../utils/form-rendering.js';
+import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
 import { getFormConfig } from '../config/form-configs.js';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from '../utils/initialization.js';
 
 /**
- * Initializes the forgot password page.
+ * Initializes the forgot password form in the specified section.
  * @param {string} context - The context or module name.
  * @returns {Promise<void>}
  */
 export async function initializeForgotPassword(context) {
-  log(context, 'Initializing forgot password page');
-  await withElement(context, 'forgot-password', async (section) => {
-    // Render forgot password form
-    section.innerHTML = renderForm(getFormConfig(context, 'forgotPassword')) + `
-      <div id="otpSection" style="display: none;">
-        ${renderForm(getFormConfig(context, 'verifyOtp'))}
-      </div>
-    `;
-    // Hide other sections, including info
+  log(context, 'Initializing forgot password form');
+  await withElement(context, 'forgotPasswordContainer', async (section) => {
+    // Ensure all other sections are hidden
     document.querySelectorAll('.section').forEach(s => {
-      if (s.id !== 'forgot-password') s.style.display = 'none';
+      if (s.id !== 'forgotPasswordContainer') s.style.display = 'none';
     });
-    toggleViewState(context, { 'forgot-password': true });
+    // Show the target section
+    section.style.display = 'block';
+    toggleViewState(context, { forgotPasswordContainer: true });
 
-    // Set up event listeners
-    setupEventListeners(context, [
-      {
-        eventType: 'submit',
-        selector: '#forgotPasswordForm',
-        handler: async event => {
-          event.preventDefault();
-          await submitConfiguredForm(context, 'forgotPasswordForm', '/reset-password', 'forgotPassword', {
-            onSuccess: async () => {
-              await withElement(context, 'otpSection', async otpSection => {
-                toggleViewState(context, { otpSection: true });
-              });
-            },
-          });
-        },
+    // Set up forgot password form submission
+    submitConfiguredForm(context, 'forgotPasswordForm', '/reset-password', 'forgotPassword', {
+      onSuccess: async () => {
+        log(context, 'Forgot password request successful, showing OTP section');
+        await withElement(context, 'verifyOtpSection', async otpSection => {
+          toggleViewState(context, { verifyOtpSection: true });
+        });
       },
-      {
-        eventType: 'submit',
-        selector: '#verifyOtpForm',
-        handler: async event => {
-          event.preventDefault();
-          await submitConfiguredForm(context, 'verifyOtpForm', '/verify-reset-code', 'verifyOtp', {
-            onSuccess: () => {
-              log(context, 'OTP verified, redirecting to login');
-              window.location.href = '/';
-            },
-          });
-        },
+      onError: (error) => {
+        log(context, 'Forgot password error:', error.message);
+        alert(ERROR_MESSAGES.FORM_SUBMISSION_FAILED || 'Failed to send OTP. Please try again.');
       },
-    ]);
+    });
+
+    // Set up verify OTP form submission
+    submitConfiguredForm(context, 'verifyOtpForm', '/verify-reset-code', 'verifyOtp', {
+      onSuccess: () => {
+        log(context, 'OTP verified, redirecting to login');
+        window.location.href = '/';
+      },
+      onError: (error) => {
+        log(context, 'OTP verification error:', error.message);
+        alert(ERROR_MESSAGES.FORM_SUBMISSION_FAILED || 'Failed to verify OTP. Please try again.');
+      },
+    });
+
+    // Set up password toggle for verify OTP form
+    const verifyOtpSection = document.getElementById('verifyOtpSection');
+    if (verifyOtpSection) {
+      const toggleButtons = verifyOtpSection.querySelectorAll('.toggle-password, .toggle-password-icon');
+      toggleButtons.forEach(toggleButton => {
+        toggleButton.addEventListener('click', () => {
+          const passwordInput = toggleButton.closest('.password-wrapper').querySelector('input[type="password"], input[type="text"]');
+          const icon = toggleButton.querySelector('i') || toggleButton;
+          if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+          } else {
+            passwordInput.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+          }
+        });
+      });
+    }
   });
 }
 
@@ -3426,52 +3630,62 @@ login/login.js
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setCookie } from '../core/cookies.js';
-import { tokenManagerSetToken } from '../core/auth.js';
+import { setAuthToken } from '../core/auth.js';
 import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
 import { withScriptLogging } from '../utils/initialization.js';
 
 /**
- * Initializes the login form in the specified section.
+ * Initializes the login form in the welcome section.
  * @param {string} context - The context or module name.
- * @param {string} targetSection - The ID of the section to initialize (e.g., 'infoContainer', 'loginContainer').
+ * @param {string} targetSection - The ID of the section to initialize (e.g., 'welcomeSection').
  * @returns {Promise<void>}
  */
 export async function initializeLogin(context, targetSection) {
   log(context, `Initializing login form in section: ${targetSection}`);
   await withElement(context, targetSection, async (section) => {
     // Ensure all other sections are hidden
-    document.querySelectorAll('.container').forEach(s => {
-      if (s.id !== targetSection) s.classList.add('hidden');
+    document.querySelectorAll('.section').forEach(s => {
+      if (s.id !== targetSection) s.style.display = 'none';
     });
     // Show the target section
-    section.classList.remove('hidden');
+    section.style.display = 'block';
     toggleViewState(context, { [targetSection]: true });
 
     // Set up form submission
     submitConfiguredForm(context, 'loginForm', '/', 'login', {
       onSuccess: data => {
         log(context, 'Login successful, setting token and cookie');
-        tokenManagerSetToken(data.token);
+        setAuthToken(data.token);
         if (data.user_id) localStorage.setItem('userId', data.user_id);
-        setCookie(context, 'authToken', data.token, 7);
+        setCookie('authToken', data.token, 7);
         window.location.reload();
       },
     });
 
     // Set up password toggle
-    const togglePassword = section.querySelector('.toggle-password');
+    const togglePassword = section.querySelector('.toggle-password, .toggle-password-icon');
     if (togglePassword) {
+      log(context, 'Toggle-password element found, binding event listener');
       togglePassword.addEventListener('click', () => {
+        log(context, 'Toggle-password clicked');
         const passwordInput = section.querySelector('#loginPassword');
-        const icon = togglePassword.querySelector('i');
-        if (passwordInput.type === 'password') {
-          passwordInput.type = 'text';
-          icon.classList.replace('fa-eye', 'fa-eye-slash');
+        const icon = togglePassword.querySelector('i') || togglePassword;
+        if (passwordInput) {
+          if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+            log(context, 'Password visibility toggled to text');
+          } else {
+            passwordInput.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+            log(context, 'Password visibility toggled to password');
+          }
         } else {
-          passwordInput.type = 'password';
-          icon.classList.replace('fa-eye-slash', 'fa-eye');
+          log(context, 'Password input #loginPassword not found');
         }
       });
+    } else {
+      log(context, 'Toggle-password element not found in section');
     }
   });
 }
@@ -3576,37 +3790,38 @@ import { log } from './core/logger.js';
 import { withErrorHandling } from './utils/error.js';
 import { toggleViewState, withElement } from './utils/dom-manipulation.js';
 import { getMenu } from './config/menus.js';
-import { renderForm } from './utils/form-rendering.js';
-import { submitConfiguredForm } from './utils/form-submission.js';
 import { initializeRoleNavigation, defineSectionHandlers } from './modules/navigation.js';
-import { withScriptLogging } from './utils/initialization.js';
-import { initializeCoreModules } from './main.js';
+import { withScriptLogging, hideOverlay } from './utils/initialization.js';
+import { initializeLogin } from './login/login.js';
+import { initializeSignup } from './login/signup.js';
+import { initializeForgotPassword } from './login/forgot-password.js';
 
 const context = 'login-page.js';
 
 /**
- * Parses the page type from a DOM element.
- * @param {string} param - The ID of the element containing the page type.
+ * Parses the page type from a DOM element or query parameter.
+ * @param {string} param - The ID of the element or query parameter containing the page type.
  * @returns {string|Promise<string>} The parsed page type or a Promise resolving to it.
  */
 export function parsePageType(param) {
     return withErrorHandling(context, () => {
         log(context, `Parsing page type from param: ${param}`);
         const pageTypeElement = document.getElementById(param);
-        return pageTypeElement ? pageTypeElement.value : 'info';
+        if (pageTypeElement) {
+            return pageTypeElement.value;
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param) || 'welcome';
     }, 'parsePageType');
 }
 
 /**
- * Initializes the login page, setting up navigation and the login form.
+ * Initializes the login page, setting up navigation.
  * @param {Object} options - Options object containing the module registry.
  * @param {Map} options.registry - The module registry instance.
  */
 export async function initializeLoginPage({ registry }) {
     log(context, 'Initializing login page');
-
-    // Initialize core modules first
-    await initializeCoreModules();
 
     // Resolve the page type
     const pageTypeElement = parsePageType('page');
@@ -3615,38 +3830,53 @@ export async function initializeLoginPage({ registry }) {
 
     // Set up navigation for the login role
     const role = 'login';
-    const defaultSection = pageType || 'info';
+    const defaultSection = pageType || 'welcome';
     log(context, `Initializing navigation for role: ${role}, default section: ${defaultSection}`);
 
     // Define section handlers for the login role
-    const sectionHandlers = withErrorHandling(context, () => defineSectionHandlers(role), 'defineSectionHandlers');
+    defineSectionHandlers(context, 'login', [
+        {
+            id: 'welcome',
+            handler: async () => {
+                log(context, 'Loading welcome section with login form');
+                await initializeLogin(context, 'welcomeSection');
+            },
+        },
+        {
+            id: 'signup',
+            handler: async () => {
+                log(context, 'Loading signup section');
+                await initializeSignup(context);
+            },
+        },
+        {
+            id: 'forgot-password',
+            handler: async () => {
+                log(context, 'Loading forgot-password section');
+                await initializeForgotPassword(context);
+            },
+        },
+    ]);
 
-    // Retrieve the menu element and menu configuration
-    await withElement(context, 'menu', async (menuElement) => {
-        const menu = getMenu(role);
+    // Retrieve the menu configuration
+    const menu = getMenu(role);
+    if (!menu || menu.length === 0) {
+        log(context, `No menu found for role: ${role}, skipping navigation setup`);
+    } else {
+        // Retrieve the menu element
+        await withElement(context, 'menu', async (menuElement) => {
+            log(context, `Retrieved menu for role: ${role}`, menu);
+            const navigationOptions = { sectionHandlers: defineSectionHandlers(context, 'login'), defaultSection };
+            withErrorHandling(context, () => initializeRoleNavigation(menuElement, menu, navigationOptions), 'initializeRoleNavigation');
+        }, 10, 100, false); // Disable visibility check
+    }
 
-        if (!menu || menu.length === 0) {
-            log(context, `Navigation element not found for role: ${role}`);
-            return;
-        }
-
-        log(context, `Retrieved menu for role: ${role}`, menu);
-
-        // Initialize navigation with the menu and default section
-        const navigationOptions = { sectionHandlers, defaultSection };
-        withErrorHandling(context, () => initializeRoleNavigation(menuElement, menu, navigationOptions), 'initializeRoleNavigation');
-
-        // Initialize the login form in the info section
-        log(context, `Initializing login form in section: info`);
-        await withElement(context, 'info', async (infoSection) => {
-            // Toggle visibility of the info section
-            toggleViewState(context, { info: true });
-
-            // Render and submit the login form
-            renderForm('loginForm', 'login', infoSection);
-            withErrorHandling(context, () => submitConfiguredForm(context, 'loginForm', '/api/login', 'login'), 'submitConfiguredForm');
-        }, 10, 100, true);
-    }, 10, 100, true);
+    // Initialize the welcome section with the login form
+    log(context, `Initializing welcome section with login form`);
+    await withElement(context, 'welcomeSection', async (welcomeSection) => {
+        toggleViewState(context, { welcomeSection: true });
+        await initializeLogin(context, 'welcomeSection');
+    }, 10, 100, false);
 }
 
 /**
@@ -3665,6 +3895,7 @@ export function initializeLoginPageModule(registry) {
 withScriptLogging(context, async () => {
     log(context, 'Module initialized');
     await initializeLoginPage({ registry: new Map() });
+    hideOverlay();
 });
 main.js
 // /static/js/main.js
@@ -4308,12 +4539,12 @@ withScriptLogging(context, () => {
 merchant-page.js
 // /static/js/merchant-page.js
 // Purpose: Orchestrates the merchant page, coordinating navigation, events, and module initialization.
-
+const context = 'merchant-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
 import { defineMerchantSectionHandlers } from './merchant/navigation.js';
 import { initializeMerchantModules } from './merchant/setup.js';
-import { withScriptLogging } from './utils/initialization.js';
+import { withScriptLogging , hideOverlay } from './utils/initialization.js';
 
 /**
  * Initializes the merchant page.
@@ -4343,9 +4574,10 @@ export function initializeMerchantPageModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'merchant-page.js';
-withScriptLogging(context, () => {
-  initializeMerchantPage(context);
+withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeLoginPage({ registry: new Map() });
+    hideOverlay();
 });
 modules/dataLoader.js
 // /static/js/modules/dataLoader.js
@@ -5100,13 +5332,13 @@ withScriptLogging(context, () => {
 partner-page.js
 // /static/js/partner-page.js
 // Purpose: Orchestrates the partner page, coordinating navigation, events, and module initialization.
-
+const context = 'partner-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
 import { definePartnerSectionHandlers } from './partner/navigation.js';
 import { setupPartnerEvents } from './partner/partner-events.js';
 import { initializePartnerModules } from './partner/initializer.js';
-import { withScriptLogging } from './utils/initialization.js';
+import { withScriptLogging , hideOverlay} from './utils/initialization.js';
 
 /**
  * Initializes the partner page.
@@ -5137,9 +5369,10 @@ export function initializePartnerPageModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'partner-page.js';
-withScriptLogging(context, () => {
-  initializePartnerPage(context);
+withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeLoginPage({ registry: new Map() });
+    hideOverlay();
 });
 utils/data-fetch.js
 // /static/js/utils/data-fetch.js
@@ -5325,7 +5558,7 @@ async function waitForElement(context, elementId, maxAttempts, retryDelay) {
 }
 
 /**
- * Toggles the visibility of elements based on a state object.
+ * Toggles the visibility of elements based on a state object, hiding all other sections with class '.section'.
  * @param {string} context - The context or module name.
  * @param {Object.<string, boolean>} state - Object mapping element IDs to visibility states.
  * @returns {void}
@@ -5333,13 +5566,15 @@ async function waitForElement(context, elementId, maxAttempts, retryDelay) {
 export function toggleViewState(context, state) {
   log(context, 'Toggling view state:', state);
   withErrorHandling(`${context}:toggleViewState`, () => {
-    Object.entries(state).forEach(([elementId, isVisible]) => {
-      const element = document.getElementById(elementId);
-      if (element) {
-        element.style.display = isVisible ? '' : 'none';
-        log(context, `Set ${elementId} display to ${isVisible ? 'visible' : 'hidden'}`);
+    const allSections = document.querySelectorAll('.section');
+    allSections.forEach(section => {
+      const id = section.id;
+      if (state.hasOwnProperty(id)) {
+        section.style.display = state[id] ? 'block' : 'none';
+        log(context, `Set ${id} display to ${state[id] ? 'visible' : 'hidden'}`);
       } else {
-        log(context, `Element not found for toggle: ${elementId}`);
+        section.style.display = 'none';
+        log(context, `Hid section ${id} as it's not in the state object`);
       }
     });
   }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);
@@ -5607,6 +5842,7 @@ import { renderMarkdown } from '../core/markdown.js';
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from './initialization.js';
+import { getFormConfig } from '../config/form-configs.js';
 
 /**
  * Generates a style string or object for form elements.
@@ -5618,61 +5854,133 @@ export function renderStyles(type, styles) {
     const context = 'form-rendering.js';
     log(context, `Rendering styles for type: ${type}`);
     return Object.entries(styles)
-      .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
-      .join('; ');
-  }
+        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
+        .join('; ');
+}
 
 /**
- * Renders a form based on the provided configuration.
- * @param {Object} config - Form configuration object.
- * @returns {string} The rendered HTML form.
+ * Renders a form based on the provided configuration and appends it to the container.
+ * @param {string} formId - The ID of the form element.
+ * @param {Object|string} config - The form configuration object or config key (e.g., 'login').
+ * @param {HTMLElement} container - The container element to render the form in.
  */
-export function renderForm(config) {
-  const context = 'form-rendering.js';
-  log(context, 'Rendering form with config:', config.id);
-  return withErrorHandling(`${context}:renderForm`, () => {
-    const { id, action, method = 'POST', fields = [], customFields = [], submitButtonText = 'Submit', extraButtons = [], wrapper } = config;
-    const fieldHtml = fields
-      .map(field => {
-        switch (field.type) {
-          case 'textarea':
-            return `
-              <div>
-                <label for="${field.id}">${field.label || ''}</label>
-                <textarea id="${field.id}" name="${field.name}" ${field.required ? 'required' : ''} rows="${field.rows || 4}" cols="${field.cols || 50}" style="${field.style || ''}">${field.value || ''}</textarea>
-              </div>
+export function renderForm(formId, config, container) {
+    const context = 'form-rendering.js';
+    log(context, 'Rendering form with formId:', formId, 'config:', config, 'container:', container);
+    return withErrorHandling(`${context}:renderForm`, () => {
+        if (!formId || !container) {
+            throw new Error('Form ID and container are required');
+        }
+
+        let formConfig = config;
+        if (typeof config === 'string') {
+            log(context, `Config is a string, retrieving form config for key: ${config}`);
+            formConfig = getFormConfig(context, config);
+            if (!formConfig) {
+                throw new Error(`No form configuration found for key: ${config}`);
+            }
+        }
+
+        if (!formConfig || typeof formConfig !== 'object') {
+            throw new Error('Invalid form configuration');
+        }
+
+        const { id = formId, action = '', method = 'POST', fields = [], customFields = [], submitButtonText = 'Submit', extraButtons = [], wrapper } = formConfig;
+
+        // Validate fields array
+        if (!Array.isArray(fields)) {
+            throw new Error('Form configuration must include a fields array');
+        }
+
+        // Ensure the form element exists or create it
+        let form = document.getElementById(id);
+        if (!form) {
+            form = document.createElement('form');
+            form.id = id;
+            container.appendChild(form);
+        }
+
+        // Clear existing content only if rendering is successful
+        try {
+            form.action = action;
+            form.method = method;
+
+            // Render form fields
+            const fieldHtml = fields
+                .map(field => {
+                    if (!field.name || !field.type) {
+                        log(context, `Warning: Field missing name or type: ${JSON.stringify(field)}`);
+                        return '';
+                    }
+                    let inputHtml;
+                    switch (field.type) {
+                        case 'textarea':
+                            inputHtml = `
+                                <textarea id="${field.id || field.name}" name="${field.name}" ${field.required ? 'required' : ''} rows="${field.rows || 4}" cols="${field.cols || 50}" style="${field.style || ''}">${field.value || ''}</textarea>
+                            `;
+                            break;
+                        case 'hidden':
+                            inputHtml = `<input type="hidden" id="${field.id || field.name}" name="${field.name}" value="${field.value || ''}">`;
+                            break;
+                        default:
+                            inputHtml = `
+                                <input type="${field.type}" id="${field.id || field.name}" name="${field.name}" value="${field.value || ''}" ${field.required ? 'required' : ''} style="${field.style || ''}" ${field.attributes ? Object.entries(field.attributes).map(([k, v]) => `${k}="${v}"`).join(' ') : ''}>
+                            `;
+                    }
+                    const extraButtonsHtml = field.extraButtons
+                        ? field.extraButtons.map(btn => `
+                            <button type="${btn.type || 'button'}" class="${btn.className || ''}" style="${btn.style || ''}" ${btn.onclick ? `onclick="${btn.onclick}"` : ''}>${btn.text}</button>
+                        `).join('')
+                        : '';
+                    const fieldWrapperStyle = field.wrapper ? `class="${field.wrapper.class || ''}" style="${field.wrapper.style || ''}"` : '';
+                    return `
+                        <div ${fieldWrapperStyle}>
+                            <label for="${field.id || field.name}">${field.label || ''}</label>
+                            ${inputHtml}
+                            ${extraButtonsHtml}
+                        </div>
+                    `;
+                })
+                .join('');
+
+            // Render custom fields (e.g., checkbox lists)
+            const customFieldHtml = customFields
+                .map(field => {
+                    if (field.type === 'checkboxList' && field.render) {
+                        return field.render(field.items, field.selected);
+                    }
+                    return '';
+                })
+                .join('');
+
+            // Render form-level buttons
+            const buttonsHtml = `
+                <button type="submit">${submitButtonText}</button>
+                ${extraButtons.map(btn => `<button type="${btn.type || 'button'}" data-action="${btn.dataAction || ''}" style="${btn.style || ''}">${btn.text}</button>`).join('')}
             `;
-          case 'hidden':
-            return `<input type="hidden" id="${field.id}" name="${field.name}" value="${field.value || ''}">`;
-          default:
-            return `<input type="${field.type}" id="${field.id}" name="${field.name}" value="${field.value || ''}" ${field.required ? 'required' : ''} style="${field.style || ''}">`;
+
+            // Apply form wrapper styles
+            const wrapperStyle = wrapper ? `class="${wrapper.class || ''}" style="${wrapper.style || ''}"` : '';
+
+            // Combine HTML
+            const formHtml = `
+                <div ${wrapperStyle}>
+                    ${fieldHtml}
+                    ${customFieldHtml}
+                    ${buttonsHtml}
+                </div>
+            `;
+
+            // Only update form content if rendering is successful
+            form.innerHTML = formHtml;
+            log(context, `Form ${id} rendered successfully in container with ${fields.length} fields`);
+        } catch (error) {
+            log(context, `Error rendering form: ${error.message}`);
+            // Display fallback message
+            form.innerHTML = '<p>Form loading failed. Please try again later.</p>';
+            throw error; // Re-throw to propagate the error
         }
-      })
-      .join('');
-
-    const customFieldHtml = customFields
-      .map(field => {
-        if (field.type === 'checkboxList' && field.render) {
-          return field.render(field.items, field.selected);
-        }
-        return '';
-      })
-      .join('');
-
-    const buttonsHtml = `
-      <button type="submit">${submitButtonText}</button>
-      ${extraButtons.map(btn => `<button type="${btn.type || 'button'}" data-action="${btn.dataAction || ''}" style="${btn.style || ''}">${btn.text}</button>`).join('')}
-    `;
-
-    const wrapperStyle = wrapper ? `class="${wrapper.class || ''}" style="${wrapper.style || ''}"` : '';
-    return `
-      <form id="${id}" action="${action}" method="${method}" ${wrapperStyle}>
-        ${fieldHtml}
-        ${customFieldHtml}
-        ${buttonsHtml}
-      </form>
-    `;
-  }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
+    }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
 }
 
 /**
@@ -5683,36 +5991,39 @@ export function renderForm(config) {
  * @returns {Promise<void>}
  */
 export async function renderMarkdownContent(context, markdownPath, targetId) {
-  log(context, `Rendering markdown content into: ${targetId}`);
-  await withErrorHandling(`${context}:renderMarkdownContent`, async () => {
-    const htmlContent = await renderMarkdown(context, markdownPath);
-    const target = document.getElementById(targetId);
-    if (!target) {
-      throw new Error(`Target element ${targetId} not found`);
-    }
-    target.innerHTML = htmlContent;
-  }, ERROR_MESSAGES.MARKDOWN_RENDER_FAILED);
+    log(context, `Rendering markdown content into: ${targetId}`);
+    await withErrorHandling(`${context}:renderMarkdownContent`, async () => {
+        const htmlContent = await renderMarkdown(context, markdownPath);
+        const target = document.getElementById(targetId);
+        if (!target) {
+            throw new Error(`Target element ${targetId} not found`);
+        }
+        target.innerHTML = htmlContent;
+    }, ERROR_MESSAGES.MARKDOWN_RENDER_FAILED);
 }
 
 /**
  * Initializes the form-rendering module for use with the module registry.
- * @param {Object} registry - The module registry instance.
+ * @param {Map} registry - The module registry instance.
  * @returns {Object} FormRendering instance with public methods.
  */
 export function initializeFormRenderingModule(registry) {
-  const context = 'form-rendering.js';
-  log(context, 'Initializing form-rendering module for module registry');
-  return {
-    renderForm,
-    renderMarkdownContent: (ctx, ...args) => renderMarkdownContent(ctx, ...args),
-  };
+    const context = 'form-rendering.js';
+    log(context, 'Initializing form-rendering module for module registry');
+    return {
+        renderForm: (formId, config, container) => renderForm(formId, config, container),
+        renderMarkdownContent: (ctx, ...args) => renderMarkdownContent(ctx, ...args),
+    };
 }
 
-// Initialize module with lifecycle logging
-const context = 'form-rendering.js';
-withScriptLogging(context, () => {
-  log(context, 'Module initialized');
-});
+/**
+ * Initializes the form-rendering module.
+ */
+export function initializeFormRendering() {
+    withScriptLogging('form-rendering.js', () => {
+        log('form-rendering.js', 'Module initialized');
+    });
+}
 utils/form-submission.js
 // /static/js/utils/form-submission.js
 // Purpose: Provides utilities for handling form submissions with validation and error handling.
@@ -5726,51 +6037,75 @@ import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from './initialization.js';
 
 /**
- * Submits a form based on the provided configuration key and endpoint.
+ * Configures a form for submission based on the provided configuration key and endpoint.
  * @param {string} context - The context or module name.
  * @param {string} formId - The ID of the form element.
  * @param {string} endpoint - The API endpoint to submit to.
  * @param {string} configKey - The form configuration key (e.g., 'login', 'userSettings').
  * @param {Object} [options={}] - Additional options (e.g., onSuccess, onError, successMessage).
- * @returns {Promise<void>}
+ * @returns {void}
  */
-export async function submitConfiguredForm(context, formId, endpoint, configKey, options = {}) {
-  log(context, `Submitting form: ${formId} with config: ${configKey}`);
-  await withErrorHandling(`${context}:submitConfiguredForm`, async () => {
-    const form = document.getElementById(formId);
-    if (!form) {
-      throw new Error(`Form ${formId} not found`);
-    }
+export function submitConfiguredForm(context, formId, endpoint, configKey, options = {}) {
+    log(context, `Configuring form submission for: ${formId} with config: ${configKey}`);
+    withErrorHandling(`${context}:submitConfiguredForm`, () => {
+        const form = document.getElementById(formId);
+        if (!form) {
+            log(context, `Form element ${formId} not found`);
+            notifyError(context, 'Form not found. Please try again.');
+            throw new Error(`Form ${formId} not found`);
+        }
 
-    const config = getFormConfig(context, configKey);
-    const formData = new FormData(form);
-    if (!config.validate(formData)) {
-      notifyError(context, config.validationError || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
-      return;
-    }
+        const config = getFormConfig(context, configKey);
+        if (!config) {
+            log(context, `No form configuration found for key: ${configKey}`);
+            notifyError(context, 'Invalid form configuration.');
+            throw new Error(`No form configuration for key: ${configKey}`);
+        }
 
-    const transformedData = config.transform ? config.transform(formData) : Object.fromEntries(formData);
-    const fetchOptions = {
-      method: config.method || 'POST',
-      headers: config.fetchOptions?.headers || {},
-      body: JSON.stringify(transformedData),
-      ...config.fetchOptions,
-    };
+        // Remove any existing submit listeners to prevent duplicates
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
 
-    try {
-      const response = await fetchData(context, endpoint, fetchOptions);
-      success(context, options.successMessage || config.successMessage || 'Form submitted successfully');
-      if (options.onSuccess) {
-        options.onSuccess(response);
-      }
-    } catch (err) {
-      notifyError(context, err.message || ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
-      if (options.onError) {
-        options.onError(err, formData);
-      }
-      throw err;
-    }
-  }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
+        // Set up form submission event listener
+        newForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            log(context, `Submitting form ${formId} to ${endpoint}`);
+
+            try {
+                const formData = new FormData(newForm);
+                if (config.validate) {
+                    const isValid = config.validate(formData);
+                    if (!isValid) {
+                        log(context, `Form validation failed for ${formId}`);
+                        notifyError(context, config.validationError || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
+                        return;
+                    }
+                }
+
+                const transformedData = config.transform ? config.transform(formData) : Object.fromEntries(formData);
+                const fetchOptions = {
+                    method: config.method || 'POST',
+                    headers: config.fetchOptions?.headers || { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(transformedData),
+                    ...config.fetchOptions,
+                };
+
+                const response = await fetchData(context, endpoint, fetchOptions);
+                success(context, options.successMessage || config.successMessage || 'Form submitted successfully');
+                if (options.onSuccess) {
+                    options.onSuccess(response);
+                }
+            } catch (err) {
+                log(context, `Submission error: ${err.message}`);
+                notifyError(context, err.message || ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
+                if (options.onError) {
+                    options.onError(err, formData);
+                }
+            }
+        });
+
+        log(context, `Form ${formId} submission configured`);
+    }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
 }
 
 /**
@@ -5781,41 +6116,44 @@ export async function submitConfiguredForm(context, formId, endpoint, configKey,
  * @returns {Promise<void>}
  */
 export async function updateFormState(context, formId, updates) {
-  log(context, `Updating form state for: ${formId}`);
-  await withErrorHandling(`${context}:updateFormState`, async () => {
-    const form = document.getElementById(formId);
-    if (!form) {
-      throw new Error(`Form ${formId} not found`);
-    }
-    Object.entries(updates).forEach(([name, value]) => {
-      const input = form.querySelector(`[name="${name}"]`);
-      if (input) {
-        input.value = value;
-        log(context, `Updated ${name} to: ${value}`);
-      }
-    });
-  }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);
+    log(context, `Updating form state for: ${formId}`);
+    await withErrorHandling(`${context}:updateFormState`, async () => {
+        const form = document.getElementById(formId);
+        if (!form) {
+            throw new Error(`Form ${formId} not found`);
+        }
+        Object.entries(updates).forEach(([name, value]) => {
+            const input = form.querySelector(`[name="${name}"]`);
+            if (input) {
+                input.value = value;
+                log(context, `Updated ${name} to: ${value}`);
+            }
+        });
+    }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);
 }
 
 /**
  * Initializes the form-submission module for use with the module registry.
- * @param {Object} registry - The module registry instance.
+ * @param {Map} registry - The module registry instance.
  * @returns {Object} FormSubmission instance with public methods.
  */
 export function initializeFormSubmissionModule(registry) {
-  const context = 'form-submission.js';
-  log(context, 'Initializing form-submission module for module registry');
-  return {
-    submitConfiguredForm: (ctx, ...args) => submitConfiguredForm(ctx, ...args),
-    updateFormState: (ctx, ...args) => updateFormState(ctx, ...args),
-  };
+    const context = 'form-submission.js';
+    log(context, 'Initializing form-submission module for module registry');
+    return {
+        submitConfiguredForm: (ctx, formId, endpoint, configKey, options) => submitConfiguredForm(ctx, formId, endpoint, configKey, options),
+        updateFormState: (ctx, formId, updates) => updateFormState(ctx, formId, updates),
+    };
 }
 
-// Initialize module with lifecycle logging
-const context = 'form-submission.js';
-withScriptLogging(context, () => {
-  log(context, 'Module initialized');
-});
+/**
+ * Initializes the form-submission module.
+ */
+export function initializeFormSubmission() {
+    withScriptLogging('form-submission.js', () => {
+        log('form-submission.js', 'Module initialized');
+    });
+}
 utils/form-validation-utils.js
 // /static/js/utils/form-validation-utils.js
 // Purpose: Provides helper functions for form validation.
@@ -6090,6 +6428,21 @@ import { defineSectionHandlers } from '../modules/navigation.js';
 const context = 'initialization.js';
 
 /**
+ * Shows the specified section and hides others.
+ * @param {string} sectionId - The ID of the section to show.
+ */
+async function showSection(sectionId) {
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(section => {
+        if (section.id === sectionId) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+}
+
+/**
  * Wraps a module initialization function with lifecycle logging.
  * @param {string} context - The context or module name.
  * @param {Function} initFunction - The initialization function to wrap.
@@ -6142,28 +6495,28 @@ export function parsePageType(context, param, defaultType) {
 export async function initializeRoleNavigation(context, role, defaultSection) {
     log(context, `Initializing navigation for role: ${role}, default section: ${defaultSection}`);
     await withErrorHandling(`${context}:initializeRoleNavigation`, async () => {
+        let sectionHandlers = {};
         if (role === 'login') {
-            // Define handlers for login page
-            defineSectionHandlers(context, 'login', [
+            sectionHandlers = defineSectionHandlers(context, 'login', [
                 {
                     id: 'info',
-                    handler: async () => {
-                        log(context, 'Loading info section with login form');
-                        await import('../login-page.js').then(m => m.initializeLoginPage({ registry: new Map() }));
+                    handler: () => {
+                        log(context, 'Showing info section');
+                        showSection('info');
                     },
                 },
                 {
                     id: 'signup',
-                    handler: async () => {
-                        log(context, 'Loading signup section');
-                        await import('../login/signup.js').then(m => m.initializeSignup(context));
+                    handler: () => {
+                        log(context, 'Showing signup section');
+                        showSection('signupContainer');
                     },
                 },
                 {
                     id: 'forgot-password',
-                    handler: async () => {
-                        log(context, 'Loading forgot-password section');
-                        await import('../login/forgot-password.js').then(m => m.initializeForgotPassword(context));
+                    handler: () => {
+                        log(context, 'Showing forgot-password section');
+                        showSection('forgotPasswordContainer');
                     },
                 },
             ]);
@@ -6225,6 +6578,24 @@ export function initializeInitializationModule(registry) {
         initializeRolePage,
     });
 }
+
+export function hideOverlay() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const layoutWrapper = document.querySelector('.layout-wrapper');
+    if (loadingOverlay && layoutWrapper) {
+        loadingOverlay.style.display = 'none';
+        layoutWrapper.style.display = '';
+    }
+}
+
+// Global event listener for the button in roles.inc
+document.addEventListener('click', (event) => {
+    const infoButton = event.target.closest('button[data-section="info"]');
+    if (infoButton) {
+        console.log('Info button clicked');
+        showSection('info');
+    }
+});
 
 // Initialize module with lifecycle logging
 withScriptLogging(context, () => {

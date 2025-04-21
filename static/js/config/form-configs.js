@@ -1,12 +1,14 @@
 // /static/js/config/form-configs.js
 import { log } from '../core/logger.js';
-import { validateRequiredFields, validatePassword, validatePhoneNumber } from '../utils/form-validation.js';
+import { validatePhoneNumber } from '../utils/form-submission.js'; // Use FormData-compatible version
+import { isValidEmail } from '../utils/form-validation-utils.js';
 import { renderStyles } from '../utils/form-rendering.js';
 import { renderCheckboxList } from '../utils/ui-components.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from './messages.js';
 import { withScriptLogging } from '../utils/initialization.js';
 import { createModuleInitializer } from '../utils/initialization.js';
-import { isValidEmail } from '../utils/form-validation-utils.js';
+
+const context = 'form-configs.js';
 
 /**
  * Generates fields for a category form based on provided data.
@@ -98,6 +100,7 @@ function getCategoriesFormConfig(context, options = {}) {
       ...generateCategoryFields(context, { defaults, category }),
       ...generateCategoryCustomFields(context, { customFields }),
     ],
+    requiresAuth: true,
   };
 }
 
@@ -131,39 +134,115 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'email',
+        name: 'email',
+        label: 'Email',
+        required: true,
+        attributes: { placeholder: 'Enter your email', id: 'loginEmail', autocomplete: 'off' },
+      },
+      {
+        type: 'password',
+        name: 'password',
+        label: 'Password',
+        required: true,
+        attributes: {
+          placeholder: 'Enter your password',
+          id: 'loginPassword',
+          autocomplete: 'off',
+        },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+    ],
+    requiresAuth: true,
   },
   signup: {
     id: 'signupForm',
     action: '/signup',
     method: 'POST',
     submitButtonText: 'Sign Me Up',
-    successMessage: 'Signup successful! Please verify OTP.',
+    successMessage: 'Signup submitted successfully!',
     transform: formData => ({
       signup_type: formData.get('signup_type')?.trim(),
       contact_name: formData.get('contact_name')?.trim(),
-      phone_number: formData.get('signup_phone')?.trim(),
-      email: formData.get('signup_email')?.trim(),
-      password: formData.get('signup_password'),
+      signup_phone: formData.get('signup_phone')?.trim(),
+      signup_email: formData.get('signup_email')?.trim(),
+      website: formData.get('website')?.trim() || ''
     }),
     validate: formData => {
+      log(context, 'Validating signup form, formData type:', formData.constructor.name);
       try {
+        validatePhoneNumber(formData); // Use FormData-compatible version from form-submission.js
         return (
           !!formData.get('signup_type')?.trim() &&
           !!formData.get('contact_name')?.trim() &&
-          validatePhoneNumber('signup', formData.get('signup_phone')) &&
+          !!formData.get('signup_phone')?.trim() &&
           !!formData.get('signup_email')?.trim() &&
-          isValidEmail('signup', formData.get('signup_email')) &&
-          !!formData.get('signup_password') &&
-          formData.get('signup_password') === formData.get('signup_confirm_password')
+          isValidEmail('signup', formData.get('signup_email'))
         );
       } catch (err) {
         throw new Error(err.message || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
       }
     },
-    validationError: 'Please complete all fields correctly and ensure passwords match.',
+    validationError: 'Please complete all fields correctly.',
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'radio',
+        name: 'signup_type',
+        label: 'Signup Type',
+        required: true,
+        attributes: { id: 'signup_type', autocomplete: 'off' },
+        options: [
+          { value: 'community', label: 'Community' },
+          { value: 'seller', label: 'Merchant' },
+          { value: 'partner', label: 'Partner' }
+        ]
+      },
+      {
+        type: 'text',
+        name: 'contact_name',
+        label: 'Contact Name',
+        required: true,
+        attributes: { id: 'contact_name', autocomplete: 'off' },
+      },
+      {
+        type: 'tel',
+        name: 'signup_phone',
+        label: 'Phone Number',
+        required: true,
+        attributes: { id: 'signup_phone', autocomplete: 'off', pattern: '[0-9]{10,11}', title: 'Please enter a 10 or 11-digit UK phone number' },
+      },
+      {
+        type: 'email',
+        name: 'signup_email',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'signup_email', autocomplete: 'off' },
+      },
+      {
+        type: 'url',
+        name: 'website',
+        label: 'Website (optional)',
+        required: false,
+        attributes: { id: 'website', autocomplete: 'off' },
+      },
+    ],
+    requiresAuth: false,
   },
   forgotPassword: {
     id: 'forgotPasswordForm',
@@ -185,25 +264,35 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'email',
+        name: 'email',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'forgotEmail', autocomplete: 'off' },
+      },
+    ],
+    requiresAuth: false,
   },
   verifyOtp: {
     id: 'verifyOtpForm',
-    action: '/verify-reset-code',
+    action: '/verify-signup-otp', // Default to signup OTP verification
     method: 'POST',
-    submitButtonText: 'Update Password',
-    successMessage: 'Password updated successfully!',
+    submitButtonText: 'Set Password',
+    successMessage: 'Password set successfully!',
     transform: formData => ({
       email: formData.get('email')?.trim(),
-      code: formData.get('code')?.trim(),
+      otp: formData.get('otp')?.trim(),
       new_password: formData.get('new_password'),
-      confirm_new_password: formData.get('confirm_new_password'),
+      otp_token: formData.get('otp_token')
     }),
     validate: formData => {
       try {
         return (
           !!formData.get('email')?.trim() &&
           isValidEmail('verifyOtp', formData.get('email')) &&
-          !!formData.get('code')?.trim() &&
+          !!formData.get('otp')?.trim() &&
           !!formData.get('new_password') &&
           formData.get('new_password') === formData.get('confirm_new_password')
         );
@@ -215,27 +304,66 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
-  },
-  verifySignupOtp: {
-    id: 'signupOtpSection',
-    action: '/verify-reset-code',
-    method: 'POST',
-    submitButtonText: 'Verify OTP',
-    successMessage: 'OTP verified successfully!',
-    transform: formData => ({
-      otp: formData.get('otp')?.trim(),
-    }),
-    validate: formData => {
-      try {
-        return !!formData.get('otp')?.trim();
-      } catch (err) {
-        throw new Error(err.message || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
-      }
-    },
-    validationError: 'Please enter a valid OTP.',
-    fetchOptions: {
-      headers: { 'Content-Type': 'application/json' },
-    },
+    fields: [
+      {
+        type: 'email',
+        name: 'email',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'verifyEmail', autocomplete: 'off' },
+      },
+      {
+        type: 'text',
+        name: 'otp',
+        label: 'One-Time Password',
+        required: true,
+        attributes: { id: 'otpCode', autocomplete: 'off' },
+      },
+      {
+        type: 'password',
+        name: 'new_password',
+        label: 'New Password',
+        required: true,
+        attributes: { id: 'newPassword', autocomplete: 'new-password' },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+      {
+        type: 'password',
+        name: 'confirm_new_password',
+        label: 'Confirm New Password',
+        required: true,
+        attributes: { id: 'confirmNewPassword', autocomplete: 'new-password' },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+      {
+        type: 'hidden',
+        name: 'otp_token',
+        attributes: { id: 'otpToken' }
+      },
+    ],
+    requiresAuth: false,
   },
   userSettings: {
     id: 'userSettingsForm',
@@ -264,6 +392,30 @@ const FORM_CONFIGS = {
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
+    fields: [
+      {
+        type: 'text',
+        name: 'contact_name',
+        label: 'Name',
+        required: true,
+        attributes: { id: 'contact_name' },
+      },
+      {
+        type: 'email',
+        name: 'email_address',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'email_address' },
+      },
+      {
+        type: 'tel',
+        name: 'phone_number',
+        label: 'Phone Number',
+        required: true,
+        attributes: { id: 'phone_number' },
+      },
+    ],
+    requiresAuth: true,
   },
   categories: getCategoriesFormConfig,
 };
@@ -274,16 +426,24 @@ const FORM_CONFIGS = {
  * @param {string} configKey - The key for the form configuration (e.g., 'login', 'categories').
  * @param {Object} [options={}] - Dynamic options to merge with the configuration.
  * @returns {Object} The form configuration.
- * @throws {Error} If the configKey is invalid.
  */
 export function getFormConfig(context, configKey, options = {}) {
   log(context, `Retrieving form config for key: ${configKey}`);
+  if (!configKey || typeof configKey !== 'string') {
+    log(context, `Invalid form configuration key: ${configKey}`);
+    return {};
+  }
   const config = FORM_CONFIGS[configKey];
   if (!config) {
-    throw new Error(`Invalid form configuration key: ${configKey}`);
+    log(context, `No form configuration found for key: ${configKey}`);
+    return {};
   }
   if (typeof config === 'function') {
     return config(context, options);
+  }
+  if (!config.method) {
+    log(context, `Invalid configuration for key: ${configKey} - missing method`);
+    return {};
   }
   return { ...config, ...options };
 }
@@ -301,7 +461,6 @@ export function initializeFormConfigsModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'form-configs.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
 });
