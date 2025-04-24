@@ -3,7 +3,7 @@
 
 import { log } from './logger.js';
 import { setCookie, getCookie, removeCookie } from './cookies.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { API_ENDPOINTS } from '../config/endpoints.js';
 
 const context = 'auth.js';

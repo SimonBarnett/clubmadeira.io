@@ -5,7 +5,7 @@ import { loadDeals } from './deals.js';
 import { initializeUserManagement } from './users-orchestrator.js';
 import { loadAdminSettings } from './settings.js';
 import { initializeAdminModules } from './initializer.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 
 /**

@@ -5,7 +5,7 @@ import { getFormConfig } from '../config/form-configs.js';
 import { success, error as notifyError } from '../core/notifications.js';
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from './initialization.js';
+import { withScriptLogging } from './logging-utils.js';
 
 /**
  * Validates the phone number from FormData for signup forms.

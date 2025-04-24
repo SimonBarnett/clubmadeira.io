@@ -5,7 +5,7 @@ import { authenticatedFetch } from '../core/auth.js';
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Fetches user data for a specific role.

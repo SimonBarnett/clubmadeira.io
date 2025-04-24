@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { authenticatedFetch } from '../core/auth.js'; // Updated import to core/auth.js
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js'; // Updated import to messages.js
-import { withScriptLogging } from './initialization.js';
+import { withScriptLogging } from './logging-utils.js';
 
 const context = 'data-fetch.js';
 

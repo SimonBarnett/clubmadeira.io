@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="page-type" content="{{ page_type | default('login') }}">
     <title>{{ title | default('clubmadeira.io') }}</title>
     <!-- External CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -121,6 +122,17 @@
                         </div>
                     </div>
                     <button type="submit"><i class="fas fa-key"></i> Update Password</button>
+                </form>
+            </div>
+            <div id="settings" class="section" style="display: none;">
+                <h2>Settings</h2>
+                <p>Configure settings specific to your role here.</p>
+                <form id="settings-form">
+                    <input type="text" id="settingsUserId" name="userId" placeholder="User ID">
+                    <input type="text" id="contactName" name="contactName" placeholder="Contact Name">
+                    <input type="text" id="websiteUrl" name="websiteUrl" placeholder="Website URL">
+                    <input type="email" id="emailAddress" name="emailAddress" placeholder="Email Address">
+                    <button type="submit">Save Settings</button>
                 </form>
             </div>
             {% endif %}

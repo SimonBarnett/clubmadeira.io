@@ -8,7 +8,7 @@ import { setupEventListeners } from '../utils/event-listeners.js';
 import { withErrorHandling } from '../utils/error.js';
 import { SETTINGS } from '../config/settings.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**

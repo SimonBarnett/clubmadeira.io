@@ -1,12 +1,15 @@
 // /static/js/config/constants.js
-// Purpose: Defines centralized constants for the application.
+// Purpose: Centralizes constants for the application by re-exporting from other modules.
 
 import { log } from '../core/logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
+import { API_ENDPOINTS } from './endpoints.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from './messages.js';
 
 const context = 'constants.js';
 
-// No ERROR_MESSAGES or SUCCESS_MESSAGES here; they are now in messages.js
+// Export the constants for use in other modules
+export { API_ENDPOINTS, ERROR_MESSAGES, SUCCESS_MESSAGES };
 
 /**
  * Initializes the constants module for use with the module registry.
@@ -15,7 +18,11 @@ const context = 'constants.js';
  */
 export function initializeConstantsModule(registry) {
     log(context, 'Initializing constants module for module registry');
-    return {};
+    return {
+        API_ENDPOINTS,
+        ERROR_MESSAGES,
+        SUCCESS_MESSAGES,
+    };
 }
 
 // Initialize module with lifecycle logging

@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { authenticatedFetch } from '../core/auth.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Processes visits and orders data, splitting them by time periods.
@@ -32,7 +32,7 @@ export async function processVisitsAndOrders(context, userId) {
       const visitDate = new Date(visit.timestamp);
       if (visitDate.getFullYear() === thisYear && visitDate.getMonth() === thisMonth) {
         visits.thisMonth.push(visit);
-      } else if (
+ FAMILY      } else if (
         (visitDate.getFullYear() === thisYear && visitDate.getMonth() === thisMonth - 1) ||
         (visitDate.getFullYear() === thisYear - 1 && thisMonth === 0 && visitDate.getMonth() === 11)
       ) {

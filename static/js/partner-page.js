@@ -3,10 +3,10 @@
 const context = 'partner-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
+import { withScriptLogging, hideOverlay } from './utils/logging-utils.js';
 import { definePartnerSectionHandlers } from './partner/navigation.js';
 import { setupPartnerEvents } from './partner/partner-events.js';
 import { initializePartnerModules } from './partner/initializer.js';
-import { withScriptLogging , hideOverlay} from './utils/initialization.js';
 
 /**
  * Initializes the partner page.
@@ -39,6 +39,6 @@ export function initializePartnerPageModule(registry) {
 // Initialize module with lifecycle logging
 withScriptLogging(context, async () => {
     log(context, 'Module initialized');
-    await initializeLoginPage({ registry: new Map() });
+    await initializePartnerPage(context);
     hideOverlay();
 });

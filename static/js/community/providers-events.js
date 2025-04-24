@@ -6,7 +6,7 @@ import { renderSettings } from '../utils/settings-renderer.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 import { renderMarkdownContent } from '../utils/form-rendering.js';
 import { setupProviderEvents } from './providers-handlers.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Renders provider settings and sets up event listeners.

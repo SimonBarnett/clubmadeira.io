@@ -6,7 +6,7 @@ import { parsePageType } from '../utils/initialization.js';
 import { withAuthenticatedUser } from '../utils/auth.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Sets up a page with role-based navigation and user authentication.

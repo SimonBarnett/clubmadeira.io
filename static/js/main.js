@@ -5,7 +5,7 @@ import { log } from './core/logger.js';
 import { withErrorHandling } from './utils/error.js';
 import { PAGE_MODULES } from './config/pages.js';
 import { ERROR_MESSAGES } from './config/messages.js';
-import { withScriptLogging } from './utils/initialization.js';
+import { withScriptLogging } from './utils/logging-utils.js';
 import { createModuleInitializer } from './utils/initialization.js';
 
 /**
@@ -34,7 +34,6 @@ export async function initializeCoreModules() {
     await withErrorHandling(`${context}:initializeCoreModules`, async () => {
         // Initialize logger
         const loggerModule = await import('./core/logger.js');
-        await loggerModule.initializeLogger();
         registerModule('logger', loggerModule.initializeLoggerModule(moduleRegistry));
 
         // Initialize cookies

@@ -4,7 +4,7 @@ import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setCookie } from '../core/cookies.js';
 import { setAuthToken } from '../core/auth.js';
 import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the login form in the welcome section.

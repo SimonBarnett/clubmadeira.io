@@ -7,7 +7,7 @@ import { fetchData } from '../utils/data-fetch.js';
 import { success } from '../core/notifications.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Sets up event listeners for API key form submissions.

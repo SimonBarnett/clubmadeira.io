@@ -6,7 +6,7 @@ import { fetchData } from '../utils/data-fetch.js';
 import { withErrorHandling } from '../utils/error.js';
 import { validateUserId } from '../utils/auth.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 // Module-scoped state for cumulative deselections

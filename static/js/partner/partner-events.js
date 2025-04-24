@@ -7,7 +7,7 @@ import { submitConfiguredForm } from '../utils/form-submission.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**

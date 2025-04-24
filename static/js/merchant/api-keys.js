@@ -9,7 +9,7 @@ import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
 import { notifyError } from '../core/notifications.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads and renders API keys data.

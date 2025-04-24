@@ -4,7 +4,7 @@
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { initializeDealsOrchestrator } from './deals-orchestrator.js';
 import { initializeUsersOrchestrator } from './users-orchestrator.js';
 import { initializeSettingsOrchestrator } from './settings-orchestrator.js';

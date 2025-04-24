@@ -6,7 +6,7 @@ import { withErrorHandling } from '../utils/error.js';
 import { notifyOperationResult } from '../core/notifications.js';
 import { renderDataTable } from '../utils/ui-components.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Updates the visits table with the provided data.

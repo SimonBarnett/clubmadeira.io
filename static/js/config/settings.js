@@ -3,7 +3,7 @@
 
 import { log } from '../core/logger.js';
 import { API_ENDPOINTS } from './endpoints.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Settings configuration registry for admin and provider settings.

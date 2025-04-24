@@ -1,6 +1,6 @@
 // /static/js/config/menus.js
 import { log } from '../core/logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { ROLES } from './roles.js';
 
 log('menus.js', 'ROLES at import:', ROLES, 'ROLES.login:', ROLES.login);

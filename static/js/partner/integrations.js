@@ -7,7 +7,7 @@ import { ERROR_MESSAGES } from '../config/messages.js';
 import { loadIntegrations } from './integrations-data.js';
 import { renderIntegrations } from './integrations-ui.js';
 import { setupPartnerEvents } from './partner-events.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads and renders integration settings.

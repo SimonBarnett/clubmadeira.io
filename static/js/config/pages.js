@@ -2,7 +2,7 @@
 // Purpose: Maps page types to their corresponding module paths for dynamic imports in main.js.
 
 import { log } from '../core/logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Page module mappings for dynamic imports.

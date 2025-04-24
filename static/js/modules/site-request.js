@@ -10,7 +10,7 @@ import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
 import { initializeTinyMCE } from '../core/mce.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the site request form, including loading data and setting up event listeners.

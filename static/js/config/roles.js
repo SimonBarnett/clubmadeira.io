@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { setAuthToken } from '../core/auth.js'; // Use setAuthToken from core/auth.js
 import { authenticatedFetch } from '../core/auth.js'; // authenticatedFetch is in utils/auth.js
 import { withErrorHandling } from '../utils/error.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 const context = 'roles.js';
 

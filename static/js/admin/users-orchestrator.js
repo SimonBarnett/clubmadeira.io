@@ -8,7 +8,7 @@ import { setupAdminEvents } from './admin-events.js';
 import { getElements } from '../utils/dom-manipulation.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**

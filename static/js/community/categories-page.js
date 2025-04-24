@@ -4,14 +4,14 @@
 import { log } from '../core/logger.js';
 import { loadCategories } from './categories-data.js';
 import { renderCategoriesSection } from './categories-ui.js';
-import { setupCategoryEvents } from './categories-events.js'; // Updated to reference correct file
+import { setupCategoryEvents } from './categories-events.js';
 import { withAuthenticatedUser } from '../utils/auth.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
 import { getElements } from '../utils/dom-manipulation.js';
-import { initializeTinyMCE } from '../core/mce.js'; // Added for TinyMCE
+import { initializeTinyMCE } from '../core/mce.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
 import { withErrorHandling } from '../utils/error.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the categories page.

@@ -46,6 +46,7 @@
 +----[login]
 +------forgot-password.js
 +------login.js
++------set-password.js
 +------signup.js
 +----login-page.js
 +----main.js
@@ -84,13 +85,15 @@
 +------form-validation.js
 +------icons.js
 +------initialization.js
++------logging-utils.js
 +------settings-data.js
 +------settings-events.js
 +------settings-renderer.js
 +------settings-ui.js
 +------ui-components.js
 
-admin/admin-events.js
+admin/admin-events.js
+
 // /static/js/admin/admin-events.js
 // Purpose: Centralizes event listener setup for the admin page.
 
@@ -98,7 +101,7 @@ import { log } from '../core/logger.js';
 import { registerEvents } from '../utils/event-listeners.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -139,8 +142,10 @@ export function initializeAdminEventsModule(registry) {
 const context = 'admin-events.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/deals-orchestrator.js
+});
+
+admin/deals-orchestrator.js
+
 // /static/js/admin/deals-orchestrator.js
 // Purpose: Orchestrates deals feature initialization for the admin interface.
 
@@ -149,7 +154,7 @@ import { loadDeals } from './deals.js';
 import { getElements } from '../utils/dom-manipulation.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -180,8 +185,10 @@ export function initializeDealsOrchestratorModule(registry) {
 const context = 'deals-orchestrator.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/deals.js
+});
+
+admin/deals.js
+
 // /static/js/admin/deals.js
 // Purpose: Manages deals data, including fetching and rendering deals in a table.
 
@@ -191,7 +198,7 @@ import { load as dataLoaderLoad } from '../modules/dataLoader.js';
 import { fetchData } from '../utils/data-fetch.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
 import { renderDataTable } from '../utils/ui-components.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Fetches and renders deals data in a table.
@@ -271,15 +278,17 @@ export function initializeDealsModule(registry) {
 const context = 'deals.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/initializer.js
+});
+
+admin/initializer.js
+
 // /static/js/admin/initializer.js
 // Purpose: Coordinates initialization of admin feature-specific orchestrators.
 
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { initializeDealsOrchestrator } from './deals-orchestrator.js';
 import { initializeUsersOrchestrator } from './users-orchestrator.js';
 import { initializeSettingsOrchestrator } from './settings-orchestrator.js';
@@ -320,8 +329,10 @@ export function initializeInitializerModule(registry) {
 const context = 'initializer.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/navigation.js
+});
+
+admin/navigation.js
+
 // /static/js/admin/navigation.js
 import { log } from '../core/logger.js';
 import { defineSectionHandlers } from '../modules/navigation.js';
@@ -329,7 +340,7 @@ import { loadDeals } from './deals.js';
 import { initializeUserManagement } from './users-orchestrator.js';
 import { loadAdminSettings } from './settings.js';
 import { initializeAdminModules } from './initializer.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 
 /**
@@ -403,8 +414,10 @@ export function initializeNavigationModule(registry) {
 const context = 'navigation.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/settings-orchestrator.js
+});
+
+admin/settings-orchestrator.js
+
 // /static/js/admin/settings-orchestrator.js
 // Purpose: Orchestrates settings feature initialization for affiliates, site settings, and API keys in the admin interface.
 
@@ -412,7 +425,7 @@ import { log } from '../core/logger.js';
 import { loadAdminSettings } from './settings.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -445,8 +458,10 @@ export function initializeSettingsOrchestratorModule(registry) {
 const context = 'settings-orchestrator.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/settings.js
+});
+
+admin/settings.js
+
 // /static/js/admin/settings.js
 // Purpose: Manages loading of admin settings for affiliates, API keys, and site settings.
 
@@ -454,7 +469,7 @@ import { log } from '../core/logger.js';
 import { renderSettingsForm } from '../utils/settings-renderer.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
 import { SETTINGS } from '../config/settings.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -488,8 +503,10 @@ export function initializeSettingsModule(registry) {
 const context = 'settings.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/users-data.js
+});
+
+admin/users-data.js
+
 // /static/js/admin/users-data.js
 // Purpose: Manages user data fetching and permission updates for the admin interface.
 
@@ -497,7 +514,7 @@ import { authenticatedFetch } from '../core/auth.js';
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Fetches user data for a specific role.
@@ -582,8 +599,10 @@ export function initializeUsersDataModule(registry) {
 const context = 'users-data.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/users-orchestrator.js
+});
+
+admin/users-orchestrator.js
+
 // /static/js/admin/users-orchestrator.js
 // Purpose: Orchestrates user management for the admin interface, coordinating data, UI, and events.
 
@@ -594,7 +613,7 @@ import { setupAdminEvents } from './admin-events.js';
 import { getElements } from '../utils/dom-manipulation.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -628,8 +647,10 @@ export function initializeUsersOrchestratorModule(registry) {
 const context = 'users-orchestrator.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin/users-ui.js
+});
+
+admin/users-ui.js
+
 // /static/js/admin/users-ui.js
 // Purpose: Manages UI rendering for user management in the admin interface.
 
@@ -638,7 +659,7 @@ import { toggleViewState } from '../utils/dom-manipulation.js';
 import { success, error as notifyError } from '../core/notifications.js';
 import { renderCheckboxList, renderDataTable, renderModal } from '../utils/ui-components.js';
 import { ROLES, SUCCESS_MESSAGES, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Renders user data in a table.
@@ -753,7 +774,7 @@ export async function renderPermissionsModal(context, userId, userData, role, fo
 
 /**
  * Initializes the users UI module for use with the module registry.
- * @param {Object} registry - The cdecl module registry instance.
+ * @param {Object} registry - The module registry instance.
  * @returns {Object} Users UI instance with public methods.
  */
 export function initializeUsersUiModule(registry) {
@@ -769,17 +790,171 @@ export function initializeUsersUiModule(registry) {
 const context = 'users-ui.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-admin-page.js
+});
+
+admin-page.js
+
 // /static/js/admin-page.js
 // Purpose: Orchestrates the admin page, coordinating navigation, events, and module initialization.
 const context = 'admin-page.js';
 import { log } from './core/logger.js';
-import { parsePageType, initializeRolePage } from './utils/initialization.js';
-import { defineAdminSectionHandlers } from './admin/navigation.js';
+import { parsePageType, hideOverlay } from './utils/initialization.js';
+import { withScriptLogging } from './utils/logging-utils.js';
+import { initializeRoleNavigation } from './admin/navigation.js';
+import { ROLES } from './config/menus.js';
 import { setupAdminEvents } from './admin/admin-events.js';
 import { initializeAdminModules } from './admin/initializer.js';
-import { withScriptLogging ,hideOverlay} from './utils/initialization.js';
+
+/**
+ * Defines section handlers for the admin role.
+ * @param {string} context - The context or module name.
+ * @returns {Object} Section handlers for admin sections.
+ */
+function defineAdminSectionHandlers(context) {
+    log(context, 'Defining section handlers for admin role');
+    return {
+        info: (show) => {
+            const infoSection = document.getElementById('info');
+            if (infoSection) {
+                infoSection.style.display = show ? 'block' : 'none';
+                const userIdInput = document.getElementById('userId');
+                if (userIdInput && document.getElementById('user-contact-name')) {
+                    document.getElementById('user-contact-name').innerText = userIdInput.value;
+                }
+            } else {
+                log(context, 'Warning: info section not found', 'warn');
+            }
+        },
+        userManagementIntro: (show) => {
+            const section = document.getElementById('userManagementIntro');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: userManagementIntro section not found', 'warn');
+            }
+        },
+        user_management: (show) => {
+            const section = document.getElementById('user_management');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: user_management section not found', 'warn');
+            }
+        },
+        deals: (show) => {
+            const section = document.getElementById('deals');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: deals section not found', 'warn');
+            }
+        },
+        testScriptsIntro: (show) => {
+            const section = document.getElementById('testScriptsIntro');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: testScriptsIntro section not found', 'warn');
+            }
+        },
+        referralTestsIntro: (show) => {
+            const section = document.getElementById('referralTestsIntro');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: referralTestsIntro section not found', 'warn');
+            }
+        },
+        page_visit_test: (show) => {
+            const section = document.getElementById('page_visit_test');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: page_visit_test section not found', 'warn');
+            }
+        },
+        order_test: (show) => {
+            const section = document.getElementById('order_test');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: order_test section not found', 'warn');
+            }
+        },
+        test_partner: (show) => {
+            const section = document.getElementById('test_partner');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: test_partner section not found', 'warn');
+            }
+        },
+        test_merchant: (show) => {
+            const section = document.getElementById('test_merchant');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: test_merchant section not found', 'warn');
+            }
+        },
+        test_community: (show) => {
+            const section = document.getElementById('test_community');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: test_community section not found', 'warn');
+            }
+        },
+        api_keys: (show) => {
+            const section = document.getElementById('api_keys');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: api_keys section not found', 'warn');
+            }
+        },
+        site_settings: (show) => {
+            const section = document.getElementById('site_settings');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: site_settings section not found', 'warn');
+            }
+        },
+        settings: (show) => {
+            const section = document.getElementById('settings');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: settings section not found', 'warn');
+            }
+        },
+        my_account: (show) => {
+            const section = document.getElementById('my-account');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: my-account section not found', 'warn');
+            }
+        },
+        contact_details: (show) => {
+            const section = document.getElementById('contact-details');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: contact-details section not found', 'warn');
+            }
+        },
+        change_password: (show) => {
+            const section = document.getElementById('change-password');
+            if (section) {
+                section.style.display = show ? 'block' : 'none';
+            } else {
+                log(context, 'Warning: change-password section not found', 'warn');
+            }
+        }
+    };
+}
 
 /**
  * Initializes the admin page.
@@ -787,13 +962,45 @@ import { withScriptLogging ,hideOverlay} from './utils/initialization.js';
  * @returns {Promise<void>}
  */
 export async function initializeAdminPage(context) {
-  log(context, 'Initializing admin page');
-  const pageType = parsePageType(context, 'page', 'deals');
-  await initializeRolePage(context, 'admin', pageType, async () => {
-    defineAdminSectionHandlers(context);
-    initializeAdminModules(context);
-    setupAdminEvents(context);
-  });
+    log(context, 'Initializing admin page');
+    const pageType = parsePageType(context, 'page', 'info'); // Default to 'info' for admin
+    log(context, `Parsed page type: ${pageType}`);
+
+    // Ensure admin role and menu are defined
+    const role = 'admin';
+    const menu = ROLES.admin?.menu || [];
+    if (!menu.length) {
+        log(context, 'Error: Admin menu not defined', 'error');
+        return;
+    }
+    log(context, 'Menu retrieved for role admin:', menu);
+
+    // Define section handlers
+    const sectionHandlers = defineAdminSectionHandlers(context);
+    log(context, 'Section handlers defined:', Object.keys(sectionHandlers));
+
+    // Initialize navigation
+    await initializeRoleNavigation(role, menu, sectionHandlers, pageType);
+    log(context, 'Navigation initialized for admin role');
+
+    // Initialize admin-specific modules
+    await initializeAdminModules(context);
+    log(context, 'Admin modules initialized');
+
+    // Setup admin-specific events
+    await setupAdminEvents(context);
+    log(context, 'Admin events setup');
+
+    // Show layout and hide overlay
+    const layoutWrapper = document.querySelector('.layout-wrapper');
+    if (layoutWrapper) {
+        layoutWrapper.style.display = 'block';
+        log(context, 'Layout wrapper displayed');
+    } else {
+        log(context, 'Warning: Layout wrapper not found', 'warn');
+    }
+    await hideOverlay();
+    log(context, 'Loading overlay hidden');
 }
 
 /**
@@ -802,20 +1009,22 @@ export async function initializeAdminPage(context) {
  * @returns {Object} AdminPage instance with public methods.
  */
 export function initializeAdminPageModule(registry) {
-  const context = 'admin-page.js';
-  log(context, 'Initializing admin-page module for module registry');
-  return {
-    initializeAdminPage: ctx => initializeAdminPage(ctx),
-  };
+    const context = 'admin-page.js';
+    log(context, 'Initializing admin-page module for module registry');
+    return {
+        initializeAdminPage: ctx => initializeAdminPage(ctx || context),
+    };
 }
 
 // Initialize module with lifecycle logging
 withScriptLogging(context, async () => {
+    log(context, 'Starting module initialization');
+    await initializeAdminPage(context);
     log(context, 'Module initialized');
-    await initializeLoginPage({ registry: new Map() });
-    hideOverlay();
-});
-community/categories-data.js
+});
+
+community/categories-data.js
+
 // /static/js/community/categories-data.js
 // Purpose: Manages data fetching, updates, and validation for the community categories page.
 
@@ -824,7 +1033,7 @@ import { fetchData } from '../utils/data-fetch.js';
 import { withErrorHandling } from '../utils/error.js';
 import { validateUserId } from '../utils/auth.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 // Module-scoped state for cumulative deselections
@@ -989,8 +1198,10 @@ export function initializeCategoriesDataModule(registry) {
 const context = 'categories-data.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community/categories-events.js
+});
+
+community/categories-events.js
+
 // /static/js/community/categories-events.js
 // Purpose: Manages event listeners for category form interactions on the community categories page.
 
@@ -1003,7 +1214,7 @@ import { withElement } from '../utils/dom-manipulation.js';
 import { notifyOperationResult } from '../core/notifications.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -1103,14 +1314,16 @@ export function initializeCategoriesEventsModule(registry) {
 const context = 'categories-events.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community/categories-navigation.js
+});
+
+community/categories-navigation.js
+
 // /static/js/community/categories-navigation.js
 import { log } from '../core/logger.js';
 import { defineSectionHandlers } from '../modules/navigation.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 
 /**
@@ -1173,22 +1386,24 @@ export function initializeCategoriesNavigationModule(registry) {
 const context = 'categories-navigation.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community/categories-page.js
+});
+
+community/categories-page.js
+
 // /static/js/community/categories-page.js
 // Purpose: Orchestrates the community categories page by coordinating data, UI, and event handling.
 
 import { log } from '../core/logger.js';
 import { loadCategories } from './categories-data.js';
 import { renderCategoriesSection } from './categories-ui.js';
-import { setupCategoryEvents } from './categories-events.js'; // Updated to reference correct file
+import { setupCategoryEvents } from './categories-events.js';
 import { withAuthenticatedUser } from '../utils/auth.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
 import { getElements } from '../utils/dom-manipulation.js';
-import { initializeTinyMCE } from '../core/mce.js'; // Added for TinyMCE
+import { initializeTinyMCE } from '../core/mce.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
 import { withErrorHandling } from '../utils/error.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the categories page.
@@ -1227,8 +1442,10 @@ export function initializeCategoriesPageModule(registry) {
 const context = 'categories-page.js';
 withScriptLogging(context, () => {
   initializeCategoriesPage(context);
-});
-community/categories-ui.js
+});
+
+community/categories-ui.js
+
 // /static/js/community/categories-ui.js
 // Purpose: Manages UI rendering for the community categories page.
 
@@ -1238,7 +1455,7 @@ import { success, error as notifyError } from '../core/notifications.js';
 import { renderForm } from '../utils/form-rendering.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
 import { getFormConfig } from '../config/form-configs.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Validates categories data structure.
@@ -1333,8 +1550,10 @@ export function initializeCategoriesUiModule(registry) {
 const context = 'categories-ui.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community/community-providers.js
+});
+
+community/community-providers.js
+
 // /static/js/community/community-providers.js
 // Purpose: Initializes the community providers sub-page.
 
@@ -1344,8 +1563,8 @@ import { withAuthenticatedUser } from '../utils/auth.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
 import { initializeProvidersPage } from './providers-page.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
-import { setupCollapsibleSections } from '../utils/dom-manipulation.js'; // Added for collapsible sections
-import { withScriptLogging } from '../utils/initialization.js';
+import { setupCollapsibleSections } from '../utils/dom-manipulation.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the community providers page.
@@ -1360,7 +1579,7 @@ export function initializeProviders(context) {
       if (userIdInput) userIdInput.value = userId;
       setupCategoriesNavigation(context, 'community', 'providers');
       initializeProvidersPage(context);
-      setupCollapsibleSections(context); // Replaced window.setupCollapsibleSections
+      setupCollapsibleSections(context);
     });
   }, ERROR_MESSAGES.FETCH_FAILED('providers page initialization'));
 }
@@ -1382,8 +1601,10 @@ export function initializeCommunityProvidersModule(registry) {
 const context = 'community-providers.js';
 withScriptLogging(context, () => {
   initializeProviders(context);
-});
-community/providers-data.js
+});
+
+community/providers-data.js
+
 // /static/js/community/providers-data.js
 // Purpose: Manages data fetching for provider settings on the community providers page.
 
@@ -1391,7 +1612,7 @@ import { log } from '../core/logger.js';
 import { fetchData } from '../utils/data-fetch.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads client API settings from the server, with a fallback to hardcoded defaults.
@@ -1485,8 +1706,10 @@ export function initializeProvidersDataModule(registry) {
 const context = 'providers-data.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community/providers-events.js
+});
+
+community/providers-events.js
+
 // /static/js/community/providers-events.js
 // Purpose: Manages UI rendering and event setup for the community providers page.
 
@@ -1495,7 +1718,7 @@ import { renderSettings } from '../utils/settings-renderer.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 import { renderMarkdownContent } from '../utils/form-rendering.js';
 import { setupProviderEvents } from './providers-handlers.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Renders provider settings and sets up event listeners.
@@ -1547,8 +1770,10 @@ export function initializeProvidersEventsModule(registry) {
 const context = 'providers-events.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community/providers-handlers.js
+});
+
+community/providers-handlers.js
+
 // /static/js/community/providers-handlers.js
 // Purpose: Manages event listeners for provider form interactions on the community providers page.
 
@@ -1558,7 +1783,7 @@ import { submitConfiguredForm } from '../utils/form-submission.js';
 import { renderProviderSettings } from './providers-events.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -1622,8 +1847,10 @@ export function initializeProvidersHandlersModule(registry) {
 const context = 'providers-handlers.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community/providers-page.js
+});
+
+community/providers-page.js
+
 // /static/js/community/providers-page.js
 // Purpose: Orchestrates the community providers sub-page.
 
@@ -1634,9 +1861,9 @@ import { ERROR_MESSAGES } from '../config/messages.js';
 import { loadClientApiSettings } from './providers-data.js';
 import { renderProviderSettings } from './providers-events.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
-import { setupCollapsibleSections } from '../utils/dom-manipulation.js'; // Added for collapsible sections
-import { initializeTinyMCE } from '../core/mce.js'; // Added for TinyMCE
-import { withScriptLogging } from '../utils/initialization.js';
+import { setupCollapsibleSections } from '../utils/dom-manipulation.js';
+import { initializeTinyMCE } from '../core/mce.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the community providers page.
@@ -1652,8 +1879,8 @@ export async function initializeProvidersPage(context) {
       if (userIdInput) userIdInput.value = userId;
       const settings = await loadClientApiSettings(context);
       await renderProviderSettings(context, settings, 'providerIconsBar');
-      setupCollapsibleSections(context); // Replaced window.setupCollapsibleSections
-      await initializeTinyMCE(context, '#aboutCommunity, #stylingDetails, #page1Content'); // Added TinyMCE
+      setupCollapsibleSections(context);
+      await initializeTinyMCE(context, '#aboutCommunity, #stylingDetails, #page1Content');
     }, ERROR_MESSAGES.FETCH_FAILED('providers page initialization'));
   });
 }
@@ -1675,8 +1902,10 @@ export function initializeProvidersPageModule(registry) {
 const context = 'providers-page.js';
 withScriptLogging(context, () => {
   initializeProvidersPage(context);
-});
-community/referrals-data.js
+});
+
+community/referrals-data.js
+
 // /static/js/community/referrals-data.js
 // Purpose: Manages data fetching and processing for the community referrals page.
 
@@ -1684,7 +1913,7 @@ import { log } from '../core/logger.js';
 import { authenticatedFetch } from '../core/auth.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Processes visits and orders data, splitting them by time periods.
@@ -1711,7 +1940,7 @@ export async function processVisitsAndOrders(context, userId) {
       const visitDate = new Date(visit.timestamp);
       if (visitDate.getFullYear() === thisYear && visitDate.getMonth() === thisMonth) {
         visits.thisMonth.push(visit);
-      } else if (
+ FAMILY      } else if (
         (visitDate.getFullYear() === thisYear && visitDate.getMonth() === thisMonth - 1) ||
         (visitDate.getFullYear() === thisYear - 1 && thisMonth === 0 && visitDate.getMonth() === 11)
       ) {
@@ -1799,8 +2028,10 @@ export function initializeReferralsDataModule(registry) {
 const context = 'referrals-data.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community/referrals-page.js
+});
+
+community/referrals-page.js
+
 // /static/js/community/referrals-page.js
 // Purpose: Orchestrates the community referrals page by coordinating data and UI updates.
 
@@ -1811,8 +2042,8 @@ import { ERROR_MESSAGES } from '../config/messages.js';
 import { processVisitsAndOrders } from './referrals-data.js';
 import { updateVisitsTable, updateOrdersTable } from './referrals-ui.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
-import { setupCollapsibleSections } from '../utils/dom-manipulation.js'; // Added for collapsible sections
-import { withScriptLogging } from '../utils/initialization.js';
+import { setupCollapsibleSections } from '../utils/dom-manipulation.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the referrals page.
@@ -1827,7 +2058,7 @@ export async function initializeReferralsPage(context) {
       const { visits, orders } = await processVisitsAndOrders(context, userId);
       updateVisitsTable(context, { visits });
       updateOrdersTable(context, { orders });
-      setupCollapsibleSections(context); // Replaced window.setupCollapsibleSections
+      setupCollapsibleSections(context);
     }, ERROR_MESSAGES.FETCH_FAILED('referrals page initialization'));
   });
 }
@@ -1849,8 +2080,10 @@ export function initializeReferralsPageModule(registry) {
 const context = 'referrals-page.js';
 withScriptLogging(context, () => {
   initializeReferralsPage(context);
-});
-community/referrals-ui.js
+});
+
+community/referrals-ui.js
+
 // /static/js/community/referrals-ui.js
 // Purpose: Manages UI rendering for the community referrals page, including visits and orders tables.
 
@@ -1859,7 +2092,7 @@ import { withErrorHandling } from '../utils/error.js';
 import { notifyOperationResult } from '../core/notifications.js';
 import { renderDataTable } from '../utils/ui-components.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Updates the visits table with the provided data.
@@ -1966,18 +2199,20 @@ export function initializeReferralsUiModule(registry) {
 const context = 'referrals-ui.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-community-page.js
+});
+
+community-page.js
+
 // /static/js/community-page.js
 // Purpose: Orchestrates the community page, coordinating navigation, events, and module initialization.
 const context = 'community-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
+import { withScriptLogging, hideOverlay } from './utils/logging-utils.js';
 import { setupCategoriesNavigation } from './community/categories-navigation.js';
 import { initializeCategoriesPage } from './community/categories-page.js';
 import { initializeProvidersPage } from './community/providers-page.js';
 import { initializeReferralsPage } from './community/referrals-page.js';
-import { withScriptLogging ,hideOverlay } from './utils/initialization.js';
 
 /**
  * Initializes the community page.
@@ -2021,19 +2256,24 @@ export function initializeCommunityPageModule(registry) {
 // Initialize module with lifecycle logging
 withScriptLogging(context, async () => {
     log(context, 'Module initialized');
-    await initializeLoginPage({ registry: new Map() });
+    await initializeCommunityPage(context);
     hideOverlay();
-});
-config/constants.js
+});
+
+config/constants.js
+
 // /static/js/config/constants.js
-// Purpose: Defines centralized constants for the application.
+// Purpose: Centralizes constants for the application by re-exporting from other modules.
 
 import { log } from '../core/logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
+import { API_ENDPOINTS } from './endpoints.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from './messages.js';
 
 const context = 'constants.js';
 
-// No ERROR_MESSAGES or SUCCESS_MESSAGES here; they are now in messages.js
+// Export the constants for use in other modules
+export { API_ENDPOINTS, ERROR_MESSAGES, SUCCESS_MESSAGES };
 
 /**
  * Initializes the constants module for use with the module registry.
@@ -2042,19 +2282,25 @@ const context = 'constants.js';
  */
 export function initializeConstantsModule(registry) {
     log(context, 'Initializing constants module for module registry');
-    return {};
+    return {
+        API_ENDPOINTS,
+        ERROR_MESSAGES,
+        SUCCESS_MESSAGES,
+    };
 }
 
 // Initialize module with lifecycle logging
 withScriptLogging(context, () => {
     log(context, 'Module initialized');
-});
-config/endpoints.js
+});
+
+config/endpoints.js
+
 // /static/js/config/endpoints.js
 // Purpose: Defines API endpoints for the application, centralizing all API routes for consistent usage.
 
 import { log } from '../core/logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * API endpoint definitions with parameterized routes where applicable.
@@ -2121,17 +2367,21 @@ export function initializeEndpoints() {
   withScriptLogging('endpoints.js', () => {
     log('endpoints.js', 'Module initialized');
   });
-}
-config/form-configs.js
+}
+
+config/form-configs.js
+
 // /static/js/config/form-configs.js
 import { log } from '../core/logger.js';
-import { validateRequiredFields, validatePassword, validatePhoneNumber } from '../utils/form-validation.js';
+import { validatePhoneNumber } from '../utils/form-submission.js';
+import { isValidEmail } from '../utils/form-validation-utils.js';
 import { renderStyles } from '../utils/form-rendering.js';
 import { renderCheckboxList } from '../utils/ui-components.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from './messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
-import { isValidEmail } from '../utils/form-validation-utils.js';
+
+const context = 'form-configs.js';
 
 /**
  * Generates fields for a category form based on provided data.
@@ -2223,6 +2473,7 @@ function getCategoriesFormConfig(context, options = {}) {
       ...generateCategoryFields(context, { defaults, category }),
       ...generateCategoryCustomFields(context, { customFields }),
     ],
+    requiresAuth: true,
   };
 }
 
@@ -2288,107 +2539,129 @@ const FORM_CONFIGS = {
         ],
       },
     ],
+    requiresAuth: false,
+  },
+  setPassword: {
+    id: 'setPasswordForm',
+    action: '/complete-signup',
+    method: 'POST',
+    submitButtonText: 'Set Password',
+    successMessage: 'Password set successfully!',
+    transform: formData => ({
+      email: formData.get('email')?.trim(),
+      password: formData.get('password'),
+      confirm_password: formData.get('confirm_password'),
+      set_password: formData.get('set_password'),
+    }),
+    validate: formData => {
+      try {
+        const email = formData.get('email')?.trim();
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirm_password');
+        return (
+          !!email &&
+          isValidEmail('setPassword', email) &&
+          !!password &&
+          password === confirmPassword
+        );
+      } catch (err) {
+        throw new Error(err.message || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
+      }
+    },
+    validationError: 'Please enter a valid email and ensure passwords match.',
+    fetchOptions: {
+      headers: { 'Content-Type': 'application/json' },
+    },
+    fields: [
+      {
+        type: 'email',
+        name: 'email',
+        label: 'Email',
+        required: true,
+        attributes: { id: 'email', autocomplete: 'off' },
+      },
+      {
+        type: 'password',
+        name: 'password',
+        label: 'Password',
+        required: true,
+        attributes: { id: 'password', placeholder: 'Enter your password', autocomplete: 'new-password' },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+      {
+        type: 'password',
+        name: 'confirm_password',
+        label: 'Confirm Password',
+        required: true,
+        attributes: { id: 'confirmPassword', placeholder: 'Confirm your password', autocomplete: 'new-password' },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+      {
+        type: 'hidden',
+        name: 'set_password',
+        value: 'true',
+      },
+    ],
+    requiresAuth: false,
   },
   signup: {
     id: 'signupForm',
     action: '/signup',
     method: 'POST',
     submitButtonText: 'Sign Me Up',
-    successMessage: 'Signup successful! Please verify OTP.',
+    successMessage: 'Signup submitted successfully!',
     transform: formData => ({
       signup_type: formData.get('signup_type')?.trim(),
-      contact_name: formData.get('contact_name')?.trim(),
-      phone_number: formData.get('signup_phone')?.trim(),
-      email: formData.get('signup_email')?.trim(),
-      password: formData.get('signup_password'),
     }),
     validate: formData => {
+      log(context, 'Validating signup form, formData type:', formData.constructor.name);
       try {
-        return (
-          !!formData.get('signup_type')?.trim() &&
-          !!formData.get('contact_name')?.trim() &&
-          validatePhoneNumber('signup', formData.get('signup_phone')) &&
-          !!formData.get('signup_email')?.trim() &&
-          isValidEmail('signup', formData.get('signup_email')) &&
-          !!formData.get('signup_password') &&
-          formData.get('signup_password') === formData.get('signup_confirm_password')
-        );
+        return !!formData.get('signup_type')?.trim();
       } catch (err) {
         throw new Error(err.message || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
       }
     },
-    validationError: 'Please complete all fields correctly and ensure passwords match.',
+    validationError: 'Please select a signup type.',
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
     fields: [
       {
-        type: 'text',
+        type: 'radio',
         name: 'signup_type',
         label: 'Signup Type',
         required: true,
         attributes: { id: 'signup_type', autocomplete: 'off' },
-      },
-      {
-        type: 'text',
-        name: 'contact_name',
-        label: 'Contact Name',
-        required: true,
-        attributes: { id: 'contact_name', autocomplete: 'off' },
-      },
-      {
-        type: 'tel',
-        name: 'signup_phone',
-        label: 'Phone Number',
-        required: true,
-        attributes: { id: 'signup_phone', autocomplete: 'off', pattern: '[0-9]{10}', title: 'Please enter a 10-digit phone number' },
-      },
-      {
-        type: 'email',
-        name: 'signup_email',
-        label: 'Email',
-        required: true,
-        attributes: { id: 'signup_email', autocomplete: 'off' },
-      },
-      {
-        type: 'password',
-        name: 'signup_password',
-        label: 'Password',
-        required: true,
-        attributes: { id: 'signup_password', autocomplete: 'new-password' },
-        wrapper: {
-          class: 'password-wrapper',
-          style: 'position: relative; width: 100%;',
-        },
-        extraButtons: [
-          {
-            type: 'button',
-            text: '<i class="fas fa-eye"></i>',
-            className: 'toggle-password',
-            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
-          },
-        ],
-      },
-      {
-        type: 'password',
-        name: 'signup_confirm_password',
-        label: 'Confirm Password',
-        required: true,
-        attributes: { id: 'signup_confirm_password', autocomplete: 'new-password' },
-        wrapper: {
-          class: 'password-wrapper',
-          style: 'position: relative; width: 100%;',
-        },
-        extraButtons: [
-          {
-            type: 'button',
-            text: '<i class="fas fa-eye"></i>',
-            className: 'toggle-password',
-            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
-          },
+        options: [
+          { value: 'community', label: 'Community' },
+          { value: 'seller', label: 'Merchant' },
+          { value: 'partner', label: 'Partner' },
         ],
       },
     ],
+    requiresAuth: false,
   },
   forgotPassword: {
     id: 'forgotPasswordForm',
@@ -2419,25 +2692,26 @@ const FORM_CONFIGS = {
         attributes: { id: 'forgotEmail', autocomplete: 'off' },
       },
     ],
+    requiresAuth: false,
   },
   verifyOtp: {
     id: 'verifyOtpForm',
-    action: '/verify-reset-code',
+    action: '/verify-signup-otp',
     method: 'POST',
-    submitButtonText: 'Update Password',
-    successMessage: 'Password updated successfully!',
+    submitButtonText: 'Set Password',
+    successMessage: 'Password set successfully!',
     transform: formData => ({
       email: formData.get('email')?.trim(),
-      code: formData.get('code')?.trim(),
+      otp: formData.get('otp')?.trim(),
       new_password: formData.get('new_password'),
-      confirm_new_password: formData.get('confirm_new_password'),
+      otp_token: formData.get('otp_token'),
     }),
     validate: formData => {
       try {
         return (
           !!formData.get('email')?.trim() &&
           isValidEmail('verifyOtp', formData.get('email')) &&
-          !!formData.get('code')?.trim() &&
+          !!formData.get('otp')?.trim() &&
           !!formData.get('new_password') &&
           formData.get('new_password') === formData.get('confirm_new_password')
         );
@@ -2459,10 +2733,10 @@ const FORM_CONFIGS = {
       },
       {
         type: 'text',
-        name: 'code',
+        name: 'otp',
         label: 'One-Time Password',
         required: true,
-        attributes: { id: 'otpCode' },
+        attributes: { id: 'otpCode', autocomplete: 'off' },
       },
       {
         type: 'password',
@@ -2502,37 +2776,13 @@ const FORM_CONFIGS = {
           },
         ],
       },
-    ],
-  },
-  verifySignupOtp: {
-    id: 'signupOtpSection',
-    action: '/verify-reset-code',
-    method: 'POST',
-    submitButtonText: 'Verify OTP',
-    successMessage: 'OTP verified successfully!',
-    transform: formData => ({
-      otp: formData.get('otp')?.trim(),
-    }),
-    validate: formData => {
-      try {
-        return !!formData.get('otp')?.trim();
-      } catch (err) {
-        throw new Error(err.message || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
-      }
-    },
-    validationError: 'Please enter a valid OTP.',
-    fetchOptions: {
-      headers: { 'Content-Type': 'application/json' },
-    },
-    fields: [
       {
-        type: 'text',
-        name: 'otp',
-        label: 'Enter OTP',
-        required: true,
-        attributes: { id: 'signupOtp' },
+        type: 'hidden',
+        name: 'otp_token',
+        attributes: { id: 'otpToken' },
       },
     ],
+    requiresAuth: false,
   },
   userSettings: {
     id: 'userSettingsForm',
@@ -2584,6 +2834,7 @@ const FORM_CONFIGS = {
         attributes: { id: 'phone_number' },
       },
     ],
+    requiresAuth: true,
   },
   categories: getCategoriesFormConfig,
 };
@@ -2594,16 +2845,24 @@ const FORM_CONFIGS = {
  * @param {string} configKey - The key for the form configuration (e.g., 'login', 'categories').
  * @param {Object} [options={}] - Dynamic options to merge with the configuration.
  * @returns {Object} The form configuration.
- * @throws {Error} If the configKey is invalid.
  */
 export function getFormConfig(context, configKey, options = {}) {
   log(context, `Retrieving form config for key: ${configKey}`);
+  if (!configKey || typeof configKey !== 'string') {
+    log(context, `Invalid form configuration key: ${configKey}`);
+    return {};
+  }
   const config = FORM_CONFIGS[configKey];
   if (!config) {
-    throw new Error(`Invalid form configuration key: ${configKey}`);
+    log(context, `No form configuration found for key: ${configKey}`);
+    return {};
   }
   if (typeof config === 'function') {
     return config(context, options);
+  }
+  if (!config.method) {
+    log(context, `Invalid configuration for key: ${configKey} - missing method`);
+    return {};
   }
   return { ...config, ...options };
 }
@@ -2621,23 +2880,22 @@ export function initializeFormConfigsModule(registry) {
 }
 
 // Initialize module with lifecycle logging
-const context = 'form-configs.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-config/menus.js
-// /static/js/config/menus.js
-// Purpose: Defines navigation menus for different roles and provides menu retrieval functionality.
+});
 
+config/menus.js
+
+// /static/js/config/menus.js
 import { log } from '../core/logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { ROLES } from './roles.js';
 
 log('menus.js', 'ROLES at import:', ROLES, 'ROLES.login:', ROLES.login);
 
-// Define menu configurations for each role using ROLES constants
+// Define menu configurations for each role using string keys
 export const MENUS = {
-    [ROLES.admin]: [
+    'admin': [
         { id: 'users', label: 'Users', section: 'usersSection' },
         { id: 'deals', label: 'Deals', section: 'dealsSection' },
         { id: 'settings', label: 'Settings', section: 'settingsSection' },
@@ -2645,7 +2903,7 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.merchant]: [
+    'merchant': [
         { id: 'store-request', label: 'Store Request', section: 'storeRequestSection' },
         { id: 'api-keys', label: 'API Keys', section: 'apiKeysSection' },
         { id: 'products', label: 'Products', section: 'productsSection' },
@@ -2654,7 +2912,7 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.community]: [
+    'community': [
         { id: 'site-request', label: 'Site Request', section: 'siteRequestSection' },
         { id: 'categories', label: 'Categories', section: 'categoriesSection' },
         { id: 'providers', label: 'Providers', section: 'providersSection' },
@@ -2663,13 +2921,13 @@ export const MENUS = {
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.partner]: [
+    'partner': [
         { id: 'integrations', label: 'Integrations', section: 'integrationsSection' },
         { id: 'my-account', label: 'My Account', section: 'my-account' },
         { id: 'contact-details', label: 'Contact Details', section: 'contact-details' },
         { id: 'change-password', label: 'Change Password', section: 'change-password' },
     ],
-    [ROLES.login]: [
+    'login': [
         { id: 'forgot-password', label: 'Forgot Password', section: 'forgotPasswordContainer', icon: 'fas fa-lock' },
         { id: 'signup', label: 'Sign Up', section: 'signupContainer', icon: 'fas fa-user-plus' },
     ],
@@ -2681,7 +2939,7 @@ export const MENUS = {
  * @returns {Array} The menu configuration for the role, or an empty array if not found.
  */
 export function getMenu(role) {
-    log(`menus.js - Retrieving menu for role: ${role}, ROLES.login: ${ROLES.login}, ROLES:`, ROLES);
+    log(`menus.js - Retrieving menu for role: ${role}`);
     const menu = MENUS[role] || [];
     if (!menu.length) {
         log(`menus.js - No menu found for role: ${role}`);
@@ -2706,8 +2964,10 @@ export function initializeMenusModule(registry) {
 const context = 'menus.js';
 withScriptLogging(context, () => {
     log(context, 'Module initialized');
-});
-config/messages.js
+});
+
+config/messages.js
+
 // /static/js/config/messages.js
 // Purpose: Defines error and success messages for consistent use across the application.
 
@@ -2743,13 +3003,15 @@ export const SUCCESS_MESSAGES = {
     RENDERED: context => `${context} successfully rendered.`,
     SUBMITTED: context => `${context} successfully submitted.`,
     SETTINGS_UPDATED: 'Settings successfully updated.',
-};
-config/pages.js
+};
+
+config/pages.js
+
 // /static/js/config/pages.js
 // Purpose: Maps page types to their corresponding module paths for dynamic imports in main.js.
 
 import { log } from '../core/logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Page module mappings for dynamic imports.
@@ -2780,8 +3042,10 @@ export function initializePagesModule(registry) {
 const context = 'pages.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-config/roles.js
+});
+
+config/roles.js
+
 // /static/js/config/roles.js
 // Purpose: Centralizes role definitions, permissions, and menu structures for consistent use across the application.
 
@@ -2789,7 +3053,7 @@ import { log } from '../core/logger.js';
 import { setAuthToken } from '../core/auth.js'; // Use setAuthToken from core/auth.js
 import { authenticatedFetch } from '../core/auth.js'; // authenticatedFetch is in utils/auth.js
 import { withErrorHandling } from '../utils/error.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 const context = 'roles.js';
 
@@ -2906,14 +3170,16 @@ export function initializeRolesModule(registry) {
 // Initialize module with lifecycle logging
 withScriptLogging(context, () => {
     log(context, 'Module initialized');
-});
-config/settings.js
+});
+
+config/settings.js
+
 // /static/js/config/settings.js
 // Purpose: Defines centralized configuration for settings across the application.
 
 import { log } from '../core/logger.js';
 import { API_ENDPOINTS } from './endpoints.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Settings configuration registry for admin and provider settings.
@@ -2988,14 +3254,16 @@ export function initializeSettingsModule(registry) {
 const context = 'settings.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-core/auth.js
+});
+
+core/auth.js
+
 // /static/js/core/auth.js
 // Purpose: Manages authentication tokens, authenticated requests, and user authentication checks.
 
 import { log } from './logger.js';
 import { setCookie, getCookie, removeCookie } from './cookies.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { API_ENDPOINTS } from '../config/endpoints.js';
 
 const context = 'auth.js';
@@ -3058,6 +3326,24 @@ export async function authenticatedFetch(endpoint, options = {}) {
 }
 
 /**
+ * Verifies the reset token and extracts the payload.
+ * @param {string} token - The reset token to verify.
+ * @returns {Object} The decoded token payload.
+ */
+export function verifyResetToken(token) {
+    log(context, 'Verifying reset token');
+    try {
+        const payload = jwt.decode(token); // Assuming a jwt library is available
+        if (!payload) {
+            throw new Error('Invalid token');
+        }
+        return payload;
+    } catch (error) {
+        throw new Error('Token verification failed');
+    }
+}
+
+/**
  * Wraps a function to ensure it runs only for an authenticated user.
  * @param {string} context - The context or module name.
  * @param {Function} fn - The function to execute if authenticated.
@@ -3082,20 +3368,18 @@ export function initializeAuth() {
     withScriptLogging(context, () => {
         log(context, 'Module initialized');
     });
-}
-core/cookies.js
+}
+
+core/cookies.js
+
+// /static/js/core/cookies.js
 // /static/js/core/cookies.js
 import { log } from './logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js'; // Corrected import
 
 const context = 'cookies.js';
 
-/**
- * Sets a cookie with the given name, value, and expiration days.
- * @param {string} name - The name of the cookie.
- * @param {string} value - The value of the cookie.
- * @param {number} days - The number of days until the cookie expires.
- */
+
 export function setCookie(name, value, days) {
     log(context, `Setting cookie: ${name}`);
     let expires = '';
@@ -3107,11 +3391,6 @@ export function setCookie(name, value, days) {
     document.cookie = `${name}=${value}${expires}; path=/; SameSite=Strict`;
 }
 
-/**
- * Retrieves the value of a cookie by name.
- * @param {string} name - The name of the cookie to retrieve.
- * @returns {string|null} The value of the cookie, or null if not found.
- */
 export function getCookie(name) {
     log(context, `Getting cookie: ${name}`);
     const nameEQ = `${name}=`;
@@ -3128,26 +3407,21 @@ export function getCookie(name) {
     return null;
 }
 
-/**
- * Removes a cookie by setting its expiration to a past date.
- * @param {string} name - The name of the cookie to remove.
- */
 export function removeCookie(name) {
     log(context, `Removing cookie: ${name}`);
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict`;
 }
 
-/**
- * Initializes the cookies module.
- */
 export function initializeCookies() {
     withScriptLogging(context, () => {
         log(context, 'Module initialized');
     });
-}
-core/logger.js
+}
+
+core/logger.js
+
 // /static/js/core/logger.js
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Logs a message to the console with the specified context.
@@ -3191,22 +3465,21 @@ export function initializeLoggerModule(registry) {
     };
 }
 
-/**
- * Initializes the logger module.
- */
-export function initializeLogger() {
-    withScriptLogging('logger.js', () => {
-        log('logger.js', 'Module initialized');
-    });
-}
-core/markdown.js
+// Initialize module with lifecycle logging
+const context = 'logger.js';
+withScriptLogging(context, () => {
+    log(context, 'Module initialized');
+});
+
+core/markdown.js
+
 // /static/js/core/markdown.js
 // Purpose: Provides markdown rendering functionality using marked.js.
 
 import { log } from './logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Renders markdown content from a URL or string.
@@ -3249,15 +3522,17 @@ export function initializeMarkdownModule(registry) {
 const context = 'markdown.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-core/mce.js
+});
+
+core/mce.js
+
 // /static/js/core/mce.js
 // Purpose: Initializes TinyMCE editor for rich text editing.
 
 import { log } from './logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes TinyMCE editor on the specified selector.
@@ -3300,13 +3575,15 @@ export function initializeMceModule(registry) {
 const context = 'mce.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-core/notifications.js
+});
+
+core/notifications.js
+
 // /static/js/core/notifications.js
 // Purpose: Provides notification utilities using Toastr with fallback to alerts.
 
 import { log, error as loggerError, warn as loggerWarn } from './logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/messages.js'; // Updated import
 
@@ -3463,8 +3740,10 @@ export function initializeNotificationsModule(registry) {
 withScriptLogging(context, () => {
     log(context, 'Module initialized');
     setupToastr(context);
-});
-core/user.js
+});
+
+core/user.js
+
 // /static/js/core/user.js
 // Purpose: Manages user-related operations, such as fetching user data and validating user IDs.
 
@@ -3473,7 +3752,7 @@ import { authenticatedFetch } from './auth.js';
 import { withErrorHandling } from '../utils/error.js';
 import {  ERROR_MESSAGES } from '../config/constants.js';
 import { API_ENDPOINTS } from '../config/endpoints.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Fetches user data for the specified user ID.
@@ -3534,15 +3813,16 @@ export function initializeUserModule(registry) {
 const context = 'user.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-login/forgot-password.js
+});
+
+login/forgot-password.js
+
 // /static/js/login/forgot-password.js
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
-import { getFormConfig } from '../config/form-configs.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the forgot password form in the specified section.
@@ -3562,10 +3842,31 @@ export async function initializeForgotPassword(context) {
 
     // Set up forgot password form submission
     submitConfiguredForm(context, 'forgotPasswordForm', '/reset-password', 'forgotPassword', {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
         log(context, 'Forgot password request successful, showing OTP section');
+        if (data.otp_token) {
+          localStorage.setItem('resetToken', data.otp_token);  // Correctly use otp_token
+          log(context, 'Stored resetToken:', data.otp_token);
+        } else {
+          log(context, 'No otp_token in response');
+          alert('Failed to receive OTP token from server.');
+          return;
+        }
         await withElement(context, 'verifyOtpSection', async otpSection => {
           toggleViewState(context, { verifyOtpSection: true });
+          // Populate the otpToken field with the stored token
+          const otpTokenInput = document.getElementById('otpToken');
+          if (otpTokenInput) {
+            const token = localStorage.getItem('resetToken');
+            if (token) {
+              otpTokenInput.value = token;
+              log(context, `Set otpToken to: ${token}`);
+            } else {
+              log(context, 'No reset token found in localStorage');
+            }
+          } else {
+            log(context, 'otpToken input not found');
+          }
         });
       },
       onError: (error) => {
@@ -3576,8 +3877,9 @@ export async function initializeForgotPassword(context) {
 
     // Set up verify OTP form submission
     submitConfiguredForm(context, 'verifyOtpForm', '/verify-reset-code', 'verifyOtp', {
-      onSuccess: () => {
+      onSuccess: (data) => {
         log(context, 'OTP verified, redirecting to login');
+        localStorage.removeItem('resetToken');
         window.location.href = '/';
       },
       onError: (error) => {
@@ -3624,15 +3926,17 @@ export function initializeForgotPasswordModule(registry) {
 const context = 'forgot-password.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-login/login.js
+});
+
+login/login.js
+
 // /static/js/login/login.js
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setCookie } from '../core/cookies.js';
 import { setAuthToken } from '../core/auth.js';
 import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the login form in the welcome section.
@@ -3687,6 +3991,18 @@ export async function initializeLogin(context, targetSection) {
     } else {
       log(context, 'Toggle-password element not found in section');
     }
+
+    // Set up existing Forgot Password button
+    const forgotPasswordButton = document.getElementById('forgotPasswordButton');
+    if (forgotPasswordButton) {
+      log(context, 'Forgot Password button found, binding event listener');
+      forgotPasswordButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleViewState(context, { forgotPasswordContainer: true });
+      });
+    } else {
+      log(context, 'Forgot Password button not found');
+    }
   });
 }
 
@@ -3707,16 +4023,75 @@ export function initializeLoginModule(registry) {
 const context = 'login.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-login/signup.js
+});
+
+login/set-password.js
+
+// /static/js/login/set-password.js
+import { log } from '../core/logger.js';
+import { submitConfiguredForm } from '../utils/form-submission.js';
+import { withElement } from '../utils/dom-manipulation.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
+
+const context = 'set-password.js';
+
+/**
+ * Initializes the set password form in the specified section.
+ * @param {string} context - The context or module name.
+ * @param {string} sectionId - The ID of the section containing the form.
+ * @returns {Promise<void>}
+ */
+export async function initializeSetPassword(context, sectionId) {
+  log(context, `Initializing set password form in section: ${sectionId}`);
+  await withElement(context, sectionId, async (section) => {
+    // Hide other sections
+    document.querySelectorAll('.section').forEach(s => {
+      if (s.id !== sectionId) s.style.display = 'none';
+    });
+    // Show the target section
+    section.style.display = 'block';
+
+    // Set up form submission to the correct endpoint
+    submitConfiguredForm(context, 'setPasswordForm', '/complete-signup', 'setPassword', {
+      onSuccess: (data) => {
+        log(context, 'Password set successfully');
+        // Redirect or update UI as needed
+        window.location.href = '/';
+      },
+      onError: (err) => {
+        log(context, 'Error setting password:', err.message);
+      },
+    });
+  });
+}
+
+/**
+ * Initializes the set password module for use with the module registry.
+ * @param {Object} registry - The module registry instance.
+ * @returns {Object} Module instance with public methods.
+ */
+export function initializeSetPasswordModule(registry) {
+  log(context, 'Initializing set password module');
+  return {
+    initializeSetPassword: (ctx, ...args) => initializeSetPassword(ctx, ...args),
+  };
+}
+
+// Initialize module with lifecycle logging
+withScriptLogging(context, () => {
+  log(context, 'Module initialized');
+});
+
+login/signup.js
+
 // /static/js/login/signup.js
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setupFormFieldEvents } from '../utils/event-listeners.js';
-import { toggleViewState } from '../utils/dom-manipulation.js';
-import { renderForm } from '../utils/form-rendering.js';
-import { getFormConfig } from '../config/form-configs.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
+
+const context = 'signup';
 
 /**
  * Initializes the signup page.
@@ -3724,44 +4099,67 @@ import { withScriptLogging } from '../utils/initialization.js';
  * @returns {Promise<void>}
  */
 export async function initializeSignup(context) {
-  log(context, 'Initializing signup page');
-  await withElement(context, 'signup', async (section) => {
-    // Render signup form
-    section.innerHTML = renderForm(getFormConfig(context, 'signup'));
-    // Hide other sections, including info
-    document.querySelectorAll('.section').forEach(s => {
-      if (s.id !== 'signup') s.style.display = 'none';
-    });
-    toggleViewState(context, { signup: true });
+    log(context, 'Initializing signup page');
 
-    // Set up form submission
-    submitConfiguredForm(context, 'signupForm', '/signup', 'signup', {
-      onSuccess: async () => {
-        log(context, 'Signup successful, showing OTP section');
-        toggleViewState(context, { signupOtpSection: true });
-      },
-    });
-
-    // Set up OTP verification
-    submitConfiguredForm(context, 'signupOtpSection', '/verify-reset-code', 'verifySignupOtp', {
-      onSuccess: () => {
-        log(context, 'OTP verified, redirecting to login');
-        window.location.href = '/';
-      },
-    });
-
-    // Set up radio button events
-    setupFormFieldEvents(context, {
-      selector: 'input[name="signup_type"]',
-      eventType: 'change',
-      handler: e => {
-        document.querySelectorAll('.option').forEach(option => {
-          option.classList.toggle('selected', option.contains(e.target));
+    await withElement(context, 'signupContainer', async (section) => {
+        // Hide other sections and show signupContainer
+        document.querySelectorAll('.section').forEach(s => {
+            if (s.id !== 'signupContainer') s.style.display = 'none';
         });
-        log(context, 'Selected signup type:', e.target.value);
-      },
-    });
-  });
+        toggleViewState(context, { signupContainer: true });
+
+        // Configure the signup form submission
+        await withElement(context, 'signupForm', async (form) => {
+            // Ensure "Community" is the default signup type
+            document.querySelectorAll('.option').forEach(option => option.classList.remove('selected'));
+            const communityOption = form.querySelector('input[value="community"]');
+            if (communityOption) {
+                communityOption.checked = true;
+                communityOption.closest('.option').classList.add('selected');
+            }
+
+            log(context, 'Configuring signup form submission');
+            submitConfiguredForm(context, 'signupForm', '/signup', 'signup', {
+                onSuccess: async (response) => {
+                    log(context, 'Signup successful, response:', response);
+                    if (response.signup_type === 'partner') {
+                        log(context, 'Showing verifyOtpSection for partner');
+                        toggleViewState(context, {
+                            signupContainer: false,
+                            verifyOtpSection: true,
+                            forgotPasswordContainer: false,
+                            info: false
+                        });
+                        const otpTokenInput = document.getElementById('otpToken');
+                        if (otpTokenInput) otpTokenInput.value = response.otp_token || '';
+                        const verifyForm = document.getElementById('verifyOtpForm');
+                        if (verifyForm) verifyForm.action = '/verify-signup-otp';
+                    } else if (response.account_link) {
+                        log(context, 'Redirecting to Stripe:', response.account_link);
+                        window.location.href = response.account_link;
+                    } else {
+                        log(context, 'Error: account_link missing in response');
+                        alert('Signup successful, but unable to redirect to Stripe. Please try again later.');
+                    }
+                },
+                onError: (err) => {
+                    log(context, 'Signup error:', err.message);
+                }
+            });
+
+            // Set up radio button events for signup type selection
+            setupFormFieldEvents(context, {
+                selector: 'input[name="signup_type"]',
+                eventType: 'change',
+                handler: e => {
+                    document.querySelectorAll('.option').forEach(option => {
+                        option.classList.toggle('selected', option.contains(e.target));
+                    });
+                    log(context, 'Selected signup type:', e.target.value);
+                },
+            });
+        }, 10, 100, false);
+    }, 10, 100, false);
 }
 
 /**
@@ -3770,53 +4168,64 @@ export async function initializeSignup(context) {
  * @returns {Object} Signup instance with public methods.
  */
 export function initializeSignupModule(registry) {
-  const context = 'signup.js';
-  log(context, 'Initializing signup module for module registry');
-  return {
-    initializeSignup: ctx => initializeSignup(ctx),
-  };
+    log(context, 'Initializing signup module for module registry');
+    return {
+        initializeSignup: ctx => initializeSignup(ctx),
+    };
 }
 
 // Initialize module with lifecycle logging
-const context = 'signup.js';
 withScriptLogging(context, () => {
-  log(context, 'Module initialized');
-});
-login-page.js
-// /static/js/login-page.js
-// Purpose: Initializes the login page, sets up navigation, and handles login form submission.
+    log(context, 'Module initialized');
+});
 
+login-page.js
+
+// /static/js/login-page.js
 import { log } from './core/logger.js';
 import { withErrorHandling } from './utils/error.js';
 import { toggleViewState, withElement } from './utils/dom-manipulation.js';
 import { getMenu } from './config/menus.js';
 import { initializeRoleNavigation, defineSectionHandlers } from './modules/navigation.js';
-import { withScriptLogging, hideOverlay } from './utils/initialization.js';
+import { withScriptLogging, hideOverlay } from './utils/logging-utils.js';
 import { initializeLogin } from './login/login.js';
 import { initializeSignup } from './login/signup.js';
 import { initializeForgotPassword } from './login/forgot-password.js';
+import { initializeSetPassword } from './login/set-password.js';
 
 const context = 'login-page.js';
 
 /**
- * Parses the page type from a DOM element or query parameter.
+ * Parses the page type from a meta tag, DOM element, or query parameter.
  * @param {string} param - The ID of the element or query parameter containing the page type.
  * @returns {string|Promise<string>} The parsed page type or a Promise resolving to it.
  */
 export function parsePageType(param) {
     return withErrorHandling(context, () => {
         log(context, `Parsing page type from param: ${param}`);
+        // Prioritize meta tag
+        const metaPageType = document.querySelector('meta[name="page-type"]')?.content;
+        if (metaPageType && ['admin', 'community', 'merchant', 'partner', 'login'].includes(metaPageType)) {
+            log(context, `Page type resolved from meta tag: ${metaPageType}`);
+            return metaPageType;
+        }
+        // Fallback to DOM element
         const pageTypeElement = document.getElementById(param);
         if (pageTypeElement) {
-            return pageTypeElement.value;
+            const pageType = pageTypeElement.value || 'info';
+            log(context, `Page type resolved from DOM element: ${pageType}`);
+            return pageType;
         }
+        // Fallback to query parameter
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(param) || 'welcome';
+        const pageType = urlParams.get(param) || 'info';
+        log(context, `Page type resolved from query parameter: ${pageType}`);
+        return pageType;
     }, 'parsePageType');
 }
 
 /**
- * Initializes the login page, setting up navigation.
+ * Initializes the login page, setting up navigation and form handling.
  * @param {Object} options - Options object containing the module registry.
  * @param {Map} options.registry - The module registry instance.
  */
@@ -3828,54 +4237,142 @@ export async function initializeLoginPage({ registry }) {
     const pageType = typeof pageTypeElement === 'string' ? pageTypeElement : await pageTypeElement;
     log(context, `Page type resolved: ${pageType}`);
 
+    // Exit early if not a login page
+    if (pageType !== 'login') {
+        log(context, `Skipping login page initialization for page type: ${pageType}`);
+        return;
+    }
+
     // Set up navigation for the login role
     const role = 'login';
-    const defaultSection = pageType || 'welcome';
+    const defaultSection = pageType === 'login' ? 'info' : pageType;
     log(context, `Initializing navigation for role: ${role}, default section: ${defaultSection}`);
 
     // Define section handlers for the login role
-    defineSectionHandlers(context, 'login', [
+    const sectionHandlers = defineSectionHandlers(context, role, [
         {
-            id: 'welcome',
+            id: 'info',
             handler: async () => {
-                log(context, 'Loading welcome section with login form');
-                await initializeLogin(context, 'welcomeSection');
+                log(context, 'Loading info section with form');
+                await withElement(context, 'info', async (infoSection) => {
+                    log(context, `Info section found, ensuring visibility`);
+                    infoSection.style.display = 'block';
+                    toggleViewState(context, {
+                        info: true,
+                        forgotPasswordContainer: false,
+                        verifyOtpSection: false,
+                        signupContainer: false,
+                    });
+
+                    // Dynamically detect which form is present
+                    const loginForm = document.getElementById('loginForm');
+                    const setPasswordForm = document.getElementById('setPasswordForm');
+
+                    if (loginForm) {
+                        log(context, 'Found loginForm, initializing login');
+                        await initializeLogin(context, 'info');
+                    } else if (setPasswordForm) {
+                        log(context, 'Found setPasswordForm, initializing set password');
+                        await initializeSetPassword(context, 'info');
+                    } else {
+                        log(context, 'No form found in info section');
+                    }
+                }, 10, 100, false);
             },
         },
         {
             id: 'signup',
             handler: async () => {
                 log(context, 'Loading signup section');
-                await initializeSignup(context);
+                await withElement(context, 'signupContainer', async (signupSection) => {
+                    signupSection.style.display = 'block';
+                    toggleViewState(context, {
+                        info: false,
+                        forgotPasswordContainer: false,
+                        verifyOtpSection: false,
+                        signupContainer: true,
+                    });
+                    await initializeSignup(context);
+                }, 10, 100, false);
             },
         },
         {
             id: 'forgot-password',
             handler: async () => {
                 log(context, 'Loading forgot-password section');
-                await initializeForgotPassword(context);
+                await withElement(context, 'forgotPasswordContainer', async (forgotPasswordSection) => {
+                    forgotPasswordSection.style.display = 'block';
+                    toggleViewState(context, {
+                        info: false,
+                        forgotPasswordContainer: true,
+                        verifyOtpSection: false,
+                        signupContainer: false,
+                    });
+                    await initializeForgotPassword(context);
+                }, 10, 100, false);
             },
         },
     ]);
+    log(context, 'Section handlers defined:', Object.keys(sectionHandlers));
 
     // Retrieve the menu configuration
     const menu = getMenu(role);
-    if (!menu || menu.length === 0) {
-        log(context, `No menu found for role: ${role}, skipping navigation setup`);
-    } else {
-        // Retrieve the menu element
-        await withElement(context, 'menu', async (menuElement) => {
-            log(context, `Retrieved menu for role: ${role}`, menu);
-            const navigationOptions = { sectionHandlers: defineSectionHandlers(context, 'login'), defaultSection };
-            withErrorHandling(context, () => initializeRoleNavigation(menuElement, menu, navigationOptions), 'initializeRoleNavigation');
-        }, 10, 100, false); // Disable visibility check
-    }
+    log(context, `Menu retrieved for role ${role}:`, menu);
 
-    // Initialize the welcome section with the login form
-    log(context, `Initializing welcome section with login form`);
-    await withElement(context, 'welcomeSection', async (welcomeSection) => {
-        toggleViewState(context, { welcomeSection: true });
-        await initializeLogin(context, 'welcomeSection');
+    // Ensure the menu container exists and render the navigation buttons
+    await withElement(context, 'menu', async (menuElement) => {
+        if (!menuElement) {
+            log(context, 'Menu element not found, creating it');
+            menuElement = document.createElement('div');
+            menuElement.id = 'menu';
+            menuElement.className = 'menu';
+            const contentElement = document.querySelector('.content');
+            if (contentElement) {
+                contentElement.prepend(menuElement);
+            } else {
+                log(context, 'Error: .content element not found', 'error');
+                return;
+            }
+        }
+
+        if (!menu || menu.length === 0) {
+            log(context, `No menu found for role: ${role}, rendering default buttons`);
+            menuElement.innerHTML = `
+                <button data-section="forgot-password">
+                    <i class="fas fa-lock"></i> Forgot Password
+                </button>
+                <button data-section="signup">
+                    <i class="fas fa-user-plus"></i> Sign Up
+                </button>
+            `;
+            menuElement.querySelectorAll('button').forEach(button => {
+                const sectionId = button.getAttribute('data-section');
+                button.addEventListener('click', () => {
+                    log(context, `Navigating to section: ${sectionId}`);
+                    const handler = sectionHandlers[sectionId];
+                    if (handler) {
+                        handler();
+                    } else {
+                        log(context, `No handler found for section: ${sectionId}`, 'warn');
+                    }
+                });
+            });
+        } else {
+            log(context, `Setting up navigation with menu:`, menu);
+            const navigationOptions = { sectionHandlers, defaultSection };
+            await withErrorHandling(context, () => initializeRoleNavigation(menuElement, menu, navigationOptions), 'initializeRoleNavigation')();
+        }
+
+        // Show layout and hide overlay
+        const layoutWrapper = document.querySelector('.layout-wrapper');
+        if (layoutWrapper) {
+            layoutWrapper.style.display = 'block';
+            log(context, 'Layout wrapper displayed');
+        } else {
+            log(context, 'Warning: Layout wrapper not found', 'warn');
+        }
+        await hideOverlay();
+        log(context, 'Loading overlay hidden');
     }, 10, 100, false);
 }
 
@@ -3893,11 +4390,13 @@ export function initializeLoginPageModule(registry) {
 
 // Initialize module with lifecycle logging
 withScriptLogging(context, async () => {
-    log(context, 'Module initialized');
+    log(context, 'Starting module initialization');
     await initializeLoginPage({ registry: new Map() });
-    hideOverlay();
-});
-main.js
+    log(context, 'Module initialized');
+});
+
+main.js
+
 // /static/js/main.js
 // Purpose: Centralizes module loading and registration for the application.
 
@@ -4019,8 +4518,10 @@ export function initializeMainModule(registry) {
 // Initialize module with lifecycle logging
 withScriptLogging('main.js', () => {
     initializeApplication();
-});
-merchant/api-keys-events.js
+});
+
+merchant/api-keys-events.js
+
 // /static/js/merchant/api-keys-events.js
 // Purpose: Manages event listeners for API key form interactions on the merchant page.
 
@@ -4030,7 +4531,7 @@ import { fetchData } from '../utils/data-fetch.js';
 import { success } from '../core/notifications.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Sets up event listeners for API key form submissions.
@@ -4083,8 +4584,10 @@ export function initializeApiKeysEventsModule(registry) {
 const context = 'api-keys-events.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-merchant/api-keys.js
+});
+
+merchant/api-keys.js
+
 // /static/js/merchant/api-keys.js
 // Purpose: Orchestrates the API keys settings page, coordinating data fetching, UI rendering, and event setup.
 
@@ -4096,7 +4599,7 @@ import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
 import { notifyError } from '../core/notifications.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads and renders API keys data.
@@ -4166,8 +4669,10 @@ export function initializeApiKeysModule(registry) {
 const context = 'api-keys.js';
 withScriptLogging(context, () => {
   loadApiKeys(context);
-});
-merchant/documentation.js
+});
+
+merchant/documentation.js
+
 // /static/js/merchant/documentation.js
 // Purpose: Handles rendering of documentation content and submenu for the merchant page.
 
@@ -4229,8 +4734,10 @@ export function initializeDocumentationModule(registry) {
 const context = 'documentation.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-merchant/navigation.js
+});
+
+merchant/navigation.js
+
 // /static/js/merchant/navigation.js
 import { log } from '../core/logger.js';
 import { defineSectionHandlers } from '../modules/navigation.js';
@@ -4238,7 +4745,7 @@ import { loadApiKeys } from './api-keys.js';
 import { loadProducts } from './products.js';
 import { loadUserSettings } from './user-settings.js';
 import { renderDocumentation } from './documentation.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 
 /**
@@ -4311,8 +4818,10 @@ export function initializeNavigationModule(registry) {
 const context = 'navigation.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-merchant/products.js
+});
+
+merchant/products.js
+
 // /static/js/merchant/products.js
 // Purpose: Manages product data fetching and rendering for the merchant page.
 
@@ -4323,7 +4832,7 @@ import { withElement } from '../utils/dom-manipulation.js';
 import { notifyError } from '../core/notifications.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads and renders product data in a table.
@@ -4377,8 +4886,10 @@ export function initializeProductsModule(registry) {
 const context = 'products.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-merchant/setup.js
+});
+
+merchant/setup.js
+
 // /static/js/merchant/setup.js
 // Purpose: Handles additional initialization tasks for the merchant page.
 
@@ -4388,7 +4899,7 @@ import { toggleViewState } from '../utils/dom-manipulation.js';
 import { initializeSiteRequest } from '../modules/site-request.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes merchant-specific modules and performs additional setup tasks.
@@ -4437,8 +4948,10 @@ export function initializeSetupModule(registry) {
 const context = 'setup.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-merchant/user-settings.js
+});
+
+merchant/user-settings.js
+
 // /static/js/merchant/user-settings.js
 // Purpose: Manages user settings for the merchant page, including rendering, form submission, and validation.
 
@@ -4449,7 +4962,7 @@ import { setupEventListeners } from '../utils/event-listeners.js';
 import { withErrorHandling } from '../utils/error.js';
 import { SETTINGS } from '../config/settings.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -4535,16 +5048,18 @@ export function initializeUserSettingsModule(registry) {
 const context = 'user-settings.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-merchant-page.js
+});
+
+merchant-page.js
+
 // /static/js/merchant-page.js
 // Purpose: Orchestrates the merchant page, coordinating navigation, events, and module initialization.
 const context = 'merchant-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
+import { withScriptLogging, hideOverlay } from './utils/logging-utils.js';
 import { defineMerchantSectionHandlers } from './merchant/navigation.js';
 import { initializeMerchantModules } from './merchant/setup.js';
-import { withScriptLogging , hideOverlay } from './utils/initialization.js';
 
 /**
  * Initializes the merchant page.
@@ -4576,10 +5091,12 @@ export function initializeMerchantPageModule(registry) {
 // Initialize module with lifecycle logging
 withScriptLogging(context, async () => {
     log(context, 'Module initialized');
-    await initializeLoginPage({ registry: new Map() });
+    await initializeMerchantPage(context);
     hideOverlay();
-});
-modules/dataLoader.js
+});
+
+modules/dataLoader.js
+
 // /static/js/modules/dataLoader.js
 // Purpose: Provides a centralized data loading utility for fetching data from API endpoints.
 
@@ -4587,7 +5104,7 @@ import { log } from '../core/logger.js';
 import { fetchData } from '../utils/data-fetch.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads data from the specified endpoint, retained for compatibility with existing modules.
@@ -4623,41 +5140,74 @@ export function initializeDataLoaderModule(registry) {
 const context = 'dataLoader.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-modules/navigation.js
-// /static/js/modules/navigation.js
-// Purpose: Handles navigation setup and section toggling for different roles.
+});
 
+modules/navigation.js
+
+// /static/js/modules/navigation.js
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
 import { getMenu } from '../config/menus.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 const context = 'navigation.js';
 
 /**
  * Defines section handlers for a given role.
+ * @param {string} context - The context or module name.
  * @param {string} role - The role for which to define section handlers.
+ * @param {Array} handlers - Array of handler configurations.
  * @returns {Object} An object mapping section IDs to handler functions.
  */
-export function defineSectionHandlers(role) {
+export function defineSectionHandlers(context, role, handlers = []) {
     log(context, `Defining section handlers for role: ${role}`);
     const menu = getMenu(role);
-    const handlers = {};
+    const sectionHandlers = {};
 
+    // Map menu items to handlers based on section IDs
     menu.forEach(item => {
-        handlers[item.section] = () => {
-            log(context, `Handling navigation to section: ${item.section}`);
-            const viewState = {};
-            menu.forEach(menuItem => {
-                viewState[menuItem.section] = menuItem.section === item.section;
-            });
-            toggleViewState(context, viewState);
-        };
+        // Find the handler whose ID matches the menu item's ID
+        const handlerConfig = handlers.find(h => h.id === item.id);
+        if (handlerConfig && handlerConfig.handler) {
+            // Map the section from the menu to the handler
+            sectionHandlers[item.section] = async () => {
+                log(context, `Navigating to section ${item.section}, hiding others`);
+                // Hide all other sections and show the target section
+                toggleViewState(context, {
+                    [item.section]: true,
+                    ...menu.reduce((acc, menuItem) => {
+                        if (menuItem.section !== item.section) {
+                            acc[menuItem.section] = false;
+                        }
+                        return acc;
+                    }, {}),
+                    info: item.section === 'info' ? true : false,
+                });
+                await handlerConfig.handler();
+            };
+        }
     });
 
-    return handlers;
+    // Add a handler for the 'info' section if not already present
+    if (!sectionHandlers['info']) {
+        const infoHandler = handlers.find(h => h.id === 'info');
+        if (infoHandler) {
+            sectionHandlers['info'] = async () => {
+                log(context, `Navigating to section info, hiding others`);
+                toggleViewState(context, {
+                    info: true,
+                    forgotPasswordContainer: false,
+                    signupContainer: false,
+                });
+                await infoHandler.handler();
+            };
+        }
+    }
+
+    // Log the defined handlers for debugging
+    log(context, `Section handlers defined for role ${role}:`, Object.keys(sectionHandlers));
+    return sectionHandlers;
 }
 
 /**
@@ -4676,10 +5226,10 @@ export function initializeRoleNavigation(element, menu, { sectionHandlers, defau
         return;
     }
 
-    // Render menu buttons
+    // Render menu buttons with icons sized to 16x16 pixels
     element.innerHTML = menu.map(item => `
         <button data-section="${item.section}">
-            ${item.label}
+            ${item.icon ? `<i class="${item.icon}" style="width: 16px; height: 16px; font-size: 16px; margin-right: 5px;"></i>` : ''} ${item.label}
         </button>
     `).join('');
 
@@ -4719,7 +5269,7 @@ export function initializeRoleNavigation(element, menu, { sectionHandlers, defau
 export function initializeNavigationModule(registry) {
     log(context, 'Initializing navigation module for module registry');
     return {
-        defineSectionHandlers: (role) => defineSectionHandlers(role),
+        defineSectionHandlers: (ctx, role, handlers) => defineSectionHandlers(ctx, role, handlers),
         initializeRoleNavigation: (element, menu, options) => initializeRoleNavigation(element, menu, options),
     };
 }
@@ -4727,8 +5277,10 @@ export function initializeNavigationModule(registry) {
 // Initialize the module with lifecycle logging
 withScriptLogging(context, () => {
     log(context, 'Module initialized');
-});
-modules/pageSetup.js
+});
+
+modules/pageSetup.js
+
 // /static/js/modules/pageSetup.js
 // Purpose: Provides utilities for setting up page-specific configurations and navigation.
 
@@ -4737,7 +5289,7 @@ import { parsePageType } from '../utils/initialization.js';
 import { withAuthenticatedUser } from '../utils/auth.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Sets up a page with role-based navigation and user authentication.
@@ -4776,8 +5328,10 @@ export function initializePageSetupModule(registry) {
 const context = 'pageSetup.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-modules/site-request.js
+});
+
+modules/site-request.js
+
 // /static/js/modules/site-request.js
 // Purpose: Manages site request form submission, loading, and UI updates for merchant and community roles.
 
@@ -4790,7 +5344,7 @@ import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
 import { initializeTinyMCE } from '../core/mce.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the site request form, including loading data and setting up event listeners.
@@ -4946,8 +5500,10 @@ export function initializeSiteRequestModule(registry) {
 const context = 'site-request.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-modules/userSettings.js
+});
+
+modules/userSettings.js
+
 // /static/js/modules/userSettings.js
 // Purpose: Manages user settings form submission and UI rendering.
 
@@ -4957,7 +5513,7 @@ import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setupEventListeners } from '../utils/event-listeners.js';
 import { SETTINGS } from '../config/settings.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads and renders user settings.
@@ -5013,8 +5569,10 @@ export function initializeUserSettingsModule(registry) {
 const context = 'userSettings.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-partner/initializer.js
+});
+
+partner/initializer.js
+
 // /static/js/partner/initializer.js
 // Purpose: Initializes partner-specific modules and navigation for the partner page.
 
@@ -5023,7 +5581,7 @@ import { withAuthenticatedUser } from '../utils/auth.js';
 import { withErrorHandling } from '../utils/error.js';
 import { definePartnerSectionHandlers } from './navigation.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes partner modules and sets up navigation.
@@ -5060,8 +5618,10 @@ export function initializeInitializerModule(registry) {
 const context = 'initializer.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-partner/integrations-data.js
+});
+
+partner/integrations-data.js
+
 // /static/js/partner/integrations-data.js
 // Purpose: Manages data fetching for integration settings on the partner page.
 
@@ -5069,7 +5629,7 @@ import { log } from '../core/logger.js';
 import { fetchData } from '../utils/data-fetch.js';
 import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads integration settings from the server.
@@ -5101,8 +5661,10 @@ export function initializeIntegrationsDataModule(registry) {
 const context = 'integrations-data.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-partner/integrations-ui.js
+});
+
+partner/integrations-ui.js
+
 // /static/js/partner/integrations-ui.js
 // Purpose: Manages UI rendering for integration settings on the partner page.
 
@@ -5112,7 +5674,7 @@ import { toggleViewState } from '../utils/dom-manipulation.js';
 import { renderMarkdownContent } from '../utils/form-rendering.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -5165,8 +5727,10 @@ export function initializeIntegrationsUiModule(registry) {
 const context = 'integrations-ui.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-partner/integrations.js
+});
+
+partner/integrations.js
+
 // /static/js/partner/integrations.js
 // Purpose: Orchestrates the integrations settings page, coordinating data fetching, UI rendering, and event setup.
 
@@ -5176,7 +5740,7 @@ import { ERROR_MESSAGES } from '../config/messages.js';
 import { loadIntegrations } from './integrations-data.js';
 import { renderIntegrations } from './integrations-ui.js';
 import { setupPartnerEvents } from './partner-events.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads and renders integration settings.
@@ -5209,13 +5773,15 @@ export function initializeIntegrationsModule(registry) {
 const context = 'integrations.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-partner/navigation.js
+});
+
+partner/navigation.js
+
 // /static/js/partner/navigation.js
 import { log } from '../core/logger.js';
 import { defineSectionHandlers } from '../modules/navigation.js';
 import { loadIntegrationsSettings } from './integrations.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 
 /**
@@ -5255,13 +5821,15 @@ export function initializeNavigationModule(registry) {
     definePartnerSectionHandlers: ctx => definePartnerSectionHandlers(ctx),
   };
 }
-
+import { withScriptLogging } from './logging-utils.js';
 // Initialize module with lifecycle logging
 const context = 'navigation.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-partner/partner-events.js
+});
+
+partner/partner-events.js
+
 // /static/js/partner/partner-events.js
 // Purpose: Manages top-level event listeners for the partner page, delegating feature-specific events.
 
@@ -5271,7 +5839,7 @@ import { submitConfiguredForm } from '../utils/form-submission.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -5299,7 +5867,7 @@ export function setupPartnerEvents(context) {
           }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
         },
       },
-      {
+import { withScriptLogging } from './logging-utils.js';
         eventType: 'click',
         selector: '#partnerNavToggle',
         handler: async () => {
@@ -5328,17 +5896,19 @@ export function initializePartnerEventsModule(registry) {
 const context = 'partner-events.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-partner-page.js
+});
+
+partner-page.js
+
 // /static/js/partner-page.js
 // Purpose: Orchestrates the partner page, coordinating navigation, events, and module initialization.
 const context = 'partner-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
+import { withScriptLogging, hideOverlay } from './utils/logging-utils.js';
 import { definePartnerSectionHandlers } from './partner/navigation.js';
 import { setupPartnerEvents } from './partner/partner-events.js';
 import { initializePartnerModules } from './partner/initializer.js';
-import { withScriptLogging , hideOverlay} from './utils/initialization.js';
 
 /**
  * Initializes the partner page.
@@ -5348,7 +5918,7 @@ import { withScriptLogging , hideOverlay} from './utils/initialization.js';
 export async function initializePartnerPage(context) {
   log(context, 'Initializing partner page');
   const pageType = parsePageType(context, 'page', 'integrations');
-  await initializeRolePage(context, 'partner', pageType, async () => {
+import { withScriptLogging } from './logging-utils.js'; async () => {
     definePartnerSectionHandlers(context);
     initializePartnerModules(context, pageType);
     setupPartnerEvents(context);
@@ -5371,10 +5941,12 @@ export function initializePartnerPageModule(registry) {
 // Initialize module with lifecycle logging
 withScriptLogging(context, async () => {
     log(context, 'Module initialized');
-    await initializeLoginPage({ registry: new Map() });
+    await initializePartnerPage(context);
     hideOverlay();
-});
-utils/data-fetch.js
+});
+
+utils/data-fetch.js
+
 // /static/js/utils/data-fetch.js
 // Purpose: Provides a centralized utility for fetching data from API endpoints.
 
@@ -5391,18 +5963,18 @@ const context = 'data-fetch.js';
  * @param {string} context - The context or module name.
  * @param {string} endpoint - The API endpoint URL.
  * @param {Object} [options={}] - Fetch options (e.g., method, headers, body).
+ * @param {boolean} [useAuth=true] - Whether to use authenticated fetch (default: true).
  * @returns {Promise<Object>} The fetched data.
  */
-export async function fetchData(context, endpoint, options = {}) {
-    log(context, `Fetching data from endpoint: ${endpoint}`);
-    return await withErrorHandling(`${context}:fetchData`, async () => {
-        const response = await authenticatedFetch(endpoint, options);
-        const data = await response.json();
-        if (data.status === 'error') {
-            throw new Error(data.message || ERROR_MESSAGES.FETCH_FAILED(endpoint));
-        }
-        return data;
-    }, ERROR_MESSAGES.FETCH_FAILED(endpoint));
+export async function fetchData(context, endpoint, options = {}, useAuth = true) {
+  log(context, `Fetching data from endpoint: ${endpoint}, useAuth: ${useAuth}`);
+  const fetchFunction = useAuth ? authenticatedFetch : fetch; // Use authenticatedFetch or regular fetch
+  const response = await fetchFunction(endpoint, options);
+  const data = await response.json();
+  if (data.status === 'error') {
+    throw new Error(data.message || ERROR_MESSAGES.FETCH_FAILED(endpoint));
+  }
+  return data;
 }
 
 /**
@@ -5411,17 +5983,19 @@ export async function fetchData(context, endpoint, options = {}) {
  * @returns {Object} DataFetch instance with public methods.
  */
 export function initializeDataFetchModule(registry) {
-    log(context, 'Initializing data-fetch module for module registry');
-    return {
-        fetchData: (ctx, ...args) => fetchData(ctx, ...args),
-    };
+  log(context, 'Initializing data-fetch module for module registry');
+  return {
+    fetchData: (ctx, ...args) => fetchData(ctx, ...args),
+  };
 }
 
 // Initialize module with lifecycle logging
 withScriptLogging(context, () => {
-    log(context, 'Module initialized');
-});
-utils/dom-events.js
+  log(context, 'Module initialized');
+});
+
+utils/dom-events.js
+
 // /static/js/utils/dom-events.js
 // Purpose: Provides utilities for managing DOM events.
 
@@ -5471,8 +6045,10 @@ export function initializeDomEventsModule(registry) {
 const context = 'dom-events.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/dom-manipulation.js
+});
+
+utils/dom-manipulation.js
+
 // /static/js/utils/dom-manipulation.js
 // Purpose: Provides utilities for DOM manipulation with retry logic and visibility toggling.
 
@@ -5634,8 +6210,10 @@ export function initializeDomManipulationModule(registry) {
 const context = 'dom-manipulation.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/error.js
+});
+
+utils/error.js
+
 // /static/js/utils/error.js
 // Purpose: Provides error handling utilities.
 
@@ -5665,8 +6243,10 @@ export function withErrorHandling(context, fn, operation) {
 // Removed lifecycle logging to break circular dependency
 // withScriptLogging(context, () => {
 //     log(context, 'Module initialized');
-// });s
-utils/event-listeners.js
+// });s
+
+utils/event-listeners.js
+
 // /static/js/utils/event-listeners.js
 // Purpose: Provides utilities for setting up DOM event listeners.
 
@@ -5674,7 +6254,7 @@ import { log } from '../core/logger.js';
 import { registerEventListener } from './dom-events.js';
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 
 /**
@@ -5700,7 +6280,7 @@ const EVENT_CONFIGS = {
         log(context, `Toggling navigation: ${navId}`);
         toggleViewState(context, { [navId]: true });
       }, ERROR_MESSAGES.SECTION_TOGGLE_FAILED);
-    },
+import { withScriptLogging } from './logging-utils.js';
   },
   permissionChange: {
     eventType: 'change',
@@ -5832,8 +6412,10 @@ export function initializeEventListenersModule(registry) {
 const context = 'event-listeners.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/form-rendering.js
+});
+
+utils/form-rendering.js
+
 // /static/js/utils/form-rendering.js
 // Purpose: Provides utilities for rendering form elements based on configurations.
 
@@ -5859,127 +6441,109 @@ export function renderStyles(type, styles) {
 }
 
 /**
- * Renders a form based on the provided configuration and appends it to the container.
- * @param {string} formId - The ID of the form element.
- * @param {Object|string} config - The form configuration object or config key (e.g., 'login').
- * @param {HTMLElement} container - The container element to render the form in.
+ * Renders a form based on the provided configuration and either appends it to the container or returns the HTML.
+ * @param {Object} formConfig - The form configuration object (must contain id, action, method, etc.).
+ * @param {Object} [config={}] - Additional rendering configuration options.
+ * @param {HTMLElement|null} [container=null] - The container element to render the form in. If null, returns the HTML as a string.
+ * @returns {string|void} Returns the rendered form HTML as a string if container is null; otherwise, appends to the container.
  */
-export function renderForm(formId, config, container) {
+export function renderForm(formConfig, config = {}, container = null) {
     const context = 'form-rendering.js';
-    log(context, 'Rendering form with formId:', formId, 'config:', config, 'container:', container);
+    log(context, 'Rendering form with formId:', formConfig, 'config:', config, 'container:', container);
     return withErrorHandling(`${context}:renderForm`, () => {
-        if (!formId || !container) {
-            throw new Error('Form ID and container are required');
+        // Validate formConfig
+        if (!formConfig || typeof formConfig !== 'object' || !formConfig.id) {
+import { withScriptLogging } from './logging-utils.js'; formConfig must be an object with an id property');
         }
 
-        let formConfig = config;
-        if (typeof config === 'string') {
-            log(context, `Config is a string, retrieving form config for key: ${config}`);
-            formConfig = getFormConfig(context, config);
-            if (!formConfig) {
-                throw new Error(`No form configuration found for key: ${config}`);
-            }
-        }
-
-        if (!formConfig || typeof formConfig !== 'object') {
-            throw new Error('Invalid form configuration');
-        }
-
-        const { id = formId, action = '', method = 'POST', fields = [], customFields = [], submitButtonText = 'Submit', extraButtons = [], wrapper } = formConfig;
+        const { id = formConfig.id, action = '', method = 'POST', fields = [], customFields = [], submitButtonText = 'Submit', extraButtons = [], wrapper } = formConfig;
 
         // Validate fields array
         if (!Array.isArray(fields)) {
             throw new Error('Form configuration must include a fields array');
         }
 
-        // Ensure the form element exists or create it
-        let form = document.getElementById(id);
-        if (!form) {
-            form = document.createElement('form');
-            form.id = id;
-            container.appendChild(form);
-        }
-
-        // Clear existing content only if rendering is successful
-        try {
-            form.action = action;
-            form.method = method;
-
-            // Render form fields
-            const fieldHtml = fields
-                .map(field => {
-                    if (!field.name || !field.type) {
-                        log(context, `Warning: Field missing name or type: ${JSON.stringify(field)}`);
-                        return '';
-                    }
-                    let inputHtml;
-                    switch (field.type) {
-                        case 'textarea':
-                            inputHtml = `
-                                <textarea id="${field.id || field.name}" name="${field.name}" ${field.required ? 'required' : ''} rows="${field.rows || 4}" cols="${field.cols || 50}" style="${field.style || ''}">${field.value || ''}</textarea>
-                            `;
-                            break;
-                        case 'hidden':
-                            inputHtml = `<input type="hidden" id="${field.id || field.name}" name="${field.name}" value="${field.value || ''}">`;
-                            break;
-                        default:
-                            inputHtml = `
-                                <input type="${field.type}" id="${field.id || field.name}" name="${field.name}" value="${field.value || ''}" ${field.required ? 'required' : ''} style="${field.style || ''}" ${field.attributes ? Object.entries(field.attributes).map(([k, v]) => `${k}="${v}"`).join(' ') : ''}>
-                            `;
-                    }
-                    const extraButtonsHtml = field.extraButtons
-                        ? field.extraButtons.map(btn => `
-                            <button type="${btn.type || 'button'}" class="${btn.className || ''}" style="${btn.style || ''}" ${btn.onclick ? `onclick="${btn.onclick}"` : ''}>${btn.text}</button>
-                        `).join('')
-                        : '';
-                    const fieldWrapperStyle = field.wrapper ? `class="${field.wrapper.class || ''}" style="${field.wrapper.style || ''}"` : '';
-                    return `
-                        <div ${fieldWrapperStyle}>
-                            <label for="${field.id || field.name}">${field.label || ''}</label>
-                            ${inputHtml}
-                            ${extraButtonsHtml}
-                        </div>
-                    `;
-                })
-                .join('');
-
-            // Render custom fields (e.g., checkbox lists)
-            const customFieldHtml = customFields
-                .map(field => {
-                    if (field.type === 'checkboxList' && field.render) {
-                        return field.render(field.items, field.selected);
-                    }
+        // Render form fields
+        const fieldHtml = fields
+            .map(field => {
+                if (!field.name || !field.type) {
+                    log(context, `Warning: Field missing name or type: ${JSON.stringify(field)}`);
                     return '';
-                })
-                .join('');
+                }
+                let inputHtml;
+                switch (field.type) {
+                    case 'textarea':
+                        inputHtml = `
+                            <textarea id="${field.id || field.name}" name="${field.name}" ${field.required ? 'required' : ''} rows="${field.rows || 4}" cols="${field.cols || 50}" style="${field.style || ''}">${field.value || ''}</textarea>
+                        `;
+                        break;
+                    case 'hidden':
+                        inputHtml = `<input type="hidden" id="${field.id || field.name}" name="${field.name}" value="${field.value || ''}">`;
+                        break;
+                    default:
+                        inputHtml = `
+                            <input type="${field.type}" id="${field.id || field.name}" name="${field.name}" value="${field.value || ''}" ${field.required ? 'required' : ''} style="${field.style || ''}" ${field.attributes ? Object.entries(field.attributes).map(([k, v]) => `${k}="${v}"`).join(' ') : ''}>
+                        `;
+                }
+                const extraButtonsHtml = field.extraButtons
+                    ? field.extraButtons.map(btn => {
+                          const btnAttributes = Object.entries(btn)
+                              .filter(([key]) => key !== 'text')
+                              .map(([key, value]) => `${key}="${value}"`)
+                              .join(' ');
+                          return `<button ${btnAttributes}>${btn.text}</button>`;
+                      }).join('')
+                    : '';
+                const fieldWrapperStyle = field.wrapper ? `class="${field.wrapper.class || ''}" style="${field.wrapper.style || ''}"` : '';
+                return `
+                    <div ${fieldWrapperStyle}>
+                        <label for="${field.id || field.name}">${field.label || ''}</label>
+                        ${inputHtml}
+                        ${extraButtonsHtml}
+                    </div>
+                `;
+            })
+            .join('');
 
-            // Render form-level buttons
-            const buttonsHtml = `
-                <button type="submit">${submitButtonText}</button>
-                ${extraButtons.map(btn => `<button type="${btn.type || 'button'}" data-action="${btn.dataAction || ''}" style="${btn.style || ''}">${btn.text}</button>`).join('')}
-            `;
+        // Render custom fields (e.g., checkbox lists)
+        const customFieldHtml = customFields
+            .map(field => {
+                if (field.type === 'checkboxList' && field.render) {
+                    return field.render(field.items, field.selected);
+                }
+                return '';
+            })
+            .join('');
 
-            // Apply form wrapper styles
-            const wrapperStyle = wrapper ? `class="${wrapper.class || ''}" style="${wrapper.style || ''}"` : '';
+        // Render form-level buttons
+        const buttonsHtml = `
+            <button type="submit">${submitButtonText}</button>
+            ${extraButtons.map(btn => `<button type="${btn.type || 'button'}" data-action="${btn.dataAction || ''}" style="${btn.style || ''}">${btn.text}</button>`).join('')}
+        `;
 
-            // Combine HTML
-            const formHtml = `
+        // Apply form wrapper styles
+        const wrapperStyle = wrapper ? `class="${wrapper.class || ''}" style="${wrapper.style || ''}"` : '';
+
+        // Combine HTML
+        const formHtml = `
+            <form id="${id}" action="${action}" method="${method}">
                 <div ${wrapperStyle}>
                     ${fieldHtml}
                     ${customFieldHtml}
                     ${buttonsHtml}
                 </div>
-            `;
+            </form>
+        `;
 
-            // Only update form content if rendering is successful
-            form.innerHTML = formHtml;
+        // If container is provided, append the form to it; otherwise, return the HTML
+        if (container && container instanceof HTMLElement) {
+            container.innerHTML = formHtml;
             log(context, `Form ${id} rendered successfully in container with ${fields.length} fields`);
-        } catch (error) {
-            log(context, `Error rendering form: ${error.message}`);
-            // Display fallback message
-            form.innerHTML = '<p>Form loading failed. Please try again later.</p>';
-            throw error; // Re-throw to propagate the error
+            return;
         }
+
+        log(context, `Form ${id} rendered as HTML string with ${fields.length} fields`);
+        return formHtml;
     }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
 }
 
@@ -6011,7 +6575,7 @@ export function initializeFormRenderingModule(registry) {
     const context = 'form-rendering.js';
     log(context, 'Initializing form-rendering module for module registry');
     return {
-        renderForm: (formId, config, container) => renderForm(formId, config, container),
+        renderForm: (formConfig, config, container) => renderForm(formConfig, config, container),
         renderMarkdownContent: (ctx, ...args) => renderMarkdownContent(ctx, ...args),
     };
 }
@@ -6023,89 +6587,106 @@ export function initializeFormRendering() {
     withScriptLogging('form-rendering.js', () => {
         log('form-rendering.js', 'Module initialized');
     });
-}
-utils/form-submission.js
-// /static/js/utils/form-submission.js
-// Purpose: Provides utilities for handling form submissions with validation and error handling.
+}
 
+utils/form-submission.js
+
+// /static/js/utils/form-submission.js
 import { log } from '../core/logger.js';
 import { fetchData } from './data-fetch.js';
 import { getFormConfig } from '../config/form-configs.js';
 import { success, error as notifyError } from '../core/notifications.js';
 import { withErrorHandling } from './error.js';
-import { ERROR_MESSAGES } from '../config/messages.js';
+import { withScriptLogging } from './logging-utils.js';
 import { withScriptLogging } from './initialization.js';
+
+/**
+ * Validates the phone number from FormData for signup forms.
+ * @param {FormData} formData - The FormData object containing form fields.
+ * @throws {Error} If the phone number is invalid.
+ */
+export function validatePhoneNumber(formData) {
+  return withErrorHandling('form-submission', () => {
+    log('form-submission', 'Type of formData:', formData.constructor.name);
+    const phone = formData.get('signup_phone');
+    log('form-submission', `Validating phone number: ${phone}`);
+    if (!phone || !/^[0-9]{10,11}$/.test(phone)) {
+      throw new Error('Invalid UK phone number (10 or 11 digits required)');
+    }
+  }, 'validatePhoneNumber');
+}
 
 /**
  * Configures a form for submission based on the provided configuration key and endpoint.
  * @param {string} context - The context or module name.
  * @param {string} formId - The ID of the form element.
  * @param {string} endpoint - The API endpoint to submit to.
- * @param {string} configKey - The form configuration key (e.g., 'login', 'userSettings').
+ * @param {string} configKey - The form configuration key (e.g., 'login', 'signup').
  * @param {Object} [options={}] - Additional options (e.g., onSuccess, onError, successMessage).
  * @returns {void}
  */
 export function submitConfiguredForm(context, formId, endpoint, configKey, options = {}) {
-    log(context, `Configuring form submission for: ${formId} with config: ${configKey}`);
-    withErrorHandling(`${context}:submitConfiguredForm`, () => {
-        const form = document.getElementById(formId);
-        if (!form) {
-            log(context, `Form element ${formId} not found`);
-            notifyError(context, 'Form not found. Please try again.');
-            throw new Error(`Form ${formId} not found`);
+  log(context, `Configuring form submission for: ${formId} with config: ${configKey}`);
+  withErrorHandling(`${context}:submitConfiguredForm`, () => {
+    const form = document.getElementById(formId);
+    if (!form) {
+      log(context, `Form element ${formId} not found`);
+      notifyError(context, 'Form not found. Please try again.');
+      throw new Error(`Form ${formId} not found`);
+    }
+
+    const config = getFormConfig(context, configKey);
+    if (!config) {
+      log(context, `No form configuration found for key: ${configKey}`);
+      notifyError(context, 'Invalid form configuration.');
+      throw new Error(`No form configuration for key: ${configKey}`);
+    }
+
+    // Remove any existing submit listeners to prevent duplicates
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+
+    // Set up form submission event listener
+    newForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+import { withScriptLogging } from './logging-utils.js';int}`);
+
+      let formData;
+      try {
+        formData = new FormData(newForm);
+        log(context, 'FormData initialized:', Array.from(formData.entries()));
+        if (config.validate) {
+          log(context, 'Running validation with FormData');
+          config.validate(formData);
         }
 
-        const config = getFormConfig(context, configKey);
-        if (!config) {
-            log(context, `No form configuration found for key: ${configKey}`);
-            notifyError(context, 'Invalid form configuration.');
-            throw new Error(`No form configuration for key: ${configKey}`);
+        const transformedData = config.transform ? config.transform(formData) : Object.fromEntries(formData);
+        log(context, 'Transformed data:', transformedData);
+        const useAuth = config.requiresAuth !== false;
+
+        const fetchOptions = {
+          method: config.method || 'POST',
+          headers: config.fetchOptions?.headers || { 'Content-Type': 'application/json' },
+          body: JSON.stringify(transformedData),
+          ...config.fetchOptions,
+        };
+
+        const response = await fetchData(context, endpoint, fetchOptions, useAuth);
+        success(context, options.successMessage || config.successMessage || 'Form submitted successfully');
+        if (options.onSuccess) {
+          options.onSuccess(response);
         }
+      } catch (err) {
+        log(context, `Submission error: ${err.message}`);
+        notifyError(context, err.message || ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
+        if (options.onError && formData) {
+          options.onError(err, formData);
+        }
+      }
+    });
 
-        // Remove any existing submit listeners to prevent duplicates
-        const newForm = form.cloneNode(true);
-        form.parentNode.replaceChild(newForm, form);
-
-        // Set up form submission event listener
-        newForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            log(context, `Submitting form ${formId} to ${endpoint}`);
-
-            try {
-                const formData = new FormData(newForm);
-                if (config.validate) {
-                    const isValid = config.validate(formData);
-                    if (!isValid) {
-                        log(context, `Form validation failed for ${formId}`);
-                        notifyError(context, config.validationError || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
-                        return;
-                    }
-                }
-
-                const transformedData = config.transform ? config.transform(formData) : Object.fromEntries(formData);
-                const fetchOptions = {
-                    method: config.method || 'POST',
-                    headers: config.fetchOptions?.headers || { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(transformedData),
-                    ...config.fetchOptions,
-                };
-
-                const response = await fetchData(context, endpoint, fetchOptions);
-                success(context, options.successMessage || config.successMessage || 'Form submitted successfully');
-                if (options.onSuccess) {
-                    options.onSuccess(response);
-                }
-            } catch (err) {
-                log(context, `Submission error: ${err.message}`);
-                notifyError(context, err.message || ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
-                if (options.onError) {
-                    options.onError(err, formData);
-                }
-            }
-        });
-
-        log(context, `Form ${formId} submission configured`);
-    }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
+    log(context, `Form ${formId} submission configured`);
+  }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
 }
 
 /**
@@ -6116,20 +6697,20 @@ export function submitConfiguredForm(context, formId, endpoint, configKey, optio
  * @returns {Promise<void>}
  */
 export async function updateFormState(context, formId, updates) {
-    log(context, `Updating form state for: ${formId}`);
-    await withErrorHandling(`${context}:updateFormState`, async () => {
-        const form = document.getElementById(formId);
-        if (!form) {
-            throw new Error(`Form ${formId} not found`);
-        }
-        Object.entries(updates).forEach(([name, value]) => {
-            const input = form.querySelector(`[name="${name}"]`);
-            if (input) {
-                input.value = value;
-                log(context, `Updated ${name} to: ${value}`);
-            }
-        });
-    }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);
+  log(context, `Updating form state for: ${formId}`);
+  await withErrorHandling(`${context}:updateFormState`, async () => {
+    const form = document.getElementById(formId);
+    if (!form) {
+      throw new Error(`Form ${formId} not found`);
+    }
+    Object.entries(updates).forEach(([name, value]) => {
+      const input = form.querySelector(`[name="${name}"]`);
+      if (input) {
+        input.value = value;
+        log(context, `Updated ${name} to: ${value}`);
+      }
+    });
+  }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);
 }
 
 /**
@@ -6138,23 +6719,25 @@ export async function updateFormState(context, formId, updates) {
  * @returns {Object} FormSubmission instance with public methods.
  */
 export function initializeFormSubmissionModule(registry) {
-    const context = 'form-submission.js';
-    log(context, 'Initializing form-submission module for module registry');
-    return {
-        submitConfiguredForm: (ctx, formId, endpoint, configKey, options) => submitConfiguredForm(ctx, formId, endpoint, configKey, options),
-        updateFormState: (ctx, formId, updates) => updateFormState(ctx, formId, updates),
-    };
+  const context = 'form-submission.js';
+  log(context, 'Initializing form-submission module for module registry');
+  return {
+    submitConfiguredForm: (ctx, formId, endpoint, configKey, options) => submitConfiguredForm(ctx, formId, endpoint, configKey, options),
+    updateFormState: (ctx, formId, updates) => updateFormState(ctx, formId, updates),
+  };
 }
 
 /**
  * Initializes the form-submission module.
  */
 export function initializeFormSubmission() {
-    withScriptLogging('form-submission.js', () => {
-        log('form-submission.js', 'Module initialized');
-    });
-}
-utils/form-validation-utils.js
+  withScriptLogging('form-submission.js', () => {
+    log('form-submission.js', 'Module initialized');
+  });
+}
+
+utils/form-validation-utils.js
+
 // /static/js/utils/form-validation-utils.js
 // Purpose: Provides helper functions for form validation.
 
@@ -6202,10 +6785,12 @@ export function initializeFormValidationUtilsModule(registry) {
 
 // Initialize module with lifecycle logging
 const context = 'form-validation-utils.js';
-withScriptLogging(context, () => {
+import { withScriptLogging } from './logging-utils.js';
   log(context, 'Module initialized');
-});
-utils/form-validation.js
+});
+
+utils/form-validation.js
+
 // /static/js/utils/form-validation.js
 // Purpose: Provides form validation utilities for common form fields.
 
@@ -6298,6 +6883,29 @@ export function validatePhoneNumber(context, formData, phoneField, typeField) {
 }
 
 /**
+ * Validates the forgot password form.
+ * @param {string} context - The context or module name.
+ * @param {FormData} formData - The form data.
+ * @returns {boolean} True if the form is valid, false otherwise.
+ */
+export function validateForgotPassword(context, formData) {
+  log(context, 'Validating forgot password form');
+  return validateRequiredFields(context, formData, ['email']);
+}
+
+/**
+ * Validates the OTP verification form.
+ * @param {string} context - The context or module name.
+ * @param {FormData} formData - The form data.
+ * @returns {boolean} True if the form is valid, false otherwise.
+ */
+export function validateVerifyOtp(context, formData) {
+  log(context, 'Validating OTP verification form');
+  return validateRequiredFields(context, formData, ['email', 'otp', 'new_password', 'confirm_new_password']) &&
+         validatePassword(context, formData, 'new_password', 'confirm_new_password');
+}
+
+/**
  * Initializes the form-validation module for use with the module registry.
  * @param {Object} registry - The module registry instance.
  * @returns {Object} FormValidation instance with public methods.
@@ -6309,6 +6917,8 @@ export function initializeFormValidationModule(registry) {
     validateRequiredFields: (ctx, ...args) => validateRequiredFields(ctx, ...args),
     validatePassword: (ctx, ...args) => validatePassword(ctx, ...args),
     validatePhoneNumber: (ctx, ...args) => validatePhoneNumber(ctx, ...args),
+    validateForgotPassword: (ctx, ...args) => validateForgotPassword(ctx, ...args),
+    validateVerifyOtp: (ctx, ...args) => validateVerifyOtp(ctx, ...args),
   };
 }
 
@@ -6316,8 +6926,10 @@ export function initializeFormValidationModule(registry) {
 const context = 'form-validation.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/icons.js
+});
+
+utils/icons.js
+
 // /static/js/utils/icons.js
 // Purpose: Provides utilities for creating and managing icons.
 
@@ -6414,8 +7026,10 @@ export function initializeIconsModule(registry) {
 const context = 'icons.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/initialization.js
+});
+
+utils/initialization.js
+
 // /static/js/utils/initialization.js
 // Purpose: Provides utilities for module initialization, page setup, and navigation.
 
@@ -6424,6 +7038,7 @@ import { withAuthenticatedUser } from '../core/auth.js'; // Updated import to co
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js'; // Updated import to messages.js
 import { defineSectionHandlers } from '../modules/navigation.js';
+import { withScriptLogging } from './logging-utils.js'; // Changed from re-export to direct import
 
 const context = 'initialization.js';
 
@@ -6440,20 +7055,6 @@ async function showSection(sectionId) {
             section.style.display = 'none';
         }
     });
-}
-
-/**
- * Wraps a module initialization function with lifecycle logging.
- * @param {string} context - The context or module name.
- * @param {Function} initFunction - The initialization function to wrap.
- * @returns {void}
- */
-export function withScriptLogging(context, initFunction) {
-    log(context, 'Starting module initialization');
-    withErrorHandling(`${context}:withScriptLogging`, () => {
-        initFunction();
-        log(context, 'Module initialization completed');
-    }, ERROR_MESSAGES.MODULE_INIT_FAILED);
 }
 
 /**
@@ -6500,7 +7101,7 @@ export async function initializeRoleNavigation(context, role, defaultSection) {
             sectionHandlers = defineSectionHandlers(context, 'login', [
                 {
                     id: 'info',
-                    handler: () => {
+import { withScriptLogging } from './logging-utils.js';
                         log(context, 'Showing info section');
                         showSection('info');
                     },
@@ -6542,7 +7143,7 @@ export async function initializeRoleNavigation(context, role, defaultSection) {
  * @param {string} role - The role associated with the page (e.g., 'admin', 'merchant').
  * @param {string} pageType - The type of page to initialize (e.g., 'products', 'integrations').
  * @param {Function} callback - The callback to execute for role-specific setup.
- * @returns {Promise<void>}
+import { withScriptLogging } from './logging-utils.js';
  */
 export async function initializeRolePage(context, role, pageType, callback) {
     log(context, `Initializing ${role} page with type: ${pageType}`);
@@ -6579,6 +7180,9 @@ export function initializeInitializationModule(registry) {
     });
 }
 
+/**
+ * Hides the loading overlay and shows the layout wrapper.
+ */
 export function hideOverlay() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const layoutWrapper = document.querySelector('.layout-wrapper');
@@ -6599,9 +7203,54 @@ document.addEventListener('click', (event) => {
 
 // Initialize module with lifecycle logging
 withScriptLogging(context, () => {
-    log(context, 'Module initialized');
-});
-utils/settings-data.js
+import { withScriptLogging } from './logging-utils.js';
+});
+
+utils/logging-utils.js
+
+// /static/js/utils/logging-utils.js
+// Purpose: Provides logging utilities for script lifecycle management.
+
+import { log } from '../core/logger.js';
+
+/**
+ * Wraps a module initialization function with lifecycle logging.
+ * @param {string} context - The context or module name.
+ * @param {Function} initFn - The initialization function to wrap.
+ * @returns {void}
+ */
+export function withScriptLogging(context, initFn) {
+  log(context, 'Starting module initialization');
+  try {
+    const result = initFn();
+    log(context, 'Module initialization completed');
+    return result;
+  } catch (error) {
+    log(context, `Module initialization failed: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Initializes the logging-utils module for use with the module registry.
+ * @param {Object} registry - The module registry instance.
+ * @returns {Object} LoggingUtils instance with public methods.
+ */
+export function initializeLoggingUtilsModule(registry) {
+  log('logging-utils.js', 'Initializing logging-utils module for module registry');
+  return {
+    withScriptLogging,
+  };
+}
+
+// Initialize module with lifecycle logging
+const context = 'logging-utils.js';
+withScriptLogging(context, () => {
+  log(context, 'Module initialized');
+});
+
+utils/settings-data.js
+
 // /static/js/utils/settings-data.js
 // Purpose: Provides utilities for fetching settings data.
 
@@ -6617,7 +7266,7 @@ import { withScriptLogging } from './initialization.js';
  * @param {string} endpoint - The API endpoint to fetch settings from.
  * @returns {Promise<Array>} The fetched settings data.
  */
-export async function loadSettings(context, endpoint) {
+import { withScriptLogging } from './logging-utils.js';
   log(context, `Loading settings from endpoint: ${endpoint}`);
   return await withErrorHandling(`${context}:loadSettings`, async () => {
     const data = await fetchData(context, endpoint);
@@ -6642,8 +7291,10 @@ export function initializeSettingsDataModule(registry) {
 const context = 'settings-data.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/settings-events.js
+});
+
+utils/settings-events.js
+
 // /static/js/utils/settings-events.js
 // Purpose: Provides utilities for setting up settings-related event listeners.
 
@@ -6680,7 +7331,7 @@ export function setupSettingsEvents(context, formId, endpoint, settingType) {
         });
         success(context, `Settings for ${settingType} updated successfully`);
       },
-    },
+import { withScriptLogging } from './logging-utils.js';
   ]);
 }
 
@@ -6701,8 +7352,10 @@ export function initializeSettingsEventsModule(registry) {
 const context = 'settings-events.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/settings-renderer.js
+});
+
+utils/settings-renderer.js
+
 // /static/js/utils/settings-renderer.js
 // Purpose: Provides utilities for rendering settings UI components.
 
@@ -6763,8 +7416,10 @@ export function initializeSettingsRendererModule(registry) {
 const context = 'settings-renderer.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/settings-ui.js
+});
+
+utils/settings-ui.js
+
 // /static/js/utils/settings-ui.js
 // Purpose: Provides low-level utilities for rendering settings fields and UI components.
 
@@ -6830,8 +7485,10 @@ export function initializeSettingsUiModule(registry) {
 const context = 'settings-ui.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
-utils/ui-components.js
+});
+
+utils/ui-components.js
+
 // /static/js/utils/ui-components.js
 // Purpose: Provides utilities for rendering reusable UI components.
 
@@ -6974,4 +7631,5 @@ export function initializeUiComponentsModule(registry) {
 const context = 'ui-components.js';
 withScriptLogging(context, () => {
   log(context, 'Module initialized');
-});
+});
+

@@ -3,7 +3,7 @@ import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setupFormFieldEvents } from '../utils/event-listeners.js';
 import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 const context = 'signup';
 
@@ -24,12 +24,6 @@ export async function initializeSignup(context) {
 
         // Configure the signup form submission
         await withElement(context, 'signupForm', async (form) => {
-            // Clear fields to prevent autofill
-            ['signup_email', 'signup_phone', 'contact_name', 'website'].forEach(id => {
-                const input = form.querySelector(`#${id}`);
-                if (input) input.value = '';
-            });
-
             // Ensure "Community" is the default signup type
             document.querySelectorAll('.option').forEach(option => option.classList.remove('selected'));
             const communityOption = form.querySelector('input[value="community"]');
@@ -54,9 +48,12 @@ export async function initializeSignup(context) {
                         if (otpTokenInput) otpTokenInput.value = response.otp_token || '';
                         const verifyForm = document.getElementById('verifyOtpForm');
                         if (verifyForm) verifyForm.action = '/verify-signup-otp';
-                    } else {
+                    } else if (response.account_link) {
                         log(context, 'Redirecting to Stripe:', response.account_link);
                         window.location.href = response.account_link;
+                    } else {
+                        log(context, 'Error: account_link missing in response');
+                        alert('Signup successful, but unable to redirect to Stripe. Please try again later.');
                     }
                 },
                 onError: (err) => {

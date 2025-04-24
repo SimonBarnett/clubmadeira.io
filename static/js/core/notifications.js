@@ -2,7 +2,7 @@
 // Purpose: Provides notification utilities using Toastr with fallback to alerts.
 
 import { log, error as loggerError, warn as loggerWarn } from './logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { createModuleInitializer } from '../utils/initialization.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/messages.js'; // Updated import
 

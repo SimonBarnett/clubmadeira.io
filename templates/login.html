@@ -1,10 +1,10 @@
 {% extends "base.inc" %}
-{% block body_attributes %}data-page-type="login"{% endblock %}
 {% block content %}
 <!-- Deployed 2025-04-19 v12, Consolidated login and signup -->
 <!-- Updated 2025-04-20 v12.4, Removed justify-content to allow main stylesheet alignment -->
 <!-- Updated 2025-04-21 v12.5, Fixed flashing border on default Community selection -->
 <!-- Updated 2025-04-22 v12.6, Fixed signupOtpSection and formData.get errors -->
+<!-- Updated 2025-04-23 v12.7, Simplified signup form to only collect role -->
 
 <style>
     /* Hide radio buttons */
@@ -86,33 +86,7 @@
                 <span>Partner</span>
             </label>
         </div>
-        <div class="form-section">
-            <div class="form-group">
-                <label for="contact_name">Contact Name:</label>
-                <div class="input-container">
-                    <input type="text" id="contact_name" name="contact_name" required autocomplete="off">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="signup_phone">Phone Number:</label>
-                <div class="input-container">
-                    <input type="tel" id="signup_phone" name="signup_phone" autocomplete="off" pattern="[0-9]{10,11}" title="Please enter a 10 or 11-digit UK phone number" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="signup_email">Email:</label>
-                <div class="input-container">
-                    <input type="email" id="signup_email" name="signup_email" required autocomplete="off">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="website">Website (optional):</label>
-                <div class="input-container">
-                    <input type="url" id="website" name="website" autocomplete="off">
-                </div>
-            </div>
-            <button type="submit">Sign Me Up</button>
-        </div>
+        <button type="submit">Sign Me Up</button>
     </form>
 </div>
 
@@ -160,7 +134,7 @@
 <script>
     window.onload = function() {
         // Clear fields to prevent autofill
-        ['signup_email', 'signup_phone', 'contact_name', 'website', 'forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
+        ['forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
             const input = document.getElementById(id);
             if (input) input.value = '';
         });

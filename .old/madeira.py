@@ -384,13 +384,24 @@ def load_users_settings():
     return {}
 
 def save_users_settings(users_settings):
+    """
+    Save the users_settings dictionary to the JSON file.
+
+    Args:
+        users_settings (dict): Dictionary containing user settings to save.
+
+    Raises:
+        Exception: If saving to the file fails, ensuring the caller is notified.
+    """
     try:
         with open(USERS_SETTINGS_FILE, 'w') as f:
             json.dump(users_settings, f, indent=4)
-    except IOError as e:
-        raise Exception(f"Failed to write to {USERS_SETTINGS_FILE}: {str(e)}")
+        # Redact sensitive data in logs
+        log_settings = {uid: {k: "[REDACTED]" if k in ["password"] else v for k, v in s.items()} for uid, s in users_settings.items()}
+        logging.debug(f"Saved users settings: {json.dumps(log_settings)}")
     except Exception as e:
-        raise Exception(f"Unexpected error saving {USERS_SETTINGS_FILE}: {str(e)}")
+        logging.error(f"UX Issue - Failed to save users settings: {str(e)}", exc_info=True)
+        raise  # Re-raise to alert calling code
     
 def get_user_settings(user_id):
     users_settings = load_users_settings()

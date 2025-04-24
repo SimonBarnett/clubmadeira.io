@@ -7,7 +7,7 @@ import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setupEventListeners } from '../utils/event-listeners.js';
 import { SETTINGS } from '../config/settings.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads and renders user settings.

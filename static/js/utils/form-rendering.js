@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { renderMarkdown } from '../core/markdown.js';
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from './initialization.js';
+import { withScriptLogging } from './logging-utils.js';
 import { getFormConfig } from '../config/form-configs.js';
 
 /**

@@ -5,7 +5,7 @@ import { loadApiKeys } from './api-keys.js';
 import { loadProducts } from './products.js';
 import { loadUserSettings } from './user-settings.js';
 import { renderDocumentation } from './documentation.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 
 /**

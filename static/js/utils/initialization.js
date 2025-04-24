@@ -6,6 +6,7 @@ import { withAuthenticatedUser } from '../core/auth.js'; // Updated import to co
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js'; // Updated import to messages.js
 import { defineSectionHandlers } from '../modules/navigation.js';
+import { withScriptLogging } from './logging-utils.js'; // Changed from re-export to direct import
 
 const context = 'initialization.js';
 
@@ -22,20 +23,6 @@ async function showSection(sectionId) {
             section.style.display = 'none';
         }
     });
-}
-
-/**
- * Wraps a module initialization function with lifecycle logging.
- * @param {string} context - The context or module name.
- * @param {Function} initFunction - The initialization function to wrap.
- * @returns {void}
- */
-export function withScriptLogging(context, initFunction) {
-    log(context, 'Starting module initialization');
-    withErrorHandling(`${context}:withScriptLogging`, () => {
-        initFunction();
-        log(context, 'Module initialization completed');
-    }, ERROR_MESSAGES.MODULE_INIT_FAILED);
 }
 
 /**
@@ -161,6 +148,9 @@ export function initializeInitializationModule(registry) {
     });
 }
 
+/**
+ * Hides the loading overlay and shows the layout wrapper.
+ */
 export function hideOverlay() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const layoutWrapper = document.querySelector('.layout-wrapper');

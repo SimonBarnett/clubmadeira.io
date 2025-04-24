@@ -1,5 +1,5 @@
 // /static/js/core/logger.js
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Logs a message to the console with the specified context.
@@ -43,11 +43,8 @@ export function initializeLoggerModule(registry) {
     };
 }
 
-/**
- * Initializes the logger module.
- */
-export function initializeLogger() {
-    withScriptLogging('logger.js', () => {
-        log('logger.js', 'Module initialized');
-    });
-}
+// Initialize module with lifecycle logging
+const context = 'logger.js';
+withScriptLogging(context, () => {
+    log(context, 'Module initialized');
+});

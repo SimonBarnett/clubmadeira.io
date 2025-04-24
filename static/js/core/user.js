@@ -6,7 +6,7 @@ import { authenticatedFetch } from './auth.js';
 import { withErrorHandling } from '../utils/error.js';
 import {  ERROR_MESSAGES } from '../config/constants.js';
 import { API_ENDPOINTS } from '../config/endpoints.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Fetches user data for the specified user ID.

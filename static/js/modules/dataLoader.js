@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { fetchData } from '../utils/data-fetch.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Loads data from the specified endpoint, retained for compatibility with existing modules.

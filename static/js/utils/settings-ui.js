@@ -7,7 +7,7 @@ import { setupSettingsEvents } from './settings-events.js';
 import { withElement } from './dom-manipulation.js';
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from './initialization.js';
+import { withScriptLogging } from './logging-utils.js';
 
 /**
  * Renders settings fields based on the provided settings and configuration.

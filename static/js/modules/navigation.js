@@ -3,7 +3,7 @@ import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
 import { getMenu } from '../config/menus.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 const context = 'navigation.js';
 

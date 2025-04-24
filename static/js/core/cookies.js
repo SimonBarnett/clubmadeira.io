@@ -1,15 +1,11 @@
 // /static/js/core/cookies.js
+// /static/js/core/cookies.js
 import { log } from './logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js'; // Corrected import
 
 const context = 'cookies.js';
 
-/**
- * Sets a cookie with the given name, value, and expiration days.
- * @param {string} name - The name of the cookie.
- * @param {string} value - The value of the cookie.
- * @param {number} days - The number of days until the cookie expires.
- */
+
 export function setCookie(name, value, days) {
     log(context, `Setting cookie: ${name}`);
     let expires = '';
@@ -21,11 +17,6 @@ export function setCookie(name, value, days) {
     document.cookie = `${name}=${value}${expires}; path=/; SameSite=Strict`;
 }
 
-/**
- * Retrieves the value of a cookie by name.
- * @param {string} name - The name of the cookie to retrieve.
- * @returns {string|null} The value of the cookie, or null if not found.
- */
 export function getCookie(name) {
     log(context, `Getting cookie: ${name}`);
     const nameEQ = `${name}=`;
@@ -42,18 +33,11 @@ export function getCookie(name) {
     return null;
 }
 
-/**
- * Removes a cookie by setting its expiration to a past date.
- * @param {string} name - The name of the cookie to remove.
- */
 export function removeCookie(name) {
     log(context, `Removing cookie: ${name}`);
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict`;
 }
 
-/**
- * Initializes the cookies module.
- */
 export function initializeCookies() {
     withScriptLogging(context, () => {
         log(context, 'Module initialized');

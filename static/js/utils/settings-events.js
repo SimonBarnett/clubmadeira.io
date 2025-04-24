@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { setupEventListeners } from './event-listeners.js';
 import { fetchData } from './data-fetch.js';
 import { success } from '../core/notifications.js';
-import { withScriptLogging } from './initialization.js';
+import { withScriptLogging } from './logging-utils.js';
 
 /**
  * Sets up event listeners for settings form submissions.

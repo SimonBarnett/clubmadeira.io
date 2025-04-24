@@ -6,7 +6,7 @@ import { toggleViewState } from '../utils/dom-manipulation.js';
 import { success, error as notifyError } from '../core/notifications.js';
 import { renderCheckboxList, renderDataTable, renderModal } from '../utils/ui-components.js';
 import { ROLES, SUCCESS_MESSAGES, ERROR_MESSAGES } from '../config/constants.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Renders user data in a table.
@@ -121,7 +121,7 @@ export async function renderPermissionsModal(context, userId, userData, role, fo
 
 /**
  * Initializes the users UI module for use with the module registry.
- * @param {Object} registry - The cdecl module registry instance.
+ * @param {Object} registry - The module registry instance.
  * @returns {Object} Users UI instance with public methods.
  */
 export function initializeUsersUiModule(registry) {

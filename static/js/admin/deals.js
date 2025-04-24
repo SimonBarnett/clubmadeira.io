@@ -7,7 +7,7 @@ import { load as dataLoaderLoad } from '../modules/dataLoader.js';
 import { fetchData } from '../utils/data-fetch.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
 import { renderDataTable } from '../utils/ui-components.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Fetches and renders deals data in a table.

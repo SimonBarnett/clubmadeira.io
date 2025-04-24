@@ -274,29 +274,18 @@ admin.html
         </form>
     </div>
 
-    <div id="settings" class="section" style="display: none;">
-        <h2>Settings</h2>
-        <p>Configure settings specific to your role here.</p>
-        <form id="settings-form">
-            <input type="text" id="userId" name="userId" placeholder="User ID">
-            <input type="text" id="contactName" name="contactName" placeholder="Contact Name">
-            <input type="text" id="websiteUrl" name="websiteUrl" placeholder="Website URL">
-            <input type="email" id="emailAddress" name="emailAddress" placeholder="Email Address">
-            <button type="submit">Save Settings</button>
-        </form>
-    </div>
-
     <div id="categories" class="section" style="display: none;">
         <h2>Categories</h2>
         <p>Manage categories here.</p>
     </div>
     
-{% endblock %}
+{% endblock %}S
 base.inc
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="page-type" content="{{ page_type | default('login') }}">
     <title>{{ title | default('clubmadeira.io') }}</title>
     <!-- External CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -418,6 +407,17 @@ base.inc
                     <button type="submit"><i class="fas fa-key"></i> Update Password</button>
                 </form>
             </div>
+            <div id="settings" class="section" style="display: none;">
+                <h2>Settings</h2>
+                <p>Configure settings specific to your role here.</p>
+                <form id="settings-form">
+                    <input type="text" id="settingsUserId" name="userId" placeholder="User ID">
+                    <input type="text" id="contactName" name="contactName" placeholder="Contact Name">
+                    <input type="text" id="websiteUrl" name="websiteUrl" placeholder="Website URL">
+                    <input type="email" id="emailAddress" name="emailAddress" placeholder="Email Address">
+                    <button type="submit">Save Settings</button>
+                </form>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -471,7 +471,6 @@ base.inc
 </html>
 community.html
 {% extends "base.inc" %}
-{% block body_attributes %}data-page-type="community"{% endblock %}
 {% block content %}
            
     <div id="categories" class="section" style="display: block;">
@@ -633,11 +632,97 @@ community.html
     </script>
 {% endblock %}
 login.html
-<!-- templates/login.html -->
 {% extends "base.inc" %}
-{% block body_attributes %}data-page-type="login"{% endblock %}
 {% block content %}
 <!-- Deployed 2025-04-19 v12, Consolidated login and signup -->
+<!-- Updated 2025-04-20 v12.4, Removed justify-content to allow main stylesheet alignment -->
+<!-- Updated 2025-04-21 v12.5, Fixed flashing border on default Community selection -->
+<!-- Updated 2025-04-22 v12.6, Fixed signupOtpSection and formData.get errors -->
+<!-- Updated 2025-04-23 v12.7, Simplified signup form to only collect role -->
+
+<style>
+    /* Hide radio buttons */
+    .option input[type="radio"] {
+        display: none;
+    }
+
+    /* Fallback rule for options container */
+    .options {
+        display: flex;
+        flex-direction: row;
+        gap: 15px; /* Spacing between options */
+    }
+
+    /* Style the options container to display items horizontally with specific ID selector */
+    #signupContainer .options {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 15px !important;
+    }
+
+    /* Style the option label as a vertical stack for icon and text */
+    .option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        padding: 10px;
+        text-align: center;
+    }
+
+    /* Apply flashing border to the entire option when selected */
+    .option.selected {
+        border: 3px solid #007BFF;
+        border-radius: 5px;
+        animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    /* Ensure the text span is below the icon */
+    .option span:not(.icon-community):not(.icon-merchant):not(.icon-partner) {
+        display: block;
+        margin-top: 5px;
+    }
+
+    /* Pulse animation keyframes */
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+        }
+    }
+</style>
+
+<div class="section" id="signupContainer" style="display: none;">
+    <h2>Sign Up - I am a...</h2>
+    <form id="signupForm" class="form" method="POST" autocomplete="off">
+        <!-- Dummy fields to trick autofill -->
+        <input type="text" class="hidden" autocomplete="off">
+        <input type="text" class="hidden" autocomplete="off">
+        <div class="options">
+            <label class="option selected">
+                <input type="radio" name="signup_type" value="community" checked>
+                <i class="fas fa-users icon-community" style="width: 50px; height: 50px; font-size: 50px;"></i>
+                <span>Community</span>
+            </label>
+            <label class="option">
+                <input type="radio" name="signup_type" value="seller">
+                <i class="fas fa-store icon-merchant" style="width: 50px; height: 50px; font-size: 50px;"></i>
+                <span>Merchant</span>
+            </label>
+            <label class="option">
+                <input type="radio" name="signup_type" value="partner">
+                <i class="fas fa-handshake icon-partner" style="width: 50px; height: 50px; font-size: 50px;"></i>
+                <span>Partner</span>
+            </label>
+        </div>
+        <button type="submit">Sign Me Up</button>
+    </form>
+</div>
 
 <div class="section" id="forgotPasswordContainer" style="display: none;">
     <h2>Forgot Password</h2>
@@ -648,18 +733,18 @@ login.html
         </div>
         <button type="submit">Send OTP via SMS</button>
     </form>
-</div>  
+</div>
 
 <div class="section" id="verifyOtpSection" style="display: none;">
     <h2>Verify OTP</h2>
-    <form id="verifyOtpForm" class="form" method="POST" action="/verify-reset-code">
+    <form id="verifyOtpForm" class="form" method="POST">
         <div class="form-group">
             <label for="verifyEmail">Email:</label>
             <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required autocomplete="off">
         </div>
         <div class="form-group">
             <label for="otpCode">One-Time Password:</label>
-            <input type="text" id="otpCode" name="code" placeholder="Enter the OTP from SMS" required>
+            <input type="text" id="otpCode" name="otp" placeholder="Enter the OTP from SMS" required>
         </div>
         <div class="form-group">
             <label for="newPassword">New Password:</label>
@@ -675,96 +760,52 @@ login.html
                 <i class="fas fa-eye toggle-password"></i>
             </div>
         </div>
-        <button type="submit">Update Password</button>
-    </form>
-</div>
-
-<div class="section" id="signupContainer" style="display: none;">
-    <h2>Sign Up - I am a...</h2>
-    <form id="signupForm" class="form" method="POST" action="/signup" autocomplete="off">
-        <!-- Dummy fields to trick autofill -->
-        <input type="text" class="hidden" autocomplete="off">
-        <input type="text" class="hidden" autocomplete="off">
-        <div class="options">
-            <label class="option selected">
-                <input type="radio" name="signup_type" value="community" checked>
-                <span class="icon-community"></span>
-                <span>Community Group</span>
-            </label>
-            <label class="option">
-                <input type="radio" name="signup_type" value="seller">
-                <span class="icon-merchant"></span>
-                <span>Merchant</span>
-            </label>
-            <label class="option">
-                <input type="radio" name="signup_type" value="wixpro">
-                <span class="icon-partner"></span>
-                <span>Partner</span>
-            </label>
-        </div>
-        <div class="form-section">
-            <div class="form-group">
-                <label for="contact_name">Contact Name:</label>
-                <div class="input-container">
-                    <input type="text" id="contact_name" name="contact_name" required autocomplete="off">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="signup_phone">Phone Number:</label>
-                <div class="input-container">
-                    <input type="tel" id="signup_phone" name="signup_phone" autocomplete="off" pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="signup_email">Email:</label>
-                <div class="input-container">
-                    <input type="email" id="signup_email" name="signup_email" required autocomplete="off">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="signup_password">Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="signup_password" name="signup_password" required autocomplete="new-password">
-                    <i class="fas fa-eye toggle-password"></i>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="signup_confirm_password">Confirm Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="signup_confirm_password" name="signup_confirm_password" required autocomplete="new-password">
-                    <i class="fas fa-eye toggle-password"></i>
-                </div>
-            </div>
-            <button type="submit">Sign Me Up</button>
-        </div>
-        <div class="otp-section hidden" id="signupOtpSection">
-            <div class="form-group">
-                <label for="signupOtp">Enter OTP:</label>
-                <input type="text" id="signupOtp" name="otp" placeholder="Enter OTP" required>
-            </div>
-            <button id="verifySignupOtpBtn">Verify OTP</button>
-        </div>
+        <input type="hidden" id="otpToken" name="otp_token">
+        <button type="submit">Set Password</button>
     </form>
 </div>
 
 <script>
-    // Inline script for minimal initialization
     window.onload = function() {
         // Clear fields to prevent autofill
-        ['signup_email', 'signup_password', 'signup_confirm_password', 'signup_phone', 'loginEmail', 'loginPassword', 'forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
+        ['forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
             const input = document.getElementById(id);
             if (input) input.value = '';
         });
 
-        // Set Community Group as default
-        document.querySelectorAll('.option').forEach(option => option.classList.remove('selected'));
-        document.querySelector('input[value="community"]').closest('.option').classList.add('selected');
+        // Ensure default Community selection has .selected class
+        const defaultOption = document.querySelector('input[name="signup_type"]:checked').closest('.option');
+        if (defaultOption) defaultOption.classList.add('selected');
+
+        // Handle click events to toggle .selected class
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                option.querySelector('input').checked = true;
+            });
+        });
+
+        // Toggle password visibility for OTP form
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const input = toggle.previousElementSibling;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    toggle.classList.remove('fa-eye');
+                    toggle.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    toggle.classList.remove('fa-eye-slash');
+                    toggle.classList.add('fa-eye');
+                }
+            });
+        });
     };
 </script>
 {% endblock %}
 merchant.html
 {% extends 'base.inc' %}
-{% block body_attributes %}data-page-type="merchant"{% endblock %}
 {% block content %}
 
     <!-- API Keys Section -->
@@ -835,7 +876,6 @@ overlay.inc
 </style>
 partner.html
 {% extends "base.inc" %}
-{% block body_attributes %}data-page-type="partner"{% endblock %}
 {% block content %}
     <div id="integrations" class="section" style="display: none;">
         <h2>Integrations</h2>
@@ -843,7 +883,7 @@ partner.html
         <ul id="integrationList"></ul>
     </div>
 
-<script>
+    <script>
         console.log('partner.html - Template loaded');
     </script>
 {% endblock %}
@@ -1013,8 +1053,35 @@ welcome.inc
     <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard empowers partners to collaborate with merchants and communities on clubmadeira.io.</p>
     <p>Use the menu to manage integrations, review site requests, access documentation, and update your account. Work together to create tailored solutions for our users.</p>
 {% else %}
-    <div id="welcomeSection" class="section">
-        <h2>Welcome to clubmadeira.io</h2>
+    {% if from_stripe %}
+        <p>Welcome back from Stripe! Please set your password to complete your account setup.</p>
+        <form id="setPasswordForm" class="form" method="POST" action="/">
+            <input type="hidden" name="set_password" value="true">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <div class="input-container">
+                    <input type="email" id="email" name="email" value="{{ email }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password:</label>
+                <div class="password-wrapper">
+                    <input type="password" id="confirmPassword" name="confirm_password" placeholder="Confirm your password" required>
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+            </div>
+            <div>
+                <button type="submit">Set Password</button>
+            </div>
+        </form>
+    {% else %}
         <p>Log in to access your dashboard.</p>
         <form id="loginForm" class="form" method="POST" action="/">
             <div class="form-group">
@@ -1034,5 +1101,5 @@ welcome.inc
                 <button type="submit">Login</button>
             </div>
         </form>
-    </div>
+    {% endif %}
 {% endif %}

@@ -2,9 +2,8 @@
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
-import { getFormConfig } from '../config/form-configs.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the forgot password form in the specified section.
@@ -26,9 +25,29 @@ export async function initializeForgotPassword(context) {
     submitConfiguredForm(context, 'forgotPasswordForm', '/reset-password', 'forgotPassword', {
       onSuccess: async (data) => {
         log(context, 'Forgot password request successful, showing OTP section');
-        localStorage.setItem('resetToken', data.token);  // Store the token for later use
+        if (data.otp_token) {
+          localStorage.setItem('resetToken', data.otp_token);  // Correctly use otp_token
+          log(context, 'Stored resetToken:', data.otp_token);
+        } else {
+          log(context, 'No otp_token in response');
+          alert('Failed to receive OTP token from server.');
+          return;
+        }
         await withElement(context, 'verifyOtpSection', async otpSection => {
           toggleViewState(context, { verifyOtpSection: true });
+          // Populate the otpToken field with the stored token
+          const otpTokenInput = document.getElementById('otpToken');
+          if (otpTokenInput) {
+            const token = localStorage.getItem('resetToken');
+            if (token) {
+              otpTokenInput.value = token;
+              log(context, `Set otpToken to: ${token}`);
+            } else {
+              log(context, 'No reset token found in localStorage');
+            }
+          } else {
+            log(context, 'otpToken input not found');
+          }
         });
       },
       onError: (error) => {

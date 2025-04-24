@@ -8,9 +8,9 @@ import { ERROR_MESSAGES } from '../config/messages.js';
 import { loadClientApiSettings } from './providers-data.js';
 import { renderProviderSettings } from './providers-events.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
-import { setupCollapsibleSections } from '../utils/dom-manipulation.js'; // Added for collapsible sections
-import { initializeTinyMCE } from '../core/mce.js'; // Added for TinyMCE
-import { withScriptLogging } from '../utils/initialization.js';
+import { setupCollapsibleSections } from '../utils/dom-manipulation.js';
+import { initializeTinyMCE } from '../core/mce.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the community providers page.
@@ -26,8 +26,8 @@ export async function initializeProvidersPage(context) {
       if (userIdInput) userIdInput.value = userId;
       const settings = await loadClientApiSettings(context);
       await renderProviderSettings(context, settings, 'providerIconsBar');
-      setupCollapsibleSections(context); // Replaced window.setupCollapsibleSections
-      await initializeTinyMCE(context, '#aboutCommunity, #stylingDetails, #page1Content'); // Added TinyMCE
+      setupCollapsibleSections(context);
+      await initializeTinyMCE(context, '#aboutCommunity, #stylingDetails, #page1Content');
     }, ERROR_MESSAGES.FETCH_FAILED('providers page initialization'));
   });
 }

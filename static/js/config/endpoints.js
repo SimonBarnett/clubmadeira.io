@@ -2,7 +2,7 @@
 // Purpose: Defines API endpoints for the application, centralizing all API routes for consistent usage.
 
 import { log } from '../core/logger.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * API endpoint definitions with parameterized routes where applicable.

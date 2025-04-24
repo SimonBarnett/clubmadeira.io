@@ -7,8 +7,8 @@ import { withAuthenticatedUser } from '../utils/auth.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
 import { initializeProvidersPage } from './providers-page.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
-import { setupCollapsibleSections } from '../utils/dom-manipulation.js'; // Added for collapsible sections
-import { withScriptLogging } from '../utils/initialization.js';
+import { setupCollapsibleSections } from '../utils/dom-manipulation.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the community providers page.
@@ -23,7 +23,7 @@ export function initializeProviders(context) {
       if (userIdInput) userIdInput.value = userId;
       setupCategoriesNavigation(context, 'community', 'providers');
       initializeProvidersPage(context);
-      setupCollapsibleSections(context); // Replaced window.setupCollapsibleSections
+      setupCollapsibleSections(context);
     });
   }, ERROR_MESSAGES.FETCH_FAILED('providers page initialization'));
 }

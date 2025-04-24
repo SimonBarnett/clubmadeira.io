@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { withErrorHandling } from './error.js';
 import { isValidEmail } from './form-validation-utils.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from './initialization.js';
+import { withScriptLogging } from './logging-utils.js';
 
 /**
  * Validates required fields in a form.

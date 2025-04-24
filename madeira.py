@@ -184,8 +184,15 @@ def home():
         if request.method == 'GET':
             decoded, token, source = get_authenticated_user()
             if not decoded:
+                from_stripe = session.get('from_stripe', False)
                 logging.debug("No valid authentication, serving login page")
-                response = make_response(render_template('login.html', title='clubmadeira.io | Login', page_type='login', base_url=request.url_root.rstrip('/')))
+                response = make_response(render_template(
+                    'login.html',
+                    title='clubmadeira.io | Login',
+                    page_type='login',
+                    base_url=request.url_root.rstrip('/'),
+                    from_stripe=from_stripe
+                ))
                 response.headers['X-Page-Type'] = 'login'
                 return response
 
@@ -215,17 +222,16 @@ def home():
             logging.debug(f"Serving {page_type} page for user {user_id} from {source} with template {template}")
             logging.debug(f"Template context - x_role: {x_role}, page_type: {page_type}, user: {user}")
             
-            # Define context with default values to prevent undefined variable errors
             context = {
                 'title': f'clubmadeira.io | {title_suffix}',
                 'page_type': page_type,
                 'user': user,
                 'x_role': x_role,
-                'deselected': [],           # Default empty list
-                'previous_deselected': [],  # Default empty list
-                'selected': [],             # Default empty list
-                'prompt': '',               # Default empty string
-                'categories': {}            # Default empty dict
+                'deselected': [],
+                'previous_deselected': [],
+                'selected': [],
+                'prompt': '',
+                'categories': {}
             }
             response = make_response(render_template(template, **context))
             response.headers['X-Role'] = x_role
@@ -233,7 +239,7 @@ def home():
             response.set_cookie('authToken', token, secure=True, max_age=604800, path='/')
             return response
 
-        # POST request (login)
+        # POST request (login or password setup)
         content_type = request.headers.get('Content-Type', '')
         if 'application/json' in content_type:
             data = request.get_json(silent=True, force=True, cache=False) or {}
@@ -250,6 +256,7 @@ def home():
         }
         logging.debug(f"Request: {json.dumps(log_data)}")
 
+        # Handle login
         if not data or 'email' not in data or 'password' not in data:
             logging.warning(f"Missing fields: {data}")
             return jsonify({"status": "error", "message": "Email and password are required"}), 400
@@ -262,7 +269,11 @@ def home():
 
         if user_entry:
             user_id, user = user_entry
-            if bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+            stored_hash = user['password']
+            logging.debug(f"Stored password hash for {user_id}: {stored_hash[:10]}...")  # Redacted for brevity
+            logging.debug(f"Provided password length: {len(password)}")  # Avoid logging full password
+
+            if bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8')):
                 permissions = user['permissions']
                 x_role = 'admin' if 'admin' in permissions else next((r for r in ['merchant', 'community', 'partner'] if r in permissions), 'login')
                 token = generate_token(user_id, permissions, x_role=x_role)
@@ -283,7 +294,7 @@ def home():
                 response.set_cookie('authToken', token, secure=True, max_age=604800, path='/')
                 return response, 200
             else:
-                logging.debug("Password does not match")
+                logging.debug("Password mismatch during login attempt")
                 return jsonify({"status": "error", "message": "Invalid credentials"}), 401
         else:
             logging.debug(f"User not found for email: {email}")
@@ -292,7 +303,7 @@ def home():
     except Exception as e:
         logging.error(f"UX Issue - Failed to process request: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
+    
 @app.route('/set-role', methods=['POST'])
 @login_required(['admin'], require_all=True)
 def set_role():

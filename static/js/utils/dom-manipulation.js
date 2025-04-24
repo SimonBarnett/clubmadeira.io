@@ -4,7 +4,7 @@
 import { log } from '../core/logger.js';
 import { withErrorHandling } from './error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
-import { withScriptLogging } from './initialization.js';
+import { withScriptLogging } from './logging-utils.js';
 
 // Cache for DOM elements to reduce repeated queries
 const elementCache = new Map();

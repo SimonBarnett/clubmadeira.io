@@ -7,7 +7,7 @@ import { success, error as notifyError } from '../core/notifications.js';
 import { renderForm } from '../utils/form-rendering.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
 import { getFormConfig } from '../config/form-configs.js';
-import { withScriptLogging } from '../utils/initialization.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Validates categories data structure.

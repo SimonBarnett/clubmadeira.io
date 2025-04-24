@@ -8,8 +8,8 @@ import { ERROR_MESSAGES } from '../config/messages.js';
 import { processVisitsAndOrders } from './referrals-data.js';
 import { updateVisitsTable, updateOrdersTable } from './referrals-ui.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
-import { setupCollapsibleSections } from '../utils/dom-manipulation.js'; // Added for collapsible sections
-import { withScriptLogging } from '../utils/initialization.js';
+import { setupCollapsibleSections } from '../utils/dom-manipulation.js';
+import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
  * Initializes the referrals page.
@@ -24,7 +24,7 @@ export async function initializeReferralsPage(context) {
       const { visits, orders } = await processVisitsAndOrders(context, userId);
       updateVisitsTable(context, { visits });
       updateOrdersTable(context, { orders });
-      setupCollapsibleSections(context); // Replaced window.setupCollapsibleSections
+      setupCollapsibleSections(context);
     }, ERROR_MESSAGES.FETCH_FAILED('referrals page initialization'));
   });
 }

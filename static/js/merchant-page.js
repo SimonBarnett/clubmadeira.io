@@ -3,9 +3,9 @@
 const context = 'merchant-page.js';
 import { log } from './core/logger.js';
 import { parsePageType, initializeRolePage } from './utils/initialization.js';
+import { withScriptLogging, hideOverlay } from './utils/logging-utils.js';
 import { defineMerchantSectionHandlers } from './merchant/navigation.js';
 import { initializeMerchantModules } from './merchant/setup.js';
-import { withScriptLogging , hideOverlay } from './utils/initialization.js';
 
 /**
  * Initializes the merchant page.
@@ -37,6 +37,6 @@ export function initializeMerchantPageModule(registry) {
 // Initialize module with lifecycle logging
 withScriptLogging(context, async () => {
     log(context, 'Module initialized');
-    await initializeLoginPage({ registry: new Map() });
+    await initializeMerchantPage(context);
     hideOverlay();
 });
