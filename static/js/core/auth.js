@@ -9,6 +9,22 @@ import { API_ENDPOINTS } from '../config/endpoints.js';
 const context = 'auth.js';
 
 /**
+ * Decodes the payload from a JWT token.
+ * @param {string} token - The JWT token.
+ * @returns {Object|null} The decoded payload or null if invalid.
+ */
+function decodeToken(token) {
+    log(context, 'Decoding JWT token');
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload;
+    } catch (e) {
+        log(context, `Token decoding failed: ${e.message}`);
+        return null;
+    }
+}
+
+/**
  * Sets the authentication token in a cookie.
  * @param {string} token - The authentication token.
  */
@@ -39,6 +55,7 @@ export function removeAuthToken() {
  * @param {string} endpoint - The API endpoint to fetch from.
  * @param {Object} [options={}] - Fetch options.
  * @returns {Promise<Response>} The fetch response.
+ * @throws {Error} If no token is found or the request fails.
  */
 export async function authenticatedFetch(endpoint, options = {}) {
     log(context, `Making authenticated fetch to ${endpoint}`);
@@ -66,46 +83,31 @@ export async function authenticatedFetch(endpoint, options = {}) {
 }
 
 /**
- * Verifies the reset token and extracts the payload.
- * @param {string} token - The reset token to verify.
- * @returns {Object} The decoded token payload.
- */
-export function verifyResetToken(token) {
-    log(context, 'Verifying reset token');
-    try {
-        const payload = jwt.decode(token); // Assuming a jwt library is available
-        if (!payload) {
-            throw new Error('Invalid token');
-        }
-        return payload;
-    } catch (error) {
-        throw new Error('Token verification failed');
-    }
-}
-
-/**
- * Wraps a function to ensure it runs only for an authenticated user.
+ * Wraps a function to ensure it runs only for an authenticated user, passing the userId.
  * @param {string} context - The context or module name.
- * @param {Function} fn - The function to execute if authenticated.
+ * @param {Function} fn - The async function to execute if authenticated, accepting userId.
  * @param {string} operation - The operation name for logging.
- * @returns {*} The result of the function execution.
- * @throws {Error} If the user is not authenticated.
+ * @returns {Promise<*>} The result of the function execution.
+ * @throws {Error} If the user is not authenticated or the token is invalid.
  */
-export function withAuthenticatedUser(context, fn, operation) {
+export async function withAuthenticatedUser(context, fn, operation) {
     log(context, `Checking authentication for ${operation || 'operation'}`);
     const token = getAuthToken();
     if (!token) {
         log(context, 'User not authenticated');
         throw new Error('User not authenticated');
     }
-    return fn();
+    const payload = decodeToken(token);
+    if (!payload || (!payload.userId && !payload.user_id)) {
+        log(context, 'Invalid token or missing userId');
+        throw new Error('Invalid token');
+    }
+    const userId = payload.userId || payload.user_id;
+    log(context, `Authenticated user with userId: ${userId} for operation: ${operation}`);
+    return await fn(userId);
 }
 
-/**
- * Initializes the auth module.
- */
-export function initializeAuth() {
-    withScriptLogging(context, () => {
-        log(context, 'Module initialized');
-    });
-}
+// Initialize module with lifecycle logging
+withScriptLogging(context, () => {
+    log(context, 'Module initialized');
+});

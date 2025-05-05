@@ -1,52 +1,48 @@
 // /static/js/community/providers-page.js
-// Purpose: Orchestrates the community providers sub-page.
-
-import { log } from '../core/logger.js';
+import { log, warn } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
-import { withAuthenticatedUser } from '../utils/auth.js';
-import { ERROR_MESSAGES } from '../config/messages.js';
+import { withAuthenticatedUser } from '../core/auth.js';
+import { error as notifyError } from '../core/notifications.js';
 import { loadClientApiSettings } from './providers-data.js';
 import { renderProviderSettings } from './providers-events.js';
 import { setupCategoriesNavigation } from './categories-navigation.js';
-import { setupCollapsibleSections } from '../utils/dom-manipulation.js';
-import { initializeTinyMCE } from '../core/mce.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
+import { shouldInitializeForPageType } from '../utils/initialization.js';
+
+const context = 'providers-page.js';
 
 /**
- * Initializes the community providers page.
+ * Initializes the providers page.
  * @param {string} context - The context or module name.
  * @returns {Promise<void>}
  */
 export async function initializeProvidersPage(context) {
-  log(context, 'Initializing providers page');
-  await withAuthenticatedUser(async userId => {
-    await withErrorHandling(`${context}:initializeProvidersPage`, async () => {
-      await setupCategoriesNavigation(context, 'community', 'providers');
-      const userIdInput = document.getElementById('userId');
-      if (userIdInput) userIdInput.value = userId;
-      const settings = await loadClientApiSettings(context);
-      await renderProviderSettings(context, settings, 'providerIconsBar');
-      setupCollapsibleSections(context);
-      await initializeTinyMCE(context, '#aboutCommunity, #stylingDetails, #page1Content');
-    }, ERROR_MESSAGES.FETCH_FAILED('providers page initialization'));
-  });
+    log(context, 'Initializing providers page');
+    await withAuthenticatedUser(context, async (userId) => {
+        await withErrorHandling(`${context}:initializeProvidersPage`, async () => {
+            // Set up navigation
+            await setupCategoriesNavigation(context, 'community', 'providers');
+
+            // Set user ID input
+            const userIdInput = document.getElementById('userId');
+            if (userIdInput) {
+                userIdInput.value = userId;
+            } else {
+                warn(context, 'userId input not found');
+            }
+
+            // Fetch and render the settings
+            const settings = await loadClientApiSettings(context);
+            await renderProviderSettings(context, settings, 'providerIconsBar', 'client-api-settings');
+        });
+    }, 'initializeProvidersPage');
 }
 
-/**
- * Initializes the providers page module for use with the module registry.
- * @param {Object} registry - The module registry instance.
- * @returns {Object} Providers page instance with public methods.
- */
-export function initializeProvidersPageModule(registry) {
-  const context = 'providers-page.js';
-  log(context, 'Initializing providers page module for module registry');
-  return {
-    initializeProvidersPage: (ctx) => initializeProvidersPage(ctx),
-  };
+if (shouldInitializeForPageType('community')) {
+    withScriptLogging(context, () => {
+        log(context, 'Module initialized');
+        initializeProvidersPage(context);
+    });
+} else {
+    log(context, 'Skipping initialization for non-community page');
 }
-
-// Initialize module with lifecycle logging
-const context = 'providers-page.js';
-withScriptLogging(context, () => {
-  initializeProvidersPage(context);
-});

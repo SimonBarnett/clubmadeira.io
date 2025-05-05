@@ -14,7 +14,9 @@
     </div>
 
     <div id="user_management" class="section" style="display: none;">
-        <h2><span id="user_role_icon" class="menu-size"></span> <span id="user_role_title"></span></h2>
+        <h2 id="user_role_title">User Management</h2>
+        <p>Use this section to manage your affiliate program credentials.</p>
+        <div id="user_role_icon" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>        
         <table>
             <thead>
                 <tr>
@@ -31,7 +33,6 @@
         </table>
     </div>
 
-    <!-- New Deals Section for Admin -->
     <div id="deals" class="section" style="display: none;">
         <h2>Discounted Deal Listings</h2>
         <p>This section displays all currently active deal listings available across your affiliate programs for administrative oversight.</p>
@@ -130,86 +131,13 @@
         </div>
     </div>
 
-    <div id="test_partner" class="section" style="display: none;">
-        <h2>Test Partner</h2>
-        <p>Test partner-related functionality here.</p>
-    </div>
-
-    <div id="test_merchant" class="section" style="display: none;">
-        <h2>Test Merchant</h2>
-        <p>Test merchant-related functionality here.</p>
-    </div>
-
-    <div id="test_community" class="section" style="display: none;">
-        <h2>Test Community</h2>
-        <p>Test community-related functionality here.</p>
-    </div>
-
-    <!-- New API Keys Section for Admin -->
-    <div id="api_keys" class="section" style="display: none;">
-        <h2>API Keys</h2>
-        <p>Manage API keys for various services.</p>
-        <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
-        <form id="api-keys-form" style="display: none;">
-            <div id="api-keys-fields">
-                <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
-                <h3 class="api-keys-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
-                <p class="api-keys-description" style="margin-bottom: 15px;"></p>
-            </div>
-            <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;">
-                <i class="fas fa-save" style="margin-right: 5px;"></i>Save API Key
-            </button>
-        </form>
-    </div>
-
-    <!-- Merchant Role Sections -->
-    <div id="deal_listings" class="section" style="display: none;">
-        <h2>Discounted Deal Listings</h2>
-        <p>This section displays all currently active deal listings available across your affiliate programs.</p>
-        <div style="display: flex; gap: 20px;">
-            <div style="flex: 1; max-width: 300px;">
-                <h3>Categories</h3>
-                <div class="treeview" id="categoryTree"></div>
-            </div>
-            <div style="flex: 2;">
-                <table class="deals-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Title</th>
-                            <th>URL</th>
-                            <th>Price</th>
-                            <th>Original</th>
-                            <th>Discount %</th>
-                            <th>Image</th>
-                            <th>QTY</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dealList"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Community Role Sections -->
-    <div id="posts" class="section" style="display: none;">
-        <h2>Posts</h2>
-        <p>Manage community posts here.</p>
-    </div>
-
-    <!-- Partner Role Sections -->
-    <div id="referrals" class="section" style="display: none;">
-        <h2>Referrals</h2>
-        <p>Manage referrals here.</p>
-    </div>
-
     <div id="affiliates" class="section" style="display: none;">
         <h2>Affiliate Programs</h2>
         <p>Use this section to manage your affiliate program credentials.</p>
         <div id="affiliate-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
         
         <!-- Static content (always visible) -->
-        <div id="affiliate-static-content" style="display: none;">
+        <div id="affiliate-static-content" style="display: block;">
             <div id="affiliate-header" style="display: flex; align-items: center; margin-bottom: 15px;">
                 <i class="selected-affiliate-icon" style="font-size: 16px; color: currentColor; margin-right: 10px;"></i>
                 <h3 class="affiliate-comment-heading" style="display: inline-block; vertical-align: middle; margin: 0;"></h3>
@@ -239,7 +167,6 @@
             </form>
         </div>
         <div id="affiliate-readme-content" style="display: none;"></div>
-        
     </div>
 
     <div id="site_settings" class="section" style="display: none;">
@@ -261,9 +188,22 @@
         </form>
     </div>
 
-    <div id="categories" class="section" style="display: none;">
-        <h2>Categories</h2>
-        <p>Manage categories here.</p>
+    <!-- New Logs Section -->    
+    <div id="logsIntro" class="section" style="display: none;">
+        <h2>Logs</h2>
+        <p>This section allows you to view different types of event logs captured by the system.</p>
+        <p>Select a log type from the submenu to view specific events:</p>
+        <ul>
+            <li><strong>Login Events:</strong> View logs related to user logins.</li>
+            <li><strong>Signup Events:</strong> View logs related to new user signups.</li>
+            <li><strong>Click Events:</strong> View logs related to user clicks on the site.</li>
+            <li><strong>Order Events:</strong> View logs related to order placements.</li>
+        </ul>
+    </div>    
+    <div id="logs" class="section" style="display: none;">
+        <h2>Logs</h2>
+        <p id="logs-description">Displaying logs for selected event type.</p>
+        <div id="logs-table-container"></div>
     </div>
     
-{% endblock %}S
+{% endblock %}

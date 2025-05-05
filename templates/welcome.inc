@@ -17,53 +17,24 @@
     <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard empowers partners to collaborate with merchants and communities on clubmadeira.io.</p>
     <p>Use the menu to manage integrations, review site requests, access documentation, and update your account. Work together to create tailored solutions for our users.</p>
 {% else %}
-    {% if from_stripe %}
-        <p>Welcome back from Stripe! Please set your password to complete your account setup.</p>
-        <form id="setPasswordForm" class="form" method="POST" action="/">
-            <input type="hidden" name="set_password" value="true">
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <div class="input-container">
-                    <input type="email" id="email" name="email" value="{{ email }}" required>
-                </div>
+    <p>Log in to access your dashboard.</p>
+    <form id="loginForm" class="form" method="POST" action="/">
+        <div class="form-group">
+            <label for="loginEmail">Email:</label>
+            <div class="input-container">
+                <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required autocomplete="off">
             </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                    <i class="fas fa-eye toggle-password"></i>
-                </div>
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Password:</label>
+            <div class="password-wrapper">
+                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="off">
+                <i class="fas fa-eye toggle-password"></i>
             </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="confirmPassword" name="confirm_password" placeholder="Confirm your password" required>
-                    <i class="fas fa-eye toggle-password"></i>
-                </div>
-            </div>
-            <div>
-                <button type="submit">Set Password</button>
-            </div>
-        </form>
-    {% else %}
-        <p>Log in to access your dashboard.</p>
-        <form id="loginForm" class="form" method="POST" action="/">
-            <div class="form-group">
-                <label for="loginEmail">Email:</label>
-                <div class="input-container">
-                    <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required autocomplete="off">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="loginPassword">Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="off">
-                    <i class="fas fa-eye toggle-password"></i>
-                </div>
-            </div>
-            <div>
-                <button type="submit">Login</button>
-            </div>
-        </form>
-    {% endif %}
+        </div>
+        <div>
+            <button type="submit">Login</button>
+        </div>
+    </form>
+
 {% endif %}

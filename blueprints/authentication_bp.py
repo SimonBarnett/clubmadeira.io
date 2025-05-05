@@ -1,14 +1,5 @@
-# ~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~
-#      .-"""-.          A friendly face to greet our users!
-#     /       \
-#    |  O   O  |
-#    |   \_/   |
-#     \       /
-#      `-...-`
-# ~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~
-
 from flask import Blueprint, render_template, request, jsonify, current_app, session, redirect, url_for
-from utils.auth import login_required, load_users_settings, save_users_settings, generate_token, decode_token, login_user, signup_user, generate_code
+from utils.auth import login_required, load_users_settings, save_users_settings, generate_token, decode_token, login_user, generate_code
 from utils.config import load_config
 import logging
 import datetime
@@ -24,189 +15,204 @@ import stripe
 # Blueprint Setup
 authentication_bp = Blueprint('authentication_bp', __name__)
 
-# Helper Function for Phone Number Formatting
-def format_phone_for_storage(phone):
-    """
-    Formats the phone number for storage by removing leading '0' or '+44'.
-    
-    - Input: '07989389179' -> Output: '7989389179'
-    - Input: '+447989389179' -> Output: '7989389179'
-    - Input: '7989389179' -> Output: '7989389179'
-    
-    This ensures consistency in storage, while allowing correct formatting for Stripe and OTP.
-    """
-    if phone.startswith('0'):
-        return phone[1:]
-    elif phone.startswith('+44'):
-        return phone[3:]
-    else:
-        return phone  # Assume it's already without leading 0
-
-# /login GET and POST - User Login
-@authentication_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'GET':
-        return render_template('login.html', title='clubmadeira.io | Login', page_type='login', base_url=request.url_root.rstrip('/'), publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY', ''))
-
-    # Use login_user from utils.auth for POST requests
-    return login_user()
-
-# /signup GET - Render Signup Page
-@authentication_bp.route('/signup', methods=['GET'])
-def signup_page():
+# /signup POST - Handle User Signup
+@authentication_bp.route('/signup', methods=['POST'])
+def signup():
     try:
         request_data = {
             "method": request.method,
             "url": request.full_path,
             "headers": dict(request.headers),
             "ip": request.remote_addr,
-            "body": "[NO BODY]"
+            "body": request.get_json(silent=True) or "[NO BODY]"
         }
         log_data = request_data.copy()
         if "Authorization" in log_data["headers"]:
             log_data["headers"]["Authorization"] = "[REDACTED]"
         logging.debug(f"Request: {json.dumps(log_data)}")
 
-        response = render_template('login.html', title='clubmadeira.io | Signup', page_type='signup', base_url=request.url_root.rstrip('/'), publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY', ''))
-        logging.info("Signup page rendered successfully")
-        return response
+        data = request_data["body"]
+        if not data or 'signup_type' not in data:
+            logging.warning("Signup attempt missing signup_type")
+            return jsonify({"status": "error", "message": "Signup type is required"}), 400
+
+        signup_type = data.get("signup_type").lower()
+        valid_signup_types = ['community', 'seller', 'partner']
+        if signup_type not in valid_signup_types:
+            logging.warning(f"Invalid signup_type: {signup_type}")
+            return jsonify({"status": "error", "message": "Invalid signup type"}), 400
+
+        site_settings = load_config()
+        stripe.api_key = site_settings.get('stripe', {}).get('API_KEY')
+
+        # Determine business type based on role
+        business_type = 'individual' if signup_type in ['community', 'partner'] else 'company'
+
+        # Create Stripe account for the new user
+        account = stripe.Account.create(
+            type='express',
+            business_type=business_type,
+            capabilities={'transfers': {'requested': True}}
+        )
+
+        # Create Stripe account link with return URL including role and section
+        return_url = f"https://clubmadeira.io/?section=completeSignup&role={signup_type}&account_id={account.id}"
+        account_link = stripe.AccountLink.create(
+            account=account.id,
+            refresh_url='https://clubmadeira.io/?section=failSignup',
+            return_url=return_url,
+            type='account_onboarding'
+        )
+
+        logging.info(f"Stripe account created for {signup_type}, account_link: {account_link.url}")
+        return jsonify({
+            "status": "success",
+            "signup_type": signup_type,
+            "account_link": account_link.url
+        }), 200
+
+    except stripe.error.StripeError as e:
+        logging.error(f"Stripe error during signup: {str(e)}")
+        return jsonify({"status": "error", "message": f"Stripe error: {str(e)}"}), 400
     except Exception as e:
-        logging.error(f"UX Issue - Failed to render signup page: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
+        logging.error(f"Signup error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
 
-# /signup POST - Handle User Signup
-@authentication_bp.route('/signup', methods=['POST'])
-def signup():
-    # Use signup_user from utils.auth
-    return signup_user()
-
-# /stripe_RETURN GET - Handle Stripe Onboarding Return
-@authentication_bp.route('/stripe-return', methods=['GET'])
-def stripe_return():
-    signup_data = session.get('signup_data', {})
-    if not signup_data:
-        return redirect('/')
-    account_id = signup_data['stripe_account_id']
-    account = stripe.Account.retrieve(account_id)
-    if account.get('charges_enabled', False) or account.get('payouts_enabled', False):
-        session['signup_data'].update({
-            'email': account.get('email'),
-        })
-        if signup_data['signup_type'] == 'community':
-            individual = account.get('individual', {})
-            session['signup_data'].update({
-                'first_name': individual.get('first_name'),
-                'last_name': individual.get('last_name'),
-                'phone': individual.get('phone'),
-                'dob': individual.get('dob'),
-                'address': individual.get('address'),
-                'ssn_last_4': individual.get('ssn_last_4'),
-            })
-        elif signup_data['signup_type'] == 'seller':
-            company = account.get('company', {})
-            session['signup_data'].update({
-                'company_name': company.get('name'),
-                'phone': company.get('phone'),
-                'tax_id': company.get('tax_id'),
-                'address': company.get('address'),
-            })
-        session.modified = True
-        return redirect('/complete-signup')
-    return redirect('/')
-
-# /complete-signup GET and POST - Complete Signup After Stripe
-@authentication_bp.route('/complete-signup', methods=['GET', 'POST'])
+# /complete-signup POST - Complete Signup After Stripe
+@authentication_bp.route('/complete-signup', methods=['POST'])
 def complete_signup():
     """Handle password setup after Stripe onboarding to complete user account creation."""
-    if 'signup_data' not in session:
-        logging.warning("Missing signup_data in session for complete-signup")
-        return redirect('/')
+    try:
+        # Load the configuration
+        config = load_config()
+        
+        # Check if Stripe API key exists in the config
+        if "stripe" not in config or "API_KEY" not in config["stripe"]:
+            logging.error("Stripe API key not found in config")
+            return jsonify({"status": "error", "message": "Server configuration error"}), 500
+        
+        # Set the Stripe API key
+        stripe.api_key = config["stripe"]["API_KEY"]
 
-    if request.method == 'GET':
-        return render_template('set_password.html', title='clubmadeira.io | Set Password')
+        # Attempt to parse JSON, fall back to form data if not JSON
+        data = request.get_json(silent=True) or request.form.to_dict()
+        logging.debug(f"Received data: {data}")
 
-    if request.method == 'POST':
+        # Check if data is empty or missing required fields
+        if not data or 'password' not in data or 'stripe_account_id' not in data or 'role' not in data:
+            logging.warning("Missing required fields in complete-signup request")
+            return jsonify({"status": "error", "message": "Password, stripe_account_id, and role are required"}), 400
+
+        password = data['password'].strip()
+        stripe_account_id = data['stripe_account_id']
+        role = data['role']
+
+        if not password:
+            return jsonify({"status": "error", "message": "Password cannot be empty"}), 400
+
+        # Fetch Stripe account details
         try:
-            data = request.form.to_dict()
-            if not data or 'password' not in data:
-                logging.warning("Missing password in complete-signup request")
-                return jsonify({"status": "error", "message": "Password is required"}), 400
+            stripe_account = stripe.Account.retrieve(stripe_account_id)
+        except stripe.error.StripeError as e:
+            logging.error(f"Stripe error: {str(e)}")
+            return jsonify({"status": "error", "message": "Failed to retrieve Stripe account"}), 400
 
-            password = data['password'].strip()
-            if not password:
-                return jsonify({"status": "error", "message": "Password cannot be empty"}), 400
+        # Generate a permanent user ID using generate_code from utils.auth
+        user_id = generate_code()
 
-            # Retrieve and clear temporary signup data from session
-            signup_data = session.pop('signup_data')
-            permissions = signup_data['permissions']
-            stripe_account_id = signup_data['stripe_account_id']
-            signup_type = signup_data['signup_type']
+        # Determine email: Use Stripe email if available, else form email, else default
+        email_from_stripe = stripe_account.email
+        email_from_form = data.get('email', '').strip()
+        email = email_from_stripe if email_from_stripe is not None else (email_from_form if email_from_form else f"{user_id}@example.com")
 
-            # Generate a permanent user ID using generate_code from utils.auth
-            user_id = generate_code()
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-            # Hash the password
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        # Prepare user data
+        user_data = {
+            'email_address': email,
+            'permissions': [role, 'validated'],
+            'password': hashed_password,
+            'stripe_account_id': stripe_account_id,
+            'role': role
+        }
 
-            # Prepare user data with information from Stripe
-            user_data = {
-                'email_address': signup_data.get('email', f"{user_id}@example.com"),
-                'permissions': permissions,
-                'password': hashed_password,
-                'stripe_account_id': stripe_account_id,
-                'role': signup_type
-            }
-
-            # Add role-specific data from Stripe onboarding
-            if signup_type == 'community':
-                user_data.update({
-                    'first_name': signup_data.get('first_name'),
-                    'last_name': signup_data.get('last_name'),
-                    'phone_number': format_phone_for_storage(signup_data.get('phone', '')) if signup_data.get('phone') else None,
-                    'dob': signup_data.get('dob'),
-                    'address': signup_data.get('address'),
-                    'ssn_last_4': signup_data.get('ssn_last_4'),
-                })
-            elif signup_type == 'seller':
-                user_data.update({
-                    'company_name': signup_data.get('company_name'),
-                    'phone_number': format_phone_for_storage(signup_data.get('phone', '')) if signup_data.get('phone') else None,
-                    'tax_id': signup_data.get('tax_id'),
-                    'address': signup_data.get('address'),
-                })
-
-            # Save the user to user_settings
-            users_settings = load_users_settings()
-            users_settings[user_id] = user_data
-            save_users_settings(users_settings)
-            logging.info(f"User {user_id} created successfully after Stripe onboarding")
-
-            # Generate a token using generate_token from utils.auth
-            token = generate_token(user_id, permissions)
-            session['user'] = {
-                'user_id': user_id,
-                'permissions': permissions,
-                'token': token,
-                'x-role': next((r for r in ['admin', 'merchant', 'community', 'partner'] if r in permissions), 'user')
-            }
-            session.modified = True
-
-            # Prepare response
-            response = jsonify({
-                "status": "success",
-                "message": "Account created successfully",
-                "token": token,
-                "user_id": user_id,
-                "redirect": "/"
+        # Add role-specific data from Stripe onboarding or form
+        if role == 'community':
+            individual = stripe_account.individual if stripe_account.individual else {}
+            phone_from_stripe = individual.get('phone') if stripe_account.individual else None
+            phone_from_form = data.get('phone', '').strip()
+            phone_number = phone_from_stripe if phone_from_stripe is not None else (phone_from_form if phone_from_form else None)
+            user_data.update({
+                'first_name': individual.get('first_name') if stripe_account.individual else None,
+                'last_name': individual.get('last_name') if stripe_account.individual else None,
+                'phone_number': phone_number,
+                'dob': individual.get('dob') if stripe_account.individual else None,
+                'address': individual.get('address') if stripe_account.individual else None,
+                'ssn_last_4': individual.get('ssn_last_4') if stripe_account.individual else None,
             })
-            response.set_cookie('authToken', token, secure=True, max_age=604800, path='/')
-            return response, 200
+        elif role == 'seller':
+            company = stripe_account.company if stripe_account.company else {}
+            phone_from_stripe = company.get('phone') if stripe_account.company else None
+            phone_from_form = data.get('phone', '').strip()
+            phone_number = phone_from_stripe if phone_from_stripe is not None else (phone_from_form if phone_from_form else None)
+            user_data.update({
+                'company_name': company.get('name') if stripe_account.company else None,
+                'phone_number': phone_number,
+                'tax_id': company.get('tax_id') if stripe_account.company else None,
+                'address': company.get('address') if stripe_account.company else None,
+            })
 
-        except Exception as e:
-            logging.error(f"Complete signup error: {str(e)}", exc_info=True)
-            return jsonify({"status": "error", "message": "Server error"}), 500
+        # Save the user to user_settings
+        users_settings = load_users_settings()
+        users_settings[user_id] = user_data
+        save_users_settings(users_settings)
+        logging.info(f"User {user_id} created successfully after Stripe onboarding")
+
+        # Record signup event in PostHog using the new utility
+        posthog_client = current_app.posthog_client
+        signup_data = {
+            "user_id": user_id,
+            "role": role,
+            "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        }
+        if posthog_client:
+            try:
+                posthog_client.capture(
+                    distinct_id=user_id,
+                    event="signup",
+                    properties=signup_data
+                )
+                logging.debug(f"PostHog signup event captured: distinct_id={user_id}, properties={json.dumps(signup_data)}")
+            except Exception as e:
+                logging.error(f"PostHog Issue - Failed to capture signup event: {str(e)}", exc_info=True)
+        else:
+            logging.warning("PostHog Issue - posthog_client is None, signup event not captured")
+
+        # Generate a token using generate_token from utils.auth
+        token = generate_token(user_id, user_data['permissions'])
+        session['user'] = {
+            'user_id': user_id,
+            'permissions': user_data['permissions'],
+            'token': token,
+            'x-role': role
+        }
+        session.modified = True
+
+        # Prepare response
+        response = jsonify({
+            "status": "success",
+            "message": "Account created successfully",
+            "token": token,
+            "user_id": user_id,
+            "redirect": "/"
+        })
+        response.set_cookie('authToken', token, secure=True, max_age=604800, path='/')
+        return response, 200
+
+    except Exception as e:
+        logging.error(f"Complete signup error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
 
 # /link-stripe POST - Link Stripe Account for Partner/Admin
 @authentication_bp.route('/link-stripe', methods=['POST'])
@@ -500,8 +506,6 @@ def update_password():
         logging.error(f"Update password error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
 
-        from flask import jsonify, request
-
 @authentication_bp.route('/debug-password/<user_id>', methods=['GET', 'POST'])
 def debug_password(user_id):
     """
@@ -538,4 +542,3 @@ def debug_password(user_id):
             return jsonify({"status": "success", "message": "Password updated"})
         except Exception as e:
             return jsonify({"status": "error", "message": f"Failed to save: {str(e)}"}), 500
-

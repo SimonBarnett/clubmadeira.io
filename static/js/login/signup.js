@@ -3,17 +3,18 @@ import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setupFormFieldEvents } from '../utils/event-listeners.js';
 import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
+import { API_ENDPOINTS } from '../config/constants.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
 
 const context = 'signup';
 
 /**
- * Initializes the signup page.
+ * Initializes the signup section on the login page.
  * @param {string} context - The context or module name.
  * @returns {Promise<void>}
  */
 export async function initializeSignup(context) {
-    log(context, 'Initializing signup page');
+    log(context, 'Initializing signup section');
 
     await withElement(context, 'signupContainer', async (section) => {
         // Hide other sections and show signupContainer
@@ -33,22 +34,18 @@ export async function initializeSignup(context) {
             }
 
             log(context, 'Configuring signup form submission');
-            submitConfiguredForm(context, 'signupForm', '/signup', 'signup', {
-                onSuccess: async (response) => {
+            submitConfiguredForm(context, 'signupForm', API_ENDPOINTS.SIGNUP, 'signup', {
+                onSuccess: async (response, formData) => {
                     log(context, 'Signup successful, response:', response);
-                    if (response.signup_type === 'partner') {
-                        log(context, 'Showing verifyOtpSection for partner');
-                        toggleViewState(context, {
-                            signupContainer: false,
-                            verifyOtpSection: true,
-                            forgotPasswordContainer: false,
-                            info: false
-                        });
-                        const otpTokenInput = document.getElementById('otpToken');
-                        if (otpTokenInput) otpTokenInput.value = response.otp_token || '';
-                        const verifyForm = document.getElementById('verifyOtpForm');
-                        if (verifyForm) verifyForm.action = '/verify-signup-otp';
-                    } else if (response.account_link) {
+                    // Get the role from the form data or response
+                    const role = response.signup_type || formData.get('signup_type');
+                    if (!role) {
+                        log(context, 'Error: No role specified in response or form data');
+                        alert('Signup successful, but no role specified. Please try again.');
+                        return;
+                    }
+
+                    if (response.account_link) {
                         log(context, 'Redirecting to Stripe:', response.account_link);
                         window.location.href = response.account_link;
                     } else {
@@ -58,6 +55,7 @@ export async function initializeSignup(context) {
                 },
                 onError: (err) => {
                     log(context, 'Signup error:', err.message);
+                    alert(`Signup failed: ${err.message}`);
                 }
             });
 
@@ -90,5 +88,5 @@ export function initializeSignupModule(registry) {
 
 // Initialize module with lifecycle logging
 withScriptLogging(context, () => {
-    log(context, 'Module initialized');
+  log(context, 'Module initialized');
 });

@@ -1,6 +1,6 @@
 + [blueprints]
++----__init__.py
 +----authentication_bp.py
-+----blueprints_contents_javascript.txt
 +----content_bp.py
 +----manager_bp.py
 +----referral_bp.py
@@ -9,17 +9,8 @@
 +----utility_bp.py
 
 authentication_bp.py
-# ~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~
-#      .-"""-.          A friendly face to greet our users!
-#     /       \
-#    |  O   O  |
-#    |   \_/   |
-#     \       /
-#      `-...-`
-# ~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~
-
 from flask import Blueprint, render_template, request, jsonify, current_app, session, redirect, url_for
-from utils.auth import login_required, load_users_settings, save_users_settings, generate_token, decode_token, login_user, signup_user, generate_code
+from utils.auth import login_required, load_users_settings, save_users_settings, generate_token, decode_token, login_user, generate_code
 from utils.config import load_config
 import logging
 import datetime
@@ -31,194 +22,209 @@ import random
 import string
 import requests
 import stripe
+from blueprints.referral_bp import posthog_client
 
 # Blueprint Setup
 authentication_bp = Blueprint('authentication_bp', __name__)
 
-# Helper Function for Phone Number Formatting
-def format_phone_for_storage(phone):
-    """
-    Formats the phone number for storage by removing leading '0' or '+44'.
-    
-    - Input: '07989389179' -> Output: '7989389179'
-    - Input: '+447989389179' -> Output: '7989389179'
-    - Input: '7989389179' -> Output: '7989389179'
-    
-    This ensures consistency in storage, while allowing correct formatting for Stripe and OTP.
-    """
-    if phone.startswith('0'):
-        return phone[1:]
-    elif phone.startswith('+44'):
-        return phone[3:]
-    else:
-        return phone  # Assume it's already without leading 0
-
-# /login GET and POST - User Login
-@authentication_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'GET':
-        return render_template('login.html', title='clubmadeira.io | Login', page_type='login', base_url=request.url_root.rstrip('/'), publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY', ''))
-
-    # Use login_user from utils.auth for POST requests
-    return login_user()
-
-# /signup GET - Render Signup Page
-@authentication_bp.route('/signup', methods=['GET'])
-def signup_page():
+# /signup POST - Handle User Signup
+@authentication_bp.route('/signup', methods=['POST'])
+def signup():
     try:
         request_data = {
             "method": request.method,
             "url": request.full_path,
             "headers": dict(request.headers),
             "ip": request.remote_addr,
-            "body": "[NO BODY]"
+            "body": request.get_json(silent=True) or "[NO BODY]"
         }
         log_data = request_data.copy()
         if "Authorization" in log_data["headers"]:
             log_data["headers"]["Authorization"] = "[REDACTED]"
         logging.debug(f"Request: {json.dumps(log_data)}")
 
-        response = render_template('login.html', title='clubmadeira.io | Signup', page_type='signup', base_url=request.url_root.rstrip('/'), publishable_key=current_app.config.get('STRIPE_PUBLISHABLE_KEY', ''))
-        logging.info("Signup page rendered successfully")
-        return response
+        data = request_data["body"]
+        if not data or 'signup_type' not in data:
+            logging.warning("Signup attempt missing signup_type")
+            return jsonify({"status": "error", "message": "Signup type is required"}), 400
+
+        signup_type = data.get("signup_type").lower()
+        valid_signup_types = ['community', 'seller', 'partner']
+        if signup_type not in valid_signup_types:
+            logging.warning(f"Invalid signup_type: {signup_type}")
+            return jsonify({"status": "error", "message": "Invalid signup type"}), 400
+
+        site_settings = load_config()
+        stripe.api_key = site_settings.get('stripe', {}).get('API_KEY')
+
+        # Determine business type based on role
+        business_type = 'individual' if signup_type in ['community', 'partner'] else 'company'
+
+        # Create Stripe account for the new user
+        account = stripe.Account.create(
+            type='express',
+            business_type=business_type,
+            capabilities={'transfers': {'requested': True}}
+        )
+
+        # Create Stripe account link with return URL including role and section
+        return_url = f"https://clubmadeira.io/?section=completeSignup&role={signup_type}&account_id={account.id}"
+        account_link = stripe.AccountLink.create(
+            account=account.id,
+            refresh_url='https://clubmadeira.io/?section=failSignup',
+            return_url=return_url,
+            type='account_onboarding'
+        )
+
+        logging.info(f"Stripe account created for {signup_type}, account_link: {account_link.url}")
+        return jsonify({
+            "status": "success",
+            "signup_type": signup_type,
+            "account_link": account_link.url
+        }), 200
+
+    except stripe.error.StripeError as e:
+        logging.error(f"Stripe error during signup: {str(e)}")
+        return jsonify({"status": "error", "message": f"Stripe error: {str(e)}"}), 400
     except Exception as e:
-        logging.error(f"UX Issue - Failed to render signup page: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
+        logging.error(f"Signup error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
 
-# /signup POST - Handle User Signup
-@authentication_bp.route('/signup', methods=['POST'])
-def signup():
-    # Use signup_user from utils.auth
-    return signup_user()
-
-# /stripe_RETURN GET - Handle Stripe Onboarding Return
-@authentication_bp.route('/stripe-return', methods=['GET'])
-def stripe_return():
-    signup_data = session.get('signup_data', {})
-    if not signup_data:
-        return redirect('/')
-    account_id = signup_data['stripe_account_id']
-    account = stripe.Account.retrieve(account_id)
-    if account.get('charges_enabled', False) or account.get('payouts_enabled', False):
-        session['signup_data'].update({
-            'email': account.get('email'),
-        })
-        if signup_data['signup_type'] == 'community':
-            individual = account.get('individual', {})
-            session['signup_data'].update({
-                'first_name': individual.get('first_name'),
-                'last_name': individual.get('last_name'),
-                'phone': individual.get('phone'),
-                'dob': individual.get('dob'),
-                'address': individual.get('address'),
-                'ssn_last_4': individual.get('ssn_last_4'),
-            })
-        elif signup_data['signup_type'] == 'seller':
-            company = account.get('company', {})
-            session['signup_data'].update({
-                'company_name': company.get('name'),
-                'phone': company.get('phone'),
-                'tax_id': company.get('tax_id'),
-                'address': company.get('address'),
-            })
-        session.modified = True
-        return redirect('/complete-signup')
-    return redirect('/')
-
-# /complete-signup GET and POST - Complete Signup After Stripe
-@authentication_bp.route('/complete-signup', methods=['GET', 'POST'])
+# /complete-signup POST - Complete Signup After Stripe
+@authentication_bp.route('/complete-signup', methods=['POST'])
 def complete_signup():
     """Handle password setup after Stripe onboarding to complete user account creation."""
-    if 'signup_data' not in session:
-        logging.warning("Missing signup_data in session for complete-signup")
-        return redirect('/')
+    try:
+        # Load the configuration
+        config = load_config()
+        
+        # Check if Stripe API key exists in the config
+        if "stripe" not in config or "API_KEY" not in config["stripe"]:
+            logging.error("Stripe API key not found in config")
+            return jsonify({"status": "error", "message": "Server configuration error"}), 500
+        
+        # Set the Stripe API key
+        stripe.api_key = config["stripe"]["API_KEY"]
 
-    if request.method == 'GET':
-        return render_template('set_password.html', title='clubmadeira.io | Set Password')
+        # Attempt to parse JSON, fall back to form data if not JSON
+        data = request.get_json(silent=True) or request.form.to_dict()
+        logging.debug(f"Received data: {data}")
 
-    if request.method == 'POST':
+        # Check if data is empty or missing required fields
+        if not data or 'password' not in data or 'stripe_account_id' not in data or 'role' not in data:
+            logging.warning("Missing required fields in complete-signup request")
+            return jsonify({"status": "error", "message": "Password, stripe_account_id, and role are required"}), 400
+
+        password = data['password'].strip()
+        stripe_account_id = data['stripe_account_id']
+        role = data['role']
+
+        if not password:
+            return jsonify({"status": "error", "message": "Password cannot be empty"}), 400
+
+        # Fetch Stripe account details
         try:
-            data = request.form.to_dict()
-            if not data or 'password' not in data:
-                logging.warning("Missing password in complete-signup request")
-                return jsonify({"status": "error", "message": "Password is required"}), 400
+            stripe_account = stripe.Account.retrieve(stripe_account_id)
+        except stripe.error.StripeError as e:
+            logging.error(f"Stripe error: {str(e)}")
+            return jsonify({"status": "error", "message": "Failed to retrieve Stripe account"}), 400
 
-            password = data['password'].strip()
-            if not password:
-                return jsonify({"status": "error", "message": "Password cannot be empty"}), 400
+        # Generate a permanent user ID using generate_code from utils.auth
+        user_id = generate_code()
 
-            # Retrieve and clear temporary signup data from session
-            signup_data = session.pop('signup_data')
-            permissions = signup_data['permissions']
-            stripe_account_id = signup_data['stripe_account_id']
-            signup_type = signup_data['signup_type']
+        # Determine email: Use Stripe email if available, else form email, else default
+        email_from_stripe = stripe_account.email
+        email_from_form = data.get('email', '').strip()
+        email = email_from_stripe if email_from_stripe is not None else (email_from_form if email_from_form else f"{user_id}@example.com")
 
-            # Generate a permanent user ID using generate_code from utils.auth
-            user_id = generate_code()
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-            # Hash the password
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        # Prepare user data
+        user_data = {
+            'email_address': email,
+            'permissions': [role, 'validated'],
+            'password': hashed_password,
+            'stripe_account_id': stripe_account_id,
+            'role': role
+        }
 
-            # Prepare user data with information from Stripe
-            user_data = {
-                'email_address': signup_data.get('email', f"{user_id}@example.com"),
-                'permissions': permissions,
-                'password': hashed_password,
-                'stripe_account_id': stripe_account_id,
-                'role': signup_type
-            }
-
-            # Add role-specific data from Stripe onboarding
-            if signup_type == 'community':
-                user_data.update({
-                    'first_name': signup_data.get('first_name'),
-                    'last_name': signup_data.get('last_name'),
-                    'phone_number': format_phone_for_storage(signup_data.get('phone', '')) if signup_data.get('phone') else None,
-                    'dob': signup_data.get('dob'),
-                    'address': signup_data.get('address'),
-                    'ssn_last_4': signup_data.get('ssn_last_4'),
-                })
-            elif signup_type == 'seller':
-                user_data.update({
-                    'company_name': signup_data.get('company_name'),
-                    'phone_number': format_phone_for_storage(signup_data.get('phone', '')) if signup_data.get('phone') else None,
-                    'tax_id': signup_data.get('tax_id'),
-                    'address': signup_data.get('address'),
-                })
-
-            # Save the user to user_settings
-            users_settings = load_users_settings()
-            users_settings[user_id] = user_data
-            save_users_settings(users_settings)
-            logging.info(f"User {user_id} created successfully after Stripe onboarding")
-
-            # Generate a token using generate_token from utils.auth
-            token = generate_token(user_id, permissions)
-            session['user'] = {
-                'user_id': user_id,
-                'permissions': permissions,
-                'token': token,
-                'x-role': next((r for r in ['admin', 'merchant', 'community', 'partner'] if r in permissions), 'user')
-            }
-            session.modified = True
-
-            # Prepare response
-            response = jsonify({
-                "status": "success",
-                "message": "Account created successfully",
-                "token": token,
-                "user_id": user_id,
-                "redirect": "/"
+        # Add role-specific data from Stripe onboarding or form
+        if role == 'community':
+            individual = stripe_account.individual if stripe_account.individual else {}
+            phone_from_stripe = individual.get('phone') if stripe_account.individual else None
+            phone_from_form = data.get('phone', '').strip()
+            phone_number = phone_from_stripe if phone_from_stripe is not None else (phone_from_form if phone_from_form else None)
+            user_data.update({
+                'first_name': individual.get('first_name') if stripe_account.individual else None,
+                'last_name': individual.get('last_name') if stripe_account.individual else None,
+                'phone_number': phone_number,
+                'dob': individual.get('dob') if stripe_account.individual else None,
+                'address': individual.get('address') if stripe_account.individual else None,
+                'ssn_last_4': individual.get('ssn_last_4') if stripe_account.individual else None,
             })
-            response.set_cookie('authToken', token, secure=True, max_age=604800, path='/')
-            return response, 200
+        elif role == 'seller':
+            company = stripe_account.company if stripe_account.company else {}
+            phone_from_stripe = company.get('phone') if stripe_account.company else None
+            phone_from_form = data.get('phone', '').strip()
+            phone_number = phone_from_stripe if phone_from_stripe is not None else (phone_from_form if phone_from_form else None)
+            user_data.update({
+                'company_name': company.get('name') if stripe_account.company else None,
+                'phone_number': phone_number,
+                'tax_id': company.get('tax_id') if stripe_account.company else None,
+                'address': company.get('address') if stripe_account.company else None,
+            })
 
-        except Exception as e:
-            logging.error(f"Complete signup error: {str(e)}", exc_info=True)
-            return jsonify({"status": "error", "message": "Server error"}), 500
+        # Save the user to user_settings
+        users_settings = load_users_settings()
+        users_settings[user_id] = user_data
+        save_users_settings(users_settings)
+        logging.info(f"User {user_id} created successfully after Stripe onboarding")
 
+        # Record signup event in PostHog
+        signup_data = {
+            "user_id": user_id,
+            "role": role,
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        }
+        if posthog_client:
+            try:
+                posthog_client.capture(
+                    distinct_id=user_id,
+                    event="signup",
+                    properties=signup_data
+                )
+                logging.debug(f"PostHog signup event captured: distinct_id={user_id}, properties={json.dumps(signup_data)}")
+            except Exception as e:
+                logging.error(f"PostHog Issue - Failed to capture signup event: {str(e)}", exc_info=True)
+        else:
+            logging.warning("PostHog Issue - posthog_client is None, signup event not captured")
+
+        # Generate a token using generate_token from utils.auth
+        token = generate_token(user_id, user_data['permissions'])
+        session['user'] = {
+            'user_id': user_id,
+            'permissions': user_data['permissions'],
+            'token': token,
+            'x-role': role
+        }
+        session.modified = True
+
+        # Prepare response
+        response = jsonify({
+            "status": "success",
+            "message": "Account created successfully",
+            "token": token,
+            "user_id": user_id,
+            "redirect": "/"
+        })
+        response.set_cookie('authToken', token, secure=True, max_age=604800, path='/')
+        return response, 200
+
+    except Exception as e:
+        logging.error(f"Complete signup error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Server error"}), 500
+        
 # /link-stripe POST - Link Stripe Account for Partner/Admin
 @authentication_bp.route('/link-stripe', methods=['POST'])
 @login_required(['partner', 'admin'])
@@ -511,8 +517,6 @@ def update_password():
         logging.error(f"Update password error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Server error"}), 500
 
-        from flask import jsonify, request
-
 @authentication_bp.route('/debug-password/<user_id>', methods=['GET', 'POST'])
 def debug_password(user_id):
     """
@@ -548,1889 +552,7 @@ def debug_password(user_id):
             save_users_settings(users_settings)
             return jsonify({"status": "success", "message": "Password updated"})
         except Exception as e:
-            return jsonify({"status": "error", "message": f"Failed to save: {str(e)}"}), 500
-
-
-blueprints_contents_javascript.txt
-+ [blueprints]
-+----authentication_bp.py
-+----content_bp.py
-+----manager_bp.py
-+----referral_bp.py
-+----site_request_bp.py
-+----user_settings_bp.py
-+----utility_bp.py
-
-authentication_bp.py
-
-from flask import Blueprint, render_template, request, jsonify, current_app
-from utils.auth import login_required, load_users_settings, save_users_settings, generate_token
-from utils.users import generate_code
-from utils.config import load_config
-import logging
-import datetime
-import json
-import bcrypt
-import jwt
-import requests
-import string
-import random
-
-# region Blueprint Setup
-authentication_bp = Blueprint('authentication_bp', __name__)
-# endregion
-
-# region /login GET and POST - User Login
-@authentication_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'GET':
-        # Render login.html for GET requests
-        return render_template('login.html', title='clubmadeira.io | Login', page_type='login', base_url=request.url_root.rstrip('/'))
-
-    # Handle POST request (login form submission)
-    try:
-        content_type = request.headers.get('Content-Type', '')
-        if 'application/json' in content_type:
-            data = request.get_json(silent=True, force=True, cache=False)
-        else:
-            data = request.form.to_dict()
-
-        log_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": {k: "[REDACTED]" if k == "Authorization" else v for k, v in request.headers.items()},
-            "ip": request.remote_addr,
-            "content_type": content_type,
-            "body": {"email": data.get("email"), "password": "[REDACTED]"} if data else "[NO BODY]"
-        }
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        if not data or 'email' not in data or 'password' not in data:
-            logging.warning(f"Missing fields: {data}")
-            return jsonify({"status": "error", "message": "Email and password are required"}), 400
-        
-        email = data['email'].strip().lower()
-        password = data['password'].strip()
-        logging.debug(f"Raw password before validation: [REDACTED]")
-        
-        users_settings = load_users_settings()
-        user_entry = next(((uid, u) for uid, u in users_settings.items() if u['email_address'].lower() == email), None)
-        
-        if user_entry:
-            user_id, user = user_entry
-            logging.debug(f"Stored hash for user {user_id}: [REDACTED]")
-            if bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
-                token = generate_token(user_id, user['permissions'])
-                return jsonify({"status": "success", "token": token, "user_id": user_id}), 200  # Changed "userId" to "user_id"
-            else:
-                logging.debug("Password does not match")
-        else:
-            logging.debug(f"User not found for email: {email}")
-        
-        return jsonify({"status": "error", "message": "Invalid credentials"}), 401
-    except Exception as e:
-        logging.error(f"Login error: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": "Server error"}), 500
-# endregion
-
-# region /signup GET - The Holy Grail of New User Entry
-@authentication_bp.route('/signup', methods=['GET'])
-def signup_page():
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        response = render_template('signup.html')
-        logging.info(f"Signup page rendered successfully")
-        return response
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to render signup page: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-# endregion
-
-# region /signup POST - Joining the Galactic Crew
-@authentication_bp.route('/signup', methods=['POST'])
-def signup():
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": request.get_json(silent=True) or "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        if isinstance(log_data["body"], dict) and "signup_password" in log_data["body"]:
-            log_data["body"]["signup_password"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        data = request_data["body"]
-        required_fields = ['signup_type', 'contact_name', 'signup_email', 'signup_password', 'signup_phone']
-        if not all(k in data for k in required_fields):
-            logging.warning(f"UX Issue - Signup attempt missing required fields: {json.dumps(data)}")
-            response_data = {"status": "error", "message": "Missing required fields"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-        
-        signup_type = data['signup_type']
-        contact_name = data['contact_name']
-        signup_email = data['signup_email']
-        signup_password = data['signup_password']
-        signup_phone = data['signup_phone']
-
-        if not signup_phone:
-            logging.warning(f"UX Issue - Signup failed for {signup_type} - Phone required")
-            response_data = {"status": "error", "message": "Phone required for all users"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-
-        users_settings = load_users_settings()
-        logging.debug(f"Loaded users: {json.dumps({k: {**v, 'password': '[REDACTED]'} for k, v in users_settings.items()})}")
-        if any(u['email_address'].lower() == signup_email.lower() for u in users_settings.values()):
-            logging.warning(f"UX Issue - Signup failed - Email already registered: {signup_email}")
-            response_data = {"status": "error", "message": "Email already registered"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 409
-
-        user_id = generate_code()
-        hashed_password = bcrypt.hashpw(signup_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        permission_map = {'seller': 'merchant', 'community': 'community', 'wixpro': 'wixpro'}
-        permission = permission_map.get(signup_type, signup_type)
-
-        otp = ''.join(random.choices(string.digits, k=6))
-        signup_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
-        if "signup_codes" not in current_app.config:
-            current_app.config["signup_codes"] = {}
-        current_app.config["signup_codes"][user_id] = {"code": otp, "expires": signup_expiry.isoformat()}
-
-        users_settings[user_id] = {
-            "email_address": signup_email.lower(),
-            "contact_name": contact_name,
-            "phone_number": signup_phone,
-            "password": hashed_password,
-            "permissions": [permission]
-        }
-        save_users_settings(users_settings)
-        logging.debug(f"User signed up - User ID: {user_id}, Permission: {permission}")
-
-        sms_payload = {
-            "email": signup_email,
-            "message": f"clubmadeira.io signup OTP: {otp}. Expires in 15 mins."
-        }
-        response = requests.post("https://madeira.io/send-sms", json=sms_payload)
-        if response.status_code != 200:
-            logging.error(f"UX Issue - Failed to send signup OTP - User ID: {user_id}, Response: {response.text}")
-            del users_settings[user_id]
-            save_users_settings(users_settings)
-            response_data = {"status": "error", "message": f"Failed to send SMS: {response.text}"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 500
-
-        logging.info(f"Signup successful for user {user_id}, OTP sent to email {signup_email}")
-        response_data = {"status": "success", "message": "User created, please verify OTP"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 201
-    except Exception as e:
-        logging.error(f"UX Issue - Signup processing error: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-# endregion
-
-# ASCII Art 1: The Dead Parrot
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "It's not pining, it's passed on! This parrot is no more!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
-
-# region /reset-password POST - A New Hope for Forgotten Passwords
-@authentication_bp.route('/reset-password', methods=['POST'])
-def reset_password():
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": request.get_json(silent=True) or "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        data = request_data["body"]
-        if not data or 'email' not in data:
-            logging.warning("UX Issue - Reset password attempt missing email")
-            response_data = {"status": "error", "message": "Email is required"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-        
-        email = data.get("email").lower()
-        users_settings = load_users_settings()
-        logging.debug(f"Loaded users: {json.dumps({k: {**v, 'password': '[REDACTED]'} for k, v in users_settings.items()})}")
-        matching_user_id = next((uid for uid, settings in users_settings.items() if settings.get("email_address", "").lower() == email), None)
-        
-        if not matching_user_id:
-            logging.warning(f"UX Issue - Reset password failed - Email not found: {email}")
-            response_data = {"status": "error", "message": "Email not found"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 404
-
-        user = users_settings[matching_user_id]
-        otp = ''.join(random.choices(string.digits, k=6))
-        reset_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
-        if "reset_codes" not in current_app.config:
-            current_app.config["reset_codes"] = {}
-        current_app.config["reset_codes"][matching_user_id] = {"code": otp, "expires": reset_expiry.isoformat()}
-        logging.debug(f"Generated OTP for reset - User ID: {matching_user_id}, OTP: {otp}")
-
-        sms_payload = {
-            "email": email,
-            "message": f"clubmadeira.io one-time password: {otp}. Expires in 15 mins."
-        }
-        response = requests.post("https://madeira.io/send-sms", json=sms_payload)
-
-        if response.status_code != 200:
-            logging.error(f"UX Issue - Failed to send SMS for reset - User ID: {matching_user_id}, Response: {response.text}")
-            response_data = {"status": "error", "message": f"Failed to send SMS: {response.text}"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 500
-        
-        logging.info(f"SMS sent successfully for password reset - User ID: {matching_user_id}")
-        response_data = {"status": "success", "message": "A one-time password has been sent to your phone"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Reset password error: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-# endregion
-
-# region /verify-reset-code POST - The Messiah of Password Recovery
-@authentication_bp.route('/verify-reset-code', methods=['POST'])
-def verify_reset_code():
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": request.get_json(silent=True) or "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        if isinstance(log_data["body"], dict) and "new_password" in log_data["body"]:
-            log_data["body"]["new_password"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        data = request_data["body"]
-        if not data or not isinstance(data, dict) or not all(k in data for k in ['email', 'code', 'new_password']):
-            logging.warning(f"UX Issue - Verify reset code missing required fields: {json.dumps(data)}")
-            response_data = {"status": "error", "message": "Email, code, and new password are required"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-        
-        email = data.get("email").lower()
-        code = data.get("code")
-        new_password = data.get("new_password")
-
-        users_settings = load_users_settings()
-        logging.debug(f"Loaded users: {json.dumps({k: {**v, 'password': '[REDACTED]'} for k, v in users_settings.items()})}")
-        matching_user_id = next((uid for uid, settings in users_settings.items() if settings.get("email_address", "").lower() == email), None)
-        
-        if not matching_user_id:
-            logging.warning(f"UX Issue - Verify reset code failed - Email not found: {email}")
-            response_data = {"status": "error", "message": "Email not found"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 404
-
-        stored_reset = current_app.config.get("reset_codes", {}).get(matching_user_id, {})
-        stored_code = stored_reset.get("code")
-        if not stored_code:
-            logging.warning(f"UX Issue - No reset code found for user {matching_user_id}")
-            response_data = {"status": "error", "message": "No reset code found for this user"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-
-        try:
-            expiry = datetime.datetime.fromisoformat(stored_reset.get("expires", "2000-01-01T00:00:00"))
-        except (ValueError, TypeError) as e:
-            logging.error(f"Security Issue - Invalid reset code expiry format for user {matching_user_id}: {str(e)}", exc_info=True)
-            response_data = {"status": "error", "message": "Invalid reset code expiry format"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 500
-
-        if stored_code != code or datetime.datetime.utcnow() > expiry:
-            logging.warning(f"Security Issue - Invalid or expired reset code for user {matching_user_id}: {code}")
-            response_data = {"status": "error", "message": "Invalid or expired reset code"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-
-        user = users_settings[matching_user_id]
-        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        user["password"] = hashed_password
-        
-        if "verified" not in user.get("permissions", []):
-            user["permissions"].append("verified")
-        
-        save_users_settings(users_settings)
-        if matching_user_id in current_app.config.get("reset_codes", {}):
-            del current_app.config["reset_codes"][matching_user_id]
-
-        token = generate_token(matching_user_id, user.get("permissions", []))
-        logging.info(f"Password reset successful for user {matching_user_id}")
-        response_data = {"status": "success", "token": "[REDACTED]", "user_id": matching_user_id}  # Changed "userId" to "user_id"
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify({"status": "success", "token": token, "user_id": matching_user_id}), 200  # Changed "userId" to "user_id"
-    except Exception as e:
-        logging.error(f"UX Issue - Verify reset code error: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-# endregion
-
-# region /update-password POST - Changing the Galactic Key
-@authentication_bp.route('/update-password', methods=['POST'])
-@login_required(["self"], require_all=True)
-def update_password():
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": request.get_json(silent=True) or "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        if isinstance(log_data["body"], dict) and "password" in log_data["body"]:
-            log_data["body"]["password"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        data = request_data["body"]
-        if not data or 'email' not in data or 'password' not in data:
-            logging.warning(f"UX Issue - Update password attempt missing email or password: {json.dumps(data)}")
-            response_data = {"status": "error", "message": "Email and password required"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-        
-        email = data["email"].strip().lower()
-        new_password = data["password"].strip()
-        users_settings = load_users_settings()
-        logging.debug(f"Loaded users: {json.dumps({k: {**v, 'password': '[REDACTED]'} for k, v in users_settings.items()})}")
-        user_id = next((uid for uid, u in users_settings.items() if u["email_address"].lower() == email), None)
-        
-        if not user_id or user_id != request.user_id:
-            logging.warning(f"Security Issue - Unauthorized password update attempt for {email} by {request.user_id}")
-            response_data = {"status": "error", "message": "Unauthorized"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 403
-        
-        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        users_settings[user_id]["password"] = hashed_password
-        save_users_settings(users_settings)
-        logging.info(f"Password updated for user {user_id}")
-        response_data = {"status": "success", "message": f"Password updated for {email}", "user_id": user_id}  # Changed "userId" to "user_id"
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Update password error: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-# endregion
-
-content_bp.py
-
-from flask import Blueprint, request, jsonify
-from utils.products import search_all_discounted
-from utils.categories import get_all_categories
-import logging
-import json
-
-# region Blueprint Setup
-# Welcome to content_bp, the blueprint that’s more organized than the Spanish Inquisition’s filing system.
-# Arthur Dent would be proud—simple, logical, and occasionally bewildered by its own existence.
-content_bp = Blueprint('content_bp', __name__)
-# endregion
-
-# region /discounted-products GET - The Quest for Bargain Treasures
-@content_bp.route('/deals', methods=['GET'])
-def get_all_discounted_products():
-    """
-    Retrieves all discounted products for a given category, like Zaphod Beeblebrox hunting for the best Pan Galactic Gargle Blaster deals.
-    Purpose: To provide a list of products that are currently on discount, filtered by category—like the Holy Grail, but with price tags.
-    Inputs: Query parameter:
-        - category_id (str): The ID of the category to filter discounted products. Required, or it’s like asking for "four candles" and getting fork handles.
-    Outputs:
-        - Success: JSON {"status": "success", "count": <int>, "products": [<product_data>]}, status 200—your treasure map to savings!
-        - Errors:
-            - 400: {"status": "error", "message": "category_id required"}—you forgot the category, you naughty boy!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the system’s gone to the People’s Front of Judea!
-    """
-    try:
-        # Arthur Dent checks the query params—where’s that category_id?
-        category_id = request.args.get('category_id')
-        if not category_id:
-            logging.warning("UX Issue - No category_id provided for discounted products")
-            return jsonify({"status": "error", "message": "category_id required"}), 400
-        
-        # Search for discounted products—like finding a shrubbery in a galaxy far, far away.
-        products = search_all_discounted(category_id)
-        if not products:
-            logging.warning(f"UX Issue - No discounted products found for category_id: {category_id}")
-        
-        # Assemble the response—fit for the Life of Brian’s marketplace.
-        response_data = {"status": "success", "count": len(products), "products": products}
-        logging.debug(f"Retrieved discounted products for category_id {category_id}: {json.dumps(response_data)}")
-        return jsonify(response_data), 200
-    except Exception as e:
-        # Marvin’s lament: “I tried to fetch products, but the universe broke.”
-        logging.error(f"UX Issue - Failed to retrieve discounted products: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 1: The Holy Grail
-"""
-       /\
-      /  \
-     /____\  "It's just a flesh wound! Keep searching for those discounts!"
-    |      |
-    |______|
-"""
-
-# region /categories GET - Mapping the Galactic Product Hierarchy
-@content_bp.route('/categories', methods=['GET'])
-def get_categories():
-    """
-    Retrieves product categories, optionally filtered by parent_id, like Trillian navigating the Heart of Gold’s improbability drive.
-    Purpose: To provide a list of categories, helping users explore the product galaxy—like the Guide, but for shopping.
-    Inputs: Query parameter (optional):
-        - parent_id (str): The ID of the parent category to filter subcategories. If omitted, returns top-level categories.
-    Outputs:
-        - Success: JSON {"status": "success", "count": <int>, "categories": [<category_data>]}, status 200—your map to the stars!
-        - Errors:
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies misplaced the candles!
-    """
-    try:
-        # Zaphod checks the query—parent_id or bust!
-        parent_id = request.args.get('parent_id')
-        # Fetch categories—like finding the right fork handle in a sea of four candles.
-        categories = get_all_categories(parent_id)
-        if not categories:
-            logging.warning(f"UX Issue - No categories returned for parent_id: {parent_id or 'None'}")
-        
-        # Assemble the response—neater than a Two Ronnies sketch.
-        response_data = {"status": "success", "count": len(categories), "categories": categories}
-        logging.debug(f"Retrieved categories for parent_id {parent_id or 'None'}: {json.dumps(response_data)}")
-        return jsonify(response_data), 200
-    except Exception as e:
-        # Marvin’s take: “I fetched categories, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to retrieve categories: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 2: Zaphod Beeblebrox
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "Two heads are better than one—especially for finding bargains!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
-
-manager_bp.py
-
-from flask import Blueprint, request, jsonify
-from utils.auth import login_required
-from utils.users import load_users_settings, save_users_settings
-from utils.config import load_config, save_config
-import logging
-import json
-
-# Behold manager_bp, the blueprint that governs with the authority of Zaphod Beeblebrox’s dual-headed presidency!
-# This is the control room—admin-only, like the bridge of the Heart of Gold, but with less improbability.
-manager_bp = Blueprint('manager_bp', __name__)
-
-from flask import jsonify, abort
-from utils.auth import login_required
-from utils.users import load_users_settings
-
-@manager_bp.route('/permission', methods=['PATCH'])
-@login_required(required_permissions=['admin'])
-def patch_permission():
-    """
-    Add a permission for a user if it doesn't already exist.
-    Payload: {"USERid": "string", "permission": "string"}
-    """
-    data = request.get_json()
-    if not data or 'USERid' not in data or 'permission' not in data:
-        return jsonify({"status": "error", "message": "USERid and permission are required"}), 400
-    
-    user_id = data['USERid']
-    new_permission = data['permission']
-    
-    users_data = load_users_settings()
-    user = users_data.get(user_id)
-    
-    if not user:
-        return jsonify({"status": "error", "message": "User not found"}), 404
-    
-    if 'permissions' not in user:
-        user['permissions'] = []
-    
-    if new_permission in user['permissions']:
-        return jsonify({"status": "error", "message": f"Permission {new_permission} already exists for user {user_id}"}), 400
-    
-    user['permissions'].append(new_permission)
-    save_users_settings(users_data)
-    return jsonify({"status": "success", "message": f"Permission {new_permission} added for user {user_id}"}), 200
-
-@manager_bp.route('/permission', methods=['DELETE'])
-@login_required(required_permissions=['admin'])
-def delete_permission():
-    """
-    Remove a specific permission from a user.
-    Payload: {"USERid": "string", "permission": "string"}
-    """
-    data = request.get_json()
-    if not data or 'USERid' not in data or 'permission' not in data:
-        return jsonify({"status": "error", "message": "USERid and permission are required"}), 400
-    
-    user_id = data['USERid']
-    permission_to_remove = data['permission']
-    
-    users_data = load_users_settings()
-    user = users_data.get(user_id)
-    
-    if not user:
-        return jsonify({"status": "error", "message": "User not found"}), 404
-    
-    if 'permissions' not in user or permission_to_remove not in user['permissions']:
-        return jsonify({"status": "error", "message": f"Permission {permission_to_remove} not found for user {user_id}"}), 404
-    
-    user['permissions'].remove(permission_to_remove)
-    save_users_settings(users_data)
-    return jsonify({"status": "success", "message": f"Permission {permission_to_remove} removed from user {user_id}"}), 200
-
-# New endpoint for listing users by role
-@manager_bp.route('/users/<role>', methods=['GET'])
-@login_required(required_permissions=['admin'])
-def get_users_by_role(role):
-    """
-    Retrieves a list of users who have the specified role in their permissions.
-    Purpose: Allows admins to view users based on their roles.
-    Permissions: Restricted to "admin".
-    Inputs: 
-        - role (string): The role to filter users by (e.g., 'admin', 'partner').
-    Outputs:
-        - Success: JSON {"status": "success", "role": "<role>", "users": [<list_of_users>]}, status 200
-        - Info: JSON {"status": "info", "message": "No users found with role '<role>'"}, status 200 if no users are found
-        - Errors:
-            - 500: {"status": "error", "message": "Server error: <reason>"}
-    """
-    try:
-        users_data = load_users_settings()
-        users_with_role = []
-        for user_id, user in users_data.items():
-            if 'permissions' in user and role in user['permissions']:
-                user_copy = user.copy()
-                user_copy['USERid'] = user_id
-                users_with_role.append(user_copy)
-        
-        if not users_with_role:
-            logging.info(f"No users found with role '{role}'")
-            return jsonify({"status": "info", "message": f"No users found with role '{role}'"}), 200
-        
-        logging.debug(f"Retrieved users with role '{role}': {len(users_with_role)} users found")
-        return jsonify({"status": "success", "role": role, "users": users_with_role}), 200
-    except Exception as e:
-        logging.error(f"Failed to retrieve users with role '{role}': {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-# region settings/api - Manage settings_key and affiliate_key
-
-@manager_bp.route('/settings/settings_key', methods=['GET'])
-@login_required(["admin"], require_all=True)
-def get_settings_key_settings():
-    """
-    Retrieves all settings of type 'settings_key' from the configuration.
-    Purpose: Provides admins with a list of settings_key settings for management.
-    Permissions: Restricted to "admin"—only the chosen can access this!
-    Inputs: None
-    Outputs:
-        - Success: JSON {"status": "success", "setting_type": "settings_key", "settings": [<list_of_settings>]}, status 200
-        - Errors:
-            - 404: {"status": "error", "message": "Setting type settings_key not found"} if no settings are found
-            - 500: {"status": "error", "message": "Server error: <reason>"}
-    """
-    try:
-        config = load_config()
-        settings = []
-        for key, value in config.items():
-            if value.get('setting_type') == 'settings_key':
-                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
-                setting = {
-                    'key_type': key,
-                    'fields': fields,
-                    'icon': value.get('icon', 'icon-favicon'),
-                    'doc_link': value.get('doc_link', ''),
-                    'comment': value.get('_comment', ''),
-                    'description': value.get('_description', '')
-                }
-                settings.append(setting)
-        
-        if not settings:
-            logging.warning("No settings found for type 'settings_key'")
-            return jsonify({"status": "error", "message": "Setting type settings_key not found"}), 404
-        
-        logging.debug(f"Retrieved settings_key settings: {json.dumps(settings)}")
-        return jsonify({"status": "success", "setting_type": "settings_key", "settings": settings}), 200
-    except Exception as e:
-        logging.error(f"Failed to retrieve settings_key settings: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@manager_bp.route('/settings/settings_key/<key_type>', methods=['PATCH'])
-@login_required(["admin"], require_all=True)
-def patch_settings_key(key_type):
-    """
-    Updates specific fields of an existing settings_key entry.
-    Purpose: Allows admins to modify parts of a settings_key setting.
-    Permissions: Restricted to "admin".
-    Inputs: JSON payload with fields to update.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Setting <key_type> updated"}, status 200
-        - Errors:
-            - 400: {"status": "error", "message": "No data provided"}
-            - 404: {"status": "error", "message": "Setting not found"}
-            - 400: {"status": "error", "message": "Invalid field: <field>"}
-            - 500: {"status": "error", "message": "Server error: <reason>"}
-    """
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        config = load_config()
-        if key_type not in config or config[key_type].get('setting_type') != 'settings_key':
-            return jsonify({"status": "error", "message": "Setting not found"}), 404
-        
-        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
-        for field, value in data.items():
-            if field in valid_fields:
-                config[key_type][field] = value
-            else:
-                return jsonify({"status": "error", "message": f"Invalid field: {field}"}), 400
-
-        save_config(config)
-        logging.info(f"Updated settings_key: {key_type}")
-        return jsonify({"status": "success", "message": f"Setting {key_type} updated"}), 200
-    except Exception as e:
-        logging.error(f"Failed to update settings_key: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@manager_bp.route('/settings/settings_key/<key_type>', methods=['PUT'])
-@login_required(["admin"], require_all=True)
-def put_settings_key(key_type):
-    """
-    Replaces an existing settings_key entry or creates it if it doesn’t exist.
-    Purpose: Allows admins to fully replace a settings_key setting.
-    Permissions: Restricted to "admin".
-    Inputs: JSON payload with full setting data (must include "setting_type": "settings_key").
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Setting <key_type> replaced"}, status 200
-        - Errors:
-            - 400: {"status": "error", "message": "No data provided"}
-            - 400: {"status": "error", "message": "Invalid setting_type for this endpoint."}
-            - 500: {"status": "error", "message": "Server error: <reason>"}
-    """
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        if data.get('setting_type') != 'settings_key':
-            return jsonify({"status": "error", "message": "Invalid setting_type for this endpoint."}), 400
-        
-        config = load_config()
-        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']} if key_type in config else set()
-        if valid_fields:
-            temp_data = {k: v for k, v in data.items() if k in valid_fields}
-            temp_data['setting_type'] = 'settings_key'
-            temp_data['_comment'] = config[key_type].get('_comment', '')
-            temp_data['icon'] = config[key_type].get('icon', 'icon-favicon')
-            temp_data['doc_link'] = config[key_type].get('doc_link', '')
-            temp_data['_description'] = config[key_type].get('_description', '')
-            config[key_type] = temp_data
-        else:
-            config[key_type] = data
-        save_config(config)
-        logging.info(f"Replaced settings_key: {key_type}")
-        return jsonify({"status": "success", "message": f"Setting {key_type} replaced"}), 200
-    except Exception as e:
-        logging.error(f"Failed to replace settings_key: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@manager_bp.route('/settings/affiliate_key', methods=['GET'])
-@login_required(["admin"], require_all=True)
-def get_affiliate_key_settings():
-    """
-    Retrieves all settings of type 'affiliate_key' from the configuration.
-    Purpose: Provides admins with a list of affiliate_key settings for management.
-    Permissions: Restricted to "admin"—only the chosen can access this!
-    Inputs: None
-    Outputs:
-        - Success: JSON {"status": "success", "setting_type": "affiliate_key", "settings": [<list_of_settings>]}, status 200
-        - Errors:
-            - 404: {"status": "error", "message": "Setting type affiliate_key not found"} if no settings are found
-            - 500: {"status": "error", "message": "Server error: <reason>"}
-    """
-    try:
-        config = load_config()
-        settings = []
-        for key, value in config.items():
-            if value.get('setting_type') == 'affiliate_key':
-                fields = {k: v for k, v in value.items() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
-                setting = {
-                    'key_type': key,
-                    'fields': fields,
-                    'icon': value.get('icon', 'icon-favicon'),
-                    'doc_link': value.get('doc_link', ''),
-                    'comment': value.get('_comment', ''),
-                    'description': value.get('_description', '')
-                }
-                settings.append(setting)
-        
-        if not settings:
-            logging.warning("No settings found for type 'affiliate_key'")
-            return jsonify({"status": "error", "message": "Setting type affiliate_key not found"}), 404
-        
-        logging.debug(f"Retrieved affiliate_key settings: {json.dumps(settings)}")
-        return jsonify({"status": "success", "setting_type": "affiliate_key", "settings": settings}), 200
-    except Exception as e:
-        logging.error(f"Failed to retrieve affiliate_key settings: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@manager_bp.route('/settings/affiliate_key/<key_type>', methods=['PATCH'])
-@login_required(["admin"], require_all=True)
-def patch_affiliate_key(key_type):
-    """
-    Updates specific fields of an existing affiliate_key entry.
-    Purpose: Allows admins to modify parts of an affiliate_key setting.
-    Permissions: Restricted to "admin".
-    Inputs: JSON payload with fields to update.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Setting <key_type> updated"}, status 200
-        - Errors:
-            - 400: {"status": "error", "message": "No data provided"}
-            - 404: {"status": "error", "message": "Setting not found"}
-            - 400: {"status": "error", "message": "Invalid field: <field>"}
-            - 500: {"status": "error", "message": "Server error: <reason>"}
-    """
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        config = load_config()
-        if key_type not in config or config[key_type].get('setting_type') != 'affiliate_key':
-            return jsonify({"status": "error", "message": "Setting not found"}), 404
-        
-        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']}
-        for field, value in data.items():
-            if field in valid_fields:
-                config[key_type][field] = value
-            else:
-                return jsonify({"status": "error", "message": f"Invalid field: {field}"}), 400
-
-        save_config(config)
-        logging.info(f"Updated affiliate_key: {key_type}")
-        return jsonify({"status": "success", "message": f"Setting {key_type} updated"}), 200
-    except Exception as e:
-        logging.error(f"Failed to update affiliate_key: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@manager_bp.route('/settings/affiliate_key/<key_type>', methods=['PUT'])
-@login_required(["admin"], require_all=True)
-def put_affiliate_key(key_type):
-    """
-    Replaces an existing affiliate_key entry or creates it if it doesn’t exist.
-    Purpose: Allows admins to fully replace an affiliate_key setting.
-    Permissions: Restricted to "admin".
-    Inputs: JSON payload with full setting data (must include "setting_type": "affiliate_key").
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Setting <key_type> replaced"}, status 200
-        - Errors:
-            - 400: {"status": "error", "message": "No data provided"}
-            - 400: {"status": "error", "message": "Invalid setting_type for this endpoint."}
-            - 500: {"status": "error", "message": "Server error: <reason>"}
-    """
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        if data.get('setting_type') != 'affiliate_key':
-            return jsonify({"status": "error", "message": "Invalid setting_type for this endpoint."}), 400
-        
-        config = load_config()
-        valid_fields = {k for k in config[key_type].keys() if k not in ['_comment', 'setting_type', 'icon', 'doc_link', '_description']} if key_type in config else set()
-        if valid_fields:
-            temp_data = {k: v for k, v in data.items() if k in valid_fields}
-            temp_data['setting_type'] = 'affiliate_key'
-            temp_data['_comment'] = config[key_type].get('_comment', '')
-            temp_data['icon'] = config[key_type].get('icon', 'icon-favicon')
-            temp_data['doc_link'] = config[key_type].get('doc_link', '')
-            temp_data['_description'] = config[key_type].get('_description', '')
-            config[key_type] = temp_data
-        else:
-            config[key_type] = data
-        save_config(config)
-        logging.info(f"Replaced affiliate_key: {key_type}")
-        return jsonify({"status": "success", "message": f"Setting {key_type} replaced"}), 200
-    except Exception as e:
-        logging.error(f"Failed to replace affiliate_key: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-# endregion
-
-# ASCII Art 1: The Two Ronnies’ Fork Handles
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "Four candles? No, fork handles—admin privileges required!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
-
-referral_bp.py
-
-from flask import Blueprint, request, jsonify
-from utils.auth import login_required
-from utils.users import load_users_settings, save_users_settings
-import logging
-import json
-
-# region Blueprint Setup
-# Welcome to referral_bp, the blueprint that tracks referrals like Zaphod Beeblebrox tracks the best parties in the galaxy!
-# This module is the galactic hub for recording and retrieving referral data—prepare for some improbably fun stats!
-referral_bp = Blueprint('referral_bp', __name__)
-# endregion
-
-# region /referral POST - Recording Galactic Referrals
-@referral_bp.route('/referral', methods=['POST'])
-def handle_referral():
-    """
-    Records referral data (visits or orders), like the Spanish Inquisition—nobody expects it, but it’s here!
-    Purpose: To log referral activities, whether it’s a page visit or an order, for tracking and analytics. Public access—no permissions needed, just like the People’s Front of Judea’s open meetings.
-    Inputs: JSON payload with:
-        - timestamp (str): When the referral happened, e.g., "2023-10-26T12:34:56Z".
-        - referer (str, optional): The ID of the referer, defaults to "none" if not provided.
-        - page (str, optional): The page visited, required for visit referrals.
-        - orderId (str, optional): The order ID, required for order referrals.
-        - buyer (str, optional): The buyer’s name or ID for orders.
-        - total (float, optional): The order total for orders.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Referral recorded", "referer": "<referer>"}, status 200—referral logged!
-        - Errors:
-            - 400: {"status": "error", "message": "Invalid data: timestamp required"}—no timestamp, no fork handles!
-            - 400: {"status": "error", "message": "Invalid referral data: page or orderId required"}—missing key data!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
-    """
-    try:
-        # Arthur Dent checks the JSON—timestamp is crucial, or it’s a bust!
-        data = request.get_json()
-        if not data or 'timestamp' not in data:
-            logging.warning(f"UX Issue - Invalid referral data: {json.dumps(data)}")
-            return jsonify({"status": "error", "message": "Invalid data: timestamp required"}), 400
-        
-        # Load the user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        referer = data.get("referer", "none")
-        if referer not in users_settings:
-            # Initialize new referer—like Zaphod discovering a new head!
-            logging.debug(f"New referer {referer} initialized with empty referral data")
-            users_settings[referer] = {"referrals": {"visits": [], "orders": []}}
-        
-        # Record the referral—page visit or order, like the Holy Grail or a shrubbery.
-        if "page" in data:
-            users_settings[referer]["referrals"]["visits"].append({
-                "page": data["page"],
-                "timestamp": data["timestamp"]
-            })
-        elif "orderId" in data:
-            users_settings[referer]["referrals"]["orders"].append({
-                "orderId": data["orderId"],
-                "buyer": data.get("buyer", "unknown"),
-                "total": data.get("total", 0.0),
-                "timestamp": data["timestamp"]
-            })
-        else:
-            # Missing page or orderId? That’s like asking for four candles and getting fork handles!
-            logging.warning(f"UX Issue - Referral data missing page or orderId: {json.dumps(data)}")
-            return jsonify({"status": "error", "message": "Invalid referral data: page or orderId required"}), 400
-        
-        # Save the updated settings—stronger than a Wookiee’s grip!
-        save_users_settings(users_settings)
-        logging.info(f"Referral recorded for referer {referer}: {json.dumps(data)}")
-        return jsonify({"status": "success", "message": "Referral recorded", "referer": referer}), 200
-    except Exception as e:
-        # Marvin’s take: “I recorded a referral, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to handle referral: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 1: The Dead Parrot
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "This referral is no more! It has ceased to be!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
-
-# region /<user_id>/visits GET - Checking Referral Visits
-@referral_bp.route('/<user_id>/visits', methods=['GET'])
-@login_required(["self", "admin"], require_all=False)
-def get_referral_visits(user_id):
-    """
-    Retrieves referral visits for a user, like Zaphod checking his party RSVPs.
-    Purpose: To list all page visits referred by the user—restricted to the user themselves or admins, because privacy is key in the galaxy!
-    Permissions: Restricted to "self" or "admin"—you’re either the referer or the Messiah!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user whose referral visits are sought.
-    Outputs:
-        - Success: JSON {"status": "success", "visits": [<visit_data>]}, status 200—visits revealed!
-        - Errors:
-            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the chosen one!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies lost the candles!
-    """
-    try:
-        # Permission check—like the Knights Who Say Ni demanding a shrubbery!
-        if user_id != request.user_id and "admin" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized visits retrieval attempt for {user_id} by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-        
-        # Load the user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        if user_id not in users_settings or "referrals" not in users_settings[user_id]:
-            logging.warning(f"UX Issue - No referral data found for user {user_id}")
-            return jsonify({"status": "success", "visits": []}), 200
-        
-        # Fetch the visits—neater than Ronnie Corbett’s wordplay.
-        visits = users_settings[user_id]["referrals"].get("visits", [])
-        logging.debug(f"Retrieved referral visits for user {user_id}: {json.dumps(visits)}")
-        return jsonify({"status": "success", "visits": visits}), 200
-    except Exception as e:
-        # Marvin groans: “I fetched visits, and now I’m broken.”
-        logging.error(f"UX Issue - Failed to retrieve referral visits for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# region /<user_id>/orders GET - Checking Referral Orders
-@referral_bp.route('/<user_id>/orders', methods=['GET'])
-@login_required(["self", "admin"], require_all=False)
-def get_referral_orders(user_id):
-    """
-    Retrieves referral orders for a user, like Trillian tallying up the galaxy’s shopping spree.
-    Purpose: To list all orders referred by the user—restricted to the user or admins, because only the elite can peek at the ledger!
-    Permissions: Restricted to "self" or "admin"—you’re either the referer or the chosen one!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user whose referral orders are sought.
-    Outputs:
-        - Success: JSON {"status": "success", "orders": [<order_data>]}, status 200—orders revealed!
-        - Errors:
-            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the Messiah, you’re a very naughty boy!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
-    """
-    try:
-        # Permission check—like the Holy Hand Grenade, only the worthy may pass!
-        if user_id != request.user_id and "admin" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized orders retrieval attempt for {user_id} by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-        
-        # Load the user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        if user_id not in users_settings or "referrals" not in users_settings[user_id]:
-            logging.warning(f"UX Issue - No referral data found for user {user_id}")
-            return jsonify({"status": "success", "orders": []}), 200
-        
-        # Fetch the orders—neater than a Two Ronnies sketch.
-        orders = users_settings[user_id]["referrals"].get("orders", [])
-        logging.debug(f"Retrieved referral orders for user {user_id}: {json.dumps(orders)}")
-        return jsonify({"status": "success", "orders": orders}), 200
-    except Exception as e:
-        # Marvin sighs: “I fetched orders, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to retrieve referral orders for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 2: The Towel (Hitchhiker’s Guide)
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "Don’t forget your towel—essential for referral success!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
-
-site_request_bp.py
-
-from flask import Blueprint, request, jsonify
-from utils.auth import login_required
-from utils.data import load_site_request, save_site_request
-from utils.users import load_users_settings
-import logging
-import os
-import datetime
-import json
-import re
-
-# region Blueprint Setup
-# Welcome to site_request_bp, the blueprint that handles site requests like Zaphod Beeblebrox handles improbability—fast and with flair!
-# This module is the galactic hub for listing and saving site requests. Prepare for some cosmic organization!
-site_request_bp = Blueprint('site_request_bp', __name__)
-# endregion
-
-# region /siterequests GET - Listing Galactic Site Requests
-@site_request_bp.route('/siterequests', methods=['GET'])
-@login_required(["admin", "wixpro"], require_all=False)
-def list_site_requests():
-    """
-    Lists all site requests, like the Spanish Inquisition—nobody expects it, but it’s here for admins and wixpro users!
-    Purpose: To provide a list of site requests for admins or wixpro users, helping them manage the galaxy’s site needs.
-    Permissions: Restricted to "admin" or "wixpro"—you’re either the chosen one or a very naughty boy!
-    Inputs: None—just be logged in with the right permissions, or it’s “Nobody expects the Spanish Inquisition!”
-    Outputs:
-        - Success: JSON {"status": "success", "siterequests": [<siterequest_data>]}, status 200—your map to the site requests!
-        - Errors:
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
-    """
-    try:
-        # Check permissions—like the Knights Who Say Ni demanding a shrubbery!
-        if "admin" not in request.permissions and "wixpro" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized site request list attempt by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-        
-        # Load the site request directory—like Arthur Dent flipping through the Guide.
-        siterequest_dir = 'siterequest'
-        if not os.path.exists(siterequest_dir):
-            logging.warning("UX Issue - No site requests directory found")
-            return jsonify({"status": "success", "siterequests": []}), 200
-
-        # Load user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        siterequests = []
-
-        # Process each site request file—like the Holy Grail, but with JSON.
-        for filename in os.listdir(siterequest_dir):
-            if filename.endswith('.json'):
-                user_id = filename.replace('.json', '')
-                site_request = load_site_request(user_id)
-                if site_request:
-                    contact_name = users_settings.get(user_id, {}).get('contact_name', '')
-                    email = users_settings.get(user_id, {}).get('email_address', '')
-                    request_type = site_request.get('type', '')
-                    store_name = site_request.get('communityName')  # Adjusted to match POST logic
-                    community_name = site_request.get('communityName')
-                    organisation = store_name if store_name else community_name if community_name else ''
-                    received_at = site_request.get('submitted_at', '')
-
-                    # Assemble the site request data—fit for the Life of Brian’s marketplace.
-                    siterequests.append({
-                        'user_id': user_id,
-                        'type': request_type,
-                        'received_at': received_at,
-                        'contact_name': contact_name,
-                        'email': email,
-                        'organisation': organisation
-                    })
-
-        if not siterequests:
-            logging.warning("UX Issue - No site requests found in directory")
-        logging.debug(f"Listed site requests: {json.dumps(siterequests)}")
-        return jsonify({"status": "success", "siterequests": siterequests}), 200
-    except Exception as e:
-        # Marvin’s take: “I tried to list site requests, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to list site requests: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 1: The Dead Parrot
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "This site request is no more! It has ceased to be!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
-
-# region /siterequests POST - Saving New Galactic Site Requests
-@site_request_bp.route('/siterequests', methods=['POST'])
-@login_required(["self"], require_all=True)
-def save_site_request_endpoint():
-    """
-    Saves a new site request, faster than Zaphod’s spaceship escaping a Vogon poetry reading.
-    Purpose: Allows users to submit new site requests, restricted to themselves—like the People’s Front of Judea’s secret meetings.
-    Permissions: Restricted to "self"—only you can submit your own request, or it’s “Nobody expects the Spanish Inquisition!”
-    Inputs: JSON payload with:
-        - userId (str, optional): Must match the authenticated user.
-        - type (str, optional): Request type, defaults to "community".
-        - communityName (str): Name of the community or store.
-        - aboutCommunity (str): Description of the community or store.
-        - communityLogos (list): Logos for the community or store.
-        - colorPrefs (str): Color preferences.
-        - stylingDetails (str): Styling details.
-        - preferredDomain (str): Preferred domain, e.g., "mycommunity.org".
-        - emails (list): List of emails.
-        - pages (list): List of pages.
-        - widgets (list): List of widgets.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Site request saved successfully"}, status 200—request logged!
-        - Errors:
-            - 400: {"status": "error", "message": "No data provided"}—no data, no fork handles!
-            - 400: {"status": "error", "message": "User ID in body does not match authenticated user"}—mismatch!
-            - 403: {"status": "error", "message": "Unauthorized: Must be admin or match user_id"}—unauthorized!
-            - 400: {"status": "error", "message": "Community name or store name is required"}—missing name!
-            - 400: {"status": "error", "message": "Invalid domain name"}—bad domain!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
-    """
-    try:
-        # Arthur Dent checks the JSON—where’s that data?
-        data = request.get_json()
-        if not data:
-            logging.warning("UX Issue - Site request save attempt with no data")
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        # Check user_id—like the Knights Who Say Ni demanding a shrubbery!
-        user_id = request.user_id
-        body_user_id = data.get("userId")
-        if body_user_id and body_user_id != user_id:
-            logging.warning(f"Security Issue - User ID mismatch: URL={user_id}, Body={body_user_id}")
-            return jsonify({"status": "error", "message": "User ID in body does not match authenticated user"}), 400
-
-        # Permission check—only self or admin can submit, or it’s “Nobody expects the Spanish Inquisition!”
-        if "admin" not in request.permissions and request.user_id != user_id:
-            logging.warning(f"Security Issue - Unauthorized site request save by {request.user_id} for {user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized: Must be admin or match user_id"}), 403
-
-        # Assemble the site request—like the Holy Grail, but with JSON.
-        request_type = data.get("type", "community")
-        site_request = {
-            "user_id": user_id,
-            "type": request_type,
-            "communityName": data.get("communityName") or data.get("storeName") or "",
-            "aboutCommunity": data.get("aboutCommunity") or data.get("aboutStore") or "",
-            "communityLogos": data.get("communityLogos") or data.get("storeLogos") or [],
-            "colorPrefs": data.get("colorPrefs", ""),
-            "stylingDetails": data.get("stylingDetails", ""),
-            "preferredDomain": data.get("preferredDomain", "mycommunity.org"),
-            "emails": data.get("emails", []),
-            "pages": data.get("pages", []),
-            "widgets": data.get("widgets", []),
-            "submitted_at": datetime.datetime.utcnow().isoformat()
-        }
-
-        # Check for community/store name—or it’s like asking for four candles and getting fork handles!
-        if not site_request["communityName"]:
-            logging.warning(f"UX Issue - Site request missing community/store name for user {user_id}")
-            return jsonify({"status": "error", "message": "Community name or store name is required"}), 400
-
-        # Validate domain—like checking if a parrot is still alive.
-        domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
-        if not re.match(domain_regex, site_request["preferredDomain"]):
-            logging.warning(f"UX Issue - Invalid domain name for user {user_id}: {site_request['preferredDomain']}")
-            return jsonify({"status": "error", "message": "Invalid domain name"}), 400
-
-        # Process page images—like the Holy Hand Grenade, but less explosive.
-        for page in site_request["pages"]:
-            if "images" in page and page["images"]:
-                page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
-
-        # Save the site request—stronger than a Wookiee’s grip!
-        save_site_request(user_id, site_request)
-        logging.info(f"Site request saved successfully for user {user_id}: {json.dumps(site_request)}")
-        return jsonify({"status": "success", "message": "Site request saved successfully"}), 200
-    except Exception as e:
-        # Marvin’s take: “I tried to save the site request, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to save site request: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 2: The Towel (Hitchhiker’s Guide)
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "Don’t forget your towel—essential for site requests!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
-
-user_settings_bp.py
-
-from flask import Blueprint, request, jsonify
-from utils.auth import login_required
-from utils.users import load_users_settings, save_users_settings
-from utils.config import load_config
-from utils import wix
-import logging
-import json
-
-user_settings_bp = Blueprint('user_settings_bp', __name__)
-
-# region <settings/user> GET, PUT, PATCH
-@user_settings_bp.route('/settings/user', methods=['GET', 'PUT', 'PATCH'])
-@login_required(["self"], require_all=True)
-def manage_user_settings():
-    """
-    Manage the authenticated user's top-level settings based on the HTTP method.
-    
-    - GET: Retrieve the user's top-level settings as a flat object of fields and values.
-    - PUT: Replace the entire top-level settings with the provided fields and values.
-    - PATCH: Update specific fields in the user's top-level settings.
-    """
-    try:
-        user_id = request.user_id
-        users_settings = load_users_settings()
-        
-        if user_id not in users_settings:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        
-        # Ensure expected fields exist with default values
-        expected_fields = ["contact_name", "website_url", "email_address", "phone_number"]
-        for field in expected_fields:
-            if field not in users_settings[user_id]:
-                users_settings[user_id][field] = ""
-        
-        if request.method == 'GET':
-            # Return a flat object of field-value pairs
-            top_level_settings = {k: v for k, v in users_settings[user_id].items()}
-            return jsonify({"status": "success", "settings": top_level_settings}), 200
-        
-        elif request.method == 'PUT':
-            data = request.get_json()
-            if not data:
-                return jsonify({"status": "error", "message": "No data provided"}), 400
-            
-            # Allow any fields provided by the client
-            users_settings[user_id] = data
-            save_users_settings(users_settings)
-            logging.info(f"Top-level settings replaced for user {user_id}")
-            return jsonify({"status": "success", "message": "Settings replaced"}), 200
-        
-        elif request.method == 'PATCH':
-            data = request.get_json()
-            if not data:
-                return jsonify({"status": "error", "message": "No data provided"}), 400
-            
-            for field, value in data.items():
-                users_settings[user_id][field] = value
-            
-            save_users_settings(users_settings)
-            logging.info(f"Top-level settings updated for user {user_id}")
-            return jsonify({"status": "success", "message": "Settings updated"}), 200
-    
-    except Exception as e:
-        logging.error(f"Error managing user settings for user {request.user_id}: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion <settings/user> GET, PUT, PATCH
-
-# region settings/api - Manage client_api and api_key settings
-@user_settings_bp.route('/settings/client_api', methods=['GET'])
-@login_required(["allauth"], require_all=False)
-def get_client_api_settings():
-    """
-    Retrieve all client_api settings from the configuration.
-    """
-    try:
-        config = load_config()
-        settings = [
-            {
-                "key_type": key,
-                "fields": {k: v for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment"]},
-                "icon": value.get("icon", "icon-favicon"),
-                "doc_link": value.get("doc_link", ""),
-                "comment": value.get("_comment", "")
-            }
-            for key, value in config.items()
-            if value.get("setting_type") == "client_api"
-        ]
-        return jsonify({"status": "success", "settings": settings}), 200
-    except Exception as e:
-        logging.error(f"Error retrieving client_api settings: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@user_settings_bp.route('/settings/client_api/<key>', methods=['PUT', 'POST'])
-@login_required(["self"], require_all=True)
-def put_client_api_setting(key):
-    """
-    Replace the client_api setting for the specified key for the authenticated user.
-    """
-    try:
-        user_id = request.user_id
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        config = load_config()
-        if key not in config or config[key].get("setting_type") != "client_api":
-            return jsonify({"status": "error", "message": "Invalid key"}), 400
-
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-
-        if "settings" not in users_settings[user_id]:
-            users_settings[user_id]["settings"] = {}
-        if "client_api" not in users_settings[user_id]["settings"]:
-            users_settings[user_id]["settings"]["client_api"] = {}
-        users_settings[user_id]["settings"]["client_api"][key] = data
-        save_users_settings(users_settings)
-        return jsonify({"status": "success", "message": f"Setting {key} replaced"}), 200
-    except Exception as e:
-        logging.error(f"Error replacing client_api setting for user {request.user_id}: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@user_settings_bp.route('/settings/client_api/<key>', methods=['PATCH'])
-@login_required(["self"], require_all=True)
-def patch_client_api_setting(key):
-    """
-    Update specific fields of the client_api setting for the specified key for the authenticated user.
-    """
-    try:
-        user_id = request.user_id
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        config = load_config()
-        if key not in config or config[key].get("setting_type") != "client_api":
-            return jsonify({"status": "error", "message": "Invalid key"}), 400
-
-        users_settings = load_users_settings()
-        if user_id not in users_settings or "settings" not in users_settings[user_id] or "client_api" not in users_settings[user_id]["settings"] or key not in users_settings[user_id]["settings"]["client_api"]:
-            return jsonify({"status": "error", "message": "Setting not found"}), 404
-
-        for field, value in data.items():
-            if field in users_settings[user_id]["settings"]["client_api"][key]:
-                users_settings[user_id]["settings"]["client_api"][key][field] = value
-            else:
-                return jsonify({"status": "error", "message": f"Invalid field: {field}"}), 400
-
-        save_users_settings(users_settings)
-        return jsonify({"status": "success", "message": f"Setting {key} updated"}), 200
-    except Exception as e:
-        logging.error(f"Error updating client_api setting for user {request.user_id}: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@user_settings_bp.route('/settings/api_key', methods=['GET'])
-@login_required(["allauth"], require_all=False)
-def get_api_key_settings():
-    """
-    Retrieve all api_key settings for the authenticated user, merging configuration defaults with saved user settings.
-    """
-    try:
-        user_id = request.user_id
-        config = load_config()
-        users_settings = load_users_settings()
-        
-        if user_id not in users_settings:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        
-        # Get user's saved api_key settings, defaulting to an empty dict if not present
-        user_api_keys = users_settings[user_id].get("settings", {}).get("api_key", {})
-        
-        settings = []
-        for key, value in config.items():
-            if value.get("setting_type") == "api_key":
-                # Extract default fields, excluding metadata
-                default_fields = {k: v for k, v in value.items() if k not in ["setting_type", "icon", "doc_link", "_comment"]}
-                # Get user's saved fields for this key, defaulting to an empty dict
-                user_fields = user_api_keys.get(key, {})
-                # Merge defaults with user settings, prioritizing user data
-                merged_fields = {field: user_fields.get(field, default_fields.get(field, "")) for field in default_fields}
-                setting = {
-                    "key_type": key,
-                    "fields": merged_fields,
-                    "icon": value.get("icon", "icon-favicon"),
-                    "doc_link": value.get("doc_link", ""),
-                    "comment": value.get("_comment", "")
-                }
-                settings.append(setting)
-        
-        return jsonify({"status": "success", "settings": settings}), 200
-    except Exception as e:
-        logging.error(f"Error retrieving api_key settings for user {request.user_id}: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@user_settings_bp.route('/settings/api_key/<key>', methods=['PUT', 'POST'])
-@login_required(["self"], require_all=True)
-def put_api_key_setting(key):
-    """
-    Replace the api_key setting for the specified key for the authenticated user.
-    """
-    try:
-        user_id = request.user_id
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        config = load_config()
-        if key not in config or config[key].get("setting_type") != "api_key":
-            return jsonify({"status": "error", "message": "Invalid key"}), 400
-
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-
-        if "settings" not in users_settings[user_id]:
-            users_settings[user_id]["settings"] = {}
-        if "api_key" not in users_settings[user_id]["settings"]:
-            users_settings[user_id]["settings"]["api_key"] = {}
-        users_settings[user_id]["settings"]["api_key"][key] = data
-        save_users_settings(users_settings)
-        return jsonify({"status": "success", "message": f"Setting {key} replaced"}), 200
-    except Exception as e:
-        logging.error(f"Error replacing api_key setting for user {request.user_id}: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-@user_settings_bp.route('/settings/api_key/<key>', methods=['PATCH'])
-@login_required(["self"], require_all=True)
-def patch_api_key_setting(key):
-    """
-    Update specific fields of the api_key setting for the specified key for the authenticated user.
-    Only fields defined in the configuration are updated; others are ignored.
-    """
-    try:
-        user_id = request.user_id
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-
-        # Load the configuration to determine allowed fields
-        config = load_config()
-        if key not in config or config[key].get("setting_type") != "api_key":
-            return jsonify({"status": "error", "message": "Invalid key"}), 400
-
-        # Extract allowed fields from the configuration, excluding metadata
-        allowed_fields = [field for field in config[key] if not field.startswith("_")]
-
-        # Load user settings
-        users_settings = load_users_settings()
-        if user_id not in users_settings:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-
-        # Ensure nested structure exists
-        if "settings" not in users_settings[user_id]:
-            users_settings[user_id]["settings"] = {}
-        if "api_key" not in users_settings[user_id]["settings"]:
-            users_settings[user_id]["settings"]["api_key"] = {}
-        if key not in users_settings[user_id]["settings"]["api_key"]:
-            users_settings[user_id]["settings"]["api_key"][key] = {}
-
-        # Update only fields that are in the allowed_fields list
-        for field, value in data.items():
-            if field in allowed_fields:
-                users_settings[user_id]["settings"]["api_key"][key][field] = value
-            else:
-                logging.info(f"Ignored invalid field: {field} for key: {key}")
-
-        # Save the updated settings
-        save_users_settings(users_settings)
-        return jsonify({"status": "success", "message": f"Setting {key} updated"}), 200
-    except Exception as e:
-        logging.error(f"Error updating api_key setting for user {request.user_id}: {str(e)}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
-# endregion settings/api
-
-@user_settings_bp.route('/settings/products', methods=['GET'])
-@login_required(["self"], require_all=True)
-def get_user_products():
-    """Retrieve the list of products for the current user."""
-    try:
-        user_id = request.user_id  # Get the user ID from the token
-        products = wix.fetch_user_products(user_id)
-        return jsonify({"status": "success", "count": len(products), "products": products}), 200
-    except Exception as e:
-        logging.error(f"Error fetching products for user {request.user_id}: {str(e)}")
-        return jsonify({"status": "error", "message": "Failed to fetch products"}), 500
-
-utility_bp.py
-
-from flask import Blueprint, request, jsonify, current_app, make_response
-from utils.auth import login_required, load_users_settings
-from utils.helpers import get_system_stats, ping_service, log_activity
-import logging
-import requests
-import os
-import markdown
-import whois
-import json
-
-utility_bp = Blueprint('utility_bp', __name__)
-
-@utility_bp.route('/system/stats', methods=['GET'])
-@login_required(["admin"], require_all=True)
-def system_stats():
-    try:
-        # Log request like madeira.py
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        if "admin" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized system stats access attempt by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-
-        stats = get_system_stats()
-        logging.info(f"System stats retrieved by admin {request.user_id}")
-        response_data = {"status": "success", "stats": stats}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to retrieve system stats: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-
-@utility_bp.route('/ping', methods=['GET'])
-@login_required(["admin", "wixpro"], require_all=False)
-def ping():
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        if "admin" not in request.permissions and "wixpro" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized ping attempt by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-
-        ping_result = ping_service()
-        if ping_result:
-            logging.info(f"Ping successful by {request.user_id}")
-            response_data = {"status": "success", "message": "Pong!"}
-        else:
-            logging.error(f"UX Issue - Ping failed by {request.user_id}")
-            response_data = {"status": "error", "message": "Service error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 200 if ping_result else 500
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to ping service: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Service error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-
-@utility_bp.route('/activity/log', methods=['POST'])
-@login_required(["admin"], require_all=True)
-def log_user_activity():
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": request.get_json(silent=True) or "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        if "admin" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized activity log attempt by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-
-        data = request.get_json()
-        if not data or "user_id" not in data or "action" not in data:
-            logging.warning(f"UX Issue - Invalid activity log data from {request.user_id}: {json.dumps(data)}")
-            return jsonify({"status": "error", "message": "Invalid data"}), 400
-
-        user_id = data["user_id"]
-        action = data["action"]
-        details = data.get("details", {})
-        log_activity(user_id, action, details)
-        logging.info(f"Activity logged by admin {request.user_id} for user {user_id}: {action}")
-        response_data = {"status": "success", "message": "Activity logged"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 201
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to log activity: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": "Server error"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-
-@utility_bp.route('/send-sms', methods=['POST'])
-def send_sms():
-    """
-    Sends an SMS to a user's phone number looked up by email, publicly accessible for OTP requests.
-    Purpose: Centralized SMS sending for public OTP workflows, using email to identify the recipient.
-    Inputs: JSON payload:
-        - email (str): User's email to look up phone number.
-        - message (str): Text message to send.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "SMS sent"}, status 200
-        - Errors:
-            - 400: {"status": "error", "message": "email and message are required"}
-            - 404: {"status": "error", "message": "User not found"}
-            - 400: {"status": "error", "message": "No valid phone number associated with this email"}
-            - 500: {"status": "error", "message": "Failed to send SMS: <reason>"}
-    """
-    try:
-        # Log request like madeira.py
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": request.get_json(silent=True) or "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        data = request.get_json()
-        if not data or "email" not in data or "message" not in data:
-            logging.warning(f"UX Issue - SMS attempt missing email or message: {json.dumps(data)}")
-            response_data = {"status": "error", "message": "email and message are required"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-
-        email = data["email"].strip().lower()
-        message = data["message"].strip()
-
-        # Look up user by email
-        users_settings = load_users_settings()
-        user_entry = next(((uid, u) for uid, u in users_settings.items() if u.get("email_address", "").lower() == email), None)
-        if not user_entry:
-            logging.warning(f"UX Issue - SMS failed - Email not found: {email}")
-            response_data = {"status": "error", "message": "User not found"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 404
-
-        user_id, user = user_entry
-        phone_number = user.get("phone_number", "").strip()
-        if not phone_number:
-            logging.warning(f"UX Issue - SMS failed for {email} - No valid phone number, User ID: {user_id}")
-            response_data = {"status": "error", "message": "No valid phone number associated with this email"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-
-        logging.debug(f"User found - ID: {user_id}, Phone: {phone_number}")
-
-        # Load TextMagic config
-        username = current_app.config.get("TEXTMAGIC_USERNAME")
-        api_key = current_app.config.get("TEXTMAGIC_API_KEY")
-        if not username or not api_key:
-            logging.error("Security Issue - TextMagic credentials not configured")
-            response_data = {"status": "error", "message": "Failed to send SMS: TextMagic credentials not configured"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 500
-
-        # Send SMS
-        url = "https://rest.textmagic.com/api/v2/messages"
-        payload = {"text": message, "phones": phone_number}
-        headers = {
-            "X-TM-Username": username,
-            "X-TM-Key": api_key,
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-        response = requests.post(url, data=payload, headers=headers)
-
-        if response.status_code != 201:
-            logging.error(f"UX Issue - Failed to send SMS for {email}, User ID: {user_id}, Response: {response.text}")
-            response_data = {"status": "error", "message": f"Failed to send SMS: {response.text}"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 500
-
-        logging.info(f"SMS sent successfully for email {email}, User ID: {user_id} to {phone_number}")
-        response_data = {"status": "success", "message": "SMS sent"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 200
-    except Exception as e:
-        logging.error(f"UX Issue - SMS sending error for email {email if 'email' in locals() else 'unknown'}: {str(e)}", exc_info=True)
-        response_data = {"status": "error", "message": f"Failed to send SMS: {str(e)}"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-
-@utility_bp.route('/render-md/<path:full_path>', methods=['GET'])
-@login_required(["allauth"], require_all=False)
-def render_md(full_path):
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        segments = full_path.rstrip('/').split('/')
-        if not segments or segments == ['']:
-            logging.warning(f"UX Issue - Invalid path provided: {full_path}")
-            raise ValueError("Invalid path provided")
-        if segments[0] == 'static':
-            if len(segments) < 2:
-                logging.warning(f"UX Issue - No file path provided after 'static': {full_path}")
-                raise ValueError("No file path provided after 'static'")
-            file_path = '/'.join(segments[1:])
-            if not file_path.endswith('.md'):
-                logging.warning(f"UX Issue - Only .md files supported: {file_path}")
-                raise ValueError("Only .md files are supported")
-            static_file = os.path.join(current_app.static_folder, file_path)
-            if not os.path.isfile(static_file):
-                logging.warning(f"UX Issue - File not found in static folder: {static_file}")
-                raise FileNotFoundError("File not found in static folder")
-            with open(static_file, 'r', encoding='utf-8') as f:
-                md_content = f.read()
-        else:
-            if len(segments) < 4:
-                logging.warning(f"UX Issue - Invalid GitHub path: {full_path}")
-                raise ValueError("Invalid GitHub path: Must provide owner/repo/branch/path")
-            owner, repo, branch = segments[:3]
-            path_segments = segments[3:]
-            path = '/'.join(path_segments)
-            if not path.endswith('.md'):
-                logging.warning(f"UX Issue - Only .md files supported: {path}")
-                raise ValueError("Only .md files are supported")
-            url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
-            response = requests.get(url)
-            if response.status_code != 200:
-                logging.warning(f"UX Issue - File not found on GitHub: {response.status_code}")
-                raise FileNotFoundError(f"File not found on GitHub: {response.status_code}")
-            md_content = response.text
-
-        html_content = markdown.markdown(md_content, extensions=['tables'])
-        status_code = 200
-        logging.info(f"Markdown rendered successfully for path {full_path}")
-    except ValueError as e:
-        status_code = 404
-        error_message = str(e)
-    except FileNotFoundError as e:
-        status_code = 404
-        error_message = str(e)
-    except requests.RequestException as e:
-        status_code = 500
-        error_message = "Failed to fetch from GitHub"
-        logging.error(f"UX Issue - Failed to fetch Markdown from GitHub: {str(e)}", exc_info=True)
-    except Exception as e:
-        status_code = 500
-        error_message = "An unexpected error occurred"
-        logging.error(f"UX Issue - Unexpected error rendering Markdown: {str(e)}", exc_info=True)
-
-    template_path = os.path.join(current_app.static_folder, 'error', f'{status_code}.md')
-    if not os.path.exists(template_path):
-        logging.error(f"UX Issue - Template for status {status_code} not found")
-        response_data = {"status": "error", "message": f"Template for status {status_code} not found"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-
-    with open(template_path, 'r', encoding='utf-8') as f:
-        template = f.read()
-
-    final_html = template.replace('{content}' if status_code == 200 else '{error_message}', html_content if status_code == 200 else error_message)
-    response = make_response(final_html, status_code)
-    response.headers['Content-Type'] = 'text/html'
-    logging.debug(f"Response: HTML content, Status: {status_code}")
-    return response
-
-@utility_bp.route('/check-domain', methods=['GET'])
-@login_required(["allauth"], require_all=False)
-def check_domain():
-    try:
-        request_data = {
-            "method": request.method,
-            "url": request.full_path,
-            "headers": dict(request.headers),
-            "ip": request.remote_addr,
-            "body": "[NO BODY]"
-        }
-        log_data = request_data.copy()
-        if "Authorization" in log_data["headers"]:
-            log_data["headers"]["Authorization"] = "[REDACTED]"
-        logging.debug(f"Request: {json.dumps(log_data)}")
-
-        domain = request.args.get('domain')
-        if not domain:
-            logging.warning(f"UX Issue - Domain check missing domain parameter")
-            response_data = {"error": "Please provide a domain name"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-
-        if not all(c.isalnum() or c in '-.' for c in domain) or '.' not in domain or len(domain.split('.')[-1]) < 2:
-            logging.warning(f"UX Issue - Invalid domain name: {domain}")
-            response_data = {"error": "Invalid domain name (e.g., mystore.uk)"}
-            logging.debug(f"Response: {json.dumps(response_data)}")
-            return jsonify(response_data), 400
-
-        w = whois.whois(domain)
-        is_available = w.creation_date is None
-        logging.info(f"Domain check successful for {domain}: {'available' if is_available else 'taken'}")
-        response_data = {"domain": domain, "available": is_available}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to check domain availability: {str(e)}", exc_info=True)
-        response_data = {"error": f"Failed to check domain availability: {str(e)}"}
-        logging.debug(f"Response: {json.dumps(response_data)}")
-        return jsonify(response_data), 500
-
-
+            return jsonify({"status": "error", "message": f"Failed to save: {str(e)}"}), 500
 content_bp.py
 from flask import Blueprint, request, jsonify, session
 import requests
@@ -2756,15 +878,13 @@ from utils.users import load_users_settings, save_users_settings
 from utils.config import load_config, save_config
 import logging
 import json
+import requests
 
 # Behold manager_bp, the blueprint that governs with the authority of Zaphod Beeblebrox’s dual-headed presidency!
 # This is the control room—admin-only, like the bridge of the Heart of Gold, but with less improbability.
 manager_bp = Blueprint('manager_bp', __name__)
 
-from flask import jsonify, abort
-from utils.auth import login_required
-from utils.users import load_users_settings
-
+# region Permission Management
 @manager_bp.route('/permission', methods=['PATCH'])
 @login_required(required_permissions=['admin'])
 def patch_permission():
@@ -2821,8 +941,9 @@ def delete_permission():
     user['permissions'].remove(permission_to_remove)
     save_users_settings(users_data)
     return jsonify({"status": "success", "message": f"Permission {permission_to_remove} removed from user {user_id}"}), 200
+# endregion
 
-# New endpoint for listing users by role
+# region Users by Role
 @manager_bp.route('/users/<role>', methods=['GET'])
 @login_required(required_permissions=['admin'])
 def get_users_by_role(role):
@@ -2856,9 +977,9 @@ def get_users_by_role(role):
     except Exception as e:
         logging.error(f"Failed to retrieve users with role '{role}': {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
 
-# region settings/api - Manage settings_key and affiliate_key
-
+# region Settings Management
 @manager_bp.route('/settings/settings_key', methods=['GET'])
 @login_required(["admin"], require_all=True)
 def get_settings_key_settings():
@@ -3100,7 +1221,244 @@ def put_affiliate_key(key_type):
     except Exception as e:
         logging.error(f"Failed to replace affiliate_key: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
 
+# region PostHog Event Endpoints
+@manager_bp.route('/posthog/login', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_all_login_events():
+    """
+    Retrieves all PostHog login events, like Marvin logging every galactic entry!
+    Purpose: Allows admins to fetch all login events for security monitoring.
+    Permissions: Restricted to "admin"—only the chosen can access the logs!
+    Inputs: None
+    Outputs:
+        - Success: JSON {"status": "success", "event_type": "login", "events": [<event_data>]}, status 200
+        - Info: JSON {"status": "info", "message": "No login events found"}, status 200 if no events
+        - Errors:
+            - 500: {"status": "error", "message": "Server error: <reason>"}
+    """
+    try:
+        user_id = request.user_id
+        config = load_config()
+        posthog_config = config.get("posthog", {})
+        api_key = posthog_config.get("PROJECT_READ_KEY")
+        host = posthog_config.get("HOST", "https://eu.i.posthog.com")
+        project_id = posthog_config.get("PROJECT_ID")
+        
+        logging.debug(f"PostHog config loaded: PROJECT_READ_KEY={'[REDACTED]' if api_key else None}, HOST={host}, PROJECT_ID={project_id}")
+        
+        if not api_key or not project_id:
+            logging.error("PostHog Issue - Missing PROJECT_READ_KEY or PROJECT_ID in config")
+            return jsonify({"status": "error", "message": "PostHog configuration missing PROJECT_READ_KEY or PROJECT_ID"}), 500
+        
+        # Query PostHog API for login events
+        response = requests.get(
+            f"{host}/api/projects/{project_id}/events",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"event": "login"}
+        )
+        
+        if response.status_code != 200:
+            logging.error(f"PostHog Issue - Failed to fetch login events: {response.text}")
+            return jsonify({"status": "error", "message": f"Failed to fetch login events: {response.text}"}), 500
+        
+        events_data = response.json().get("results", [])
+        events = [
+            {
+                "distinct_id": event.get("distinct_id"),
+                "properties": event.get("properties", {}),
+                "timestamp": event.get("timestamp")
+            }
+            for event in events_data
+        ]
+        
+        if not events:
+            logging.info("No login events found")
+            return jsonify({"status": "info", "message": "No login events found"}), 200
+        
+        logging.debug(f"Admin {user_id} retrieved {len(events)} login events")
+        return jsonify({"status": "success", "event_type": "login", "events": events}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to retrieve login events for admin {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@manager_bp.route('/posthog/signup', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_all_signup_events():
+    """
+    Retrieves all PostHog signup events, like Arthur Dent signing up for galactic adventures!
+    Purpose: Allows admins to fetch all signup events for user onboarding analysis.
+    Permissions: Restricted to "admin"—only the elite can see new recruits!
+    Inputs: None
+    Outputs:
+        - Success: JSON {"status": "success", "event_type": "signup", "events": [<event_data>]}, status 200
+        - Info: JSON {"status": "info", "message": "No signup events found"}, status 200 if no events
+        - Errors:
+            - 500: {"status": "error", "message": "Server error: <reason>"}
+    """
+    try:
+        user_id = request.user_id
+        config = load_config()
+        posthog_config = config.get("posthog", {})
+        api_key = posthog_config.get("PROJECT_READ_KEY")
+        host = posthog_config.get("HOST", "https://eu.i.posthog.com")
+        project_id = posthog_config.get("PROJECT_ID")
+        
+        logging.debug(f"PostHog config loaded: PROJECT_READ_KEY={'[REDACTED]' if api_key else None}, HOST={host}, PROJECT_ID={project_id}")
+        
+        if not api_key or not project_id:
+            logging.error("PostHog Issue - Missing PROJECT_READ_KEY or PROJECT_ID in config")
+            return jsonify({"status": "error", "message": "PostHog configuration missing PROJECT_READ_KEY or PROJECT_ID"}), 500
+        
+        # Query PostHog API for signup events
+        response = requests.get(
+            f"{host}/api/projects/{project_id}/events",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"event": "signup"}
+        )
+        
+        if response.status_code != 200:
+            logging.error(f"PostHog Issue - Failed to fetch signup events: {response.text}")
+            return jsonify({"status": "error", "message": f"Failed to fetch signup events: {response.text}"}), 500
+        
+        events_data = response.json().get("results", [])
+        events = [
+            {
+                "distinct_id": event.get("distinct_id"),
+                "properties": event.get("properties", {}),
+                "timestamp": event.get("timestamp")
+            }
+            for event in events_data
+        ]
+        
+        if not events:
+            logging.info("No signup events found")
+            return jsonify({"status": "info", "message": "No signup events found"}), 200
+        
+        logging.debug(f"Admin {user_id} retrieved {len(events)} signup events")
+        return jsonify({"status": "success", "event_type": "signup", "events": events}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to retrieve signup events for admin {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@manager_bp.route('/posthog/click', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_all_click_events():
+    """
+    Retrieves all PostHog click events, like Zaphod clicking his way to a Pan-Galactic Gargle Blaster!
+    Purpose: Allows admins to fetch all click events for referral tracking.
+    Permissions: Restricted to "admin"—only the chosen can track clicks!
+    Inputs: None
+    Outputs:
+        - Success: JSON {"status": "success", "event_type": "click", "events": [<event_data>]}, status 200
+        - Info: JSON {"status": "info", "message": "No click events found"}, status 200 if no events
+        - Errors:
+            - 500: {"status": "error", "message": "Server error: <reason>"}
+    """
+    try:
+        user_id = request.user_id
+        config = load_config()
+        posthog_config = config.get("posthog", {})
+        api_key = posthog_config.get("PROJECT_READ_KEY")
+        host = posthog_config.get("HOST", "https://eu.i.posthog.com")
+        project_id = posthog_config.get("PROJECT_ID")
+        
+        logging.debug(f"PostHog config loaded: PROJECT_READ_KEY={'[REDACTED]' if api_key else None}, HOST={host}, PROJECT_ID={project_id}")
+        
+        if not api_key or not project_id:
+            logging.error("PostHog Issue - Missing PROJECT_READ_KEY or PROJECT_ID in config")
+            return jsonify({"status": "error", "message": "PostHog configuration missing PROJECT_READ_KEY or PROJECT_ID"}), 500
+        
+        # Query PostHog API for click events
+        response = requests.get(
+            f"{host}/api/projects/{project_id}/events",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"event": "click"}
+        )
+        
+        if response.status_code != 200:
+            logging.error(f"PostHog Issue - Failed to fetch click events: {response.text}")
+            return jsonify({"status": "error", "message": f"Failed to fetch click events: {response.text}"}), 500
+        
+        events_data = response.json().get("results", [])
+        events = [
+            {
+                "distinct_id": event.get("distinct_id"),
+                "properties": event.get("properties", {}),
+                "timestamp": event.get("timestamp")
+            }
+            for event in events_data
+        ]
+        
+        if not events:
+            logging.info("No click events found")
+            return jsonify({"status": "info", "message": "No click events found"}), 200
+        
+        logging.debug(f"Admin {user_id} retrieved {len(events)} click events")
+        return jsonify({"status": "success", "event_type": "click", "events": events}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to retrieve click events for admin {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+@manager_bp.route('/posthog/order', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_all_order_events():
+    """
+    Retrieves all PostHog order events, like Trillian sealing deals across the galaxy!
+    Purpose: Allows admins to fetch all order events for sales analysis.
+    Permissions: Restricted to "admin"—only the elite can see the ledger!
+    Inputs: None
+    Outputs:
+        - Success: JSON {"status": "success", "event_type": "order", "events": [<event_data>]}, status 200
+        - Info: JSON {"status": "info", "message": "No order events found"}, status 200 if no events
+        - Errors:
+            - 500: {"status": "error", "message": "Server error: <reason>"}
+    """
+    try:
+        user_id = request.user_id
+        config = load_config()
+        posthog_config = config.get("posthog", {})
+        api_key = posthog_config.get("PROJECT_READ_KEY")
+        host = posthog_config.get("HOST", "https://eu.i.posthog.com")
+        project_id = posthog_config.get("PROJECT_ID")
+        
+        logging.debug(f"PostHog config loaded: PROJECT_READ_KEY={'[REDACTED]' if api_key else None}, HOST={host}, PROJECT_ID={project_id}")
+        
+        if not api_key or not project_id:
+            logging.error("PostHog Issue - Missing PROJECT_READ_KEY or PROJECT_ID in config")
+            return jsonify({"status": "error", "message": "PostHog configuration missing PROJECT_READ_KEY or PROJECT_ID"}), 500
+        
+        # Query PostHog API for order events
+        response = requests.get(
+            f"{host}/api/projects/{project_id}/events",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"event": "order"}
+        )
+        
+        if response.status_code != 200:
+            logging.error(f"PostHog Issue - Failed to fetch order events: {response.text}")
+            return jsonify({"status": "error", "message": f"Failed to fetch order events: {response.text}"}), 500
+        
+        events_data = response.json().get("results", [])
+        events = [
+            {
+                "distinct_id": event.get("distinct_id"),
+                "properties": event.get("properties", {}),
+                "timestamp": event.get("timestamp")
+            }
+            for event in events_data
+        ]
+        
+        if not events:
+            logging.info("No order events found")
+            return jsonify({"status": "info", "message": "No order events found"}), 200
+        
+        logging.debug(f"Admin {user_id} retrieved {len(events)} order events")
+        return jsonify({"status": "success", "event_type": "order", "events": events}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to retrieve order events for admin {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 # endregion
 
 # ASCII Art 1: The Two Ronnies’ Fork Handles
@@ -3119,54 +1477,102 @@ from utils.auth import login_required
 from utils.users import load_users_settings, save_users_settings
 import logging
 import json
+import os
+import posthog
+from datetime import datetime
 
 # region Blueprint Setup
-# Welcome to referral_bp, the blueprint that tracks referrals like Zaphod Beeblebrox tracks the best parties in the galaxy!
-# This module is the galactic hub for recording and retrieving referral data—prepare for some improbably fun stats!
+# referral_bp: The galactic hub for tracking referrals, clicks, orders, logins, and signups!
 referral_bp = Blueprint('referral_bp', __name__)
+# endregion
+
+# region Config Handling
+CONFIG_FILE = "config.json"
+
+def load_config():
+    """Load configuration from config.json."""
+    try:
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, 'r') as f:
+                config = json.load(f)
+                log_config = config.copy()
+                if "jwt" in log_config and "SECRET_KEY" in log_config["jwt"]:
+                    log_config["jwt"]["SECRET_KEY"] = "[REDACTED]"
+                if "posthog" in log_config and "api_key" in log_config["posthog"]:
+                    log_config["posthog"]["api_key"] = "[REDACTED]"
+                logging.debug(f"Loaded config: {json.dumps(log_config)}")
+                return config
+        else:
+            logging.warning("UX Issue - Config file not found, using defaults")
+            default_config = {"log_level": "DEBUG", "jwt": {"SECRET_KEY": "your-secret-key"}, "posthog": {}}
+            return default_config
+    except json.JSONDecodeError as e:
+        logging.error(f"Security Issue - Invalid config file format: {str(e)}", exc_info=True)
+        return {"log_level": "DEBUG", "jwt": {"SECRET_KEY": "your-secret-key"}, "posthog": {}}
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to load config: {str(e)}", exc_info=True)
+        return {"log_level": "DEBUG", "jwt": {"SECRET_KEY": "your-secret-key"}, "posthog": {}}
+
+def save_config(config):
+    """Save configuration to config.json."""
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(config, f, indent=4)
+        log_config = config.copy()
+        if "jwt" in log_config and "SECRET_KEY" in log_config["jwt"]:
+            log_config["jwt"]["SECRET_KEY"] = "[REDACTED]"
+        if "posthog" in log_config and "api_key" in log_config["posthog"]:
+            log_config["posthog"]["api_key"] = "[REDACTED]"
+        logging.debug(f"Saved config: {json.dumps(log_config)}")
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to save config: {str(e)}", exc_info=True)
+        raise
 # endregion
 
 # region /referral POST - Recording Galactic Referrals
 @referral_bp.route('/referral', methods=['POST'])
 def handle_referral():
     """
-    Records referral data (visits or orders), like the Spanish Inquisition—nobody expects it, but it’s here!
-    Purpose: To log referral activities, whether it’s a page visit or an order, for tracking and analytics. Public access—no permissions needed, just like the People’s Front of Judea’s open meetings.
+    Records referral data (visits or orders), like the Spanish Inquisition—nobody expects it!
     Inputs: JSON payload with:
-        - timestamp (str): When the referral happened, e.g., "2023-10-26T12:34:56Z".
-        - referer (str, optional): The ID of the referer, defaults to "none" if not provided.
+        - timestamp (str): When the referral happened.
+        - referer (str, optional): The ID of the referer, defaults to "none".
         - page (str, optional): The page visited, required for visit referrals.
         - orderId (str, optional): The order ID, required for order referrals.
         - buyer (str, optional): The buyer’s name or ID for orders.
         - total (float, optional): The order total for orders.
     Outputs:
-        - Success: JSON {"status": "success", "message": "Referral recorded", "referer": "<referer>"}, status 200—referral logged!
-        - Errors:
-            - 400: {"status": "error", "message": "Invalid data: timestamp required"}—no timestamp, no fork handles!
-            - 400: {"status": "error", "message": "Invalid referral data: page or orderId required"}—missing key data!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
+        - Success: JSON {"status": "success", "message": "Referral recorded", "referer": "<referer>"}, status 200
+        - Errors: JSON with error message, status 400 or 500
     """
     try:
-        # Arthur Dent checks the JSON—timestamp is crucial, or it’s a bust!
         data = request.get_json()
         if not data or 'timestamp' not in data:
             logging.warning(f"UX Issue - Invalid referral data: {json.dumps(data)}")
+            if posthog_client:
+                posthog_client.capture(
+                    distinct_id=data.get("referer", "unknown"),
+                    event="referral_error",
+                    properties={"error": "Invalid data: timestamp required", "data": data}
+                )
             return jsonify({"status": "error", "message": "Invalid data: timestamp required"}), 400
         
-        # Load the user settings—like the Guide, but with less towel advice.
         users_settings = load_users_settings()
         referer = data.get("referer", "none")
         if referer not in users_settings:
-            # Initialize new referer—like Zaphod discovering a new head!
             logging.debug(f"New referer {referer} initialized with empty referral data")
             users_settings[referer] = {"referrals": {"visits": [], "orders": []}}
         
-        # Record the referral—page visit or order, like the Holy Grail or a shrubbery.
+        event_properties = {"timestamp": data["timestamp"]}
+        event_name = None
+        
         if "page" in data:
             users_settings[referer]["referrals"]["visits"].append({
                 "page": data["page"],
                 "timestamp": data["timestamp"]
             })
+            event_name = "referral_visit"
+            event_properties["page"] = data["page"]
         elif "orderId" in data:
             users_settings[referer]["referrals"]["orders"].append({
                 "orderId": data["orderId"],
@@ -3174,18 +1580,138 @@ def handle_referral():
                 "total": data.get("total", 0.0),
                 "timestamp": data["timestamp"]
             })
+            event_name = "referral_order"
+            event_properties.update({
+                "orderId": data["orderId"],
+                "buyer": data.get("buyer", "unknown"),
+                "total": data.get("total", 0.0)
+            })
         else:
-            # Missing page or orderId? That’s like asking for four candles and getting fork handles!
             logging.warning(f"UX Issue - Referral data missing page or orderId: {json.dumps(data)}")
+            if posthog_client:
+                posthog_client.capture(
+                    distinct_id=referer,
+                    event="referral_error",
+                    properties={"error": "Invalid referral data: page or orderId required", "data": data}
+                )
             return jsonify({"status": "error", "message": "Invalid referral data: page or orderId required"}), 400
         
-        # Save the updated settings—stronger than a Wookiee’s grip!
         save_users_settings(users_settings)
         logging.info(f"Referral recorded for referer {referer}: {json.dumps(data)}")
+        
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=referer,
+                event=event_name,
+                properties=event_properties
+            )
+        
         return jsonify({"status": "success", "message": "Referral recorded", "referer": referer}), 200
     except Exception as e:
-        # Marvin’s take: “I recorded a referral, and now I’m even more depressed.”
         logging.error(f"UX Issue - Failed to handle referral: {str(e)}", exc_info=True)
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=data.get("referer", "unknown") if data else "unknown",
+                event="referral_error",
+                properties={"error": f"Server error: {str(e)}"}
+            )
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# region /click POST - Recording Click Events
+@referral_bp.route('/click', methods=['POST'])
+def handle_click():
+    try:
+        data = request.get_json()
+        if not data or not all(key in data for key in ["source_user_id", "destination_user_id", "timestamp"]):
+            logging.warning(f"UX Issue - Invalid click data: {json.dumps(data)}")
+            if posthog_client:
+                posthog_client.capture(
+                    distinct_id=data.get("source_user_id", "unknown"),
+                    event="click_error",
+                    properties={"error": "Invalid data: source_user_id, destination_user_id, timestamp required", "data": data}
+                )
+            return jsonify({"status": "error", "message": "Invalid data: source_user_id, destination_user_id, timestamp required"}), 400
+        
+        if posthog_client:
+            try:
+                posthog_client.capture(
+                    distinct_id=data["source_user_id"],
+                    event="click",
+                    properties={
+                        "source_user_id": data["source_user_id"],
+                        "destination_user_id": data["destination_user_id"],
+                        "timestamp": data["timestamp"]
+                    }
+                )
+                logging.info(f"Click event captured for {data['source_user_id']} to {data['destination_user_id']}")
+            except Exception as e:
+                logging.error(f"Failed to capture click event: {str(e)}")
+        else:
+            logging.warning("posthog_client is None, event not captured")
+        
+        logging.info(f"Click recorded from {data['source_user_id']} to {data['destination_user_id']}")
+        return jsonify({"status": "success", "message": "Click recorded"}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to handle click: {str(e)}", exc_info=True)
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=data.get("source_user_id", "unknown") if data else "unknown",
+                event="click_error",
+                properties={"error": f"Server error: {str(e)}"}
+            )
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    
+# endregion
+
+# region /order POST - Recording Order Events
+@referral_bp.route('/order', methods=['POST'])
+def handle_order():
+    """
+    Records an order event with source, destination user IDs, and sale value, like Trillian sealing a deal in the galaxy!
+    Inputs: JSON payload with:
+        - source_user_id (str): The ID of the user initiating the order.
+        - destination_user_id (str): The ID of the user being referred to.
+        - sale_value (float): The value of the sale.
+        - timestamp (str): When the order happened, e.g., "2023-10-26T12:34:56Z".
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Order recorded"}, status 200
+        - Errors: JSON with error message, status 400 or 500
+    """
+    try:
+        data = request.get_json()
+        if not data or not all(key in data for key in ["source_user_id", "destination_user_id", "sale_value", "timestamp"]):
+            logging.warning(f"UX Issue - Invalid order data: {json.dumps(data)}")
+            if posthog_client:
+                posthog_client.capture(
+                    distinct_id=data.get("source_user_id", "unknown"),
+                    event="order_error",
+                    properties={"error": "Invalid data: source_user_id, destination_user_id, sale_value, timestamp required", "data": data}
+                )
+            return jsonify({"status": "error", "message": "Invalid data: source_user_id, destination_user_id, sale_value, timestamp required"}), 400
+        
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=data["source_user_id"],
+                event="order",
+                properties={
+                    "source_user_id": data["source_user_id"],
+                    "destination_user_id": data["destination_user_id"],
+                    "sale_value": data["sale_value"],
+                    "timestamp": data["timestamp"]
+                }
+            )
+        
+        logging.info(f"Order recorded from {data['source_user_id']} to {data['destination_user_id']} for {data['sale_value']}")
+        return jsonify({"status": "success", "message": "Order recorded"}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to handle order: {str(e)}", exc_info=True)
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=data.get("source_user_id", "unknown") if data else "unknown",
+                event="order_error",
+                properties={"error": f"Server error: {str(e)}"}
+            )
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 # endregion
 
@@ -3200,83 +1726,7 @@ def handle_referral():
           |__|__| 
 """
 
-# region /<user_id>/visits GET - Checking Referral Visits
-@referral_bp.route('/<user_id>/visits', methods=['GET'])
-@login_required(["self", "admin"], require_all=False)
-def get_referral_visits(user_id):
-    """
-    Retrieves referral visits for a user, like Zaphod checking his party RSVPs.
-    Purpose: To list all page visits referred by the user—restricted to the user themselves or admins, because privacy is key in the galaxy!
-    Permissions: Restricted to "self" or "admin"—you’re either the referer or the Messiah!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user whose referral visits are sought.
-    Outputs:
-        - Success: JSON {"status": "success", "visits": [<visit_data>]}, status 200—visits revealed!
-        - Errors:
-            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the chosen one!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies lost the candles!
-    """
-    try:
-        # Permission check—like the Knights Who Say Ni demanding a shrubbery!
-        if user_id != request.user_id and "admin" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized visits retrieval attempt for {user_id} by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-        
-        # Load the user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        if user_id not in users_settings or "referrals" not in users_settings[user_id]:
-            logging.warning(f"UX Issue - No referral data found for user {user_id}")
-            return jsonify({"status": "success", "visits": []}), 200
-        
-        # Fetch the visits—neater than Ronnie Corbett’s wordplay.
-        visits = users_settings[user_id]["referrals"].get("visits", [])
-        logging.debug(f"Retrieved referral visits for user {user_id}: {json.dumps(visits)}")
-        return jsonify({"status": "success", "visits": visits}), 200
-    except Exception as e:
-        # Marvin groans: “I fetched visits, and now I’m broken.”
-        logging.error(f"UX Issue - Failed to retrieve referral visits for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# region /<user_id>/orders GET - Checking Referral Orders
-@referral_bp.route('/<user_id>/orders', methods=['GET'])
-@login_required(["self", "admin"], require_all=False)
-def get_referral_orders(user_id):
-    """
-    Retrieves referral orders for a user, like Trillian tallying up the galaxy’s shopping spree.
-    Purpose: To list all orders referred by the user—restricted to the user or admins, because only the elite can peek at the ledger!
-    Permissions: Restricted to "self" or "admin"—you’re either the referer or the chosen one!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user whose referral orders are sought.
-    Outputs:
-        - Success: JSON {"status": "success", "orders": [<order_data>]}, status 200—orders revealed!
-        - Errors:
-            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the Messiah, you’re a very naughty boy!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
-    """
-    try:
-        # Permission check—like the Holy Hand Grenade, only the worthy may pass!
-        if user_id != request.user_id and "admin" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized orders retrieval attempt for {user_id} by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-        
-        # Load the user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        if user_id not in users_settings or "referrals" not in users_settings[user_id]:
-            logging.warning(f"UX Issue - No referral data found for user {user_id}")
-            return jsonify({"status": "success", "orders": []}), 200
-        
-        # Fetch the orders—neater than a Two Ronnies sketch.
-        orders = users_settings[user_id]["referrals"].get("orders", [])
-        logging.debug(f"Retrieved referral orders for user {user_id}: {json.dumps(orders)}")
-        return jsonify({"status": "success", "orders": orders}), 200
-    except Exception as e:
-        # Marvin sighs: “I fetched orders, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to retrieve referral orders for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 2: The Towel (Hitchhiker’s Guide)
+# ASCII Art 2: The Towel
 """
        ______
       /|_||_\`.__
@@ -3488,6 +1938,7 @@ from utils.config import load_config
 from utils import wix
 import logging
 import json
+from blueprints.referral_bp import posthog_client
 
 user_settings_bp = Blueprint('user_settings_bp', __name__)
 
@@ -3770,7 +2221,177 @@ def get_user_products():
     except Exception as e:
         logging.error(f"Error fetching products for user {request.user_id}: {str(e)}")
         return jsonify({"status": "error", "message": "Failed to fetch products"}), 500
-    
+    
+# region /sales GET - Self-Auth Endpoint for Sales Data
+@user_settings_bp.route('/sales', methods=['GET'])
+@login_required(["self"], require_all=False)
+def get_sales():
+    """
+    Queries PostHog for click and order events where the user is source or destination, like Zaphod checking his galactic sales!
+    Permissions: Restricted to merchant or community roles.
+    Outputs:
+        - Success: JSON {"status": "success", "clicks": [<click_data>], "orders": [<order_data>]}, status 200
+        - Errors: JSON with error message, status 500
+    """
+    try:
+        user_id = request.user_id
+        clicks = []
+        orders = []
+        
+        if posthog_client:
+            # Query clicks where user is source or destination
+            click_query = {
+                "event": "click",
+                "properties": [
+                    {"key": "source_user_id", "value": user_id, "operator": "exact"},
+                    {"key": "destination_user_id", "value": user_id, "operator": "exact"}
+                ],
+                "operator": "OR"
+            }
+            click_results = posthog_client.query_events(click_query)  # Assumes query_events method; adjust based on SDK
+            clicks = [{"event": r["event"], "properties": r["properties"]} for r in click_results.get("results", [])]
+            
+            # Query orders where user is source or destination
+            order_query = {
+                "event": "order",
+                "properties": [
+                    {"key": "source_user_id", "value": user_id, "operator": "exact"},
+                    {"key": "destination_user_id", "value": user_id, "operator": "exact"}
+                ],
+                "operator": "OR"
+            }
+            order_results = posthog_client.query_events(order_query)
+            orders = [{"event": r["event"], "properties": r["properties"]} for r in order_results.get("results", [])]
+        
+        logging.debug(f"Retrieved sales data for user {user_id}: {len(clicks)} clicks, {len(orders)} orders")
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=user_id,
+                event="view_sales",
+                properties={"clicks_count": len(clicks), "orders_count": len(orders)}
+            )
+        
+        return jsonify({"status": "success", "clicks": clicks, "orders": orders}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to retrieve sales for user {user_id}: {str(e)}", exc_info=True)
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=user_id,
+                event="view_sales_error",
+                properties={"error": f"Server error: {str(e)}"}
+            )
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# region /referrals GET - Self-Auth Endpoint for Referrals Data
+@user_settings_bp.route('/referrals', methods=['GET'])
+@login_required(["self"], require_all=False)
+def get_referrals():
+    """
+    Queries PostHog for click and order events where the user is source, like Trillian tracking her referral network!
+    Permissions: Restricted to merchant or community roles.
+    Outputs:
+        - Success: JSON {"status": "success", "clicks": [<click_data>], "orders": [<order_data>]}, status 200
+        - Errors: JSON with error message, status 500
+    """
+    try:
+        user_id = request.user_id
+        clicks = []
+        orders = []
+        
+        if posthog_client:
+            # Query clicks where user is source (referrer-focused)
+            click_query = {
+                "event": "click",
+                "properties": [
+                    {"key": "source_user_id", "value": user_id, "operator": "exact"}
+                ]
+            }
+            click_results = posthog_client.query_events(click_query)
+            clicks = [{"event": r["event"], "properties": r["properties"]} for r in click_results.get("results", [])]
+            
+            # Query orders where user is source (referrer-focused)
+            order_query = {
+                "event": "order",
+                "properties": [
+                    {"key": "source_user_id", "value": user_id, "operator": "exact"}
+                ]
+            }
+            order_results = posthog_client.query_events(order_query)
+            orders = [{"event": r["event"], "properties": r["properties"]} for r in order_results.get("results", [])]
+        
+        logging.debug(f"Retrieved referrals data for user {user_id}: {len(clicks)} clicks, {len(orders)} orders")
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=user_id,
+                event="view_referrals",
+                properties={"clicks_count": len(clicks), "orders_count": len(orders)}
+            )
+        
+        return jsonify({"status": "success", "clicks": clicks, "orders": orders}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to retrieve referrals for user {user_id}: {str(e)}", exc_info=True)
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=user_id,
+                event="view_referrals_error",
+                properties={"error": f"Server error: {str(e)}"}
+            )
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# region /last-login GET - Self-Auth Endpoint for Last Login
+@user_settings_bp.route('/last-login', methods=['GET'])
+@login_required(["self"], require_all=False)
+def get_last_login():
+    """
+    Queries PostHog for the most recent login event, like Marvin reminding you where you parked your spaceship!
+    Permissions: Restricted to merchant or community roles.
+    Outputs:
+        - Success: JSON {"status": "success", "message": "You last logged in from <ip> on <date>"}, status 200
+        - Errors: JSON with error message, status 500
+    """
+    try:
+        user_id = request.user_id
+        last_login = None
+        
+        if posthog_client:
+            login_query = {
+                "event": "login",
+                "properties": [
+                    {"key": "user_id", "value": user_id, "operator": "exact"}
+                ],
+                "order_by": ["-timestamp"]  # Latest first
+            }
+            login_results = posthog_client.query_events(login_query)
+            if login_results.get("results", []):
+                last_login = login_results["results"][0]["properties"]
+        
+        if last_login:
+            message = f"You last logged in from {last_login['ip_address']} on {last_login['timestamp']}"
+        else:
+            message = "No login history found"
+        
+        logging.debug(f"Retrieved last login for user {user_id}: {message}")
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=user_id,
+                event="view_last_login",
+                properties={"has_login": bool(last_login)}
+            )
+        
+        return jsonify({"status": "success", "message": message}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to retrieve last login for user {user_id}: {str(e)}", exc_info=True)
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=user_id,
+                event="view_last_login_error",
+                properties={"error": f"Server error: {str(e)}"}
+            )
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
 utility_bp.py
 from flask import Blueprint, request, jsonify, current_app, make_response
 from utils.auth import login_required, load_users_settings
@@ -4109,3 +2730,5 @@ def check_domain():
         response_data = {"error": f"Failed to check domain availability: {str(e)}"}
         logging.debug(f"Response: {json.dumps(response_data)}")
         return jsonify(response_data), 500
+__init__.py
+

@@ -5,6 +5,11 @@
 <!-- Updated 2025-04-21 v12.5, Fixed flashing border on default Community selection -->
 <!-- Updated 2025-04-22 v12.6, Fixed signupOtpSection and formData.get errors -->
 <!-- Updated 2025-04-23 v12.7, Simplified signup form to only collect role -->
+<!-- Updated 2025-04-26 v12.8, Added failSignup section for Stripe error handling -->
+<!-- Updated 2025-04-27 v12.9, Fixed email and password fields in completeSignup section -->
+<!-- Updated 2025-10-15 v13.0, Fixed serialization error by safely accessing signup_data keys -->
+<!-- Updated 2025-10-16 v13.1, Added hidden fields for stripe_account_id and role in completeSignup -->
+<!-- Updated 2025-10-17 v13.2, Removed button-specific CSS to focus only on role selection highlighting -->
 
 <style>
     /* Hide radio buttons */
@@ -63,9 +68,9 @@
     }
 </style>
 
-<div class="section" id="signupContainer" style="display: none;">
+<div class="section" id="signupContainer" style="display: {% if section == 'signupContainer' %}block{% else %}none{% endif %};">
     <h2>Sign Up - I am a...</h2>
-    <form id="signupForm" class="form" method="POST" autocomplete="off">
+    <form id="signupForm" class="form" method="POST" action="/signup" autocomplete="off">
         <!-- Dummy fields to trick autofill -->
         <input type="text" class="hidden" autocomplete="off">
         <input type="text" class="hidden" autocomplete="off">
@@ -90,7 +95,7 @@
     </form>
 </div>
 
-<div class="section" id="forgotPasswordContainer" style="display: none;">
+<div class="section" id="forgotPasswordContainer" style="display: {% if section == 'forgotPasswordContainer' %}block{% else %}none{% endif %};">
     <h2>Forgot Password</h2>
     <form id="forgotPasswordForm" class="form" method="POST" action="/reset-password">
         <div class="form-group">
@@ -101,9 +106,9 @@
     </form>
 </div>
 
-<div class="section" id="verifyOtpSection" style="display: none;">
+<div class="section" id="verifyOtpSection" style="display: {% if section == 'verifyOtpSection' %}block{% else %}none{% endif %};">
     <h2>Verify OTP</h2>
-    <form id="verifyOtpForm" class="form" method="POST">
+    <form id="verifyOtpForm" class="form" method="POST" action="/verify-reset-code">
         <div class="form-group">
             <label for="verifyEmail">Email:</label>
             <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required autocomplete="off">
@@ -131,16 +136,63 @@
     </form>
 </div>
 
+<div class="section" id="completeSignup" style="display: {% if section == 'completeSignup' %}block{% else %}none{% endif %};">
+    <h2>Complete Signup</h2>
+    <p>Welcome back from Stripe! Please set your password to complete your account setup.</p>
+    {% if signup_data is defined and 'stripe_account_id' in signup_data and 'role' in signup_data %}
+        <form id="setPasswordForm" class="form" method="POST" action="/complete-signup">
+            <input type="hidden" name="stripe_account_id" value="{{ signup_data.stripe_account_id }}">
+            <input type="hidden" name="role" value="{{ signup_data.role }}">
+            {% if stripe_sandbox %}
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number:</label>
+                <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+            </div>
+            {% endif %}            
+            <div class="form-group">
+                <label for="setPassword">Password:</label>
+                <div class="password-wrapper">
+                    <input type="password" id="setPassword" name="password" placeholder="Enter your password" required autocomplete="new-password">
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="setConfirmPassword">Confirm Password:</label>
+                <div class="password-wrapper">
+                    <input type="password" id="setConfirmPassword" name="confirm_password" placeholder="Confirm your password" required autocomplete="new-password">
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+            </div>
+            <div>
+                <button type="submit">Set Password</button>
+            </div>
+        </form>
+    {% else %}
+        <p class="error">Signup data is missing or incomplete. Please try signing up again.</p>
+        <button onclick="window.location.href='/?section=signupContainer'">Return to Signup</button>
+    {% endif %}
+</div>
+
+<div class="section" id="failSignupContainer" style="display: {% if section == 'failSignupContainer' %}block{% else %}none{% endif %};">
+    <h2>Signup Failed</h2>
+    <p>There was an issue during signup. Please try again.</p>
+    <button onclick="window.location.href='/?section=signupContainer'">Try Again</button>
+</div>
+
 <script>
     window.onload = function() {
         // Clear fields to prevent autofill
-        ['forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
+        ['forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword', 'setPassword', 'setConfirmPassword'].forEach(id => {
             const input = document.getElementById(id);
             if (input) input.value = '';
         });
 
         // Ensure default Community selection has .selected class
-        const defaultOption = document.querySelector('input[name="signup_type"]:checked').closest('.option');
+        const defaultOption = document.querySelector('input[name="signup_type"]:checked')?.closest('.option');
         if (defaultOption) defaultOption.classList.add('selected');
 
         // Handle click events to toggle .selected class
@@ -152,7 +204,7 @@
             });
         });
 
-        // Toggle password visibility for OTP form
+        // Toggle password visibility
         document.querySelectorAll('.toggle-password').forEach(toggle => {
             toggle.addEventListener('click', () => {
                 const input = toggle.previousElementSibling;

@@ -39,8 +39,6 @@
   .icon-woocommerce,
   .icon-shopify,
   .icon-magento,
-  .icon-textmagic,
-  .icon-tiny,
   .woo-cart-icon,
   .custom-icon {
     display: inline-block;
@@ -63,8 +61,6 @@
   .icon-woocommerce::before,
   .icon-shopify::before,
   .icon-magento::before,
-  .icon-textmagic::before,
-  .icon-tiny::before,
   .woo-cart-icon::before,
   .custom-icon::before {
     display: block; /* Fills the <i> container */
@@ -162,15 +158,6 @@
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M445.7 127.9V384l-63.4 36.5V164.7L223.8 73.1 65.2 164.7l.4 255.9L2.3 384V128.1L224.2 0l221.5 127.9zM255.6 420.5L224 438.9l-31.8-18.2v-256l-63.3 36.6 .1 255.9 94.9 54.9 95.1-54.9v-256l-63.4-36.6v255.9z"/></svg>');
   }
   
-  /* TextMagic Icon (Custom SVG based on branding - stylized 'T' with message bubble) */
-  .icon-textmagic::before {
-    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M4 2h6v12H4V2zm8 0h2v8h8V8h-2V2h-6v6h-2V2zm0 10h6c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2h-6c-1.1 0-2-.9-2-2v-6c0-1.1.9-2 2-2z"/></svg>');
-  }
-  
-  /* TinyMCE Icon (Official TinyMCE SVG logo simplified) */
-  .icon-tiny::before {
-    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M2 2h20v2H2V2zm4 4h12v12H6V6zm2 2v8h8V8H8z"/></svg>');
-  }
   
   /* WooCommerce Cart Icon */
   .woo-cart-icon::before {

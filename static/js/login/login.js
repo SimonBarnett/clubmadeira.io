@@ -4,12 +4,13 @@ import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setCookie } from '../core/cookies.js';
 import { setAuthToken } from '../core/auth.js';
 import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
+import { API_ENDPOINTS } from '../config/constants.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
- * Initializes the login form in the welcome section.
+ * Initializes the login form in the specified section.
  * @param {string} context - The context or module name.
- * @param {string} targetSection - The ID of the section to initialize (e.g., 'welcomeSection').
+ * @param {string} targetSection - The ID of the section to initialize (e.g., 'info').
  * @returns {Promise<void>}
  */
 export async function initializeLogin(context, targetSection) {
@@ -24,7 +25,7 @@ export async function initializeLogin(context, targetSection) {
     toggleViewState(context, { [targetSection]: true });
 
     // Set up form submission
-    submitConfiguredForm(context, 'loginForm', '/', 'login', {
+    submitConfiguredForm(context, 'loginForm', API_ENDPOINTS.LOGIN, 'login', {
       onSuccess: data => {
         log(context, 'Login successful, setting token and cookie');
         setAuthToken(data.token);

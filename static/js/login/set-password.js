@@ -2,6 +2,7 @@
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { withElement } from '../utils/dom-manipulation.js';
+import { API_ENDPOINTS } from '../config/constants.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
 
 const context = 'set-password.js';
@@ -23,7 +24,7 @@ export async function initializeSetPassword(context, sectionId) {
     section.style.display = 'block';
 
     // Set up form submission to the correct endpoint
-    submitConfiguredForm(context, 'setPasswordForm', '/complete-signup', 'setPassword', {
+    submitConfiguredForm(context, 'setPasswordForm', API_ENDPOINTS.COMPLETE_SIGNUP, 'setPassword', {
       onSuccess: (data) => {
         log(context, 'Password set successfully');
         // Redirect or update UI as needed

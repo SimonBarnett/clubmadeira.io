@@ -6,19 +6,22 @@
         <div style="display: flex; align-items: center; margin-bottom: 10px;">                
             <h2>API Keys</h2>
         </div>
-        <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>            
-        <form id="api-keys-form" style="display: none;">
-            <div id="api-keys-fields"></div>                
-        </form>
-        <style>
-            #api-keys-icons i {
-                display: inline-block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                font-size: 24px;
-                color: #000;
-            }
-        </style>
+        <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+        
+        <!-- Static content (always visible) -->
+        <div id="api-keys-static-content"></div>
+        
+        <!-- Settings container for the form -->
+        <div id="api-keys-settings-container" style="display: none;">
+            <form id="api-keys-form">
+                <div id="api-keys-fields"></div>
+                <!-- Submit button for form interaction -->
+                <button type="submit">Save API Key</button>
+            </form>
+        </div>
+        
+        <!-- Readme content (toggleable) -->
+        <div id="api-keys-readme-content" style="display: none;"></div>
     </div>
 
     <!-- Create Store Section -->

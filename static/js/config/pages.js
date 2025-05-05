@@ -9,7 +9,7 @@ import { withScriptLogging } from '../utils/logging-utils.js';
  * @type {Object.<string, string[]>}
  */
 export const PAGE_MODULES = {
-  admin: ['./admin/admin-page.js'],
+  admin: ['./admin-page.js'],
   login: ['./login-page.js'],
   merchant: ['./merchant/category-management.js', './merchant/site-request.js', './merchant/merchant-page.js'],
   partner: ['./partner/partner-page.js'],

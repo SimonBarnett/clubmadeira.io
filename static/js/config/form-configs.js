@@ -1,4 +1,3 @@
-// /static/js/config/form-configs.js
 import { log } from '../core/logger.js';
 import { validatePhoneNumber } from '../utils/form-submission.js';
 import { isValidEmail } from '../utils/form-validation-utils.js';
@@ -462,6 +461,120 @@ const FORM_CONFIGS = {
       },
     ],
     requiresAuth: true,
+  },
+  completeSignup: {
+    id: 'setPasswordForm',
+    action: '/complete-signup',
+    method: 'POST',
+    submitButtonText: 'Set Password',
+    successMessage: 'Account created successfully!',
+    transform: formData => ({
+      password: formData.get('password'),
+      confirm_password: formData.get('confirm_password'),
+      stripe_account_id: formData.get('stripe_account_id'),
+      role: formData.get('role'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+    }),
+    validate: formData => {
+      const password = formData.get('password');
+      const confirmPassword = formData.get('confirm_password');
+      const stripeAccountId = formData.get('stripe_account_id');
+      const role = formData.get('role');
+      const email = formData.get('email');
+      const phone = formData.get('phone');
+
+      if (!password || !confirmPassword || password !== confirmPassword || !stripeAccountId || !role) {
+        throw new Error('Please ensure all required fields are filled correctly and passwords match.');
+      }
+
+      if (email !== null && !isValidEmail('completeSignup', email)) {
+        throw new Error('Please enter a valid email address.');
+      }
+
+      if (phone !== null && !validatePhoneNumber('completeSignup', phone)) {
+        throw new Error('Please enter a valid phone number.');
+      }
+
+      return true;
+    },
+    validationError: 'Please complete all fields correctly and ensure passwords match.',
+    fetchOptions: {
+      headers: { 'Content-Type': 'application/json' },
+    },
+    fields: [
+      {
+        type: 'password',
+        name: 'password',
+        label: 'Password',
+        required: true,
+        attributes: { 
+          id: 'setPassword', 
+          placeholder: 'Enter your password', 
+          autocomplete: 'new-password' 
+        },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+      {
+        type: 'password',
+        name: 'confirm_password',
+        label: 'Confirm Password',
+        required: true,
+        attributes: { 
+          id: 'setConfirmPassword', 
+          placeholder: 'Confirm your password', 
+          autocomplete: 'new-password' 
+        },
+        wrapper: {
+          class: 'password-wrapper',
+          style: 'position: relative; width: 100%;',
+        },
+        extraButtons: [
+          {
+            type: 'button',
+            text: '<i class="fas fa-eye"></i>',
+            className: 'toggle-password',
+            style: 'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 16px; color: #666;',
+          },
+        ],
+      },
+      {
+        type: 'email',
+        name: 'email',
+        label: 'Email',
+        required: false,
+        attributes: { id: 'email', placeholder: 'Enter your email', autocomplete: 'off' },
+      },
+      {
+        type: 'tel',
+        name: 'phone',
+        label: 'Phone Number',
+        required: false,
+        attributes: { id: 'phone', placeholder: 'Enter your phone number' },
+      },
+      {
+        type: 'hidden',
+        name: 'stripe_account_id',
+        attributes: { id: 'stripeAccountId' },
+      },
+      {
+        type: 'hidden',
+        name: 'role',
+        attributes: { id: 'role' },
+      },
+    ],
+    requiresAuth: false,
   },
   categories: getCategoriesFormConfig,
 };

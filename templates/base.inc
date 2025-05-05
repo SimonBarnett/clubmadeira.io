@@ -9,17 +9,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Local CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css?v=1.0.1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css?v=1.0.1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/siterequest.css?v=1.0.1') }}">
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Dynamic API URL -->
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
     <!-- External JS -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
     <script src="https://cdn.tiny.cloud/1/{{ site_settings.tiny.API_KEY | default('YOUR_VALID_API_KEY') }}/tinymce/6/tinymce.min.js" defer></script>
+    <!-- Add .hidden class for hideOverlay -->
+    <style>
+        #loadingOverlay.hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 <body {% block body_attributes %}{% endblock %}>
     <!-- Loading Overlay -->
@@ -45,7 +52,6 @@
     <!-- Debug script to log template variables -->
     <script type="text/template" id="debug-script">
         (function() {
-            // Use safe filter and ensure valid JSON output
             const xRole = {{ x_role | tojson | safe if x_role is defined else '"undefined"' }};
             const pageType = {{ page_type | tojson | safe if page_type is defined else '"undefined"' }};
             const user = {{ user | tojson | safe if user is defined and user is not none else '"undefined"' }};
@@ -63,8 +69,8 @@
     <!-- Main content wrapper, hidden initially -->
     <div class="layout-wrapper" style="display: none;">
         <div class="header">
-            {% include 'roles.inc' %}            
-        </div>                
+            {% include 'roles.inc' %}
+        </div>
         <div class="content">
             <!-- Menu Container (dynamically populated by navigation.js) -->
             <div id="menu" class="menu"></div>
@@ -140,7 +146,7 @@
     </div>
 
     <!-- Core script using new consolidated structure -->
-    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}?v=1.0.4"></script>
 
     <!-- Page-specific scripts -->
     {% if page_type == 'login' %}
@@ -157,30 +163,27 @@
         <script type="module" src="{{ url_for('static', filename='js/modules/site-request.js') }}" defer></script>
     {% endif %}
 
-    <script>
-        // Minimal DOMContentLoaded handler for markdown links only
+    <!-- Markdown link handler as a module -->
+    <script type="module">
+        import { marked } from 'https://cdn.jsdelivr.net/npm/marked@4.0.0/+esm';
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Add event listeners for markdown rendering
-            if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
-                document.querySelectorAll('.md-link').forEach(link => {
-                    link.addEventListener('click', function(event) {
-                        event.preventDefault();
-                        const mdPath = this.getAttribute('data-md-path');
-                        const targetId = 'md-render-target';
-                        const target = document.getElementById(targetId);
-                        if (target) {
-                            fetch(mdPath)
-                                .then(response => response.text())
-                                .then(text => {
-                                    target.innerHTML = marked.parse(text);
-                                })
-                                .catch(err => console.error('Failed to render markdown:', err));
-                        }
-                    });
+            document.querySelectorAll('.md-link').forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const mdPath = this.getAttribute('data-md-path');
+                    const targetId = 'md-render-target';
+                    const target = document.getElementById(targetId);
+                    if (target) {
+                        fetch(mdPath)
+                            .then(response => response.text())
+                            .then(text => {
+                                target.innerHTML = marked.parse(text);
+                            })
+                            .catch(err => console.error('Failed to render markdown:', err));
+                    }
                 });
-            } else {
-                console.error('marked.parse is not defined');
-            }
+            });
         });
     </script>
     {% block scripts %}{% endblock %}

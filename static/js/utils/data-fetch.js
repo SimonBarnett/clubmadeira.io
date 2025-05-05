@@ -19,6 +19,12 @@ const context = 'data-fetch.js';
  */
 export async function fetchData(context, endpoint, options = {}, useAuth = true) {
   log(context, `Fetching data from endpoint: ${endpoint}, useAuth: ${useAuth}`);
+  
+  // Ensure endpoint is correctly formatted (relative path)
+  if (!endpoint.startsWith('/')) {
+    endpoint = `/${endpoint}`;
+  }
+  
   const fetchFunction = useAuth ? authenticatedFetch : fetch; // Use authenticatedFetch or regular fetch
   const response = await fetchFunction(endpoint, options);
   const data = await response.json();

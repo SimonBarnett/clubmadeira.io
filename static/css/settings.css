@@ -1,0 +1,46 @@
+/* settings.css */
+
+/* Base styles for site settings icons */
+.site-settings-icon {
+    color: grey; /* Grey out unselected icons */
+    font-size: 24px; /* Set size using font-size for font icons */
+    display: inline-block;
+    margin: 5px; /* Add spacing between icons */
+    cursor: pointer; /* Indicate interactivity */
+}
+
+/* Style for selected site settings icon */
+.site-settings-icon.selected {
+    color: #007bff; /* Use a specific blue color for selection */
+    border-bottom: 2px solid #007bff; /* Add visual indicator for selected state */
+}
+
+/* Base styles for affiliate icons */
+.affiliate-icon {
+    color: grey; /* Grey out unselected icons */
+    font-size: 24px; /* Set size using font-size for font icons */
+    display: inline-block;
+    margin: 5px; /* Add spacing between icons */
+    cursor: pointer; /* Indicate interactivity */
+}
+
+/* Style for selected affiliate icon */
+.affiliate-icon.selected {
+    color: #007bff; /* Use a specific blue color for selection */
+    border-bottom: 2px solid #007bff; /* Add visual indicator for selected state */
+}
+
+/* Base styles for provider icons */
+.provider-icon {
+    color: grey; /* Grey out unselected icons */
+    font-size: 24px; /* Set size using font-size for font icons */
+    display: inline-block;
+    margin: 5px; /* Add spacing between icons */
+    cursor: pointer; /* Indicate interactivity */
+}
+
+/* Style for selected provider icon */
+.provider-icon.selected {
+    color: #007bff; /* Use a specific blue color for selection */
+    border-bottom: 2px solid #007bff; /* Add visual indicator for selected state */
+}

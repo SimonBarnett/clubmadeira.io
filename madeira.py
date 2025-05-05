@@ -1,13 +1,15 @@
-from flask import Flask, render_template, session, request, jsonify, make_response, send_from_directory, redirect
+# madeira.py
+from flask import Flask, render_template, session, request, jsonify, make_response, send_from_directory, redirect, current_app
 from flask_cors import CORS
+from blueprints.referral_bp import referral_bp
 from blueprints.authentication_bp import authentication_bp
+from blueprints.content_bp import content_bp
+from blueprints.manager_bp import manager_bp
 from blueprints.site_request_bp import site_request_bp
 from blueprints.user_settings_bp import user_settings_bp
 from blueprints.utility_bp import utility_bp
-from blueprints.content_bp import content_bp
-from blueprints.referral_bp import referral_bp
-from blueprints.manager_bp import manager_bp
 from utils.auth import login_required, load_users_settings, generate_token, decode_token
+from utils.posthog_utils import initialize_posthog
 from functools import wraps
 import json
 import os
@@ -36,6 +38,9 @@ def load_config():
 config = load_config()
 app.config['JWT_SECRET_KEY'] = config['jwt']['SECRET_KEY']
 app.secret_key = config['session']['SECRET_KEY']
+
+# Initialize PostHog client and attach it to the app
+app.posthog_client = initialize_posthog()
 
 def setup_logging():
     log_level_str = config.get("log_level", "DEBUG").upper()
@@ -170,29 +175,44 @@ def log_response(response):
     logging.debug(f"Response: {json.dumps(response_data)}")
     return response
 
-app.register_blueprint(authentication_bp, url_prefix='')
-app.register_blueprint(site_request_bp, url_prefix='')
-app.register_blueprint(user_settings_bp, url_prefix='')
-app.register_blueprint(utility_bp, url_prefix='')
-app.register_blueprint(content_bp, url_prefix='')
-app.register_blueprint(referral_bp, url_prefix='')
-app.register_blueprint(manager_bp, url_prefix='')
+app.register_blueprint(referral_bp)
+app.register_blueprint(authentication_bp)
+app.register_blueprint(content_bp)
+app.register_blueprint(manager_bp)
+app.register_blueprint(site_request_bp)
+app.register_blueprint(user_settings_bp)
+app.register_blueprint(utility_bp)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     try:
+        decoded, token, source = get_authenticated_user()
+        is_authenticated = bool(decoded)
+
         if request.method == 'GET':
-            decoded, token, source = get_authenticated_user()
             if not decoded:
-                from_stripe = session.get('from_stripe', False)
-                logging.debug("No valid authentication, serving login page")
-                response = make_response(render_template(
-                    'login.html',
-                    title='clubmadeira.io | Login',
-                    page_type='login',
-                    base_url=request.url_root.rstrip('/'),
-                    from_stripe=from_stripe
-                ))
+                section = request.args.get('section', 'info')
+                context = {
+                    'title': 'clubmadeira.io | Login',
+                    'page_type': 'login',
+                    'is_authenticated': False,
+                    'base_url': request.url_root.rstrip('/'),
+                    'section': section
+                }
+                if section == 'completeSignup':
+                    stripe_account_id = request.args.get('account_id')
+                    role = request.args.get('role')
+                    if not stripe_account_id or not role:
+                        logging.warning("Missing account_id or role in query parameters")
+                        return redirect('/?section=failSignupContainer')
+                    context['signup_data'] = {
+                        'stripe_account_id': stripe_account_id,
+                        'role': role
+                    }
+                    config = load_config()
+                    stripe_api_key = config.get('stripe', {}).get('API_KEY', '')
+                    context['stripe_sandbox'] = stripe_api_key.startswith('sk_test_')
+                response = make_response(render_template('login.html', **context))
                 response.headers['X-Page-Type'] = 'login'
                 return response
 
@@ -225,6 +245,7 @@ def home():
             context = {
                 'title': f'clubmadeira.io | {title_suffix}',
                 'page_type': page_type,
+                'is_authenticated': True,
                 'user': user,
                 'x_role': x_role,
                 'deselected': [],
@@ -270,8 +291,8 @@ def home():
         if user_entry:
             user_id, user = user_entry
             stored_hash = user['password']
-            logging.debug(f"Stored password hash for {user_id}: {stored_hash[:10]}...")  # Redacted for brevity
-            logging.debug(f"Provided password length: {len(password)}")  # Avoid logging full password
+            logging.debug(f"Stored password hash for {user_id}: {stored_hash[:10]}...")
+            logging.debug(f"Provided password length: {len(password)}")
 
             if bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8')):
                 permissions = user['permissions']
@@ -285,6 +306,26 @@ def home():
                 }
                 session.modified = True
                 logging.debug(f"Login successful, x-role set to {x_role} for user {user_id}")
+
+                # Record login event in PostHog
+                login_data = {
+                    "user_id": user_id,
+                    "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "ip_address": request.remote_addr
+                }
+                if current_app.posthog_client:
+                    try:
+                        current_app.posthog_client.capture(
+                            distinct_id=user_id,
+                            event="login",
+                            properties=login_data
+                        )
+                        logging.debug(f"PostHog login event captured: distinct_id={user_id}, properties={json.dumps(login_data)}")
+                    except Exception as e:
+                        logging.error(f"PostHog Issue - Failed to capture login event: {str(e)}", exc_info=True)
+                else:
+                    logging.warning("PostHog Issue - posthog_client is None, login event not captured")
+
                 response = jsonify({
                     "status": "success",
                     "token": token,
@@ -303,7 +344,7 @@ def home():
     except Exception as e:
         logging.error(f"UX Issue - Failed to process request: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-    
+         
 @app.route('/set-role', methods=['POST'])
 @login_required(['admin'], require_all=True)
 def set_role():
@@ -342,6 +383,7 @@ def set_role():
 def get_token():
     try:
         decoded, token, source = get_authenticated_user()
+        is_authenticated = bool(decoded)  # Set is_authenticated for consistency
         if not decoded:
             logging.debug("No valid token found in session, header, or cookie")
             return jsonify({"status": "error", "message": "No token found"}), 401
@@ -356,39 +398,40 @@ def get_token():
 @app.route('/logoff', methods=['GET'])
 def logoff():
     try:
+        # Check for authenticated user and log details
         decoded, _, source = get_authenticated_user()
         if decoded:
             logging.debug(f"Logging off user {decoded['user_id']} authenticated via {source}")
         
+        # Clear session data
         if 'user' in session:
             session['user'].pop('x-role', None)
             logging.debug("x-role cleared from session")
         session.clear()
         logging.debug("Server-side session cleared during logoff")
 
+        # Create redirect response to home page
         response = redirect('/')
+        # Delete authentication-related cookies
         response.delete_cookie('authToken', path='/')
         response.delete_cookie('session', path='/')
         return response
 
     except Exception as e:
+        # Log error and render error page
         logging.error(f"UX Issue - Failed to process logoff request: {str(e)}", exc_info=True)
-        html_content = f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>Logoff Error</title>
-        </head>
-        <body>
-            <p>Error during logoff: {str(e)}</p>
-        </body>
-        </html>
-        """
+        context = {
+            'title': 'clubmadeira.io | Logoff Error',
+            'page_type': 'error',
+            'is_authenticated': False,
+            'error_message': str(e)
+        }
+        html_content = render_template('error.html', **context)
         response = make_response(html_content, 500)
         response.headers['Content-Type'] = 'text/html'
+        response.headers['X-Page-Type'] = 'error'
         return response
-
+    
 @app.route('/static/js/<path:filename>')
 def serve_js(filename):
     response = send_from_directory('static/js', filename, mimetype='text/javascript')

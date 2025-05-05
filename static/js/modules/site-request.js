@@ -5,7 +5,7 @@ import { log } from '../core/logger.js';
 import { fetchData } from '../utils/data-fetch.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { setupEventListeners } from '../utils/event-listeners.js';
-import { withAuthenticatedUser } from '../utils/auth.js';
+import { withAuthenticatedUser } from '../core/auth.js';
 import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
 import { initializeTinyMCE } from '../core/mce.js';
 import { withErrorHandling } from '../utils/error.js';
@@ -48,13 +48,13 @@ async function loadSiteRequest(context, sectionId, userId) {
 
       // Determine role-specific field IDs (merchant or community)
       const fieldIds = {
-        storeName: sectionId === 'store-request' ? 'storeName' : 'communityStoreName',
-        aboutStore: sectionId === 'store-request' ? 'aboutStore' : 'communityAboutStore',
-        colorPreference: sectionId === 'store-request' ? 'colorPreference' : 'communityColorPreference',
-        stylingDetails: sectionId === 'store-request' ? 'stylingDetails' : 'communityStylingDetails',
-        domain: sectionId === 'store-request' ? 'domain' : 'communityDomain',
-        emailsContainer: sectionId === 'store-request' ? 'emailsContainer' : 'communityEmailsContainer',
-        pagesContainer: sectionId === 'store-request' ? 'pagesContainer' : 'communityPagesContainer',
+        storeName: sectionId === 'store-request' ? 'name' : 'name', // Updated to match HTML
+        aboutStore: sectionId === 'store-request' ? 'about' : 'about', // Updated to match HTML
+        colorPreference: sectionId === 'store-request' ? 'colorPrefs' : 'colorPrefs', // Updated to match HTML
+        stylingDetails: sectionId === 'store-request' ? 'stylingDetails' : 'stylingDetails', // Updated to match HTML
+        domain: sectionId === 'store-request' ? 'preferredDomain' : 'preferredDomain', // Updated to match HTML
+        emailsContainer: sectionId === 'store-request' ? 'emailsContainer' : 'emailsContainer', // Matches HTML
+        pagesContainer: sectionId === 'store-request' ? 'pagesContainer' : 'pagesContainer', // Matches HTML
       };
 
       // Populate form fields
@@ -81,17 +81,14 @@ async function loadSiteRequest(context, sectionId, userId) {
         pagesContainer.innerHTML = data.pages.map((page, index) => `
           <div class="page-entry">
             <input type="text" name="page_${index}_title" value="${page.title}">
-            <textarea name="page_${index}_content">${page.content}</textarea>
+            <textarea name="page_${index}_content" class="mce-editor">${page.content}</textarea>
             <button type="button" class="remove-page" data-index="${index}">Remove</button>
           </div>
         `).join('');
       }
 
-      // Initialize TinyMCE for rich text fields
-      await initializeTinyMCE(context, [
-        fieldIds.aboutStore,
-        ...data.pages.map((_, i) => `page_${i}_content`),
-      ]);
+      // Initialize TinyMCE for all elements with class 'mce-editor'
+      await initializeTinyMCE(context, '.mce-editor');
 
       // Update domain preview if function exists
       if (typeof window.updateDomainPreview === 'function') {
@@ -141,7 +138,7 @@ function setupSiteRequestEvents(context, sectionId, userId) {
       handler: event => {
         const index = event.target.dataset.index;
         const pageEntry = document.querySelector(`.page-entry:nth-child(${parseInt(index) + 1})`);
-        if (emailEntry) pageEntry.remove();
+        if (pageEntry) pageEntry.remove(); // Fixed typo from 'emailEntry' to 'pageEntry'
         log(context, `Removed page entry at index: ${index}`);
       },
     },

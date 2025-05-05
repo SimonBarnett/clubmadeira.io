@@ -1,0 +1,152 @@
+/* General form styling */
+.site-request-form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling for each top-level section */
+.form-section {
+    margin-bottom: 10px; /* 10px bottom margin as requested */
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+/* Label styling */
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Input, textarea, and file input styling */
+.form-input,
+.form-textarea,
+.form-file-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-file-input {
+    padding: 3px;
+}
+
+/* Hint text styling */
+.form-hint {
+    display: block;
+    margin-bottom: 10px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Button styling */
+.form-button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.form-button:hover {
+    background-color: #0056b3;
+}
+
+/* Specific button styling */
+.check-domain-button,
+.add-email-button,
+.add-page-button,
+.submit-request-button {
+    background-color: #28a745;
+}
+
+.check-domain-button:hover,
+.add-email-button:hover,
+.add-page-button:hover,
+.submit-request-button:hover {
+    background-color: #218838;
+}
+
+/* Container for emails and pages */
+.emails-container,
+.pages-container {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+/* Email and page sections */
+.email-section,
+.page-section {
+    margin-bottom: 10px;
+}
+
+/* Email domain styling */
+.email-domain {
+    color: #555;
+    font-size: 14px;
+    margin-left: 5px;
+}
+
+/* Widget section styling */
+.widget-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.widget-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.widget-label {
+    font-weight: normal;
+    color: #333;
+}
+
+.widget-checkbox {
+    margin-right: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .site-request-form {
+        padding: 15px;
+    }
+
+    .form-section {
+        padding: 10px;
+    }
+
+    .form-button {
+        width: 100%;
+        justify-content: center;
+    }
+}

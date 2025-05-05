@@ -9,11 +9,13 @@ import { withScriptLogging } from '../utils/logging-utils.js';
  * @type {Object.<string, string|Function>}
  */
 export const API_ENDPOINTS = {
+  BASE: 'https://clubmadeira.io', // Base URL for constructing full endpoint URLs
   // Admin endpoints
   SETTINGS_AFFILIATE: '/settings/affiliate',
+  SETTINGS_AFFILIATE_KEY: '/settings/affiliate_key', // Added for affiliates.js
   SETTINGS_API_KEY: '/settings/api-key',
-  SETTINGS_KEY: '/settings/site',
-  USERS_ROLE: role => `/users/role/${role}`,
+  SETTINGS_KEY: '/settings/settings_key',
+  USERS_ROLE: role => `/users/${role}`,
   USERS_USERID: userId => `/users/${userId}`,
   PERMISSION: '/permissions',
   DEALS: '/deals',
@@ -24,8 +26,13 @@ export const API_ENDPOINTS = {
   RESET_CATEGORIES: '/categories/reset',
   CLIENT_API_SETTINGS: '/settings/client_api',
   CHECK_DOMAIN: '/check-domain',
-  VISITS: userId => `/visits/${userId}`,
-  ORDERS: userId => `/orders/${userId}`,
+  // Referral endpoints (user ID is inferred from auth token)
+  REFERRAL: '/referral', // POST endpoint for recording referral data (visits or orders)
+  REFERRAL_VISITS: '/referral/visits', // GET endpoint for retrieving referral visits
+  REFERRAL_ORDERS: '/referral/orders', // GET endpoint for retrieving referral orders
+  // Deprecated endpoints (kept for reference, not used with referral_bp)
+  // VISITS: userId => `/visits/${userId}`,
+  // ORDERS: userId => `/orders/${userId}`,
 
   // Partner endpoints
   CLIENT_API: '/client-api',
@@ -47,6 +54,7 @@ export const API_ENDPOINTS = {
   VERIFY_RESET_CODE: '/verify-reset-code',
   SIGNUP: '/signup',
   VERIFY_TOKEN: '/verify-token',
+  COMPLETE_SIGNUP: '/complete-signup', // Added for set-password.js
 };
 
 /**

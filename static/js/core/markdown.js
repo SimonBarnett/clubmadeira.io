@@ -25,8 +25,8 @@ export async function renderMarkdown(context, contentOrUrl) {
     } else {
       markdownContent = contentOrUrl;
     }
-    // Assume marked.js is globally available
-    return window.marked ? window.marked(markdownContent) : markdownContent;
+    // Use global window.marked with fallback to raw content
+    return window.marked ? window.marked.parse(markdownContent) : markdownContent;
   }, ERROR_MESSAGES.MARKDOWN_RENDER_FAILED);
 }
 

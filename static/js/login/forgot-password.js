@@ -2,7 +2,7 @@
 import { log } from '../core/logger.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
 import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/messages.js';
+import { API_ENDPOINTS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
 
 /**
@@ -22,7 +22,7 @@ export async function initializeForgotPassword(context) {
     toggleViewState(context, { forgotPasswordContainer: true });
 
     // Set up forgot password form submission
-    submitConfiguredForm(context, 'forgotPasswordForm', '/reset-password', 'forgotPassword', {
+    submitConfiguredForm(context, 'forgotPasswordForm', API_ENDPOINTS.RESET_PASSWORD, 'forgotPassword', {
       onSuccess: async (data) => {
         log(context, 'Forgot password request successful, showing OTP section');
         if (data.otp_token) {
@@ -57,7 +57,7 @@ export async function initializeForgotPassword(context) {
     });
 
     // Set up verify OTP form submission
-    submitConfiguredForm(context, 'verifyOtpForm', '/verify-reset-code', 'verifyOtp', {
+    submitConfiguredForm(context, 'verifyOtpForm', API_ENDPOINTS.VERIFY_RESET_CODE, 'verifyOtp', {
       onSuccess: (data) => {
         log(context, 'OTP verified, redirecting to login');
         localStorage.removeItem('resetToken');

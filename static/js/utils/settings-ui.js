@@ -24,10 +24,20 @@ export async function renderSettingsFields(context, settings, config) {
         await withElement(context, config.formId, async form => {
           container.innerHTML = '';
           fieldsContainer.innerHTML = '';
-          const linkIcons = createLinkIcons(context, settings, config.type, config.onReadmeClick, config.onIconClick);
-          container.append(...linkIcons);
-          if (settings.length > 0) {
-            fieldsContainer.innerHTML = settings[0].fields
+
+          // Ensure settings is an array
+          const validSettings = Array.isArray(settings) ? settings : [];
+          const linkIcons = createLinkIcons(context, validSettings, config.type, config.onReadmeClick, config.onIconClick);
+          
+          // Only append if linkIcons is an array
+          if (Array.isArray(linkIcons)) {
+            container.append(...linkIcons);
+          } else {
+            log(context, 'No link icons to append; settings may be empty or invalid');
+          }
+
+          if (validSettings.length > 0 && validSettings[0].fields) {
+            fieldsContainer.innerHTML = validSettings[0].fields
               .map(field => `
                 <div>
                   <label for="${field.name}">${field.label || field.name}</label>
@@ -36,9 +46,13 @@ export async function renderSettingsFields(context, settings, config) {
               `)
               .join('');
             if (config.onIconClick) {
-              config.onIconClick(settings[0], fieldsContainer, form);
+              config.onIconClick(validSettings[0], fieldsContainer, form);
             }
+          } else {
+            fieldsContainer.innerHTML = '<p>No settings available for this type.</p>';
+            log(context, `No settings data available for type: ${config.type}`);
           }
+
           setupSettingsEvents(context, config.formId, config.endpoint || '/settings', config.type);
         });
       });

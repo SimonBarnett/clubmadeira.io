@@ -4,7 +4,6 @@
 +----community.html
 +----login.html
 +----merchant.html
-+----overlay.inc
 +----partner.html
 +----roles.inc
 +----siterequest.inc
@@ -27,7 +26,9 @@ admin.html
     </div>
 
     <div id="user_management" class="section" style="display: none;">
-        <h2><span id="user_role_icon" class="menu-size"></span> <span id="user_role_title"></span></h2>
+        <h2 id="user_role_title">User Management</h2>
+        <p>Use this section to manage your affiliate program credentials.</p>
+        <div id="user_role_icon" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>        
         <table>
             <thead>
                 <tr>
@@ -44,7 +45,6 @@ admin.html
         </table>
     </div>
 
-    <!-- New Deals Section for Admin -->
     <div id="deals" class="section" style="display: none;">
         <h2>Discounted Deal Listings</h2>
         <p>This section displays all currently active deal listings available across your affiliate programs for administrative oversight.</p>
@@ -143,86 +143,13 @@ admin.html
         </div>
     </div>
 
-    <div id="test_partner" class="section" style="display: none;">
-        <h2>Test Partner</h2>
-        <p>Test partner-related functionality here.</p>
-    </div>
-
-    <div id="test_merchant" class="section" style="display: none;">
-        <h2>Test Merchant</h2>
-        <p>Test merchant-related functionality here.</p>
-    </div>
-
-    <div id="test_community" class="section" style="display: none;">
-        <h2>Test Community</h2>
-        <p>Test community-related functionality here.</p>
-    </div>
-
-    <!-- New API Keys Section for Admin -->
-    <div id="api_keys" class="section" style="display: none;">
-        <h2>API Keys</h2>
-        <p>Manage API keys for various services.</p>
-        <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
-        <form id="api-keys-form" style="display: none;">
-            <div id="api-keys-fields">
-                <i class="selected-setting-icon" style="font-size: 16px; color: currentColor; margin-right: 10px; vertical-align: middle;"></i>
-                <h3 class="api-keys-comment-heading" style="display: inline-block; vertical-align: middle;"></h3>
-                <p class="api-keys-description" style="margin-bottom: 15px;"></p>
-            </div>
-            <button type="submit" class="btn" style="margin-top: 10px; color: currentColor; padding: 5px 10px;">
-                <i class="fas fa-save" style="margin-right: 5px;"></i>Save API Key
-            </button>
-        </form>
-    </div>
-
-    <!-- Merchant Role Sections -->
-    <div id="deal_listings" class="section" style="display: none;">
-        <h2>Discounted Deal Listings</h2>
-        <p>This section displays all currently active deal listings available across your affiliate programs.</p>
-        <div style="display: flex; gap: 20px;">
-            <div style="flex: 1; max-width: 300px;">
-                <h3>Categories</h3>
-                <div class="treeview" id="categoryTree"></div>
-            </div>
-            <div style="flex: 2;">
-                <table class="deals-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Title</th>
-                            <th>URL</th>
-                            <th>Price</th>
-                            <th>Original</th>
-                            <th>Discount %</th>
-                            <th>Image</th>
-                            <th>QTY</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dealList"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Community Role Sections -->
-    <div id="posts" class="section" style="display: none;">
-        <h2>Posts</h2>
-        <p>Manage community posts here.</p>
-    </div>
-
-    <!-- Partner Role Sections -->
-    <div id="referrals" class="section" style="display: none;">
-        <h2>Referrals</h2>
-        <p>Manage referrals here.</p>
-    </div>
-
     <div id="affiliates" class="section" style="display: none;">
         <h2>Affiliate Programs</h2>
         <p>Use this section to manage your affiliate program credentials.</p>
         <div id="affiliate-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
         
         <!-- Static content (always visible) -->
-        <div id="affiliate-static-content" style="display: none;">
+        <div id="affiliate-static-content" style="display: block;">
             <div id="affiliate-header" style="display: flex; align-items: center; margin-bottom: 15px;">
                 <i class="selected-affiliate-icon" style="font-size: 16px; color: currentColor; margin-right: 10px;"></i>
                 <h3 class="affiliate-comment-heading" style="display: inline-block; vertical-align: middle; margin: 0;"></h3>
@@ -252,7 +179,6 @@ admin.html
             </form>
         </div>
         <div id="affiliate-readme-content" style="display: none;"></div>
-        
     </div>
 
     <div id="site_settings" class="section" style="display: none;">
@@ -278,8 +204,7 @@ admin.html
         <h2>Categories</h2>
         <p>Manage categories here.</p>
     </div>
-    
-{% endblock %}S
+{% endblock %}
 base.inc
 <!DOCTYPE html>
 <html lang="en">
@@ -292,17 +217,24 @@ base.inc
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Local CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css?v=1.0.1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css?v=1.0.1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/siterequest.css?v=1.0.1') }}">
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Dynamic API URL -->
     <script>
         window.apiUrl = 'https://clubmadeira.io';
     </script>
     <!-- External JS -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" defer></script>
     <script src="https://cdn.tiny.cloud/1/{{ site_settings.tiny.API_KEY | default('YOUR_VALID_API_KEY') }}/tinymce/6/tinymce.min.js" defer></script>
+    <!-- Add .hidden class for hideOverlay -->
+    <style>
+        #loadingOverlay.hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 <body {% block body_attributes %}{% endblock %}>
     <!-- Loading Overlay -->
@@ -328,7 +260,6 @@ base.inc
     <!-- Debug script to log template variables -->
     <script type="text/template" id="debug-script">
         (function() {
-            // Use safe filter and ensure valid JSON output
             const xRole = {{ x_role | tojson | safe if x_role is defined else '"undefined"' }};
             const pageType = {{ page_type | tojson | safe if page_type is defined else '"undefined"' }};
             const user = {{ user | tojson | safe if user is defined and user is not none else '"undefined"' }};
@@ -346,8 +277,8 @@ base.inc
     <!-- Main content wrapper, hidden initially -->
     <div class="layout-wrapper" style="display: none;">
         <div class="header">
-            {% include 'roles.inc' %}            
-        </div>                
+            {% include 'roles.inc' %}
+        </div>
         <div class="content">
             <!-- Menu Container (dynamically populated by navigation.js) -->
             <div id="menu" class="menu"></div>
@@ -423,7 +354,7 @@ base.inc
     </div>
 
     <!-- Core script using new consolidated structure -->
-    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}?v=1.0.4"></script>
 
     <!-- Page-specific scripts -->
     {% if page_type == 'login' %}
@@ -440,65 +371,60 @@ base.inc
         <script type="module" src="{{ url_for('static', filename='js/modules/site-request.js') }}" defer></script>
     {% endif %}
 
-    <script>
-        // Minimal DOMContentLoaded handler for markdown links only
+    <!-- Markdown link handler as a module -->
+    <script type="module">
+        import { marked } from 'https://cdn.jsdelivr.net/npm/marked@4.0.0/+esm';
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Add event listeners for markdown rendering
-            if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
-                document.querySelectorAll('.md-link').forEach(link => {
-                    link.addEventListener('click', function(event) {
-                        event.preventDefault();
-                        const mdPath = this.getAttribute('data-md-path');
-                        const targetId = 'md-render-target';
-                        const target = document.getElementById(targetId);
-                        if (target) {
-                            fetch(mdPath)
-                                .then(response => response.text())
-                                .then(text => {
-                                    target.innerHTML = marked.parse(text);
-                                })
-                                .catch(err => console.error('Failed to render markdown:', err));
-                        }
-                    });
+            document.querySelectorAll('.md-link').forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const mdPath = this.getAttribute('data-md-path');
+                    const targetId = 'md-render-target';
+                    const target = document.getElementById(targetId);
+                    if (target) {
+                        fetch(mdPath)
+                            .then(response => response.text())
+                            .then(text => {
+                                target.innerHTML = marked.parse(text);
+                            })
+                            .catch(err => console.error('Failed to render markdown:', err));
+                    }
                 });
-            } else {
-                console.error('marked.parse is not defined');
-            }
+            });
         });
     </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
 community.html
-{% extends "base.inc" %}
+{% extends 'base.inc' %}
 {% block content %}
-           
+    <!-- Categories Section -->
     <div id="categories" class="section" style="display: block;">
         <h2>My Categories</h2>
         <p>This section lets you choose which product categories will appear on your website's "Community Discounts" page.</p>
+        <div id="category-error" style="color: red; display: none;"></div>
         <div id="categories-form">
-            <div id="category-error" style="color: red; display: none;"></div>
             {% if categories %}
-                <form id="category-form" method="POST" action="/categories" onsubmit="return handleCategorySubmit(event)">
+                <form id="category-form" method="POST" action="/categories">
                     <label for="prompt">Describe your club (e.g., 'Discount categories for a scout group'):</label><br>
                     <textarea id="prompt" name="prompt" rows="4" cols="50" style="width: 100%; max-width: 600px;" required>{{ prompt | default('') }}</textarea><br><br>
                     <input type="hidden" id="deselected" name="deselected" value="{{ deselected | default([]) | tojson | safe }}">
                     <input type="hidden" id="previous_deselected" name="previous_deselected" value="{{ previous_deselected | default([]) | tojson | safe }}">
                     <input type="hidden" id="previous_selected" name="previous_selected" value="{{ selected | default([]) | tojson | safe }}">
                     <input type="hidden" id="categories" name="categories" value="{{ categories | default({}) | tojson | safe }}">
-                    <div class="categories-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
+                    <div id="categories-container" class="categories-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
                         {% for main_cat, subcats in categories.items() %}
                             <div class="category-item" style="min-width: 200px; flex: 1 0 auto; box-sizing: border-box;">
                                 <h3 style="font-size: 1.2em; margin-top: 15px;">
-                                    <input type="checkbox" name="selected" value="{{ main_cat }}" checked
-                                            onchange="updateDeselected()">
+                                    <input type="checkbox" name="selected" value="{{ main_cat }}" checked data-deselected="true">
                                     {{ main_cat }}
                                 </h3>
                                 <ul style="margin-left: 20px; list-style-type: none;">
                                     {% for subcat in subcats %}
                                         <li>
-                                            <input type="checkbox" name="selected" value="{{ main_cat }}:{{ subcat }}"
-                                                    checked onchange="updateDeselected()">
+                                            <input type="checkbox" name="selected" value="{{ main_cat }}:{{ subcat }}" checked data-deselected="true">
                                             {{ subcat }}
                                         </li>
                                     {% endfor %}
@@ -507,22 +433,26 @@ community.html
                         {% endfor %}
                     </div>
                     <button type="submit" style="margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Refine Categories</button>
-                    <button type="button" onclick="handleSaveCategories()" style="margin-top: 20px; margin-left: 10px; padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Save Categories</button>
-                    <button type="button" onclick="handleResetCategories()" style="margin-top: 20px; margin-left: 10px; padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">Reset Categories</button>
+                    <button type="button" data-action="save-categories" style="margin-top: 20px; margin-left: 10px; padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Save Categories</button>
+                    <button type="button" data-action="reset-categories" style="margin-top: 20px; margin-left: 10px; padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">Reset Categories</button>
                 </form>
             {% else %}
-                <form id="category-form" method="POST" action="/categories" onsubmit="return handleCategorySubmit(event)">
+                <form id="category-form" method="POST" action="/categories">
                     <label for="prompt">Describe your club (e.g., 'We are a scout group, ages 8-16'):</label><br>
                     <textarea id="prompt" name="prompt" rows="4" cols="50" style="width: 100%; max-width: 600px;" required>{{ prompt | default('') }}</textarea><br><br>
                     <input type="hidden" id="deselected" name="deselected" value="{{ deselected | default([]) | tojson | safe }}">
                     <input type="hidden" id="previous_deselected" name="previous_deselected" value="{{ previous_deselected | default([]) | tojson | safe }}">
                     <input type="hidden" id="previous_selected" name="previous_selected" value="{{ selected | default([]) | tojson | safe }}">
                     <input type="hidden" id="categories" name="categories" value="{{ categories | default({}) | tojson | safe }}">
+                    <div id="categories-container" class="categories-container" style="display: none;"></div>
                     <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Generate Categories</button>
                 </form>
+                <p id="no-categories-message" style="margin-top: 20px;">No categories available. Please describe your club above and click "Generate Categories" to get started.</p>
             {% endif %}
         </div>
     </div>
+
+    <!-- Referrals Intro Section -->
     <div id="referrals_intro" class="section" style="display: none;">
         <h2>My Referrals</h2>
         <p>This section allows you to track your referral activity.</p>
@@ -532,13 +462,15 @@ community.html
             <li><strong>Orders:</strong> See orders placed via your referrals.</li>
         </ul>
     </div>
+
+    <!-- Visits Section -->
     <div id="visits" class="section" style="display: none;">
         <h2>Visits</h2>
         <div class="toggle-section" data-toggle="visits_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
         <div id="visits_this_month" class="toggle-content open">
             <table id="visitsTableThisMonth">
                 <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                <tbody id="visitsListThisMonth"></tbody>
+                <tbody id="visitList"></tbody>
             </table>
         </div>
         <div class="toggle-section" data-toggle="visits_last_month"><i class="fas fa-calendar-alt"></i> Last Month</div>
@@ -556,13 +488,15 @@ community.html
             </table>
         </div>
     </div>
+
+    <!-- Orders Section -->
     <div id="orders" class="section" style="display: none;">
         <h2>Orders</h2>
         <div class="toggle-section" data-toggle="orders_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
         <div id="orders_this_month" class="toggle-content open">
             <table id="ordersTableThisMonth">
                 <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                <tbody id="ordersListThisMonth"></tbody>
+                <tbody id="orderList"></tbody>
             </table>
         </div>
         <div class="toggle-section" data-toggle="orders_last_month"><i class="fas fa-calendar-alt"></i> Last Month</div>
@@ -580,15 +514,18 @@ community.html
             </table>
         </div>
     </div>
+
+    <!-- My Website Intro Section -->
     <div id="my_website_intro_section" class="section" style="display: none;">
         <h2>My Web Site</h2>
         <p>Welcome to the "My Web Site" section! Here, you can learn how to integrate discounts into your community website.</p>
-        <p>Choose your website provider from the menu to get started.</p>
-        <div id="website-provider-icons" style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
-            <!-- Removed "No Website" button -->
-        </div>
+        <p>Choose your website provider from the icons below to get started.</p>
+        <div id="providerIconsBar" style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;"></div>
         <div id="client-api-settings"></div>
+        <div id="markdown-content" style="margin-top: 20px;"></div>
     </div>
+
+    <!-- No Website Section -->
     <div id="no_website" class="section" style="display: none;">
         <div style="display: flex; align-items: center; margin-bottom: 10px;">
             <i class="fas fa-question-circle" style="font-size: 32px; margin-right: 10px;"></i>
@@ -599,34 +536,37 @@ community.html
             {% include 'siterequest.inc' %}
         {% endwith %}
     </div>
-    
 {% endblock %}
 {% block scripts %}
-    <!-- TinyMCE initialization for siterequest.inc -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            tinymce.init({
-                selector: '#aboutCommunity, #stylingDetails, #page1Content',
-                inline: true,
-                menubar: false,
-                toolbar: 'bold italic | bullist numlist | link',
-                plugins: 'lists link',
-                setup: (editor) => {
-                    editor.on('init', () => {
-                        console.log('TinyMCE initialized for:', editor.id);
-                    });
-                }
-            });
+            // Initialize TinyMCE for rich text fields
+            if (window.tinymce) {
+                tinymce.init({
+                    selector: '#aboutCommunity, #stylingDetails, #page1Content',
+                    inline: true,
+                    menubar: false,
+                    toolbar: 'bold italic | bullist numlist | link',
+                    plugins: 'lists link',
+                    setup: (editor) => {
+                        editor.on('init', () => {
+                            console.log('TinyMCE initialized for:', editor.id);
+                        });
+                    }
+                });
+            } else {
+                console.error('TinyMCE library not loaded');
+            }
 
-            // Fallback in case handleCategorySubmit is not defined
-            if (!window.handleCategorySubmit) {
-                console.error('handleCategorySubmit not defined');
-                window.handleCategorySubmit = function(event) {
-                    console.error('handleCategorySubmit fallback - Function not loaded');
-                    event.preventDefault();
-                    toastr.error('Error: Form submission handler not loaded');
-                    return false;
+            // Ensure marked is loaded before rendering markdown
+            if (typeof marked === 'undefined') {
+                console.error('marked library not loaded');
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js';
+                script.onload = () => {
+                    console.log('marked library loaded dynamically');
                 };
+                document.head.appendChild(script);
             }
         });
     </script>
@@ -639,6 +579,11 @@ login.html
 <!-- Updated 2025-04-21 v12.5, Fixed flashing border on default Community selection -->
 <!-- Updated 2025-04-22 v12.6, Fixed signupOtpSection and formData.get errors -->
 <!-- Updated 2025-04-23 v12.7, Simplified signup form to only collect role -->
+<!-- Updated 2025-04-26 v12.8, Added failSignup section for Stripe error handling -->
+<!-- Updated 2025-04-27 v12.9, Fixed email and password fields in completeSignup section -->
+<!-- Updated 2025-10-15 v13.0, Fixed serialization error by safely accessing signup_data keys -->
+<!-- Updated 2025-10-16 v13.1, Added hidden fields for stripe_account_id and role in completeSignup -->
+<!-- Updated 2025-10-17 v13.2, Removed button-specific CSS to focus only on role selection highlighting -->
 
 <style>
     /* Hide radio buttons */
@@ -697,9 +642,9 @@ login.html
     }
 </style>
 
-<div class="section" id="signupContainer" style="display: none;">
+<div class="section" id="signupContainer" style="display: {% if section == 'signupContainer' %}block{% else %}none{% endif %};">
     <h2>Sign Up - I am a...</h2>
-    <form id="signupForm" class="form" method="POST" autocomplete="off">
+    <form id="signupForm" class="form" method="POST" action="/signup" autocomplete="off">
         <!-- Dummy fields to trick autofill -->
         <input type="text" class="hidden" autocomplete="off">
         <input type="text" class="hidden" autocomplete="off">
@@ -724,7 +669,7 @@ login.html
     </form>
 </div>
 
-<div class="section" id="forgotPasswordContainer" style="display: none;">
+<div class="section" id="forgotPasswordContainer" style="display: {% if section == 'forgotPasswordContainer' %}block{% else %}none{% endif %};">
     <h2>Forgot Password</h2>
     <form id="forgotPasswordForm" class="form" method="POST" action="/reset-password">
         <div class="form-group">
@@ -735,9 +680,9 @@ login.html
     </form>
 </div>
 
-<div class="section" id="verifyOtpSection" style="display: none;">
+<div class="section" id="verifyOtpSection" style="display: {% if section == 'verifyOtpSection' %}block{% else %}none{% endif %};">
     <h2>Verify OTP</h2>
-    <form id="verifyOtpForm" class="form" method="POST">
+    <form id="verifyOtpForm" class="form" method="POST" action="/verify-reset-code">
         <div class="form-group">
             <label for="verifyEmail">Email:</label>
             <input type="email" id="verifyEmail" name="email" placeholder="Enter your email" required autocomplete="off">
@@ -765,16 +710,63 @@ login.html
     </form>
 </div>
 
+<div class="section" id="completeSignup" style="display: {% if section == 'completeSignup' %}block{% else %}none{% endif %};">
+    <h2>Complete Signup</h2>
+    <p>Welcome back from Stripe! Please set your password to complete your account setup.</p>
+    {% if signup_data is defined and 'stripe_account_id' in signup_data and 'role' in signup_data %}
+        <form id="setPasswordForm" class="form" method="POST" action="/complete-signup">
+            <input type="hidden" name="stripe_account_id" value="{{ signup_data.stripe_account_id }}">
+            <input type="hidden" name="role" value="{{ signup_data.role }}">
+            {% if stripe_sandbox %}
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number:</label>
+                <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+            </div>
+            {% endif %}            
+            <div class="form-group">
+                <label for="setPassword">Password:</label>
+                <div class="password-wrapper">
+                    <input type="password" id="setPassword" name="password" placeholder="Enter your password" required autocomplete="new-password">
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="setConfirmPassword">Confirm Password:</label>
+                <div class="password-wrapper">
+                    <input type="password" id="setConfirmPassword" name="confirm_password" placeholder="Confirm your password" required autocomplete="new-password">
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+            </div>
+            <div>
+                <button type="submit">Set Password</button>
+            </div>
+        </form>
+    {% else %}
+        <p class="error">Signup data is missing or incomplete. Please try signing up again.</p>
+        <button onclick="window.location.href='/?section=signupContainer'">Return to Signup</button>
+    {% endif %}
+</div>
+
+<div class="section" id="failSignupContainer" style="display: {% if section == 'failSignupContainer' %}block{% else %}none{% endif %};">
+    <h2>Signup Failed</h2>
+    <p>There was an issue during signup. Please try again.</p>
+    <button onclick="window.location.href='/?section=signupContainer'">Try Again</button>
+</div>
+
 <script>
     window.onload = function() {
         // Clear fields to prevent autofill
-        ['forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword'].forEach(id => {
+        ['forgotEmail', 'verifyEmail', 'otpCode', 'newPassword', 'confirmNewPassword', 'setPassword', 'setConfirmPassword'].forEach(id => {
             const input = document.getElementById(id);
             if (input) input.value = '';
         });
 
         // Ensure default Community selection has .selected class
-        const defaultOption = document.querySelector('input[name="signup_type"]:checked').closest('.option');
+        const defaultOption = document.querySelector('input[name="signup_type"]:checked')?.closest('.option');
         if (defaultOption) defaultOption.classList.add('selected');
 
         // Handle click events to toggle .selected class
@@ -786,7 +778,7 @@ login.html
             });
         });
 
-        // Toggle password visibility for OTP form
+        // Toggle password visibility
         document.querySelectorAll('.toggle-password').forEach(toggle => {
             toggle.addEventListener('click', () => {
                 const input = toggle.previousElementSibling;
@@ -813,19 +805,22 @@ merchant.html
         <div style="display: flex; align-items: center; margin-bottom: 10px;">                
             <h2>API Keys</h2>
         </div>
-        <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>            
-        <form id="api-keys-form" style="display: none;">
-            <div id="api-keys-fields"></div>                
-        </form>
-        <style>
-            #api-keys-icons i {
-                display: inline-block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                font-size: 24px;
-                color: #000;
-            }
-        </style>
+        <div id="api-keys-icons" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>
+        
+        <!-- Static content (always visible) -->
+        <div id="api-keys-static-content"></div>
+        
+        <!-- Settings container for the form -->
+        <div id="api-keys-settings-container" style="display: none;">
+            <form id="api-keys-form">
+                <div id="api-keys-fields"></div>
+                <!-- Submit button for form interaction -->
+                <button type="submit">Save API Key</button>
+            </form>
+        </div>
+        
+        <!-- Readme content (toggleable) -->
+        <div id="api-keys-readme-content" style="display: none;"></div>
     </div>
 
     <!-- Create Store Section -->
@@ -859,21 +854,6 @@ merchant.html
         console.log('merchant.html - Template loaded');
     </script>
 {% endblock %}
-overlay.inc
-<div id="loadingOverlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 1); justify-content: center; align-items: center; z-index: 9999;">
-    <div style="position: relative; width: 200px; height: 200px;">
-        <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 120px; height: 120px; border-top-color: #ff6f61; top: 40px; left: 40px; animation-delay: 0s;"></div>
-        <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 90px; height: 90px; border-top-color: #6bff61; top: 55px; left: 55px; animation-delay: 0.3s;"></div>
-        <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 60px; height: 60px; border-top-color: #61cfff; top: 70px; left: 70px; animation-delay: 0.6s;"></div>
-        <div style="position: absolute; border-radius: 50%; border: 8px solid transparent; animation: spin 1.5s linear infinite; width: 30px; height: 30px; border-top-color: #ff61ff; top: 85px; left: 85px; animation-delay: 0.9s;"></div>
-    </div>
-</div>
-<style>
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-</style>
 partner.html
 {% extends "base.inc" %}
 {% block content %}
@@ -941,97 +921,179 @@ roles.inc
     </button>    
 {% endif %}
 siterequest.inc
-<form id="siteRequestForm" class="settings-form">
-    <input type="hidden" id="userType" value="{{ user_type }}">
+<form id="siteRequestForm" class="settings-form site-request-form">
+    <input type="hidden" id="userType" class="user-type-input" value="{{ user_type }}">
 
-    <label for="name">{{ 'Community Name' if user_type == 'community' else 'Store Name' }}:</label>
-    <input type="text" id="name" name="name" placeholder="Enter your {{ 'community' if user_type == 'community' else 'store' }} name" required>
-
-    <label for="about">{{ 'About Our Community' if user_type == 'community' else 'About Your Store' }}:</label>
-    <textarea id="about" name="about" placeholder="Tell us about your {{ 'community' if user_type == 'community' else 'store' }}"></textarea>
-
-    <label for="logos">{{ 'Community Logos' if user_type == 'community' else 'Store Logos' }}:</label>
-    <input type="file" id="logos" name="logos" accept="image/*" multiple>
-    <small>Upload up to 5 logos (e.g., main logo, secondary logos).</small>
-
-    <label for="colorPrefs">Color Preferences:</label>
-    <input type="text" id="colorPrefs" name="colorPrefs" placeholder="e.g., #FF5733, Blue">
-
-    <label for="stylingDetails">Styling Details:</label>
-    <textarea id="stylingDetails" name="stylingDetails" rows="4" placeholder="e.g., modern layout, bold fonts"></textarea>
-
-    <label for="preferredDomain">Preferred Domain Name:</label>
-    <input type="text" id="preferredDomain" name="preferredDomain" placeholder="e.g., my{{ 'community.org' if user_type == 'community' else 'store.uk' }}" oninput="updateEmailDomains()">
-    <button type="button" data-action="checkDomainAvailability"><i class="fas fa-search"></i> Check Availability</button>
-
-    <label>Email Addresses to Set Up (up to 5):</label>
-    <div id="emailsContainer">
-        <div class="email-section" data-email="1">
-            <label for="email1Name">Email Name:</label>
-            <input type="text" id="email1Name" name="email1Name" placeholder="e.g., info">
-            <span id="email1Domain">@my{{ 'community.org' if user_type == 'community' else 'store.uk' }}</span>
-        </div>
+    <div id="orgname" class="form-section orgname-section">
+        <label for="name" class="form-label">{{ 'Community Name' if user_type == 'community' else 'Store Name' }}:</label>
+        <input type="text" id="name" name="name" class="form-input orgname-input"
+            placeholder="Enter your {{ 'community' if user_type == 'community' else 'store' }} name" required>
     </div>
-    <button type="button" data-action="addEmail"><i class="fas fa-plus"></i> Add Another Email</button>
 
-    <label>{{ 'Requested Pages (up to 5)' if user_type == 'community' else 'Required Pages' }}:</label>
-    <div id="pagesContainer">
-        {% if user_type == 'merchant' %}
+    <div id="aboutorg" class="form-section aboutorg-section">
+        <label for="about" class="form-label">{{ 'About Our Community' if user_type == 'community' else 'About Your Store' }}:</label>
+        <textarea id="about" name="about" class="mce-editor form-textarea aboutorg-textarea"
+            placeholder="Tell us about your {{ 'community' if user_type == 'community' else 'store' }}"></textarea>
+    </div>
+
+    <div id="orglogos" class="form-section orglogos-section">
+        <label for="logos" class="form-label">{{ 'Community Logos' if user_type == 'community' else 'Store Logos' }}:</label>
+        <input type="file" id="logos" name="logos" class="form-file-input orglogos-input" accept="image/*" multiple>
+        <small class="form-hint">Upload up to 5 logos (e.g., main logo, secondary logos).</small>
+    </div>
+
+    <div id="orgcolour" class="form-section orgcolour-section">
+        <label for="colorPrefs" class="form-label">Color Preferences:</label>
+        <input type="text" id="colorPrefs" name="colorPrefs" class="form-input orgcolour-input" placeholder="e.g., #FF5733, Blue">
+    </div>
+
+    <div id="orgStyle" class="form-section orgstyle-section">
+        <label for="stylingDetails" class="form-label">Styling Details:</label>
+        <textarea id="stylingDetails" name="stylingDetails" class="mce-editor form-textarea orgstyle-textarea" rows="4"
+            placeholder="e.g., modern layout, bold fonts"></textarea>
+    </div>
+
+    <div id="orgEmail" class="form-section orgemail-section orgemail-domain">
+        <label for="preferredDomain" class="form-label">Preferred Domain Name:</label>
+        <input type="text" id="preferredDomain" name="preferredDomain" class="form-input orgemail-domain-input"
+            placeholder="e.g., my{{ 'community.org' if user_type == 'community' else 'store.uk' }}"
+            oninput="updateEmailDomains()">
+        <button type="button" data-action="checkDomainAvailability" class="form-button check-domain-button">
+            <i class="fas fa-search"></i> Check Availability
+        </button>
+    </div>
+
+    <div id="orgEmail" class="form-section orgemail-section orgemail-addresses">
+        <label class="form-label">Email Addresses to Set Up (up to 5):</label>
+        <div id="emailsContainer" class="emails-container">
+            <div class="email-section" data-email="1">
+                <label for="email1Name" class="form-label email-name-label">Email Name:</label>
+                <input type="text" id="email1Name" name="email1Name" class="form-input email-name-input" placeholder="e.g., info">
+                <span id="email1Domain" class="email-domain">@my{{ 'community.org' if user_type == 'community' else 'store.uk' }}</span>
+            </div>
+        </div>
+        <button type="button" data-action="addEmail" class="form-button add-email-button">
+            <i class="fas fa-plus"></i> Add Another Email
+        </button>
+    </div>
+
+    <div id="orgPages" class="form-section orgpages-section">
+        <label class="form-label">{{ 'Requested Pages (up to 5)' if user_type == 'community' else 'Required Pages' }}:</label>
+        <div id="pagesContainer" class="pages-container">
+            {% if user_type == 'merchant' %}
             <!-- Fixed Home page -->
             <div class="page-section" data-page="1">
-                <label for="page1Name">Page Name:</label>
-                <input type="text" id="page1Name" name="page1Name" value="Home" readonly>
+                <label for="page1Name" class="form-label page-name-label">Page Name:</label>
+                <input type="text" id="page1Name" name="page1Name" class="form-input page-name-input" value="Home" readonly>
                 <br><br>
-                <label for="page1Content">Home Page Content:</label>
-                <textarea id="page1Content" name="page1Content" placeholder="Describe your home page (e.g., welcome message, featured products)"></textarea>
-                <label for="page1Images">Additional Images:</label>
-                <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+                <label for="page1Content" class="form-label page-content-label">Home Page Content:</label>
+                <textarea id="page1Content" name="page1Content" class="mce-editor form-textarea page-content-textarea"
+                    placeholder="Describe your home page (e.g., welcome message, featured products)"></textarea>
+                <label for="page1Images" class="form-label page-images-label">Additional Images:</label>
+                <input type="file" id="page1Images" name="page1Images" class="form-file-input page-images-input" accept="image/*" multiple>
             </div>
             <!-- Fixed Returns Policy page -->
             <div class="page-section" data-page="2">
-                <label for="page2Name">Page Name:</label>
-                <input type="text" id="page2Name" name="page2Name" value="Returns Policy" readonly>
+                <label for="page2Name" class="form-label page-name-label">Page Name:</label>
+                <input type="text" id="page2Name" name="page2Name" class="form-input page-name-input" value="Returns Policy" readonly>
                 <br><br>
-                <label for="page2Content">Returns Policy Content:</label>
-                <textarea id="page2Content" name="page2Content" placeholder="Outline your returns policy"></textarea>
-                <label for="page2Images">Additional Images:</label>
-                <input type="file" id="page2Images" name="page2Images" accept="image/*" multiple>
+                <label for="page2Content" class="form-label page-content-label">Returns Policy Content:</label>
+                <textarea id="page2Content" name="page2Content" class="mce-editor form-textarea page-content-textarea"
+                    placeholder="Outline your returns policy"></textarea>
+                <label for="page2Images" class="form-label page-images-label">Additional Images:</label>
+                <input type="file" id="page2Images" name="page2Images" class="form-file-input page-images-input" accept="image/*" multiple>
             </div>
-        {% else %}
+            {% else %}
             <!-- Community starts with one customizable page -->
             <div class="page-section" data-page="1">
-                <label for="page1Name">Page Name:</label>
-                <input type="text" id="page1Name" name="page1Name" value="Home">
+                <label for="page1Name" class="form-label page-name-label">Page Name:</label>
+                <input type="text" id="page1Name" name="page1Name" class="form-input page-name-input" value="Home">
                 <br><br>
-                <label for="page1Content">Page Content:</label>
-                <textarea id="page1Content" name="page1Content" placeholder="Describe this page"></textarea>
-                <label for="page1Images">Additional Images:</label>
-                <input type="file" id="page1Images" name="page1Images" accept="image/*" multiple>
+                <label for="page1Content" class="form-label page-content-label">Page Content:</label>
+                <textarea id="page1Content" name="page1Content" class="mce-editor form-textarea page-content-textarea"
+                    placeholder="Describe this page"></textarea>
+                <label for="page1Images" class="form-label page-images-label">Additional Images:</label>
+                <input type="file" id="page1Images" name="page1Images" class="form-file-input page-images-input" accept="image/*" multiple>
             </div>
-        {% endif %}
-    </div>
-    <button type="button" data-action="addPage"><i class="fas fa-plus"></i> Add Another Page</button>
-
-    <label>{{ 'Wix Widgets' if user_type == 'community' else 'Wix Store Widgets' }}:</label>
-    <div class="widget-checkboxes">
-        {% if user_type == 'community' %}
-            <div><label><input type="checkbox" name="widgets" value="events"> Events</label> - Add an events calendar.</div>
-            <div><label><input type="checkbox" name="widgets" value="socialMediaFeeds"> Social Media Feeds</label> - Display live social media feeds.</div>
-            <div><label><input type="checkbox" name="widgets" value="gallery"> Gallery</label> - Showcase photos.</div>
-            <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Simple contact form.</div>
-            <div><label><input type="checkbox" name="widgets" value="blog"> Blog</label> - Share updates and stories.</div>
-            <div><label><input type="checkbox" name="widgets" value="weather"> Weather</label> - Show real-time weather.</div>
-            <div><label><input type="checkbox" name="widgets" value="socialMediaLinks"> Social Media Links</label> - Quick links to profiles.</div>
-        {% else %}
-            <div><label><input type="checkbox" name="widgets" value="productCatalog"> Product Catalog</label> - Display your products.</div>
-            <div><label><input type="checkbox" name="widgets" value="checkout"> Checkout</label> - Enable direct purchases.</div>
-            <div><label><input type="checkbox" name="widgets" value="cart"> Shopping Cart</label> - Add a cart for customers.</div>
-            <div><label><input type="checkbox" name="widgets" value="promotions"> Promotions</label> - Highlight sales and discounts.</div>
-            <div><label><input type="checkbox" name="widgets" value="contactForm"> Contact Form</label> - Customer inquiries.</div>
-        {% endif %}
+            {% endif %}
+        </div>
+        <button type="button" data-action="addPage" class="form-button add-page-button">
+            <i class="fas fa-plus"></i> Add Another Page
+        </button>
     </div>
 
-    <button type="button" data-action="saveSiteRequest"><i class="fas fa-paper-plane"></i> Submit Request</button>
+    <div id="orgWidgets" class="form-section orgwidgets-section">
+        <label class="form-label">{{ 'Wix Widgets' if user_type == 'community' else 'Wix Store Widgets' }}:</label>
+        <div class="widget-checkboxes">
+            {% if user_type == 'community' %}
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="events"> Events
+                </label> - Add an events calendar.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="socialMediaFeeds"> Social Media Feeds
+                </label> - Display live social media feeds.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="gallery"> Gallery
+                </label> - Showcase photos.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="contactForm"> Contact Form
+                </label> - Simple contact form.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="blog"> Blog
+                </label> - Share updates and stories.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="weather"> Weather
+                </label> - Show real-time weather.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="socialMediaLinks"> Social Media Links
+                </label> - Quick links to profiles.
+            </div>
+            {% else %}
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="productCatalog"> Product Catalog
+                </label> - Display your products.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="checkout"> Checkout
+                </label> - Enable direct purchases.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="cart"> Shopping Cart
+                </label> - Add a cart for customers.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="promotions"> Promotions
+                </label> - Highlight sales and discounts.
+            </div>
+            <div class="widget-option">
+                <label class="form-label widget-label">
+                    <input type="checkbox" name="widgets" class="widget-checkbox" value="contactForm"> Contact Form
+                </label> - Customer inquiries.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <button type="button" data-action="saveSiteRequest" class="form-button submit-request-button">
+        <i class="fas fa-paper-plane"></i> Submit Request
+    </button>
 </form>
 welcome.inc
 <!-- templates/welcome.inc -->
@@ -1053,53 +1115,24 @@ welcome.inc
     <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard empowers partners to collaborate with merchants and communities on clubmadeira.io.</p>
     <p>Use the menu to manage integrations, review site requests, access documentation, and update your account. Work together to create tailored solutions for our users.</p>
 {% else %}
-    {% if from_stripe %}
-        <p>Welcome back from Stripe! Please set your password to complete your account setup.</p>
-        <form id="setPasswordForm" class="form" method="POST" action="/">
-            <input type="hidden" name="set_password" value="true">
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <div class="input-container">
-                    <input type="email" id="email" name="email" value="{{ email }}" required>
-                </div>
+    <p>Log in to access your dashboard.</p>
+    <form id="loginForm" class="form" method="POST" action="/">
+        <div class="form-group">
+            <label for="loginEmail">Email:</label>
+            <div class="input-container">
+                <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required autocomplete="off">
             </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                    <i class="fas fa-eye toggle-password"></i>
-                </div>
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Password:</label>
+            <div class="password-wrapper">
+                <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="off">
+                <i class="fas fa-eye toggle-password"></i>
             </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="confirmPassword" name="confirm_password" placeholder="Confirm your password" required>
-                    <i class="fas fa-eye toggle-password"></i>
-                </div>
-            </div>
-            <div>
-                <button type="submit">Set Password</button>
-            </div>
-        </form>
-    {% else %}
-        <p>Log in to access your dashboard.</p>
-        <form id="loginForm" class="form" method="POST" action="/">
-            <div class="form-group">
-                <label for="loginEmail">Email:</label>
-                <div class="input-container">
-                    <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required autocomplete="off">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="loginPassword">Password:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="off">
-                    <i class="fas fa-eye toggle-password"></i>
-                </div>
-            </div>
-            <div>
-                <button type="submit">Login</button>
-            </div>
-        </form>
-    {% endif %}
+        </div>
+        <div>
+            <button type="submit">Login</button>
+        </div>
+    </form>
+
 {% endif %}

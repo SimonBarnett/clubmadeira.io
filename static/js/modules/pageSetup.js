@@ -3,7 +3,7 @@
 
 import { log } from '../core/logger.js';
 import { parsePageType } from '../utils/initialization.js';
-import { withAuthenticatedUser } from '../utils/auth.js';
+import { withAuthenticatedUser } from '../core/auth.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from '../utils/logging-utils.js';

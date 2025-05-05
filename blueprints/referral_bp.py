@@ -1,75 +1,121 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from utils.auth import login_required
 from utils.users import load_users_settings, save_users_settings
 import logging
 import json
+import os
+from datetime import datetime
 
 # region Blueprint Setup
-# Welcome to referral_bp, the blueprint that tracks referrals like Zaphod Beeblebrox tracks the best parties in the galaxy!
-# This module is the galactic hub for recording and retrieving referral data—prepare for some improbably fun stats!
+# referral_bp: The galactic hub for tracking referrals, clicks, orders, logins, and signups!
 referral_bp = Blueprint('referral_bp', __name__)
 # endregion
 
-# region /referral POST - Recording Galactic Referrals
-@referral_bp.route('/referral', methods=['POST'])
-def handle_referral():
+# region /click POST - Recording Click Events
+@referral_bp.route('/click', methods=['POST'])
+def handle_click():
     """
-    Records referral data (visits or orders), like the Spanish Inquisition—nobody expects it, but it’s here!
-    Purpose: To log referral activities, whether it’s a page visit or an order, for tracking and analytics. Public access—no permissions needed, just like the People’s Front of Judea’s open meetings.
+    Records a click event between source and destination user IDs.
     Inputs: JSON payload with:
-        - timestamp (str): When the referral happened, e.g., "2023-10-26T12:34:56Z".
-        - referer (str, optional): The ID of the referer, defaults to "none" if not provided.
-        - page (str, optional): The page visited, required for visit referrals.
-        - orderId (str, optional): The order ID, required for order referrals.
-        - buyer (str, optional): The buyer’s name or ID for orders.
-        - total (float, optional): The order total for orders.
+        - source_user_id (str): The ID of the user initiating the click.
+        - destination_user_id (str): The ID of the user being clicked to.
+        - timestamp (str): When the click happened.
     Outputs:
-        - Success: JSON {"status": "success", "message": "Referral recorded", "referer": "<referer>"}, status 200—referral logged!
-        - Errors:
-            - 400: {"status": "error", "message": "Invalid data: timestamp required"}—no timestamp, no fork handles!
-            - 400: {"status": "error", "message": "Invalid referral data: page or orderId required"}—missing key data!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
+        - Success: JSON {"status": "success", "message": "Click recorded"}, status 200
+        - Errors: JSON with error message, status 400 or 500
     """
     try:
-        # Arthur Dent checks the JSON—timestamp is crucial, or it’s a bust!
+        posthog_client = current_app.posthog_client
         data = request.get_json()
-        if not data or 'timestamp' not in data:
-            logging.warning(f"UX Issue - Invalid referral data: {json.dumps(data)}")
-            return jsonify({"status": "error", "message": "Invalid data: timestamp required"}), 400
+        if not data or not all(key in data for key in ["source_user_id", "destination_user_id", "timestamp"]):
+            logging.warning(f"UX Issue - Invalid click data: {json.dumps(data)}")
+            if posthog_client:
+                posthog_client.capture(
+                    distinct_id=data.get("source_user_id", "unknown"),
+                    event="click_error",
+                    properties={"error": "Invalid data: source_user_id, destination_user_id, timestamp required", "data": data}
+                )
+            return jsonify({"status": "error", "message": "Invalid data: source_user_id, destination_user_id, timestamp required"}), 400
         
-        # Load the user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        referer = data.get("referer", "none")
-        if referer not in users_settings:
-            # Initialize new referer—like Zaphod discovering a new head!
-            logging.debug(f"New referer {referer} initialized with empty referral data")
-            users_settings[referer] = {"referrals": {"visits": [], "orders": []}}
-        
-        # Record the referral—page visit or order, like the Holy Grail or a shrubbery.
-        if "page" in data:
-            users_settings[referer]["referrals"]["visits"].append({
-                "page": data["page"],
-                "timestamp": data["timestamp"]
-            })
-        elif "orderId" in data:
-            users_settings[referer]["referrals"]["orders"].append({
-                "orderId": data["orderId"],
-                "buyer": data.get("buyer", "unknown"),
-                "total": data.get("total", 0.0),
-                "timestamp": data["timestamp"]
-            })
+        if posthog_client:
+            try:
+                posthog_client.capture(
+                    distinct_id=data["source_user_id"],
+                    event="click",
+                    properties={
+                        "source_user_id": data["source_user_id"],
+                        "destination_user_id": data["destination_user_id"],
+                        "timestamp": data["timestamp"]
+                    }
+                )
+                logging.info(f"Click event captured for {data['source_user_id']} to {data['destination_user_id']}")
+            except Exception as e:
+                logging.error(f"Failed to capture click event: {str(e)}")
         else:
-            # Missing page or orderId? That’s like asking for four candles and getting fork handles!
-            logging.warning(f"UX Issue - Referral data missing page or orderId: {json.dumps(data)}")
-            return jsonify({"status": "error", "message": "Invalid referral data: page or orderId required"}), 400
+            logging.warning("posthog_client is None, event not captured")
         
-        # Save the updated settings—stronger than a Wookiee’s grip!
-        save_users_settings(users_settings)
-        logging.info(f"Referral recorded for referer {referer}: {json.dumps(data)}")
-        return jsonify({"status": "success", "message": "Referral recorded", "referer": referer}), 200
+        logging.info(f"Click recorded from {data['source_user_id']} to {data['destination_user_id']}")
+        return jsonify({"status": "success", "message": "Click recorded"}), 200
     except Exception as e:
-        # Marvin’s take: “I recorded a referral, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to handle referral: {str(e)}", exc_info=True)
+        logging.error(f"UX Issue - Failed to handle click: {str(e)}", exc_info=True)
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=data.get("source_user_id", "unknown") if data else "unknown",
+                event="click_error",
+                properties={"error": f"Server error: {str(e)}"}
+            )
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
+
+# region /order POST - Recording Order Events
+@referral_bp.route('/order', methods=['POST'])
+def handle_order():
+    """
+    Records an order event with source, destination user IDs, and sale value, like Trillian sealing a deal in the galaxy!
+    Inputs: JSON payload with:
+        - source_user_id (str): The ID of the user initiating the order.
+        - destination_user_id (str): The ID of the user being referred to.
+        - sale_value (float): The value of the sale.
+        - timestamp (str): When the order happened, e.g., "2023-10-26T12:34:56Z".
+    Outputs:
+        - Success: JSON {"status": "success", "message": "Order recorded"}, status 200
+        - Errors: JSON with error message, status 400 or 500
+    """
+    try:
+        posthog_client = current_app.posthog_client
+        data = request.get_json()
+        if not data or not all(key in data for key in ["source_user_id", "destination_user_id", "sale_value", "timestamp"]):
+            logging.warning(f"UX Issue - Invalid order data: {json.dumps(data)}")
+            if posthog_client:
+                posthog_client.capture(
+                    distinct_id=data.get("source_user_id", "unknown"),
+                    event="order_error",
+                    properties={"error": "Invalid data: source_user_id, destination_user_id, sale_value, timestamp required", "data": data}
+                )
+            return jsonify({"status": "error", "message": "Invalid data: source_user_id, destination_user_id, sale_value, timestamp required"}), 400
+        
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=data["source_user_id"],
+                event="order",
+                properties={
+                    "source_user_id": data["source_user_id"],
+                    "destination_user_id": data["destination_user_id"],
+                    "sale_value": data["sale_value"],
+                    "timestamp": data["timestamp"]
+                }
+            )
+        
+        logging.info(f"Order recorded from {data['source_user_id']} to {data['destination_user_id']} for {data['sale_value']}")
+        return jsonify({"status": "success", "message": "Order recorded"}), 200
+    except Exception as e:
+        logging.error(f"UX Issue - Failed to handle order: {str(e)}", exc_info=True)
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=data.get("source_user_id", "unknown") if data else "unknown",
+                event="order_error",
+                properties={"error": f"Server error: {str(e)}"}
+            )
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 # endregion
 
@@ -84,83 +130,7 @@ def handle_referral():
           |__|__| 
 """
 
-# region /<user_id>/visits GET - Checking Referral Visits
-@referral_bp.route('/<user_id>/visits', methods=['GET'])
-@login_required(["self", "admin"], require_all=False)
-def get_referral_visits(user_id):
-    """
-    Retrieves referral visits for a user, like Zaphod checking his party RSVPs.
-    Purpose: To list all page visits referred by the user—restricted to the user themselves or admins, because privacy is key in the galaxy!
-    Permissions: Restricted to "self" or "admin"—you’re either the referer or the Messiah!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user whose referral visits are sought.
-    Outputs:
-        - Success: JSON {"status": "success", "visits": [<visit_data>]}, status 200—visits revealed!
-        - Errors:
-            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the chosen one!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Ronnies lost the candles!
-    """
-    try:
-        # Permission check—like the Knights Who Say Ni demanding a shrubbery!
-        if user_id != request.user_id and "admin" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized visits retrieval attempt for {user_id} by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-        
-        # Load the user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        if user_id not in users_settings or "referrals" not in users_settings[user_id]:
-            logging.warning(f"UX Issue - No referral data found for user {user_id}")
-            return jsonify({"status": "success", "visits": []}), 200
-        
-        # Fetch the visits—neater than Ronnie Corbett’s wordplay.
-        visits = users_settings[user_id]["referrals"].get("visits", [])
-        logging.debug(f"Retrieved referral visits for user {user_id}: {json.dumps(visits)}")
-        return jsonify({"status": "success", "visits": visits}), 200
-    except Exception as e:
-        # Marvin groans: “I fetched visits, and now I’m broken.”
-        logging.error(f"UX Issue - Failed to retrieve referral visits for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# region /<user_id>/orders GET - Checking Referral Orders
-@referral_bp.route('/<user_id>/orders', methods=['GET'])
-@login_required(["self", "admin"], require_all=False)
-def get_referral_orders(user_id):
-    """
-    Retrieves referral orders for a user, like Trillian tallying up the galaxy’s shopping spree.
-    Purpose: To list all orders referred by the user—restricted to the user or admins, because only the elite can peek at the ledger!
-    Permissions: Restricted to "self" or "admin"—you’re either the referer or the chosen one!
-    Inputs: URL parameter:
-        - user_id (str): The ID of the user whose referral orders are sought.
-    Outputs:
-        - Success: JSON {"status": "success", "orders": [<order_data>]}, status 200—orders revealed!
-        - Errors:
-            - 403: {"status": "error", "message": "Unauthorized"}—you’re not the Messiah, you’re a very naughty boy!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
-    """
-    try:
-        # Permission check—like the Holy Hand Grenade, only the worthy may pass!
-        if user_id != request.user_id and "admin" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized orders retrieval attempt for {user_id} by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-        
-        # Load the user settings—like the Guide, but with less towel advice.
-        users_settings = load_users_settings()
-        if user_id not in users_settings or "referrals" not in users_settings[user_id]:
-            logging.warning(f"UX Issue - No referral data found for user {user_id}")
-            return jsonify({"status": "success", "orders": []}), 200
-        
-        # Fetch the orders—neater than a Two Ronnies sketch.
-        orders = users_settings[user_id]["referrals"].get("orders", [])
-        logging.debug(f"Retrieved referral orders for user {user_id}: {json.dumps(orders)}")
-        return jsonify({"status": "success", "orders": orders}), 200
-    except Exception as e:
-        # Marvin sighs: “I fetched orders, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to retrieve referral orders for user {user_id}: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 2: The Towel (Hitchhiker’s Guide)
+# ASCII Art 2: The Towel
 """
        ______
       /|_||_\`.__

@@ -4,15 +4,13 @@ from utils.users import load_users_settings, save_users_settings
 from utils.config import load_config, save_config
 import logging
 import json
+import requests
 
 # Behold manager_bp, the blueprint that governs with the authority of Zaphod Beeblebrox’s dual-headed presidency!
 # This is the control room—admin-only, like the bridge of the Heart of Gold, but with less improbability.
 manager_bp = Blueprint('manager_bp', __name__)
 
-from flask import jsonify, abort
-from utils.auth import login_required
-from utils.users import load_users_settings
-
+# region Permission Management
 @manager_bp.route('/permission', methods=['PATCH'])
 @login_required(required_permissions=['admin'])
 def patch_permission():
@@ -69,8 +67,9 @@ def delete_permission():
     user['permissions'].remove(permission_to_remove)
     save_users_settings(users_data)
     return jsonify({"status": "success", "message": f"Permission {permission_to_remove} removed from user {user_id}"}), 200
+# endregion
 
-# New endpoint for listing users by role
+# region Users by Role
 @manager_bp.route('/users/<role>', methods=['GET'])
 @login_required(required_permissions=['admin'])
 def get_users_by_role(role):
@@ -104,9 +103,9 @@ def get_users_by_role(role):
     except Exception as e:
         logging.error(f"Failed to retrieve users with role '{role}': {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+# endregion
 
-# region settings/api - Manage settings_key and affiliate_key
-
+# region Settings Management
 @manager_bp.route('/settings/settings_key', methods=['GET'])
 @login_required(["admin"], require_all=True)
 def get_settings_key_settings():
@@ -348,9 +347,97 @@ def put_affiliate_key(key_type):
     except Exception as e:
         logging.error(f"Failed to replace affiliate_key: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
 # endregion
 
+@manager_bp.route('/logs/<event_type>', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_events(event_type):
+    """
+    Retrieves PostHog events based on the specified event type for the admin logs page.
+    Purpose: Allows admins to view logs for login, signup, click, or order events in JSON format.
+    Permissions: Restricted to 'admin' users only via login_required decorator.
+    Inputs: event_type (str) - One of 'login', 'signup', 'click', 'order'.
+    Outputs: JSON response with event data or error response.
+    """
+    # Validate event type
+    valid_event_types = ['login', 'signup', 'click', 'order']
+    if event_type not in valid_event_types:
+        logging.error(f"Invalid event type requested: {event_type}")
+        return jsonify({"status": "error", "message": "Invalid event type"}), 400
+
+    try:
+        user_id = request.user_id
+        config = load_config()
+        posthog_config = config.get("posthog", {})
+        api_key = posthog_config.get("PROJECT_READ_KEY")
+        host = posthog_config.get("HOST", "https://eu.i.posthog.com")
+        project_id = posthog_config.get("PROJECT_ID")
+
+        # Check for missing PostHog configuration
+        if not api_key or not project_id:
+            logging.error("PostHog configuration missing: PROJECT_READ_KEY or PROJECT_ID not set")
+            return jsonify({"status": "error", "message": "PostHog configuration missing"}), 500
+
+        # Fetch events from PostHog API
+        response = requests.get(
+            f"{host}/api/projects/{project_id}/events",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"event": event_type}
+        )
+
+        if response.status_code != 200:
+            logging.error(f"Failed to fetch {event_type} events from PostHog: {response.status_code} - {response.text}")
+            return jsonify({"status": "error", "message": f"Failed to fetch {event_type} events"}), 500
+
+        # Process event data
+        events_data = response.json().get("results", [])
+        events = [
+            {
+                "timestamp": event.get("timestamp", "N/A"),
+                "user": event.get("distinct_id", "Anonymous"),
+                "details": format_event_details(event.get("properties", {}), event_type)
+            }
+            for event in events_data
+        ]
+
+        # Log retrieval
+        if not events:
+            logging.info(f"No {event_type} events found for admin {user_id}")
+        else:
+            logging.debug(f"Admin {user_id} retrieved {len(events)} {event_type} events")
+
+        return jsonify({
+            "status": "success",
+            "data": events
+        }), 200
+
+    except Exception as e:
+        logging.error(f"Failed to retrieve {event_type} events for admin {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+def format_event_details(properties, event_type):
+    """
+    Formats PostHog event properties into a string for the 'details' column in the logs table.
+    Args:
+        properties (dict): The event properties from PostHog.
+        event_type (str): The type of event ('login', 'signup', 'click', 'order').
+    Returns:
+        str: A formatted string summarizing the event details.
+    """
+    try:
+        if event_type == 'login':
+            return f"Login attempt from IP {properties.get('ip', 'N/A')} using {properties.get('method', 'N/A')}"
+        elif event_type == 'signup':
+            return f"Signup for role {properties.get('role', 'N/A')} with email {properties.get('email', 'N/A')}"
+        elif event_type == 'click':
+            return f"Clicked {properties.get('element', 'N/A')} on page {properties.get('page', 'N/A')}"
+        elif event_type == 'order':
+            return f"Order ID {properties.get('order_id', 'N/A')} with total {properties.get('total', 'N/A')}"
+        return "No details available"
+    except Exception as e:
+        logging.error(f"Error formatting event details for {event_type}: {str(e)}")
+        return "Error formatting details"
+    
 # ASCII Art 1: The Two Ronnies’ Fork Handles
 """
        ______
