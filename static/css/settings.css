@@ -11,8 +11,8 @@
 
 /* Style for selected site settings icon */
 .site-settings-icon.selected {
-    color: #007bff; /* Use a specific blue color for selection */
-    border-bottom: 2px solid #007bff; /* Add visual indicator for selected state */
+    color: #34495e; /* Use a specific blue color for selection */
+    border-bottom: 2px solid #34495e; /* Add visual indicator for selected state */
 }
 
 /* Base styles for affiliate icons */
@@ -26,8 +26,8 @@
 
 /* Style for selected affiliate icon */
 .affiliate-icon.selected {
-    color: #007bff; /* Use a specific blue color for selection */
-    border-bottom: 2px solid #007bff; /* Add visual indicator for selected state */
+    color: #34495e; /* Use a specific blue color for selection */
+    border-bottom: 2px solid #34495e; /* Add visual indicator for selected state */
 }
 
 /* Base styles for provider icons */
@@ -41,6 +41,19 @@
 
 /* Style for selected provider icon */
 .provider-icon.selected {
-    color: #007bff; /* Use a specific blue color for selection */
-    border-bottom: 2px solid #007bff; /* Add visual indicator for selected state */
+    color: #34495e; /* Use a specific blue color for selection */
+    border-bottom: 2px solid #34495e; /* Add visual indicator for selected state */
+}
+
+/* Style for selected period icon */
+.period-icon {
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 15px;
+    color: #333;
+}
+
+.period-icon.selected {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
 }

@@ -8,14 +8,12 @@ import { initializeAdminModules } from './initializer.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 import { parsePageType, shouldInitializeForPageType } from '../utils/initialization.js';
+import { loadSiteRequests, viewSiteRequest } from './site-requests.js';
 
 const context = 'navigation.js';
 
-// Placeholder for loadLogs; in practice, this should be imported or defined elsewhere
-async function loadLogs(type) {
-    console.log(`Loading logs for type: ${type}`);
-    // Implementation to load logs would go here
-}
+let lastSection = null; // Track the last section to prevent duplicate events
+const DEBOUNCE_MS = 100; // Debounce events within 100ms
 
 export function defineAdminSectionHandlers(context) {
     const pageType = parsePageType(context, 'page', 'admin');
@@ -28,70 +26,153 @@ export function defineAdminSectionHandlers(context) {
         {
             id: 'info',
             handler: async (show) => {
-                log(context, 'Loading info section');
-                toggleViewState(context, { info: show });
+                if (show && lastSection !== 'info') {
+                    log(context, 'Loading info section');
+                    lastSection = 'info';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    toggleViewState(context, { info: show });
+                } else if (!show) {
+                    lastSection = null;
+                    toggleViewState(context, { info: false });
+                }
             },
         },
         {
             id: 'user_management',
             handler: async (show) => {
-                log(context, 'Loading user management section');
-                await initializeUserManagement(context);
-                toggleViewState(context, { user_management: show });
+                if (show && lastSection !== 'user_management') {
+                    log(context, 'Loading user management section');
+                    lastSection = 'user_management';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    await initializeUserManagement(context);
+                    toggleViewState(context, { user_management: show });
+                } else if (!show) {
+                    lastSection = null;
+                    toggleViewState(context, { user_management: false });
+                }
             },
         },
         {
             id: 'affiliates',
             handler: async (show) => {
-                log(context, 'Calling loadAdminSettings for affiliates');
-                await loadAdminSettings(context, 'affiliates');
-                toggleViewState(context, { affiliates: show });
+                if (show && lastSection !== 'affiliates') {
+                    log(context, 'Calling loadAdminSettings for affiliates');
+                    lastSection = 'affiliates';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    await loadAdminSettings(context, 'affiliates');
+                    toggleViewState(context, { affiliates: show });
+                } else if (!show) {
+                    lastSection = null;
+                    toggleViewState(context, { affiliates: false });
+                }
             },
         },
         {
             id: 'site_settings',
             handler: async (show) => {
-                log(context, 'Calling initializeAdminModules');
-                await initializeAdminModules(context);
-                toggleViewState(context, { site_settings: show });
+                if (show && lastSection !== 'site_settings') {
+                    log(context, 'Calling initializeAdminModules');
+                    lastSection = 'site_settings';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    await initializeAdminModules(context);
+                    toggleViewState(context, { site_settings: show });
+                } else if (!show) {
+                    lastSection = null;
+                    toggleViewState(context, { site_settings: false });
+                }
             },
         },
         {
             id: 'api_keys',
             handler: async (show) => {
-                log(context, 'Calling loadAdminSettings for apiKeys');
-                await loadAdminSettings(context, 'apiKeys');
-                toggleViewState(context, { api_keys: show });
+                if (show && lastSection !== 'api_keys') {
+                    log(context, 'Calling loadAdminSettings for apiKeys');
+                    lastSection = 'api_keys';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    await loadAdminSettings(context, 'apiKeys');
+                    toggleViewState(context, { api_keys: show });
+                } else if (!show) {
+                    lastSection = null;
+                    toggleViewState(context, { api_keys: false });
+                }
             },
         },
         {
             id: 'deals',
             handler: async (show) => {
-                log(context, 'Calling loadDeals');
-                const elements = await import('../utils/dom-manipulation.js').then(m => m.getElements(context, ['dealList']));
-                await loadDeals(context, elements);
-                toggleViewState(context, { deals: show });
+                if (show && lastSection !== 'deals') {
+                    log(context, 'Calling loadDeals');
+                    lastSection = 'deals';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    const elements = await import('../utils/dom-manipulation.js').then(m => m.getElements(context, ['dealList']));
+                    await loadDeals(context, elements);
+                    toggleViewState(context, { deals: show });
+                } else if (!show) {
+                    lastSection = null;
+                    toggleViewState(context, { deals: false });
+                }
+            },
+        },
+        {
+            id: 'site_requests',
+            handler: async (show) => {
+                if (show && lastSection !== 'site_requests') {
+                    log(context, 'Loading site requests section');
+                    lastSection = 'site_requests';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    await loadSiteRequests(context);
+                    toggleViewState(context, { site_requests: show });
+                } else if (!show) {
+                    log(context, 'Hiding site requests section');
+                    lastSection = null;
+                    toggleViewState(context, { site_requests: false });
+                }
+            },
+        },
+        {
+            id: 'view-site-request',
+            handler: async (show) => {
+                if (show && lastSection !== 'view-site-request') {
+                    log(context, 'Loading view site request section');
+                    lastSection = 'view-site-request';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    toggleViewState(context, { 'view-site-request': show });
+                } else if (!show) {
+                    log(context, 'Hiding view site request section');
+                    lastSection = null;
+                    toggleViewState(context, { 'view-site-request': false });
+                }
             },
         },
         {
             id: 'logsIntro',
             handler: async (show) => {
-                log(context, 'Loading logsIntro section');
-                toggleViewState(context, { logsIntro: show });
+                if (show && lastSection !== 'logsIntro') {
+                    log(context, 'Loading logsIntro section');
+                    lastSection = 'logsIntro';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
+                    toggleViewState(context, { logsIntro: show });
+                } else if (!show) {
+                    lastSection = null;
+                    toggleViewState(context, { logsIntro: false });
+                }
             },
         },
         {
             id: 'logs',
             handler: async (show, role, type) => {
-                log(context, `Loading logs section with type: ${type || 'none'}`);
-                if (show) {
+                if (show && lastSection !== 'logs') {
+                    log(context, `Loading logs section with type: ${type || 'none'}`);
+                    lastSection = 'logs';
+                    await new Promise(resolve => setTimeout(resolve, DEBOUNCE_MS));
                     toggleViewState(context, { logs: true });
                     if (type) {
                         await loadLogs(type);
                     } else {
                         logError(context, 'No log type specified');
                     }
-                } else {
+                } else if (!show) {
+                    lastSection = null;
                     toggleViewState(context, { logs: false });
                 }
             },

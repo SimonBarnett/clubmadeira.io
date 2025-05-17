@@ -1,6 +1,5 @@
 // /static/js/utils/form-submission.js
 import { log } from '../core/logger.js';
-import { fetchData } from './data-fetch.js';
 import { getFormConfig } from '../config/form-configs.js';
 import { success, error as notifyError } from '../core/notifications.js';
 import { withErrorHandling } from './error.js';
@@ -10,134 +9,151 @@ import { withScriptLogging } from './logging-utils.js';
 const context = 'form-submission.js';
 
 /**
- * Validates the phone number from FormData for signup forms.
+ * Validates a UK phone number.
  * @param {string} context - The context or module name.
  * @param {string} phone - The phone number to validate.
  * @returns {boolean} True if valid, false otherwise.
  */
 export function validatePhoneNumber(context, phone) {
+    log(context, `Validating phone number: ${phone}`);
     return withErrorHandling(`${context}:validatePhoneNumber`, () => {
-        log(context, `Validating phone number: ${phone}`);
-        if (!phone || !/^[0-9]{10,11}$/.test(phone)) {
-            throw new Error('Invalid UK phone number (10 or 11 digits required)');
-        }
-        return true;
-    }, ERROR_MESSAGES.FORM_VALIDATION_FAILED);
+        const isValid = phone && /^[0-9]{10,11}$/.test(phone.trim());
+        log(context, `Phone number validation result: ${isValid}`);
+        return isValid;
+    }, 'Phone number validation failed');
 }
 
 /**
- * Configures a form for submission based on the provided configuration key and endpoint.
+ * Configures and submits a form to the specified endpoint.
  * @param {string} context - The context or module name.
- * @param {string} formId - The ID of the form element.
- * @param {string} endpoint - The API endpoint to submit to.
- * @param {string} configKey - The form configuration key (e.g., 'login', 'signup').
- * @param {Object} [options={}] - Additional options (e.g., onSuccess, onError, successMessage).
- * @returns {void}
+ * @param {string} formId - The form's ID.
+ * @param {string} endpoint - The submission endpoint.
+ * @param {string} configKey - The form config key.
+ * @param {Object} [options={}] - Submission options.
+ * @returns {Promise<Object>} The response data or throws an error.
  */
-export function submitConfiguredForm(context, formId, endpoint, configKey, options = {}) {
-    log(context, `Configuring form submission for: ${formId} with config: ${configKey}`);
-    withErrorHandling(`${context}:submitConfiguredForm`, () => {
+export async function submitConfiguredForm(context, formId, endpoint, configKey, options = {}) {
+    log(context, `Starting form submission configuration for formId: ${formId}, endpoint: ${endpoint}, configKey: ${configKey}`);
+    let formData = null;
+    try {
+        // Check if the form exists
         const form = document.getElementById(formId);
         if (!form) {
-            log(context, `Form element ${formId} not found`);
-            notifyError(context, 'Form not found. Please try again.');
+            log(context, `Form ${formId} not found`);
             throw new Error(`Form ${formId} not found`);
         }
+        log(context, `Form ${formId} found`);
 
+        // Retrieve form configuration
         const config = getFormConfig(context, configKey);
-        if (!config) {
-            log(context, `No form configuration found for key: ${configKey}`);
-            notifyError(context, 'Invalid form configuration.');
-            throw new Error(`No form configuration for key: ${configKey}`);
+        if (!config || !config.method) {
+            log(context, `No valid form configuration for key: ${configKey}`);
+            throw new Error(`No valid form configuration for key: ${configKey}`);
+        }
+        log(context, `Form configuration retrieved for key: ${configKey}`);
+
+        // Collect form data
+        log(context, `Collecting form data for formId: ${formId}`);
+        formData = new FormData(form);
+        log(context, `Form data collected:`, Array.from(formData.entries()));
+
+        // Validate form data if applicable
+        if (config.validate) {
+            log(context, `Validating form data for formId: ${formId}`);
+            config.validate(formData);
+            log(context, `Form data validation passed for formId: ${formId}`);
         }
 
-        // Remove existing submit listeners to prevent duplicates
-        const submitHandler = async (event) => {
-            event.preventDefault();
-            log(context, `Submitting form ${formId} to ${endpoint}`);
+        // Transform data if applicable
+        const transformedData = config.transform ? config.transform(formData) : Object.fromEntries(formData);
+        log(context, `Transformed data:`, transformedData);
 
-            let formData;
-            try {
-                formData = new FormData(form);
-                log(context, 'FormData initialized:', Array.from(formData.entries()));
-                if (config.validate) {
-                    log(context, 'Running validation with FormData');
-                    config.validate(formData);
-                }
+        // Make API call
+        log(context, `Making request to ${endpoint} for formId: ${formId}`);
+        const response = await fetch(endpoint, {
+            method: config.method || 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(transformedData),
+        });
+        log(context, `API response status: ${response.status}`);
 
-                const transformedData = config.transform ? config.transform(formData) : Object.fromEntries(formData);
-                log(context, 'Transformed data:', transformedData);
-                const useAuth = config.requiresAuth !== false;
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+        }
 
-                const fetchOptions = {
-                    method: config.method || 'POST',
-                    headers: config.fetchOptions?.headers || { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(transformedData),
-                    ...config.fetchOptions,
-                };
+        let responseData;
+        try {
+            responseData = await response.json();
+        } catch (parseError) {
+            log(context, `Failed to parse response as JSON: ${parseError.message}`);
+            throw new Error(`Invalid JSON response from server`);
+        }
+        log(context, `API response data:`, responseData);
 
-                const response = await fetchData(context, endpoint, fetchOptions, useAuth);
-                success(context, options.successMessage || config.successMessage || 'Form submitted successfully');
-                if (options.onSuccess) {
-                    options.onSuccess(response);
-                }
-            } catch (err) {
-                log(context, `Submission error: ${err.message}`);
-                notifyError(context, err.message || ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
-                if (options.onError && formData) {
-                    options.onError(err, formData);
-                }
-            }
-        };
+        // Handle success
+        success(context, options.successMessage || config.successMessage || 'Form submitted successfully');
+        if (options.onSuccess) {
+            log(context, `Invoking onSuccess for formId: ${formId}`);
+            options.onSuccess(responseData);
+        }
 
-        // Remove previous submit listener if it exists
-        form.removeEventListener('submit', form._submitHandler);
-        form._submitHandler = submitHandler;
-        form.addEventListener('submit', submitHandler);
-
-        log(context, `Form ${formId} submission configured`);
-    }, ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
+        return responseData;
+    } catch (error) {
+        log(context, `Form submission failed for formId: ${formId}: ${error.message}`);
+        console.error('Detailed error:', error);
+        if (options.onError) {
+            log(context, `Invoking onError for formId: ${formId}`);
+            options.onError(error, formData);
+        }
+        notifyError(context, error.message || ERROR_MESSAGES.FORM_SUBMISSION_FAILED);
+        throw error; // Rethrow to allow caller to handle
+    } finally {
+        log(context, `Submission process completed for formId: ${formId}`);
+    }
 }
 
 /**
  * Updates form field values dynamically.
  * @param {string} context - The context or module name.
- * @param {string} formId - The ID of the form element.
- * @param {Object} updates - Object mapping field names to values.
- * @returns {Promise<void>}
+ * @param {string} formId - The form's ID.
+ * @param {Object} updates - Field name-value pairs to update.
  */
 export async function updateFormState(context, formId, updates) {
-    log(context, `Updating form state for: ${formId}`);
+    log(context, `Starting form state update for formId: ${formId}`);
     await withErrorHandling(`${context}:updateFormState`, async () => {
         const form = document.getElementById(formId);
         if (!form) {
+            log(context, `Form ${formId} not found for state update`);
             throw new Error(`Form ${formId} not found`);
         }
+        log(context, `Form ${formId} found for state update`);
         Object.entries(updates).forEach(([name, value]) => {
             const input = form.querySelector(`[name="${name}"]`);
             if (input) {
                 input.value = value;
-                log(context, `Updated ${name} to: ${value}`);
+                log(context, `Updated field ${name} to ${value} in form ${formId}`);
+            } else {
+                log(context, `Field ${name} not found in form ${formId}`);
             }
         });
     }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);
 }
 
 /**
- * Initializes the form-submission module for use with the module registry.
- * @param {Object} registry - The module registry instance.
- * @returns {Object} FormSubmission instance with public methods.
+ * Initializes the form submission module.
+ * @param {Object} registry - The registry object.
+ * @returns {Object} Module functions.
  */
 export function initializeFormSubmissionModule(registry) {
-    log(context, 'Initializing form-submission module for module registry');
+    log(context, 'Initializing form-submission module');
     return {
-        submitConfiguredForm: (ctx, formId, endpoint, configKey, options) => submitConfiguredForm(ctx, formId, endpoint, configKey, options),
-        updateFormState: (ctx, formId, updates) => updateFormState(ctx, formId, updates),
-        validatePhoneNumber: (ctx, phone) => validatePhoneNumber(ctx, phone),
+        submitConfiguredForm,
+        updateFormState,
+        validatePhoneNumber,
     };
 }
 
-// Initialize module with lifecycle logging
 withScriptLogging(context, () => {
     log(context, 'Module initialized');
 });

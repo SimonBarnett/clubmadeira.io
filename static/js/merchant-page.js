@@ -16,48 +16,53 @@ const context = 'merchant-page.js';
  * @returns {Promise<void>}
  */
 export async function initializeMerchantPage(context) {
-    log(context, 'Initializing merchant page');
-    const pageType = parsePageType(context, 'page', 'products');
-    if (pageType === 'login') {
-        log(context, 'Skipping merchant page initialization for login page');
-        return;
+  log(context, 'Initializing merchant page');
+  const pageType = parsePageType(context, 'page', 'products');
+  if (pageType === 'login') {
+    log(context, 'Skipping merchant page initialization for login page');
+    return;
+  }
+  const role = 'merchant';
+  const fallbackSection = 'info';
+  const defaultSection = getDefaultSectionFromQuery(context, role, fallbackSection);
+
+  await initializeRolePage(context, role, pageType, async () => {
+    const sectionHandlers = defineMerchantSectionHandlers(context);
+    
+    const menuElement = document.getElementById('menu');
+    if (menuElement) {
+      const menu = getMenu(role);
+      await initializeRoleNavigation(menuElement, menu, { sectionHandlers, defaultSection });
+      log(context, 'Navigation initialized with default section:', defaultSection);
+    } else {
+      log(context, 'Menu element not found, skipping navigation setup');
     }
-    const role = 'merchant';
-    const fallbackSection = 'info'; // Default to 'info' as per requirement
-    const defaultSection = getDefaultSectionFromQuery(context, role, fallbackSection);
 
-    await initializeRolePage(context, role, pageType, async () => {
-        const sectionHandlers = defineMerchantSectionHandlers(context);
-        
-        const menuElement = document.getElementById('menu');
-        if (menuElement) {
-            const menu = getMenu(role);
-            await initializeRoleNavigation(menuElement, menu, { sectionHandlers, defaultSection });
-            log(context, 'Navigation initialized with default section:', defaultSection);
-        } else {
-            log(context, 'Menu element not found, skipping navigation setup');
-        }
+    // Initialize additional merchant modules, avoiding #siteRequestForm handlers
+    const form = document.querySelector('#siteRequestForm');
+    if (form && form.dataset.siteRequestHandled) {
+      log(context, 'Skipping form handler setup for #siteRequestForm, handled by site-request.js');
+    }
+    await initializeMerchantModules(context, pageType);
 
-        await initializeMerchantModules(context, pageType);
-
-        toggleViewState(context, { [defaultSection]: true });
-        log(context, `Default section '${defaultSection}' set to visible`);
-    });
+    toggleViewState(context, { [defaultSection]: true });
+    log(context, `Default section '${defaultSection}' set to visible`);
+  });
 }
 
 export function initializeMerchantPageModule(registry) {
-    log(context, 'Initializing merchant-page module for module registry');
-    return {
-        initializeMerchantPage: ctx => initializeMerchantPage(ctx),
-    };
+  log(context, 'Initializing merchant-page module for module registry');
+  return {
+    initializeMerchantPage: ctx => initializeMerchantPage(ctx),
+  };
 }
 
 if (shouldInitializeForPageType('merchant')) {
-    withScriptLogging(context, async () => {
-        log(context, 'Module initialized');
-        await initializeMerchantPage(context);
-        hideOverlay();
-    });
+  withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeMerchantPage(context);
+    hideOverlay();
+  });
 } else {
-    log(context, 'Skipping initialization for non-merchant page');
+  log(context, 'Skipping initialization for non-merchant page');
 }

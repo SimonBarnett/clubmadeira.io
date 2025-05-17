@@ -1,3 +1,4 @@
+// /static/js/form-configs.js
 import { log } from '../core/logger.js';
 import { validatePhoneNumber } from '../utils/form-submission.js';
 import { isValidEmail } from '../utils/form-validation-utils.js';
@@ -67,37 +68,84 @@ function generateCategoryCustomFields(context, options = {}) {
  */
 function getCategoriesFormConfig(context, options = {}) {
   log(context, 'Generating categories form config');
-  const { defaults = {}, category = {}, customFields = [] } = options;
   return {
-    id: 'categoriesForm',
+    id: 'category-form', // Updated to match DOM ID
     action: '/categories',
     method: 'POST',
-    submitButtonText: 'Save Category',
-    successMessage: 'Category saved successfully!',
+    successMessage: 'Categories processed successfully!', // Updated for clarity
     transform: formData => {
-      const customFieldEntries = Array.from(formData.entries())
-        .filter(([key]) => key.startsWith('custom_field_'))
-        .map(([key, value]) => ({ key: key.replace('custom_field_', ''), value }));
+      let deselected = [];
+      let previous_deselected = [];
+      let previous_selected = [];
+      let categories = {};
+      try {
+        deselected = JSON.parse(formData.get('deselected') || '[]');
+      } catch (e) {
+        log(context, 'Error parsing deselected:', e);
+      }
+      try {
+        previous_deselected = JSON.parse(formData.get('previous_deselected') || '[]');
+      } catch (e) {
+        log(context, 'Error parsing previous_deselected:', e);
+      }
+      try {
+        previous_selected = JSON.parse(formData.get('previous_selected') || '[]');
+      } catch (e) {
+        log(context, 'Error parsing previous_selected:', e);
+      }
+      try {
+        categories = JSON.parse(formData.get('categories') || '{}');
+      } catch (e) {
+        log(context, 'Error parsing categories:', e);
+      }
       return {
-        name: formData.get('category_name')?.trim(),
-        description: formData.get('category_description')?.trim(),
-        custom_fields: customFieldEntries,
+        prompt: formData.get('prompt')?.trim(),
+        deselected,
+        previous_deselected,
+        previous_selected,
+        categories,
       };
     },
     validate: formData => {
-      try {
-        return !!formData.get('category_name')?.trim();
-      } catch (err) {
-        throw new Error(err.message || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
+      const prompt = formData.get('prompt')?.trim();
+      if (!prompt) {
+        throw new Error('Please describe your club.');
       }
+      return true;
     },
-    validationError: 'Please enter a valid category name.',
+    validationError: 'Please describe your club.', // Updated to match validate message
     fetchOptions: {
       headers: { 'Content-Type': 'application/json' },
     },
     fields: [
-      ...generateCategoryFields(context, { defaults, category }),
-      ...generateCategoryCustomFields(context, { customFields }),
+      {
+        type: 'textarea',
+        id: 'prompt',
+        name: 'prompt',
+        label: 'Describe your club', // Simplified label
+        required: true,
+        style: { width: '100%', maxWidth: '600px' }, // Added style for consistency
+      },
+      {
+        type: 'hidden',
+        id: 'deselected',
+        name: 'deselected',
+      },
+      {
+        type: 'hidden',
+        id: 'previous_deselected',
+        name: 'previous_deselected',
+      },
+      {
+        type: 'hidden',
+        id: 'previous_selected',
+        name: 'previous_selected',
+      },
+      {
+        type: 'hidden',
+        id: 'categories',
+        name: 'categories',
+      },
     ],
     requiresAuth: true,
   };
@@ -575,6 +623,153 @@ const FORM_CONFIGS = {
       },
     ],
     requiresAuth: false,
+  },
+  siteRequest: {
+    id: 'siteRequestForm',
+    action: '/siterequest',
+    method: 'POST',
+    submitButtonText: 'Save Site Request',
+    successMessage: 'Site request saved successfully!',
+    transform: formData => {
+      const data = { pages: [] };
+      for (let [key, value] of formData.entries()) {
+        if (key.startsWith('email_')) {
+          data.emails = data.emails || [];
+          data.emails.push(value);
+        } else if (key.startsWith('page_')) {
+          const [prefix, index, field] = key.split('_');
+          data.pages[parseInt(index)] = data.pages[parseInt(index)] || {};
+          data.pages[parseInt(index)][field] = value;
+        } else {
+          const fieldMap = {
+            name: 'communityName',
+            about: 'aboutCommunity',
+            colorPrefs: 'colorPrefs',
+            stylingDetails: 'stylingDetails',
+            preferredDomain: 'preferredDomain',
+            logos: 'communityLogos',
+          };
+          data[fieldMap[key] || key] = value instanceof File ? 'placeholder' : value;
+        }
+      }
+      data.pages = data.pages.filter(page => page && page.title);
+      return data;
+    },
+    validate: formData => {
+      try {
+        const communityName = formData.get('name')?.trim();
+        const emails = Array.from(formData.entries())
+          .filter(([key]) => key.startsWith('email_'))
+          .map(([_, value]) => value);
+        return (
+          !!communityName &&
+          emails.length > 0 &&
+          emails.some(email => email.trim())
+        );
+      } catch (err) {
+        throw new Error(err.message || ERROR_MESSAGES.FORM_VALIDATION_FAILED);
+      }
+    },
+    validationError: 'Please enter a valid community name and at least one email.',
+    fetchOptions: {
+      headers: { 'Content-Type': 'application/json' },
+    },
+    fields: [
+      {
+        type: 'text',
+        name: 'name',
+        label: 'Community Name',
+        required: true,
+        attributes: { id: 'name', placeholder: 'Enter community name' },
+      },
+      {
+        type: 'textarea',
+        name: 'about',
+        label: 'About Community',
+        attributes: { id: 'about', placeholder: 'Describe your community', class: 'mce-editor' },
+      },
+      {
+        type: 'text',
+        name: 'colorPrefs',
+        label: 'Color Preferences',
+        attributes: { id: 'colorPrefs', placeholder: 'Enter color preferences' },
+      },
+      {
+        type: 'text',
+        name: 'stylingDetails',
+        label: 'Styling Details',
+        attributes: { id: 'stylingDetails', placeholder: 'Enter styling details' },
+      },
+      {
+        type: 'text',
+        name: 'preferredDomain',
+        label: 'Preferred Domain',
+        attributes: { id: 'preferredDomain', placeholder: 'e.g., mycommunity.org' },
+      },
+      {
+        type: 'file',
+        name: 'logos',
+        label: 'Community Logos',
+        attributes: { id: 'logos', multiple: true },
+      },
+      {
+        type: 'dynamic',
+        name: 'emails',
+        containerId: 'emailsContainer',
+        addButton: {
+          text: 'Add Another Email',
+          dataset: { action: 'addEmail' },
+        },
+        template: index => ({
+          type: 'email',
+          name: `email_${index}`,
+          label: `Email ${index + 1}`,
+          attributes: { placeholder: 'Enter email' },
+          removeButton: {
+            text: 'Remove',
+            className: 'remove-email',
+          },
+        }),
+      },
+      {
+        type: 'dynamic',
+        name: 'pages',
+        containerId: 'pagesContainer',
+        addButton: {
+          text: 'Add Page',
+          dataset: { action: 'addPage' },
+        },
+        template: index => ({
+          type: 'group',
+          fields: [
+            {
+              type: 'text',
+              name: `page_${index}_title`,
+              label: `Page ${index + 1} Title`,
+              attributes: { id: `page_${index}_title`, placeholder: 'Page Title' },
+            },
+            {
+              type: 'textarea',
+              name: `page_${index}_content`,
+              label: `Page ${index + 1} Content`,
+              attributes: { id: `page_${index}_content`, class: 'mce-editor', placeholder: 'Page Content' },
+            },
+            {
+              type: 'file',
+              name: `page_${index}_images`,
+              label: `Page ${index + 1} Images`,
+              attributes: { id: `page_${index}_images`, multiple: true },
+            },
+            {
+              type: 'button',
+              text: 'Remove',
+              className: 'remove-page',
+            },
+          ],
+        }),
+      },
+    ],
+    requiresAuth: true,
   },
   categories: getCategoriesFormConfig,
 };

@@ -16,8 +16,17 @@ const state = {
 export async function loadCategories(context, userId, isAdmin = false) {
     log(context, `Loading categories for user: ${userId}, isAdmin: ${isAdmin}`);
     return await withErrorHandling(`${context}:loadCategories`, async () => {
-        await validateUserId(context);
-        const data = await fetchData(context, API_ENDPOINTS.CATEGORIES, { method: 'GET' });
+        const token = getAuthToken(); // Assume this is imported from auth.js
+        if (!token) {
+            throw new Error('User not authenticated');
+        }
+        await validateUserId(context); // Existing check, likely validates userId
+        const data = await fetchData(context, API_ENDPOINTS.CATEGORIES, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}` // Ensure token is passed
+            }
+        });
         return {
             categories: data.categories || {},
             deselected: data.deselected || [],
@@ -37,9 +46,16 @@ export async function loadCategories(context, userId, isAdmin = false) {
 export async function saveCategories(context, data) {
     log(context, 'Saving categories');
     return await withErrorHandling(`${context}:saveCategories`, async () => {
+        const token = getAuthToken(); // Assume this is imported from auth.js
+        if (!token) {
+            throw new Error('User not authenticated');
+        }
         return await fetchData(context, API_ENDPOINTS.SAVE_CATEGORIES, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Ensure token is passed
+            },
             body: JSON.stringify(data),
         });
     }, ERROR_MESSAGES.FETCH_FAILED('categories save'));
@@ -48,10 +64,17 @@ export async function saveCategories(context, data) {
 export async function resetCategories(context, userId) {
     log(context, `Resetting categories for user: ${userId}`);
     return await withErrorHandling(`${context}:resetCategories`, async () => {
-        await validateUserId(context);
+        const token = getAuthToken(); // Assume this is imported from auth.js
+        if (!token) {
+            throw new Error('User not authenticated');
+        }
+        await validateUserId(context); // Existing check
         return await fetchData(context, API_ENDPOINTS.RESET_CATEGORIES, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Ensure token is passed
+            },
             body: JSON.stringify({ userId }),
         });
     }, ERROR_MESSAGES.FETCH_FAILED('categories reset'));

@@ -12,13 +12,15 @@ export const API_ENDPOINTS = {
   BASE: 'https://clubmadeira.io', // Base URL for constructing full endpoint URLs
   // Admin endpoints
   SETTINGS_AFFILIATE: '/settings/affiliate',
-  SETTINGS_AFFILIATE_KEY: '/settings/affiliate_key', // Added for affiliates.js
+  SETTINGS_AFFILIATE_KEY: '/settings/affiliate_key',
   SETTINGS_API_KEY: '/settings/api-key',
   SETTINGS_KEY: '/settings/settings_key',
   USERS_ROLE: role => `/users/${role}`,
   USERS_USERID: userId => `/users/${userId}`,
+  USERS_CURRENT: '/users/current', // Added for fetching current user ID
   PERMISSION: '/permissions',
   DEALS: '/deals',
+  EVENT: '/event', // Added for referral tracking and test forms
 
   // Community endpoints
   CATEGORIES: '/categories',
@@ -26,14 +28,12 @@ export const API_ENDPOINTS = {
   RESET_CATEGORIES: '/categories/reset',
   CLIENT_API_SETTINGS: '/settings/client_api',
   CHECK_DOMAIN: '/check-domain',
+  
   // Referral endpoints (user ID is inferred from auth token)
-  REFERRAL: '/referral', // POST endpoint for recording referral data (visits or orders)
-  REFERRAL_VISITS: '/referral/visits', // GET endpoint for retrieving referral visits
-  REFERRAL_ORDERS: '/referral/orders', // GET endpoint for retrieving referral orders
-  // Deprecated endpoints (kept for reference, not used with referral_bp)
-  // VISITS: userId => `/visits/${userId}`,
-  // ORDERS: userId => `/orders/${userId}`,
-
+  REFERRAL: '/referral',
+  REFERRAL_VISITS: '/referral/visits',
+  REFERRAL_ORDERS: '/referral/orders',
+  
   // Partner endpoints
   CLIENT_API: '/client-api',
 
@@ -42,7 +42,8 @@ export const API_ENDPOINTS = {
   UPDATE_PASSWORD: '/update-password',
 
   // Site request endpoint
-  SITE_REQUEST: userId => `/site-request/${userId}`,
+  SITE_REQUEST: '/siterequest',
+  SITE_REQUESTS: '/siterequests',
 
   // Merchant endpoints
   API_KEY: '/settings/api_key',
@@ -54,7 +55,7 @@ export const API_ENDPOINTS = {
   VERIFY_RESET_CODE: '/verify-reset-code',
   SIGNUP: '/signup',
   VERIFY_TOKEN: '/verify-token',
-  COMPLETE_SIGNUP: '/complete-signup', // Added for set-password.js
+  COMPLETE_SIGNUP: '/complete-signup',
 };
 
 /**

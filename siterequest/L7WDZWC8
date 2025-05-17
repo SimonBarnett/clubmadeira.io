@@ -1,0 +1,23 @@
+{
+    "user_id": "L7WDZWC8",
+    "type": "community",
+    "communityName": "TestCommunity",
+    "aboutCommunity": "",
+    "communityLogos": "placeholder",
+    "colorPrefs": "",
+    "stylingDetails": "",
+    "preferredDomain": "mycommunity.org",
+    "emails": [
+        "test@community.org"
+    ],
+    "pages": [
+        {
+            "title": "Home",
+            "content": "",
+            "images": {},
+            "mandatory": "true"
+        }
+    ],
+    "widgets": [],
+    "submitted_at": "2025-05-11T18:22:21.647642"
+}

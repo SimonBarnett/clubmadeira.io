@@ -24,16 +24,34 @@ export async function initializeLogin(context, targetSection) {
     section.style.display = 'block';
     toggleViewState(context, { [targetSection]: true });
 
-    // Set up form submission
-    submitConfiguredForm(context, 'loginForm', API_ENDPOINTS.LOGIN, 'login', {
-      onSuccess: data => {
-        log(context, 'Login successful, setting token and cookie');
-        setAuthToken(data.token);
-        if (data.user_id) localStorage.setItem('userId', data.user_id);
-        setCookie('authToken', data.token, 7);
-        window.location.reload();
-      },
-    });
+    // Locate the login form
+    const form = document.getElementById('loginForm');
+    if (form) {
+      // Add event listener for form submission
+      form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent default form submission behavior
+        const formData = new FormData(this);
+        const email = formData.get('email')?.trim();
+        const password = formData.get('password');
+
+        // Perform basic client-side validation
+        if (email && password) {
+          await submitConfiguredForm(context, 'loginForm', API_ENDPOINTS.LOGIN, 'login', {
+            onSuccess: data => {
+              log(context, 'Login successful, setting token and cookie');
+              setAuthToken(data.token);
+              if (data.user_id) localStorage.setItem('userId', data.user_id);
+              setCookie('authToken', data.token, 7);
+              window.location.reload();
+            },
+          });
+        } else {
+          notifyError(context, 'Please enter both email and password');
+        }
+      });
+    } else {
+      log(context, 'Login form not found');
+    }
 
     // Set up password toggle
     const togglePassword = section.querySelector('.toggle-password, .toggle-password-icon');

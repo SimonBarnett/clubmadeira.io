@@ -7,7 +7,7 @@ import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from './logging-utils.js';
 
 // Cache for DOM elements to reduce repeated queries
-const elementCache = new Map();
+export const elementCache = new Map(); // Export elementCache
 
 /**
  * Executes a callback with a DOM element, retrying if the element is not found.

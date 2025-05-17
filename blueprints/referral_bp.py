@@ -1,142 +1,311 @@
-from flask import Blueprint, request, jsonify, current_app
-from utils.auth import login_required
-from utils.users import load_users_settings, save_users_settings
+from flask import Blueprint, jsonify, request, current_app
 import logging
+import string
 import json
-import os
-from datetime import datetime
+import requests 
+from utils.auth import login_required, get_authenticated_user
+from utils.posthog_utils import get_date_range, fetch_events, format_event_details  # Import helper functions
+from utils.users import load_users_settings
 
-# region Blueprint Setup
-# referral_bp: The galactic hub for tracking referrals, clicks, orders, logins, and signups!
-referral_bp = Blueprint('referral_bp', __name__)
-# endregion
+# Create the Blueprint
+referral_bp = Blueprint("referral_bp", __name__)
 
-# region /click POST - Recording Click Events
-@referral_bp.route('/click', methods=['POST'])
-def handle_click():
+def verify_code(code):
     """
-    Records a click event between source and destination user IDs.
-    Inputs: JSON payload with:
-        - source_user_id (str): The ID of the user initiating the click.
-        - destination_user_id (str): The ID of the user being clicked to.
-        - timestamp (str): When the click happened.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Click recorded"}, status 200
-        - Errors: JSON with error message, status 400 or 500
+    Verify if the given code matches its checksum.
+    
+    The code should be an 8-character string where the first 7 characters
+    are from the charset (digits and uppercase letters), and the 8th character
+    is the checksum computed as charset[sum(indices) % 36].
+    
+    Args:
+        code: The code to verify.
+    
+    Returns:
+        bool: True if the code is valid, False otherwise.
+    """
+    # Define valid characters for user IDs (uppercase letters and digits)
+    charset = string.digits + string.ascii_uppercase
+    
+    # Check if input is a string and exactly 8 characters long
+    if not isinstance(code, str) or len(code) != 8:
+        return False
+    
+    # Check if all characters are in the charset
+    if not all(c in charset for c in code):
+        return False
+    
+    # Split into code part and checksum
+    code_part = code[:7]
+    given_checksum = code[7]
+    
+    # Calculate the sum of indices for the first 7 characters
+    total = sum(charset.index(c) for c in code_part)
+    
+    # Compute the expected checksum
+    expected_checksum = charset[total % 36]
+    
+    # Return True if the expected checksum matches the given checksum
+    return expected_checksum == given_checksum
+
+@referral_bp.route("/event", methods=["POST"])
+def handle_event():
+    """
+    Handle events by determining the event type based on the presence of sale_value.
+    
+    Expects a JSON payload with:
+    - source_user_id: ID of the referring user (required)
+    - destination_user_id: ID of the target user (required)
+    - sale_value (optional): If present, the event is an "order"; otherwise, a "click"
+    
+    Returns:
+        JSON response with status or error message, along with HTTP status code.
     """
     try:
-        posthog_client = current_app.posthog_client
-        data = request.get_json()
-        if not data or not all(key in data for key in ["source_user_id", "destination_user_id", "timestamp"]):
-            logging.warning(f"UX Issue - Invalid click data: {json.dumps(data)}")
-            if posthog_client:
-                posthog_client.capture(
-                    distinct_id=data.get("source_user_id", "unknown"),
-                    event="click_error",
-                    properties={"error": "Invalid data: source_user_id, destination_user_id, timestamp required", "data": data}
-                )
-            return jsonify({"status": "error", "message": "Invalid data: source_user_id, destination_user_id, timestamp required"}), 400
-        
-        if posthog_client:
+        # Parse JSON data from the request
+        data = request.get_json(silent=True)
+        if not data:
+            logging.warning("No JSON data provided in request")
+            return {"error": "Invalid data: JSON required"}, 400
+
+        # Extract required fields
+        source_user_id = data.get("source_user_id")
+        destination_user_id = data.get("destination_user_id")
+
+        # Check for required fields
+        if not source_user_id or not destination_user_id:
+            logging.warning("Missing required fields: source_user_id or destination_user_id")
+            return {"error": "Missing required fields: source_user_id and destination_user_id"}, 400
+
+        # Validate user IDs
+        if not verify_code(source_user_id) or not verify_code(destination_user_id):
+            logging.warning(f"Invalid user IDs - Source: {source_user_id}, Destination: {destination_user_id}")
+            return {"error": "Invalid source_user_id or destination_user_id"}, 403
+
+        # Determine event type based on presence of sale_value
+        if "sale_value" in data:
+            event_type = "order"
             try:
-                posthog_client.capture(
-                    distinct_id=data["source_user_id"],
-                    event="click",
-                    properties={
-                        "source_user_id": data["source_user_id"],
-                        "destination_user_id": data["destination_user_id"],
-                        "timestamp": data["timestamp"]
-                    }
-                )
-                logging.info(f"Click event captured for {data['source_user_id']} to {data['destination_user_id']}")
-            except Exception as e:
-                logging.error(f"Failed to capture click event: {str(e)}")
+                sale_value = float(data["sale_value"])
+            except (TypeError, ValueError):
+                logging.warning(f"Invalid sale_value: {data.get('sale_value')}")
+                return {"error": "Invalid sale_value: must be a number"}, 400
         else:
-            logging.warning("posthog_client is None, event not captured")
-        
-        logging.info(f"Click recorded from {data['source_user_id']} to {data['destination_user_id']}")
-        return jsonify({"status": "success", "message": "Click recorded"}), 200
+            event_type = "click"
+            sale_value = None
+
+        # Retrieve user settings (assuming utils.users provides this function)
+        from utils.users import get_user_settings
+        source_user_settings = get_user_settings(source_user_id)
+        destination_user_settings = get_user_settings(destination_user_id)
+
+        # Check if both users exist
+        if not source_user_settings or not destination_user_settings:
+            logging.warning(f"User not found - Source: {source_user_id}, Destination: {destination_user_id}")
+            return {"error": "Source or destination user not found"}, 403
+
+        # Extract website URLs, defaulting to "N/A" if missing or empty
+        source_url = source_user_settings.get("website_url") or "N/A"
+        destination_url = destination_user_settings.get("website_url") or "N/A"
+
+        # Build event properties for PostHog
+        event_properties = {
+            "source_user_id": source_user_id,
+            "destination_user_id": destination_user_id,
+            "source": source_url,
+            "destination": destination_url,
+        }
+        if event_type == "order":
+            event_properties["sale_value"] = sale_value
+
+        # Send event to PostHog if client is configured
+        posthog_client = current_app.posthog_client
+        if posthog_client:
+            posthog_client.capture(
+                distinct_id=source_user_id,
+                event=event_type,
+                properties=event_properties
+            )
+
+        # Log successful event
+        log_message = f"{event_type.capitalize()} recorded from {source_user_id} to {destination_user_id}"
+        if event_type == "order":
+            log_message += f" for {sale_value}"
+        logging.info(log_message)
+
+        return {"status": "success"}, 200
+
     except Exception as e:
-        logging.error(f"UX Issue - Failed to handle click: {str(e)}", exc_info=True)
+        # Handle server errors, log them, and report to PostHog
+        logging.error(f"Server error in handle_event: {str(e)}")
+        posthog_client = current_app.posthog_client
         if posthog_client:
             posthog_client.capture(
                 distinct_id=data.get("source_user_id", "unknown") if data else "unknown",
-                event="click_error",
-                properties={"error": f"Server error: {str(e)}"}
+                event="event_error",
+                properties={"error": str(e)}
             )
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
+        return {"error": "Internal server error"}, 500
 
-# region /order POST - Recording Order Events
-@referral_bp.route('/order', methods=['POST'])
-def handle_order():
+@referral_bp.route('/events/<event_type>', methods=['GET'])
+@login_required(["self"], require_all=True)
+def get_user_events(event_type):
     """
-    Records an order event with source, destination user IDs, and sale value, like Trillian sealing a deal in the galaxy!
-    Inputs: JSON payload with:
-        - source_user_id (str): The ID of the user initiating the order.
-        - destination_user_id (str): The ID of the user being referred to.
-        - sale_value (float): The value of the sale.
-        - timestamp (str): When the order happened, e.g., "2023-10-26T12:34:56Z".
+    Retrieves PostHog events for the authenticated user based on role and event type, with temporal filter.
+    Inputs:
+        event_type (str): One of 'click', 'order'.
+        period (query param, optional): Temporal filter (e.g., 'today', 'yesterday', 'this_week'), defaults to 'today'.
     Outputs:
-        - Success: JSON {"status": "success", "message": "Order recorded"}, status 200
-        - Errors: JSON with error message, status 400 or 500
+        - Success: JSON {"status": "success", "events": [<event_list>]}
+        - Error: JSON {"status": "error", "message": "<error_message>"}
     """
     try:
-        posthog_client = current_app.posthog_client
-        data = request.get_json()
-        if not data or not all(key in data for key in ["source_user_id", "destination_user_id", "sale_value", "timestamp"]):
-            logging.warning(f"UX Issue - Invalid order data: {json.dumps(data)}")
-            if posthog_client:
-                posthog_client.capture(
-                    distinct_id=data.get("source_user_id", "unknown"),
-                    event="order_error",
-                    properties={"error": "Invalid data: source_user_id, destination_user_id, sale_value, timestamp required", "data": data}
-                )
-            return jsonify({"status": "error", "message": "Invalid data: source_user_id, destination_user_id, sale_value, timestamp required"}), 400
-        
-        if posthog_client:
-            posthog_client.capture(
-                distinct_id=data["source_user_id"],
-                event="order",
-                properties={
-                    "source_user_id": data["source_user_id"],
-                    "destination_user_id": data["destination_user_id"],
-                    "sale_value": data["sale_value"],
-                    "timestamp": data["timestamp"]
-                }
-            )
-        
-        logging.info(f"Order recorded from {data['source_user_id']} to {data['destination_user_id']} for {data['sale_value']}")
-        return jsonify({"status": "success", "message": "Order recorded"}), 200
+        decoded, _, error_response = get_authenticated_user()
+        if error_response:
+            return error_response
+
+        user_id = decoded.get('user_id')
+        x_role = decoded.get('x-role', 'login').lower()
+
+        # Updated to use 'click' and 'order' instead of 'referral' and 'sale'
+        if event_type not in ["click", "order"]:
+            return jsonify({"status": "error", "message": "Invalid event type"}), 400
+
+        # Determine filter key based on user role
+        if x_role == 'community':
+            filter_key = 'source_user_id'
+        elif x_role == 'merchant':
+            filter_key = 'destination_user_id'
+        else:
+            logging.warning(f"Permission denied for user {user_id}: invalid x-role '{x_role}'")
+            return jsonify({"status": "error", "message": "Permission denied"}), 403
+
+        # Get the period from query parameters, default to 'today'
+        period = request.args.get('period', 'today')
+        start, end = get_date_range(period)
+
+        # Fetch events with role-based filter
+        properties_filter = [{'key': filter_key, 'value': user_id}]
+        events_data = fetch_events(event_type, start, end, properties_filter)
+
+        events = [
+            {
+                "timestamp": event.get("timestamp", "N/A"),
+                "details": format_event_details(event.get("properties", {}), event_type)
+            }
+            for event in events_data
+        ]
+        logging.debug(f"User {user_id} retrieved {len(events)} {event_type} events for period {period}")
+        return jsonify({"status": "success", "events": events}), 200
+
     except Exception as e:
-        logging.error(f"UX Issue - Failed to handle order: {str(e)}", exc_info=True)
-        if posthog_client:
-            posthog_client.capture(
-                distinct_id=data.get("source_user_id", "unknown") if data else "unknown",
-                event="order_error",
-                properties={"error": f"Server error: {str(e)}"}
-            )
+        logging.error(f"Failed to retrieve {event_type} events for user {user_id}: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
+    
+@referral_bp.route('/logs/<event_type>', methods=['GET'])
+@login_required(["admin"], require_all=True)
+def get_events(event_type):
+    """
+    Retrieves PostHog events for admins based on event type, with an optional temporal filter.
+    Inputs:
+        event_type (str): One of 'login', 'signup', 'click', 'order'.
+        period (query param, optional): Temporal filter (e.g., 'today', 'yesterday', 'this_week'), defaults to 'today'.
+    Outputs:
+        - Success: JSON {"status": "success", "data": [<event_list>]}
+        - Error: JSON {"status": "error", "message": "<error_message>"}
+    """
+    valid_event_types = ['login', 'signup', 'click', 'order']
+    if event_type not in valid_event_types:
+        logging.error(f"Invalid event type requested: {event_type}")
+        return jsonify({"status": "error", "message": "Invalid event type"}), 400
 
-# ASCII Art 1: The Dead Parrot
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "This referral is no more! It has ceased to be!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
+    # Get the period from query parameters, default to 'today'
+    period = request.args.get('period', 'today').strip()
+    start, end = get_date_range(period)
 
-# ASCII Art 2: The Towel
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "Don’t forget your towel—essential for referral success!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
+    try:
+        # Fetch events from PostHog for the given event type and time range
+        events_data = fetch_events(event_type, start, end)
+        events = [
+            {
+                "timestamp": event.get("timestamp", "N/A"),
+                "user": event.get("distinct_id", "Anonymous"),
+                "details": format_event_details(event.get("properties", {}), event_type)
+            }
+            for event in events_data
+        ]
+        logging.debug(f"Admin retrieved {len(events)} {event_type} events for period {period}")
+        return jsonify({"status": "success", "data": events}), 200
+    except Exception as e:
+        logging.error(f"Failed to retrieve {event_type} events: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    
+@referral_bp.route('/referrer/<event_type>', methods=['GET'])
+@login_required(["admin", "partner"], require_all=False)
+def get_referrer_events(event_type):
+    """
+    Retrieves events where the current user is the referrer of either the source or destination user.
+    
+    Inputs:
+    - event_type (str): The type of event to retrieve (e.g., 'click', 'signup').
+    - period (query param, optional): Temporal filter (e.g., 'today', 'this_month'), defaults to 'today'.
+    
+    Outputs:
+    - Success: JSON {"status": "success", "events": [<array_of_events>]} with HTTP 200.
+    - Error: JSON {"status": "error", "message": "<error_message>"} with HTTP 400 or 500.
+    """
+    try:
+        # Step 1: Authenticate and get the current user's ID
+        decoded, _, error_response = get_authenticated_user()
+        if error_response:
+            return error_response
+        user_id = decoded.get('user_id')
+        if not user_id:
+            return jsonify({"status": "error", "message": "User ID not found"}), 400
+
+        # Step 2: Load all user settings to check referrers
+        user_settings = load_users_settings()
+
+        # Step 3: Validate the event type
+        valid_event_types = ['login', 'signup', 'click', 'order']
+        if event_type not in valid_event_types:
+            return jsonify({"status": "error", "message": f"Invalid event type: {event_type}"}), 400
+
+        # Step 4: Get the date range for event filtering
+        period = request.args.get('period', 'today')
+        start, end = get_date_range(period)
+
+        # Step 5: Fetch all events of the specified type
+        all_events = fetch_events(event_type, start, end, properties_filter=None)
+
+        # Step 6: Filter events where the current user is the referrer of source or destination
+        filtered_events = []
+        for event_dict in all_events:
+            properties = event_dict.get("properties", {})
+            source_user_id = properties.get("source_user_id")
+            destination_user_id = properties.get("destination_user_id")
+
+            # Get the referrer for source and destination users from user_settings
+            source_referrer = user_settings.get(source_user_id, {}).get("referrer")
+            dest_referrer = user_settings.get(destination_user_id, {}).get("referrer")
+
+            # Keep the event if the current user is the referrer of source OR destination
+            if user_id in (source_referrer, dest_referrer):
+                filtered_events.append(event_dict)
+
+        # Step 7: Format the events for the response
+        formatted_events = [
+            {
+                "timestamp": event_dict.get("timestamp", "N/A"),
+                "details": format_event_details(event_dict.get("properties", {}), event_type)
+            }
+            for event_dict in filtered_events
+        ]
+
+        # Step 8: Log and return the response
+        logging.debug(f"Retrieved {len(formatted_events)} {event_type} events where {user_id} is referrer")
+        return jsonify({"status": "success", "events": formatted_events}), 200
+
+    except Exception as e:
+        logging.error(f"Failed to retrieve referral events: {str(e)}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500

@@ -4,7 +4,7 @@ import { parsePageType, initializeRolePage, hideOverlay, getDefaultSectionFromQu
 import { toggleViewState } from './utils/dom-manipulation.js';
 import { withScriptLogging } from './utils/logging-utils.js';
 import { defineCommunitySectionHandlers } from './community/navigation.js';
-import { initializeCommunityModules } from './community/setup.js'; // Assuming a setup module exists or can be created
+import { initializeCommunityModules } from './community/setup.js';
 import { getMenu } from './config/menus.js';
 import { initializeRoleNavigation } from './modules/navigation.js';
 
@@ -16,52 +16,56 @@ const context = 'community-page.js';
  * @returns {Promise<void>}
  */
 export async function initializeCommunityPage(context) {
-    log(context, 'Initializing community page');
-    const pageType = parsePageType(context, 'page', 'categories');
-    if (pageType === 'login') {
-        log(context, 'Skipping community page initialization for login page');
-        return;
+  log(context, 'Initializing community page');
+  const pageType = parsePageType(context, 'page', 'categories');
+  if (pageType === 'login') {
+    log(context, 'Skipping community page initialization for login page');
+    return;
+  }
+  const role = 'community';
+  const fallbackSection = 'info';
+  const defaultSection = getDefaultSectionFromQuery(context, role, fallbackSection);
+
+  await initializeRolePage(context, role, pageType, async () => {
+    // Get section handlers
+    const sectionHandlers = defineCommunitySectionHandlers(context);
+    
+    // Set up navigation
+    const menuElement = document.getElementById('menu');
+    if (menuElement) {
+      const menu = getMenu(role);
+      await initializeRoleNavigation(menuElement, menu, { sectionHandlers, defaultSection });
+      log(context, 'Navigation initialized with default section:', defaultSection);
+    } else {
+      log(context, 'Menu element not found, skipping navigation setup');
     }
-    const role = 'community';
-    const fallbackSection = 'info'; // Default to 'info' as per requirement
-    const defaultSection = getDefaultSectionFromQuery(context, role, fallbackSection);
 
-    await initializeRolePage(context, role, pageType, async () => {
-        // Get section handlers
-        const sectionHandlers = defineCommunitySectionHandlers(context);
-        
-        // Set up navigation
-        const menuElement = document.getElementById('menu');
-        if (menuElement) {
-            const menu = getMenu(role);
-            await initializeRoleNavigation(menuElement, menu, { sectionHandlers, defaultSection });
-            log(context, 'Navigation initialized with default section:', defaultSection);
-        } else {
-            log(context, 'Menu element not found, skipping navigation setup');
-        }
+    // Initialize additional community modules, avoiding #siteRequestForm handlers
+    const form = document.querySelector('#siteRequestForm');
+    if (form && form.dataset.siteRequestHandled) {
+      log(context, 'Skipping form handler setup for #siteRequestForm, handled by site-request.js');
+    }
+    await initializeCommunityModules(context, pageType);
 
-        // Initialize additional community modules (if any)
-        await initializeCommunityModules(context, pageType);
-
-        // Ensure the default section is visible
-        toggleViewState(context, { [defaultSection]: true });
-        log(context, `Default section '${defaultSection}' set to visible`);
-    });
+    // Ensure the default section is visible
+    toggleViewState(context, { [defaultSection]: true });
+    log(context, `Default section '${defaultSection}' set to visible`);
+  });
 }
 
 export function initializeCommunityPageModule(registry) {
-    log(context, 'Initializing community-page module for module registry');
-    return {
-        initializeCommunityPage: ctx => initializeCommunityPage(ctx),
-    };
+  log(context, 'Initializing community-page module for module registry');
+  return {
+    initializeCommunityPage: ctx => initializeCommunityPage(ctx),
+  };
 }
 
 if (shouldInitializeForPageType('community')) {
-    withScriptLogging(context, async () => {
-        log(context, 'Module initialized');
-        await initializeCommunityPage(context);
-        hideOverlay();
-    });
+  withScriptLogging(context, async () => {
+    log(context, 'Module initialized');
+    await initializeCommunityPage(context);
+    hideOverlay();
+  });
 } else {
-    log(context, 'Skipping initialization for non-community page');
+  log(context, 'Skipping initialization for non-community page');
 }

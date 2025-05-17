@@ -1,0 +1,118 @@
+/* styles/menu.css */
+
+/* Menu container */
+#menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Left-align menu items */
+    overflow-x: hidden; /* Prevent horizontal overflow */
+    width: 100%; /* Ensure menu takes full width of its container */
+}
+
+/* Base styles for menu buttons */
+.menu-button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%; /* Full width of menu */
+    text-align: left;
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide excess text */
+    text-overflow: ellipsis; /* Add ellipsis for long text */
+    margin-bottom: 5px;
+    box-sizing: border-box; /* Include padding and border in width */
+}
+
+/* Hover effect for menu buttons */
+.menu-button:hover {
+    background-color: #e0e0e0;
+    border-color: #aaa;
+}
+
+/* Active state for menu buttons */
+.menu-button.active {
+    background-color: #34495e;
+    color: white;
+    border-color: #34495e;
+}
+
+/* Icon styling within menu buttons */
+.menu-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    margin-right: 5px;
+    flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+/* Caret styling for submenus */
+.menu-submenu-caret {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    margin-left: 5px;
+    transition: transform 0.3s;
+    flex-shrink: 0; /* Prevent caret from shrinking */
+}
+
+/* Submenu container */
+.menu-submenu {
+    display: none;
+    margin-left: 20px;
+    width: calc(100% - 20px); /* Keep submenu within menu bounds */
+    box-sizing: border-box; /* Include padding and border in width */
+}
+
+/* Show submenu when parent button has 'submenu-open' class */
+.menu-button.submenu-open + .menu-submenu {
+    display: block;
+}
+
+/* Rotate caret when submenu is open */
+.menu-button.submenu-open .menu-submenu-caret {
+    transform: rotate(90deg);
+}
+
+/* Styling for different menu levels */
+.menu-button[data-level="0"] {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.menu-button[data-level="1"] {
+    font-size: 14px;
+    padding-left: 20px;
+}
+
+.menu-button[data-level="2"] {
+    font-size: 12px;
+    padding-left: 40px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .menu-button {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .menu-button[data-level="0"] {
+        font-size: 14px;
+    }
+
+    .menu-button[data-level="1"] {
+        font-size: 12px;
+        padding-left: 15px;
+    }
+
+    .menu-button[data-level="2"] {
+        font-size: 10px;
+        padding-left: 30px;
+    }
+}

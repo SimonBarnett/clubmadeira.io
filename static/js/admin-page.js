@@ -1,9 +1,9 @@
 // /static/js/admin-page.js
 import { log, error as logError } from './core/logger.js';
-import { authenticatedFetch } from './core/auth.js';
 import { initializeUserManagement } from './admin/users-orchestrator.js';
 import { loadAffiliates } from './admin/affiliates.js';
 import { loadSiteSettings } from './admin/site-settings.js';
+import { initializeReferralTest } from './admin/referral-test.js';
 import { initializeRoleNavigation, defineSectionHandlers as defineCommonSectionHandlers } from './modules/navigation.js';
 import { getMenu } from './config/menus.js';
 import { getElements, toggleViewState } from './utils/dom-manipulation.js';
@@ -11,6 +11,8 @@ import { withScriptLogging } from './utils/logging-utils.js';
 import { getDefaultSectionFromQuery, parsePageType, shouldInitializeForPageType } from './utils/initialization.js';
 import { setupAdminEvents } from './admin/admin-events.js';
 import { error as notifyError } from './core/notifications.js';
+import { renderPeriodIcons } from './admin/logs-ui.js';
+import { loadSiteRequests } from './admin/site-requests.js';
 
 const context = 'admin-page.js';
 
@@ -26,87 +28,14 @@ function handleError(fnName, error, toastrMessage) {
 }
 
 /**
- * Fetches data from an endpoint with authentication.
- * @param {string} endpoint - The API endpoint to fetch from.
- * @param {Object} [options] - Fetch options.
- * @returns {Promise<Object>} The fetched data.
+ * Creates fallback content for unavailable sections.
+ * @param {string} message - The message to display.
+ * @returns {HTMLElement} The created div element.
  */
-async function fetchData(endpoint, options = {}) {
-    if (typeof endpoint !== 'string') {
-        logError(context, `fetchData - Invalid endpoint: ${endpoint}`);
-        throw new Error('Endpoint must be a string');
-    }
-    try {
-        const cleanEndpoint = endpoint.startsWith('http') ? new URL(endpoint).pathname : endpoint;
-        const response = await authenticatedFetch(cleanEndpoint, {
-            headers: { 'Content-Type': 'application/json' },
-            ...options,
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch ${cleanEndpoint}: ${response.status} ${response.statusText}`);
-        }
-        const data = await response.json();
-        log(context, `Fetched data from ${cleanEndpoint}:`, data);
-        if (data.status === 'error') {
-            throw new Error(data.message || `Error fetching data from ${cleanEndpoint}`);
-        }
-        return data;
-    } catch (error) {
-        logError(context, `fetchData - Failed for ${endpoint}: ${error.message}`);
-        throw error;
-    }
-}
-
-/**
- * Fetches and loads logs based on the specified type.
- * @param {string} type - The type of logs to load (e.g., 'login', 'signup').
- */
-async function loadLogs(type) {
-    try {
-        const response = await fetchData(`/logs/${type}`);
-        const logs = response.data;
-        renderLogs(logs, type);
-    } catch (error) {
-        handleError('loadLogs', error, `Failed to load ${type} logs`);
-    }
-}
-
-/**
- * Renders log data into the logs section.
- * @param {Array} logs - The log data to render.
- * @param {string} type - The type of logs being rendered.
- */
-function renderLogs(logs, type) {
-    const logsContainer = document.getElementById('logs-table-container');
-    if (!logsContainer) {
-        logError(context, 'Logs table container not found');
-        return;
-    }
-    logsContainer.innerHTML = ''; // Clear existing content
-    const table = document.createElement('table');
-    table.innerHTML = `
-        <thead>
-            <tr>
-                <th>Timestamp</th>
-                <th>User</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${logs.map(log => `
-                <tr>
-                    <td>${log.timestamp}</td>
-                    <td>${log.user}</td>
-                    <td>${log.details}</td>
-                </tr>
-            `).join('')}
-        </tbody>
-    `;
-    logsContainer.appendChild(table);
-    const description = document.getElementById('logs-description');
-    if (description) {
-        description.textContent = `Displaying ${type.charAt(0).toUpperCase() + type.slice(1)} Events`;
-    }
+function createFallbackContent(message) {
+    const div = document.createElement('div');
+    div.innerHTML = `<p>${message}</p>`;
+    return div;
 }
 
 /**
@@ -125,7 +54,9 @@ export async function initializeAdmin(pageType) {
             'user_management', 'user_list', 'user_role_icon', 'user_role_title',
             'affiliate-icons', 'affiliate-settings-container', 'affiliate-static-content', 'affiliate-readme-content',
             'site-settings-icons', 'site-settings-form', 'site-settings-fields',
-            'logs', 'logs-table-container', 'logs-description', 'logsIntro' // Added logsIntro
+            'logs', 'logs-table-container', 'logs-description', 'logsIntro',
+            'page_visit_test', 'order_test',
+            'site-request-list', 'view-site-request', 'siteRequestForm'
         ]);
 
         Object.entries(elements).forEach(([key, value]) => {
@@ -173,10 +104,30 @@ export async function initializeAdmin(pageType) {
                 }
             },
             {
+                name: 'siteRequests',
+                fn: async () => {
+                    log(context, 'Initializing Site Requests');
+                    if (elements['site-request-list'] && elements['view-site-request'] && elements['siteRequestForm']) {
+                        await loadSiteRequests(context);
+                    } else {
+                        logError(context, 'Skipping Site Requests initialization due to missing elements');
+                        notifyError(context, 'Site Requests section not properly configured');
+                        document.getElementById('site_requests')?.appendChild(createFallbackContent('Site requests unavailable'));
+                    }
+                }
+            },
+            {
                 name: 'events',
                 fn: async () => {
                     log(context, 'Setting up admin events');
                     await setupAdminEvents(context);
+                }
+            },
+            {
+                name: 'referralTest',
+                fn: async () => {
+                    log(context, 'Initializing Referral Test');
+                    await initializeReferralTest(context);
                 }
             }
         ];
@@ -196,17 +147,6 @@ export async function initializeAdmin(pageType) {
     } catch (error) {
         handleError('initializeAdmin', error, 'Failed to initialize admin page');
     }
-}
-
-/**
- * Creates fallback content for unavailable sections.
- * @param {string} message - The message to display.
- * @returns {HTMLElement} The created div element.
- */
-function createFallbackContent(message) {
-    const div = document.createElement('div');
-    div.innerHTML = `<p>${message}</p>`;
-    return div;
 }
 
 /**
@@ -270,6 +210,41 @@ function defineAdminSectionHandlers() {
                 handleError('site_settings', error, 'Failed to load site settings');
             }
         },
+        'site_requests': async (show, role) => {
+            log(context, 'Handler - Site Requests triggered');
+            try {
+                const elements = await getElements(context, ['site-request-list']);
+                if (!elements['site-request-list']) {
+                    logError(context, 'Required site requests elements not found');
+                    notifyError(context, 'Site requests section not properly configured');
+                    document.getElementById('site_requests')?.appendChild(createFallbackContent('Site requests unavailable due to configuration issues'));
+                    return;
+                }
+                if (show) {
+                    await loadSiteRequests(context);
+                }
+                toggleViewState(context, { site_requests: show, info: false, 'view-site-request': false });
+                log(context, 'Site requests section loaded');
+            } catch (error) {
+                handleError('site_requests', error, 'Failed to load site requests');
+            }
+        },
+        'view-site-request': async (show, role) => {
+            log(context, 'Handler - View Site Request triggered');
+            try {
+                const elements = await getElements(context, ['view-site-request', 'siteRequestForm']);
+                if (!elements['view-site-request'] || !elements['siteRequestForm']) {
+                    logError(context, 'Required view site request elements not found');
+                    notifyError(context, 'View site request section not properly configured');
+                    document.getElementById('view-site-request')?.appendChild(createFallbackContent('View site request unavailable due to configuration issues'));
+                    return;
+                }
+                toggleViewState(context, { 'view-site-request': show, site_requests: false, info: false });
+                log(context, 'View site request section loaded');
+            } catch (error) {
+                handleError('view-site-request', error, 'Failed to load view site request');
+            }
+        },
         'userManagementIntro': async (show, role) => {
             log(context, 'Handler - User Management Intro triggered');
             toggleViewState(context, { userManagementIntro: show, info: false });
@@ -311,7 +286,9 @@ function defineAdminSectionHandlers() {
             if (show) {
                 toggleViewState(context, { logs: true, info: false });
                 if (type) {
-                    await loadLogs(type);
+                    const logsSection = document.getElementById('logs');
+                    logsSection.dataset.type = type;
+                    renderPeriodIcons();
                 } else {
                     logError(context, 'No log type specified for logs section');
                     notifyError(context, 'Log type not specified');
@@ -331,7 +308,6 @@ if (shouldInitializeForPageType('admin')) {
             const role = 'admin';
             const defaultSection = await getDefaultSectionFromQuery(context, role, 'info');
 
-            // Combine common and admin-specific section handlers
             const commonHandlers = defineCommonSectionHandlers(context, role);
             const adminHandlers = defineAdminSectionHandlers();
             const sectionHandlers = { ...commonHandlers, ...adminHandlers };
@@ -379,7 +355,6 @@ if (shouldInitializeForPageType('admin')) {
 
 // Expose functions to the global scope
 window.handleError = handleError;
-window.fetchData = fetchData;
 window.initializeAdmin = initializeAdmin;
 
 /**

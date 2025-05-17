@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session , current_app
 import requests
 import json
 import logging
@@ -44,7 +44,7 @@ def call_xai_api(messages, deselected_categories):
     try:
         # No need to import app; current_app is available in request context
         headers = {
-            'Authorization': f'Bearer {current_app.config["GROK_API_KEY"]}',
+            'Authorization': f'Bearer {XAI_API_KEY}',
             'Content-Type': 'application/json'
         }
         payload = {
@@ -54,7 +54,7 @@ def call_xai_api(messages, deselected_categories):
             'max_tokens': 1000
         }
         logging.debug(f"Sending request to xAI API: {json.dumps(payload, indent=2)}")
-        response = requests.post('https://api.x.ai/v1/chat/completions', headers=headers, json=payload)
+        response = requests.post(XAI_API_URL, headers=headers, json=payload)
         response.raise_for_status()
         response_data = response.json()
         logging.debug(f"xAI API raw response: {json.dumps(response_data, indent=2)}")

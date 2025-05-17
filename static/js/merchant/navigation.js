@@ -1,64 +1,117 @@
-// /static/js/merchant/navigation.js
-import { log } from '../core/logger.js';
+// File path: /static/js/merchant/navigation.js
+import { log, error as logError } from '../core/logger.js';
 import { defineSectionHandlers } from '../modules/navigation.js';
 import { toggleViewState } from '../utils/dom-manipulation.js';
 import { loadApiKeys } from './api-keys.js';
 import { loadProducts } from './products.js';
+import { initializeReferralsPage } from './referrals-page.js';
+import { selectPeriod, renderPeriodIcons } from './referrals-ui.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
+import { error as notifyError } from '../core/notifications.js';
 
 const context = 'merchant/navigation.js';
 
-/**
- * Defines and returns section handlers for the merchant page.
- * @param {string} context - The context or module name.
- * @returns {Object} An object mapping section IDs to handler functions.
- */
-export function defineMerchantSectionHandlers(context) {
-    log(context, 'Defining merchant section handlers');
+const topLevelSections = ['info', 'my-products', 'api-keys', 'logsIntro'];
+const allSections = ['info', 'my-products', 'api-keys', 'logsIntro', 'logs'];
+
+export function defineMerchantSectionHandlers(contextParameter) {
+    log(contextParameter, 'Defining section handlers for the merchant interface');
 
     const specificHandlers = [
         {
             id: 'info',
-            handler: async () => {
-                log(context, 'Loading info section');
-                toggleViewState(context, { info: true });
+            handler: async function() {
+                log(contextParameter, 'Loading the information section');
+                const state = allSections.reduce(function(accumulator, section) {
+                    accumulator[section] = section === 'info';
+                    return accumulator;
+                }, {});
+                toggleViewState(contextParameter, state);
             },
         },
         {
             id: 'my-products',
-            handler: async () => {
-                log(context, 'Loading my-products section');
-                await loadProducts(context);
-                toggleViewState(context, { 'my-products': true });
+            handler: async function() {
+                log(contextParameter, 'Loading the my products section');
+                await loadProducts(contextParameter);
+                const state = allSections.reduce(function(accumulator, section) {
+                    accumulator[section] = section === 'my-products';
+                    return accumulator;
+                }, {});
+                toggleViewState(contextParameter, state);
             },
         },
         {
             id: 'api-keys',
-            handler: async () => {
-                log(context, 'Loading api-keys section');
-                await loadApiKeys(context);
-                toggleViewState(context, { 'api-keys': true });
+            handler: async function() {
+                log(contextParameter, 'Loading the API keys section');
+                await loadApiKeys(contextParameter);
+                const state = allSections.reduce(function(accumulator, section) {
+                    accumulator[section] = section === 'api-keys';
+                    return accumulator;
+                }, {});
+                toggleViewState(contextParameter, state);
+            },
+        },
+        {
+            id: 'logsIntro',
+            handler: async function(show) {
+                log(contextParameter, 'Loading the logs introduction section');
+                toggleViewState(contextParameter, { logsIntro: show });
+            },
+        },
+        {
+            id: 'logs',
+            handler: async function(show, role, type) {
+                log(contextParameter, `Loading logs section with type: ${type || 'none'}`);
+                if (show) {
+                    if (!type || !['click', 'order'].includes(type)) {
+                        logError(contextParameter, `Invalid or missing log type: ${type}`);
+                        notifyError(contextParameter, 'Please select a log type (Click or Order Events)');
+                        toggleViewState(contextParameter, { logs: false, logsIntro: true });
+                        return;
+                    }
+
+                    const logsSection = document.getElementById('logs');
+                    if (!logsSection) {
+                        logError(contextParameter, 'Logs section element not found');
+                        notifyError(contextParameter, 'Logs section not found');
+                        return;
+                    }
+
+                    logsSection.dataset.type = type;
+                    log(contextParameter, `Set data-type="${type}" on logs section`);
+
+                    toggleViewState(contextParameter, { logs: true, info: false });
+
+                    try {
+                        await initializeReferralsPage(type);
+                        renderPeriodIcons();
+                        log(contextParameter, `Initialized logs UI for type: ${type}`);
+                    } catch (err) {
+                        logError(contextParameter, `Failed to initialize logs UI: ${err.message}`);
+                        notifyError(contextParameter, 'Failed to load logs');
+                    }
+                } else {
+                    toggleViewState(contextParameter, { logs: false });
+                }
             },
         },
     ];
 
-    const sectionHandlers = defineSectionHandlers(context, 'merchant', specificHandlers);
+    const sectionHandlers = defineSectionHandlers(contextParameter, 'merchant', specificHandlers);
     return sectionHandlers;
 }
 
-/**
- * Initializes the navigation module for use with the module registry.
- * @param {Object} registry - The module registry instance.
- * @returns {Object} Module instance with public methods.
- */
 export function initializeNavigationModule(registry) {
-    log(context, 'Initializing navigation module for module registry');
+    log(context, 'Initializing the navigation module for the module registry');
     return {
-        defineMerchantSectionHandlers: ctx => defineMerchantSectionHandlers(ctx),
+        defineMerchantSectionHandlers: function(contextParameter) {
+            return defineMerchantSectionHandlers(contextParameter);
+        },
     };
 }
 
-// Initialize module with lifecycle logging
-withScriptLogging(context, () => {
+withScriptLogging(context, function() {
     log(context, 'Module initialized');
 });

@@ -1,193 +1,272 @@
-from flask import Blueprint, request, jsonify
-from utils.auth import login_required
+from flask import Blueprint, request, jsonify, current_app
+from utils.auth import login_required  # Assumes this validates the token and sets request.user_id
 from utils.data import load_site_request, save_site_request
-from utils.users import load_users_settings
+from utils.users import load_users_settings  # Use load_users_settings for listing all settings
 import logging
 import os
 import datetime
 import json
 import re
+import jwt  # For decoding the JWT token
 
-# region Blueprint Setup
-# Welcome to site_request_bp, the blueprint that handles site requests like Zaphod Beeblebrox handles improbability—fast and with flair!
-# This module is the galactic hub for listing and saving site requests. Prepare for some cosmic organization!
+# Blueprint Setup
 site_request_bp = Blueprint('site_request_bp', __name__)
-# endregion
 
-# region /siterequests GET - Listing Galactic Site Requests
+# /siterequests GET - List All Site Requests (Admin/Partner)
 @site_request_bp.route('/siterequests', methods=['GET'])
-@login_required(["admin", "wixpro"], require_all=False)
+@login_required(["admin", "partner"], require_all=False)
 def list_site_requests():
     """
-    Lists all site requests, like the Spanish Inquisition—nobody expects it, but it’s here for admins and wixpro users!
-    Purpose: To provide a list of site requests for admins or wixpro users, helping them manage the galaxy’s site needs.
-    Permissions: Restricted to "admin" or "wixpro"—you’re either the chosen one or a very naughty boy!
-    Inputs: None—just be logged in with the right permissions, or it’s “Nobody expects the Spanish Inquisition!”
-    Outputs:
-        - Success: JSON {"status": "success", "siterequests": [<siterequest_data>]}, status 200—your map to the site requests!
-        - Errors:
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s ceased to be!
+    Lists all site requests for admin or partner users.
+    Permissions: Requires 'admin' or 'partner' role.
+    Returns:
+        - 200: {"status": "success", "siterequests": [<siterequest_data>]}
+        - 403: {"status": "error", "message": "Unauthorized"}
+        - 500: {"status": "error", "message": "Server error: <reason>"}
     """
     try:
-        # Check permissions—like the Knights Who Say Ni demanding a shrubbery!
-        if "admin" not in request.permissions and "wixpro" not in request.permissions:
-            logging.warning(f"Security Issue - Unauthorized site request list attempt by {request.user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized"}), 403
-        
-        # Load the site request directory—like Arthur Dent flipping through the Guide.
-        siterequest_dir = 'siterequest'
+        siterequest_dir = 'c:\\inetpub\\clubmadeira.io\\siterequest'
         if not os.path.exists(siterequest_dir):
-            logging.warning("UX Issue - No site requests directory found")
+            logging.warning("No site requests directory found")
             return jsonify({"status": "success", "siterequests": []}), 200
 
-        # Load user settings—like the Guide, but with less towel advice.
+        # Fetch all users' settings using load_users_settings
         users_settings = load_users_settings()
         siterequests = []
 
-        # Process each site request file—like the Holy Grail, but with JSON.
-        for filename in os.listdir(siterequest_dir):
-            if filename.endswith('.json'):
-                user_id = filename.replace('.json', '')
-                site_request = load_site_request(user_id)
-                if site_request:
-                    contact_name = users_settings.get(user_id, {}).get('contact_name', '')
-                    email = users_settings.get(user_id, {}).get('email_address', '')
-                    request_type = site_request.get('type', '')
-                    store_name = site_request.get('communityName')  # Adjusted to match POST logic
-                    community_name = site_request.get('communityName')
-                    organisation = store_name if store_name else community_name if community_name else ''
-                    received_at = site_request.get('submitted_at', '')
-
-                    # Assemble the site request data—fit for the Life of Brian’s marketplace.
-                    siterequests.append({
-                        'user_id': user_id,
-                        'type': request_type,
-                        'received_at': received_at,
-                        'contact_name': contact_name,
-                        'email': email,
-                        'organisation': organisation
-                    })
+        # Iterate through the siterequest directory to gather all site requests
+        for filename in os.listdir(siterequest_dir):            
+            user_id = filename
+            site_request = load_site_request(user_id)
+            if site_request:                
+                first_name = users_settings.get(user_id, {}).get('first_name', '')
+                last_name = users_settings.get(user_id, {}).get('last_name', '')
+                email = users_settings.get(user_id, {}).get('email_address', '')
+                organisation = site_request.get('communityName', '')
+                siterequests.append({
+                    'user_id': user_id,
+                    'type': site_request.get('type', ''),
+                    'received_at': site_request.get('submitted_at', ''),
+                    'contact_name': first_name + " " + last_name,
+                    'email': email,
+                    'organisation': organisation
+                })
 
         if not siterequests:
-            logging.warning("UX Issue - No site requests found in directory")
+            logging.warning("No site requests found in directory")
         logging.debug(f"Listed site requests: {json.dumps(siterequests)}")
         return jsonify({"status": "success", "siterequests": siterequests}), 200
     except Exception as e:
-        # Marvin’s take: “I tried to list site requests, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to list site requests: {str(e)}", exc_info=True)
+        logging.error(f"Failed to list site requests: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
 
-# ASCII Art 1: The Dead Parrot
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "This site request is no more! It has ceased to be!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""
-
-# region /siterequests POST - Saving New Galactic Site Requests
-@site_request_bp.route('/siterequests', methods=['POST'])
-@login_required(["self"], require_all=True)
-def save_site_request_endpoint():
+# /siterequests/<user_id> GET - Get Specific Site Request (Admin/Partner)
+@site_request_bp.route('/siterequests/<user_id>', methods=['GET'])
+@login_required(["admin", "partner"], require_all=False)
+def get_site_request(user_id):
     """
-    Saves a new site request, faster than Zaphod’s spaceship escaping a Vogon poetry reading.
-    Purpose: Allows users to submit new site requests, restricted to themselves—like the People’s Front of Judea’s secret meetings.
-    Permissions: Restricted to "self"—only you can submit your own request, or it’s “Nobody expects the Spanish Inquisition!”
-    Inputs: JSON payload with:
-        - userId (str, optional): Must match the authenticated user.
-        - type (str, optional): Request type, defaults to "community".
-        - communityName (str): Name of the community or store.
-        - aboutCommunity (str): Description of the community or store.
-        - communityLogos (list): Logos for the community or store.
-        - colorPrefs (str): Color preferences.
-        - stylingDetails (str): Styling details.
-        - preferredDomain (str): Preferred domain, e.g., "mycommunity.org".
-        - emails (list): List of emails.
-        - pages (list): List of pages.
-        - widgets (list): List of widgets.
-    Outputs:
-        - Success: JSON {"status": "success", "message": "Site request saved successfully"}, status 200—request logged!
-        - Errors:
-            - 400: {"status": "error", "message": "No data provided"}—no data, no fork handles!
-            - 400: {"status": "error", "message": "User ID in body does not match authenticated user"}—mismatch!
-            - 403: {"status": "error", "message": "Unauthorized: Must be admin or match user_id"}—unauthorized!
-            - 400: {"status": "error", "message": "Community name or store name is required"}—missing name!
-            - 400: {"status": "error", "message": "Invalid domain name"}—bad domain!
-            - 500: {"status": "error", "message": "Server error: <reason>"}—the Parrot’s pining again!
+    Retrieves a specific site request by user_id for admin or partner users.
+    Permissions: Requires 'admin' or 'partner' role.
+    Returns:
+        - 200: {"status": "success", "siterequest": <siterequest_data>}
+        - 403: {"status": "error", "message": "Unauthorized"}
+        - 404: {"status": "error", "message": "Site request not found"}
+        - 500: {"status": "error", "message": "Server error: <reason>"}
     """
     try:
-        # Arthur Dent checks the JSON—where’s that data?
+        site_request = load_site_request(user_id)
+        if not site_request:
+            logging.warning(f"Site request not found for user {user_id}")
+            return jsonify({"status": "error", "message": "Site request not found"}), 404
+
+        logging.debug(f"Retrieved site request for user {user_id}: {json.dumps(site_request)}")
+        return jsonify({"status": "success", "siterequest": site_request}), 200
+    except Exception as e:
+        logging.error(f"Failed to retrieve site request for user {user_id}: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+# /siterequest GET, POST, PATCH - Self Site Request Operations
+@site_request_bp.route('/siterequest', methods=['GET', 'POST', 'PATCH'])
+@login_required(["self"], require_all=True)
+def manage_self_site_request():
+    """
+    Handles GET, POST, and PATCH for the authenticated user's site request.
+    Permissions: Requires 'self' role (authenticated user).
+    GET:
+        Returns the user's site request or a blank site request with mandatory pages if none exists.
+        - 200: {"status": "success", "siterequest": <siterequest_data>}
+        - 500: {"status": "error", "message": "Server error: <reason>"}
+    POST:
+        Creates a new site request, ensuring mandatory pages are included.
+        Inputs (JSON):
+            - type (str, optional): Defaults to "community".
+            - communityName (str, required): Community or store name.
+            - aboutCommunity (str): Description.
+            - communityLogos (list): Logos.
+            - colorPrefs (str): Color preferences.
+            - stylingDetails (str): Styling details.
+            - preferredDomain (str): e.g., "mycommunity.org".
+            - emails (list): Emails.
+            - pages (list): Pages.
+            - widgets (list): Widgets.
+        Returns:
+            - 200: {"status": "success", "message": "Site request saved successfully"}
+            - 400: {"status": "error", "message": "<validation error>"}
+            - 500: {"status": "error", "message": "Server error: <reason>"}
+    PATCH:
+        Updates specific fields of the site request, ensuring mandatory pages are not removed.
+        Inputs (JSON): Any subset of POST fields (e.g., {"communityName": "New Name"}).
+        Returns:
+            - 200: {"status": "success", "message": "Site request updated successfully"}
+            - 400: {"status": "error", "message": "<validation error>"}
+            - 404: {"status": "error", "message": "Site request not found"}
+            - 500: {"status": "error", "message": "Server error: <reason>"}
+    """
+    try:
+        user_id = request.user_id
+
+        # Extract and validate JWT token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            logging.warning("No valid Authorization header provided")
+            return jsonify({"status": "error", "message": "Missing or invalid token"}), 401
+
+        token = auth_header.split(' ')[1]
+        decoded_token = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+        x_role = decoded_token.get('x-role', 'community')  # Default to 'community' if missing
+
+        # Define mandatory pages based on user role
+        mandatory_pages = (
+            [
+                {"title": "Home", "content": "", "mandatory": True},
+                {"title": "Returns Policy", "content": "", "mandatory": True}
+            ] if x_role == 'merchant' else
+            [
+                {"title": "Home", "content": "", "mandatory": True}
+            ]
+        )
+
+        if request.method == 'GET':
+            site_request = load_site_request(user_id)
+            if not site_request:
+                logging.info(f"No site request found for user {user_id}, returning blank site request with mandatory pages for role: {x_role}")
+                site_request = {
+                    "user_id": user_id,
+                    "type": x_role,
+                    "communityName": "",
+                    "aboutCommunity": "",
+                    "communityLogos": [],
+                    "colorPrefs": "",
+                    "stylingDetails": "",
+                    "preferredDomain": "",
+                    "emails": [""],  # Default to a single empty email
+                    "pages": mandatory_pages,
+                    "widgets": [],
+                    "submitted_at": ""
+                }
+            else:
+                # Ensure emails field is populated
+                if not site_request.get("emails"):
+                    site_request["emails"] = [""]
+                # Ensure mandatory pages are included
+                existing_pages = {page['title']: page for page in site_request.get("pages", [])}
+                for mandatory_page in mandatory_pages:
+                    if mandatory_page['title'] not in existing_pages:
+                        site_request["pages"].append(mandatory_page)
+            logging.debug(f"Retrieved site request for user {user_id}: {json.dumps(site_request)}")
+            return jsonify({"status": "success", "siterequest": site_request}), 200
+
+        # Handle POST and PATCH requests
         data = request.get_json()
         if not data:
-            logging.warning("UX Issue - Site request save attempt with no data")
+            logging.warning("Site request operation attempted with no data")
             return jsonify({"status": "error", "message": "No data provided"}), 400
 
-        # Check user_id—like the Knights Who Say Ni demanding a shrubbery!
-        user_id = request.user_id
-        body_user_id = data.get("userId")
-        if body_user_id and body_user_id != user_id:
-            logging.warning(f"Security Issue - User ID mismatch: URL={user_id}, Body={body_user_id}")
-            return jsonify({"status": "error", "message": "User ID in body does not match authenticated user"}), 400
+        if request.method == 'POST':
+            community_name = data.get("communityName") or data.get("storeName")
+            if not community_name:
+                logging.warning(f"Missing community/store name for user {user_id}")
+                return jsonify({"status": "error", "message": "Community name or store name is required"}), 400
 
-        # Permission check—only self or admin can submit, or it’s “Nobody expects the Spanish Inquisition!”
-        if "admin" not in request.permissions and request.user_id != user_id:
-            logging.warning(f"Security Issue - Unauthorized site request save by {request.user_id} for {user_id}")
-            return jsonify({"status": "error", "message": "Unauthorized: Must be admin or match user_id"}), 403
+            preferred_domain = data.get("preferredDomain", "mycommunity.org")
+            domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+            if not re.match(domain_regex, preferred_domain):
+                logging.warning(f"Invalid domain name for user {user_id}: {preferred_domain}")
+                return jsonify({"status": "error", "message": "Invalid domain name"}), 400
 
-        # Assemble the site request—like the Holy Grail, but with JSON.
-        request_type = data.get("type", "community")
-        site_request = {
-            "user_id": user_id,
-            "type": request_type,
-            "communityName": data.get("communityName") or data.get("storeName") or "",
-            "aboutCommunity": data.get("aboutCommunity") or data.get("aboutStore") or "",
-            "communityLogos": data.get("communityLogos") or data.get("storeLogos") or [],
-            "colorPrefs": data.get("colorPrefs", ""),
-            "stylingDetails": data.get("stylingDetails", ""),
-            "preferredDomain": data.get("preferredDomain", "mycommunity.org"),
-            "emails": data.get("emails", []),
-            "pages": data.get("pages", []),
-            "widgets": data.get("widgets", []),
-            "submitted_at": datetime.datetime.utcnow().isoformat()
-        }
+            site_request = {
+                "user_id": user_id,
+                "type": data.get("type", x_role),  # Use role from token if not provided
+                "communityName": community_name,
+                "aboutCommunity": data.get("aboutCommunity") or data.get("aboutStore") or "",
+                "communityLogos": data.get("communityLogos") or data.get("storeLogos") or [],
+                "colorPrefs": data.get("colorPrefs", ""),
+                "stylingDetails": data.get("stylingDetails", ""),
+                "preferredDomain": preferred_domain,
+                "emails": data.get("emails", []),
+                "pages": data.get("pages", []),
+                "widgets": data.get("widgets", []),
+                "submitted_at": datetime.datetime.utcnow().isoformat()
+            }
 
-        # Check for community/store name—or it’s like asking for four candles and getting fork handles!
-        if not site_request["communityName"]:
-            logging.warning(f"UX Issue - Site request missing community/store name for user {user_id}")
-            return jsonify({"status": "error", "message": "Community name or store name is required"}), 400
+            # Ensure mandatory pages are included
+            existing_pages = {page['title']: page for page in site_request["pages"]}
+            for mandatory_page in mandatory_pages:
+                if mandatory_page['title'] not in existing_pages:
+                    site_request["pages"].append(mandatory_page)
 
-        # Validate domain—like checking if a parrot is still alive.
-        domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
-        if not re.match(domain_regex, site_request["preferredDomain"]):
-            logging.warning(f"UX Issue - Invalid domain name for user {user_id}: {site_request['preferredDomain']}")
-            return jsonify({"status": "error", "message": "Invalid domain name"}), 400
+            # Process images in pages
+            for page in site_request["pages"]:
+                if "images" in page and page["images"]:
+                    page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
 
-        # Process page images—like the Holy Hand Grenade, but less explosive.
-        for page in site_request["pages"]:
-            if "images" in page and page["images"]:
-                page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
+            save_site_request(user_id, site_request)
+            logging.info(f"Site request saved for user {user_id}: {json.dumps(site_request)}")
+            return jsonify({"status": "success", "message": "Site request saved successfully"}), 200
 
-        # Save the site request—stronger than a Wookiee’s grip!
-        save_site_request(user_id, site_request)
-        logging.info(f"Site request saved successfully for user {user_id}: {json.dumps(site_request)}")
-        return jsonify({"status": "success", "message": "Site request saved successfully"}), 200
+        if request.method == 'PATCH':
+            site_request = load_site_request(user_id)
+            if not site_request:
+                logging.warning(f"Site request not found for user {user_id}")
+                return jsonify({"status": "error", "message": "Site request not found"}), 404
+
+            updatable_fields = [
+                "type", "communityName", "aboutCommunity", "communityLogos",
+                "colorPrefs", "stylingDetails", "preferredDomain", "emails",
+                "pages", "widgets"
+            ]
+            for field in updatable_fields:
+                if field in data:
+                    site_request[field] = data[field]
+
+            if "communityName" in data and not data["communityName"]:
+                logging.warning(f"Empty community name provided for user {user_id}")
+                return jsonify({"status": "error", "message": "Community name cannot be empty"}), 400
+
+            if "preferredDomain" in data:
+                domain_regex = r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+                if not re.match(domain_regex, data["preferredDomain"]):
+                    logging.warning(f"Invalid domain name for user {user_id}: {data['preferredDomain']}")
+                    return jsonify({"status": "error", "message": "Invalid domain name"}), 400
+
+            if "pages" in data:
+                # Ensure mandatory pages are not removed
+                existing_pages = {page['title']: page for page in site_request["pages"]}
+                for mandatory_page in mandatory_pages:
+                    if mandatory_page['title'] not in existing_pages:
+                        site_request["pages"].append(mandatory_page)
+                # Process images in pages
+                for page in site_request["pages"]:
+                    if "images" in page and page["images"]:
+                        page["images"] = [img if isinstance(img, str) else "placeholder" for img in page["images"]]
+
+            save_site_request(user_id, site_request)
+            logging.info(f"Site request updated for user {user_id}: {json.dumps(site_request)}")
+            return jsonify({"status": "success", "message": "Site request updated successfully"}), 200
+
+    except jwt.InvalidTokenError as e:
+        logging.error(f"JWT decoding failed for user {user_id}: {str(e)}")
+        return jsonify({"status": "error", "message": "Invalid token"}), 401
     except Exception as e:
-        # Marvin’s take: “I tried to save the site request, and now I’m even more depressed.”
-        logging.error(f"UX Issue - Failed to save site request: {str(e)}", exc_info=True)
+        logging.error(f"Failed to process site request for user {user_id}: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# ASCII Art 2: The Towel (Hitchhiker’s Guide)
-"""
-       ______
-      /|_||_\`.__
-     (   _    _ _\
-     =|  _    _  |  "Don’t forget your towel—essential for site requests!"
-      | (_)  (_) |
-       \._|\'|\'_./
-          |__|__| 
-"""

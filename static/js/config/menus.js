@@ -1,5 +1,4 @@
-// /static/js/config/menus.js
-// Purpose: Defines menu configurations for each role with nested submenus and provides utilities for dynamic menu generation.
+// config/menus.js
 
 import { log, warn } from '../core/logger.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
@@ -9,7 +8,6 @@ import { resetNavigation } from '../modules/navigation.js';
 
 const context = 'menus.js';
 
-// Define menu configurations for each role
 export const MENUS = {
     'admin': [
         {
@@ -19,6 +17,11 @@ export const MENUS = {
         },
         { section: 'affiliates', label: 'Affiliate Programs', icons: ['icon-amazon-uk'] },
         { section: 'site_settings', label: 'Site Settings', icons: ['fas fa-cog'] },
+        {
+            section: 'site_requests', // New menu item for site requests
+            label: 'Site Requests',
+            icons: ['fas fa-globe']
+        },
         {
             section: 'logsIntro',
             label: 'Logs',
@@ -53,19 +56,28 @@ export const MENUS = {
     'merchant': [
         { section: 'create-store', label: 'Create Store', icons: ['fas fa-store'] },
         { section: 'my-products', label: 'My Products', icons: ['fas fa-box-open'] },
-        { section: 'api-keys', label: 'API Keys', icons: ['fas fa-key'] }
+        { section: 'api-keys', label: 'API Keys', icons: ['fas fa-key'] },
+        {
+            section: 'logsIntro',
+            label: 'Logs',
+            icons: ['fas fa-chart-bar'],
+            submenu: [                
+                { section: 'logs', label: 'Click Events', icons: ['fas fa-mouse-pointer'], type: 'click' },
+                { section: 'logs', label: 'Order Events', icons: ['fas fa-shopping-cart'], type: 'order' }
+            ]
+        }
     ],
     'community': [
         { section: 'categories', label: 'Categories', icons: ['fas fa-list'] },
         { section: 'my_website_intro_section', label: 'Link My Website', icons: ['fas fa-link'] },
         { section: 'no_website', label: 'Create Website', icons: ['fas fa-globe'] },
         {
-            section: 'referrals_intro',
-            label: 'Referrals',
-            icons: ['fas fa-user-friends'],
-            submenu: [
-                { section: 'visits', label: 'Visits', icons: ['fas fa-eye'] },
-                { section: 'orders', label: 'Orders', icons: ['fas fa-shopping-cart'] }
+            section: 'logsIntro',
+            label: 'Logs',
+            icons: ['fas fa-chart-bar'],
+            submenu: [                
+                { section: 'logs', label: 'Click Events', icons: ['fas fa-mouse-pointer'], type: 'click' },
+                { section: 'logs', label: 'Order Events', icons: ['fas fa-shopping-cart'], type: 'order' }
             ]
         }
     ],
@@ -94,10 +106,6 @@ export const MENUS = {
     ]
 };
 
-/**
- * Checks if the user has admin permission based on the auth token.
- * @returns {boolean} True if the user has admin permission, false otherwise.
- */
 export function hasAdminPermission() {
     const token = getAuthToken();
     if (!token) {
@@ -115,11 +123,6 @@ export function hasAdminPermission() {
     }
 }
 
-/**
- * Performs a role switch by calling the /set-role endpoint.
- * @param {string} role - The role to switch to.
- * @returns {Promise<void>}
- */
 async function switchRole(role) {
     log(context, `Switching to role: ${role}`);
     window.showLoadingOverlay?.();
@@ -150,10 +153,6 @@ async function switchRole(role) {
     }
 }
 
-/**
- * Handles logoff by clearing the token and redirecting to /logoff.
- * @returns {Promise<void>}
- */
 async function handleLogoff() {
     log(context, 'Logoff button clicked');
     try {
@@ -175,12 +174,6 @@ async function handleLogoff() {
     }
 }
 
-/**
- * Recursively attaches actions to menu items based on their section.
- * @param {Array} menu - The menu array to process.
- * @param {string} role - The role for which the menu is being generated.
- * @returns {Array} The menu with actions attached where applicable.
- */
 function addActionsToMenu(menu, role) {
     return menu.map(item => {
         let newItem = { ...item };
@@ -202,11 +195,6 @@ function addActionsToMenu(menu, role) {
     });
 }
 
-/**
- * Retrieves the menu configuration for a given role, adding dynamic buttons and actions.
- * @param {string} role - The role for which to retrieve the menu.
- * @returns {Array} The menu configuration for the role.
- */
 export function getMenu(role) {
     log(context, `Retrieving menu for role: ${role}`);
     let baseMenu = MENUS[role] || MENUS['default'];
@@ -215,12 +203,10 @@ export function getMenu(role) {
         baseMenu = MENUS['default'];
     }
 
-    // Attach actions to menu items recursively
     const menuWithActions = addActionsToMenu(baseMenu, role);
 
     const additionalButtons = [];
 
-    // Add "My Account" button with submenu for all roles except 'login'
     if (role !== 'login') {
         additionalButtons.push({
             section: 'my-account',
@@ -233,10 +219,9 @@ export function getMenu(role) {
         });
     }
 
-    // Determine page type for "Back to Admin" button logic
     let pageType = document.body.getAttribute('data-page-type') || document.body.dataset.pageType;
     if (role === 'login') {
-        pageType = 'login'; // Force pageType to 'login' for login role
+        pageType = 'login';
         log(context, 'Forcing pageType to "login" for login role');
     } else if (!pageType) {
         const token = getAuthToken();
@@ -254,7 +239,6 @@ export function getMenu(role) {
     }
     log(context, `Page type determined: ${pageType}, hasAdminPermission: ${hasAdminPermission()}`);
 
-    // Add "Back to Admin" button if user has admin permission and page_type is not 'admin' or 'login'
     const shouldAddBackToAdmin = hasAdminPermission() && pageType.toLowerCase() !== 'admin' && pageType.toLowerCase() !== 'login';
     log(context, `Should add Back to Admin button: ${shouldAddBackToAdmin}`);
     if (shouldAddBackToAdmin) {
@@ -269,7 +253,6 @@ export function getMenu(role) {
         log(context, 'Back to Admin button not added');
     }
 
-    // Add "Logoff" button for all roles except 'login'
     if (role !== 'login') {
         additionalButtons.push({
             label: 'Logoff',
@@ -281,7 +264,6 @@ export function getMenu(role) {
     const finalMenu = [...menuWithActions, ...additionalButtons];
     log(context, `Final menu for role ${role}:`, finalMenu.map(item => item.label));
 
-    // Validate login menu
     if (role === 'login') {
         const requiredSections = ['signupContainer', 'forgotPasswordContainer'];
         const hasRequired = requiredSections.every(section => 
@@ -307,11 +289,6 @@ export function getMenu(role) {
     return finalMenu;
 }
 
-/**
- * Initializes the menus module for use with the module registry.
- * @param {Map} registry - The module registry instance.
- * @returns {Object} Module instance with public methods.
- */
 export function initializeMenusModule(registry) {
     log(context, 'Initializing menus module for module registry');
     return {
@@ -319,10 +296,8 @@ export function initializeMenusModule(registry) {
     };
 }
 
-// Initialize the module with lifecycle logging
 withScriptLogging(context, () => {
     log(context, 'Module initialized');
-    // Debug: Retrieve and log the login menu during initialization
     const loginMenu = getMenu('login');
     log(context, 'Login menu during initialization:', loginMenu.map(item => item.label));
     if (!loginMenu.some(item => item.section === 'signupContainer') || 

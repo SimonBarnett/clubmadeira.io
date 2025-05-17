@@ -5,6 +5,7 @@ import { withScriptLogging } from '../utils/logging-utils.js';
 import { initializeDealsOrchestrator } from './deals-orchestrator.js';
 import { initializeUsersOrchestratorModule } from './users-orchestrator.js';
 import { initializeSettingsOrchestrator } from './settings-orchestrator.js';
+import { initializeReferralTest } from './referral-test.js'; // Added import
 import { parsePageType, shouldInitializeForPageType } from '../utils/initialization.js';
 
 const context = 'initializer.js';
@@ -20,6 +21,7 @@ export async function initializeAdminModules(context) {
         { name: 'deals', init: initializeDealsOrchestrator },
         { name: 'users', init: initializeUsersOrchestratorModule },
         { name: 'settings', init: initializeSettingsOrchestrator },
+        { name: 'referralTest', init: initializeReferralTest }, // Added referralTest
     ];
     for (const { name, init } of orchestrators) {
         await withErrorHandling(`${context}:initialize${name}`, async () => {

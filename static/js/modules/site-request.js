@@ -1,10 +1,7 @@
 // /static/js/modules/site-request.js
-// Purpose: Manages site request form submission, loading, and UI updates for merchant and community roles.
-
-import { log } from '../core/logger.js';
+import { log, error as logError } from '../core/logger.js';
 import { fetchData } from '../utils/data-fetch.js';
 import { submitConfiguredForm } from '../utils/form-submission.js';
-import { setupEventListeners } from '../utils/event-listeners.js';
 import { withAuthenticatedUser } from '../core/auth.js';
 import { withElement, toggleViewState } from '../utils/dom-manipulation.js';
 import { initializeTinyMCE } from '../core/mce.js';
@@ -12,155 +9,226 @@ import { withErrorHandling } from '../utils/error.js';
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../config/constants.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
 
+const context = 'site-request.js';
+
 /**
- * Initializes the site request form, including loading data and setting up event listeners.
+ * Initializes the site request form for a given section.
  * @param {string} context - The context or module name.
- * @param {string} sectionId - The ID of the section to initialize (e.g., 'store-request', 'site-request').
- * @returns {Promise<void>}
+ * @param {string} sectionId - The ID of the section (e.g., 'create-store', 'no_website').
  */
-export async function initializeSiteRequest(context, sectionId = 'store-request') {
-  log(context, `Initializing site request for section: ${sectionId}`);
-  await withAuthenticatedUser(async userId => {
-    await withErrorHandling(`${context}:initializeSiteRequest`, async () => {
-      await loadSiteRequest(context, sectionId, userId);
-      setupSiteRequestEvents(context, sectionId, userId);
-    }, ERROR_MESSAGES.MODULE_INIT_FAILED);
-  });
+export async function initializeSiteRequest(context, sectionId) {
+    log(context, `Initializing site request for section: ${sectionId}`);
+    await withAuthenticatedUser(context, async (userId) => {
+        await withErrorHandling(`${context}:initializeSiteRequest`, async () => {
+            log(context, `Starting initialization with userId: ${userId}`);
+            await loadSiteRequest(context, sectionId, userId);
+            setupSiteRequestEvents(context, sectionId, userId);
+            log(context, 'Initialization completed successfully');
+        }, ERROR_MESSAGES.MODULE_INIT_FAILED);
+    }, 'initializeSiteRequest');
 }
 
 /**
- * Loads and populates the site request form with data from the server.
+ * Loads existing site request data into the form.
  * @param {string} context - The context or module name.
- * @param {string} sectionId - The ID of the section to populate (e.g., 'store-request', 'site-request').
- * @param {string} userId - The user ID.
- * @returns {Promise<void>}
+ * @param {string} sectionId - The section ID.
+ * @param {string} userId - The authenticated user ID.
  */
 async function loadSiteRequest(context, sectionId, userId) {
-  log(context, `Loading site request data for section: ${sectionId}`);
-  await withErrorHandling(`${context}:loadSiteRequest`, async () => {
-    await withElement(context, sectionId, async (section) => {
-      // Fetch site request data
-      const data = await fetchData(context, `${API_ENDPOINTS.SITE_REQUEST}/${userId}`);
-      if (!data) {
-        log(context, 'No site request data available');
-        return;
-      }
+    log(context, `Loading site request data for section: ${sectionId}, userId: ${userId}`);
+    await withErrorHandling(`${context}:loadSiteRequest`, async () => {
+        await withElement(context, sectionId, async (section) => {
+            const form = section.querySelector('#siteRequestForm');
+            if (!form) {
+                logError(context, `Form #siteRequestForm not found in section: ${sectionId}`);
+                return;
+            }
+            log(context, 'Form #siteRequestForm found');
+            form.dataset.siteRequestHandled = 'true'; // Mark as handled to avoid conflicts
 
-      // Determine role-specific field IDs (merchant or community)
-      const fieldIds = {
-        storeName: sectionId === 'store-request' ? 'name' : 'name', // Updated to match HTML
-        aboutStore: sectionId === 'store-request' ? 'about' : 'about', // Updated to match HTML
-        colorPreference: sectionId === 'store-request' ? 'colorPrefs' : 'colorPrefs', // Updated to match HTML
-        stylingDetails: sectionId === 'store-request' ? 'stylingDetails' : 'stylingDetails', // Updated to match HTML
-        domain: sectionId === 'store-request' ? 'preferredDomain' : 'preferredDomain', // Updated to match HTML
-        emailsContainer: sectionId === 'store-request' ? 'emailsContainer' : 'emailsContainer', // Matches HTML
-        pagesContainer: sectionId === 'store-request' ? 'pagesContainer' : 'pagesContainer', // Matches HTML
-      };
+            const data = await fetchData(context, API_ENDPOINTS.SITE_REQUEST);
+            log(context, 'Fetched site request data:', data);
+            const siteRequest = data?.siterequest || {};
 
-      // Populate form fields
-      document.getElementById(fieldIds.storeName)?.setAttribute('value', data.storeName || '');
-      document.getElementById(fieldIds.aboutStore)?.setAttribute('value', data.about || '');
-      document.getElementById(fieldIds.colorPreference)?.setAttribute('value', data.colorPreference || '');
-      document.getElementById(fieldIds.stylingDetails)?.setAttribute('value', data.stylingDetails || '');
-      document.getElementById(fieldIds.domain)?.setAttribute('value', data.domain || '');
+            if (Object.keys(siteRequest).length > 0) {
+                form.dataset.siteRequestId = 'exists';
+                log(context, 'Set dataset.siteRequestId to "exists"');
+            }
 
-      // Populate emails
-      const emailsContainer = document.getElementById(fieldIds.emailsContainer);
-      if (emailsContainer && data.emails) {
-        emailsContainer.innerHTML = data.emails.map((email, index) => `
-          <div class="email-entry">
-            <input type="email" name="email_${index}" value="${email}">
-            <button type="button" class="remove-email" data-index="${index}">Remove</button>
-          </div>
-        `).join('');
-      }
+            // Populate static fields
+            const fields = {
+                name: siteRequest.communityName || '',
+                about: siteRequest.aboutCommunity || '',
+                colorPrefs: siteRequest.colorPrefs || '',
+                stylingDetails: siteRequest.stylingDetails || '',
+                preferredDomain: siteRequest.preferredDomain || '',
+            };
+            Object.entries(fields).forEach(([id, value]) => {
+                const input = form.querySelector(`#${id}`);
+                if (input) {
+                    input.value = value;
+                    log(context, `Populated ${id} with: ${value}`);
+                }
+            });
 
-      // Populate pages
-      const pagesContainer = document.getElementById(fieldIds.pagesContainer);
-      if (pagesContainer && data.pages) {
-        pagesContainer.innerHTML = data.pages.map((page, index) => `
-          <div class="page-entry">
-            <input type="text" name="page_${index}_title" value="${page.title}">
-            <textarea name="page_${index}_content" class="mce-editor">${page.content}</textarea>
-            <button type="button" class="remove-page" data-index="${index}">Remove</button>
-          </div>
-        `).join('');
-      }
+            // Populate emails
+            const emailsContainer = form.querySelector('#emailsContainer');
+            if (emailsContainer) {
+                const emails = siteRequest.emails || [''];
+                emailsContainer.innerHTML = emails.map((email, index) => `
+                    <div class="email-entry">
+                        <input type="email" name="email_${index}" value="${email}">
+                        ${emails.length > 1 ? '<button type="button" class="remove-email">Remove</button>' : ''}
+                    </div>
+                `).join('');
+                log(context, 'Populated emails:', emails);
+            }
 
-      // Initialize TinyMCE for all elements with class 'mce-editor'
-      await initializeTinyMCE(context, '.mce-editor');
+            // Populate pages
+            const pagesContainer = form.querySelector('#pagesContainer');
+            if (pagesContainer) {
+                const pages = siteRequest.pages || [];
+                pagesContainer.innerHTML = pages.length > 0 ? pages.map((page, index) => {
+                    const isMandatory = page.mandatory || false;
+                    return `
+                        <div class="page-entry" data-mandatory="${isMandatory}">
+                            <input type="text" name="page_${index}_title" value="${page.title || ''}" ${isMandatory ? 'readonly' : ''}>
+                            <textarea name="page_${index}_content" id="page_${index}_content" class="mce-editor">${page.content || ''}</textarea>
+                            <input type="file" name="page_${index}_images" multiple>
+                            <input type="hidden" name="page_${index}_mandatory" value="${isMandatory}">
+                            ${isMandatory ? '' : '<button type="button" class="remove-page">Remove</button>'}
+                        </div>
+                    `;
+                }).join('') : `
+                    <div class="page-entry" data-mandatory="false">
+                        <input type="text" name="page_0_title" placeholder="Page Title">
+                        <textarea name="page_0_content" id="page_0_content" class="mce-editor" placeholder="Page Content"></textarea>
+                        <input type="file" name="page_0_images" multiple>
+                        <input type="hidden" name="page_0_mandatory" value="false">
+                        <button type="button" class="remove-page">Remove</button>
+                    </div>
+                `;
+                log(context, 'Populated pages:', pages);
 
-      // Update domain preview if function exists
-      if (typeof window.updateDomainPreview === 'function') {
-        window.updateDomainPreview(data.domain);
-      }
+                // Initialize TinyMCE for pages' textareas
+                const textareas = pagesContainer.querySelectorAll('.mce-editor');
+                for (let i = 0; i < textareas.length; i++) {
+                    const textarea = textareas[i];
+                    if (!textarea.id) textarea.id = `page_${i}_content`; // Ensure unique ID
+                    await initializeTinyMCE(context, `#${textarea.id}`);
+                }
+                log(context, `Initialized TinyMCE for ${textareas.length} textareas`);
+            }
 
-      // Show the section
-      toggleViewState(context, { [sectionId]: true });
-    });
-  }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);
+            // Initialize TinyMCE for static .mce-editor textareas (e.g., about, stylingDetails)
+            const staticMceTextareas = form.querySelectorAll('.mce-editor:not(#pagesContainer .mce-editor)');
+            for (let i = 0; i < staticMceTextareas.length; i++) {
+                const textarea = staticMceTextareas[i];
+                if (!textarea.id) {
+                    textarea.id = `static_mce_${i}`; // Assign a unique ID if not present
+                }
+                await initializeTinyMCE(context, `#${textarea.id}`);
+            }
+            log(context, `Initialized TinyMCE for ${staticMceTextareas.length} static textareas`);
+
+            toggleViewState(context, { [sectionId]: true });
+        });
+    }, ERROR_MESSAGES.ELEMENT_NOT_FOUND);
 }
 
 /**
- * Sets up event listeners for site request form submission and UI interactions.
+ * Sets up event listeners for form interactions and submission.
  * @param {string} context - The context or module name.
- * @param {string} sectionId - The ID of the section (e.g., 'store-request', 'site-request').
+ * @param {string} sectionId - The section ID.
  * @param {string} userId - The user ID.
  */
 function setupSiteRequestEvents(context, sectionId, userId) {
-  log(context, `Setting up site request event listeners for section: ${sectionId}`);
-  setupEventListeners(context, [
-    {
-      eventType: 'submit',
-      selector: '#siteRequestForm',
-      handler: async event => {
-        event.preventDefault();
-        await submitConfiguredForm(context, 'siteRequestForm', API_ENDPOINTS.SITE_REQUEST(userId), 'siteRequest', {
-          onSuccess: data => {
-            log(context, 'Site request submitted successfully:', data);
-          },
-        });
-      },
-    },
-    {
-      eventType: 'click',
-      selector: '.remove-email',
-      handler: event => {
-        const index = event.target.dataset.index;
-        const emailEntry = document.querySelector(`.email-entry:nth-child(${parseInt(index) + 1})`);
-        if (emailEntry) emailEntry.remove();
-        log(context, `Removed email entry at index: ${index}`);
-      },
-    },
-    {
-      eventType: 'click',
-      selector: '.remove-page',
-      handler: event => {
-        const index = event.target.dataset.index;
-        const pageEntry = document.querySelector(`.page-entry:nth-child(${parseInt(index) + 1})`);
-        if (pageEntry) pageEntry.remove(); // Fixed typo from 'emailEntry' to 'pageEntry'
-        log(context, `Removed page entry at index: ${index}`);
-      },
-    },
-  ]);
+    log(context, `Setting up events for section: ${sectionId}`);
+    const form = document.getElementById('siteRequestForm');
+    if (!form) {
+        logError(context, 'Form #siteRequestForm not found for event setup');
+        return;
+    }
+
+    // Event delegation for dynamic elements
+    form.addEventListener('click', async event => {
+        const target = event.target;
+        if (target.classList.contains('remove-email')) {
+            const emailEntry = target.closest('.email-entry');
+            const emailsContainer = form.querySelector('#emailsContainer');
+            if (emailsContainer.querySelectorAll('.email-entry').length > 1) {
+                emailEntry.remove();
+                log(context, 'Removed an email entry');
+            }
+        } else if (target.classList.contains('remove-page')) {
+            const pageEntry = target.closest('.page-entry');
+            const isMandatory = pageEntry.dataset.mandatory === 'true';
+            if (!isMandatory) {
+                pageEntry.remove();
+                log(context, 'Removed a page entry');
+            } else {
+                log(context, 'Cannot remove mandatory page');
+                // Optionally, alert the user: alert('Mandatory pages cannot be removed.');
+            }
+        } else if (target.dataset.action === 'addEmail') {
+            const emailsContainer = form.querySelector('#emailsContainer');
+            const index = emailsContainer.querySelectorAll('.email-entry').length;
+            emailsContainer.insertAdjacentHTML('beforeend', `
+                <div class="email-entry">
+                    <input type="email" name="email_${index}" placeholder="Enter email">
+                    <button type="button" class="remove-email">Remove</button>
+                </div>
+            `);
+            log(context, `Added email entry ${index}`);
+        } else if (target.dataset.action === 'addPage') {
+            const pagesContainer = form.querySelector('#pagesContainer');
+            const index = pagesContainer.querySelectorAll('.page-entry').length;
+            const pageHtml = `
+                <div class="page-entry" data-mandatory="false">
+                    <input type="text" name="page_${index}_title" placeholder="Page Title">
+                    <textarea name="page_${index}_content" id="page_${index}_content" class="mce-editor" placeholder="Page Content"></textarea>
+                    <input type="file" name="page_${index}_images" multiple>
+                    <input type="hidden" name="page_${index}_mandatory" value="false">
+                    <button type="button" class="remove-page">Remove</button>
+                </div>
+            `;
+            pagesContainer.insertAdjacentHTML('beforeend', pageHtml);
+            await initializeTinyMCE(context, `#page_${index}_content`);
+            log(context, `Added page entry ${index} with TinyMCE`);
+        }
+    });
+
+    // Configure form submission with TinyMCE save
+    submitConfiguredForm(context, 'siteRequestForm', API_ENDPOINTS.SITE_REQUEST, 'siteRequest', {
+        method: form => form.dataset.siteRequestId === 'exists' ? 'PATCH' : 'POST',
+        onSuccess: (response) => {
+            log(context, 'Form submission successful:', response);
+            form.dataset.siteRequestId = 'exists';
+        },
+        onError: (err) => {
+            logError(context, 'Form submission failed:', err.message);
+        },
+        data: () => {
+            if (window.tinymce) {
+                window.tinymce.triggerSave();
+                log(context, 'Triggered TinyMCE save before form data collection');
+            }
+            const formData = new FormData(form);
+            log(context, 'Collected form data:', Array.from(formData.entries()));
+            return formData;
+        },
+    });
+    log(context, 'Form submission handler configured');
 }
 
-/**
- * Initializes the site-request module for use with the module registry.
- * @param {Object} registry - The module registry instance.
- * @returns {Object} SiteRequest instance with public methods.
- */
 export function initializeSiteRequestModule(registry) {
-  const context = 'site-request.js';
-  log(context, 'Initializing site-request module for module registry');
-  return {
-    initializeSiteRequest: (ctx, ...args) => initializeSiteRequest(ctx, ...args),
-    loadSiteRequest: (ctx, ...args) => loadSiteRequest(ctx, ...args),
-  };
+    log(context, 'Initializing site-request module');
+    return {
+        initializeSiteRequest,
+        loadSiteRequest,
+    };
 }
 
-// Initialize module with lifecycle logging
-const context = 'site-request.js';
 withScriptLogging(context, () => {
-  log(context, 'Module initialized');
+    log(context, 'Module initialized');
 });

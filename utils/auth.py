@@ -1,4 +1,3 @@
-
 from functools import wraps
 from flask import request, jsonify, current_app, url_for, redirect, session
 import jwt
@@ -39,11 +38,11 @@ def login_required(required_permissions, require_all=True):
                     else:
                         effective_perms.append(perm)
                 if require_all:
-                    if not all(p in request.permissions for p in effective_perms if p and p != "self"):
+                    if not all(p in request.permissions or p == "self" for p in effective_perms if p):
                         logging.warning(f"Security Issue - Insufficient permissions for user {request.user_id}: required={effective_perms}, has={request.permissions}")
                         return jsonify({"status": "error", "message": f"Insufficient permissions: {effective_perms}"}), 403
                 else:
-                    if not any(p in request.permissions for p in effective_perms if p and p != "self"):
+                    if not any(p in request.permissions or p == "self" for p in effective_perms if p):
                         logging.warning(f"Security Issue - Insufficient permissions for user {request.user_id}: required={effective_perms}, has={request.permissions}")
                         return jsonify({"status": "error", "message": f"Insufficient permissions: {effective_perms}"}), 403
                 return f(*args, **kwargs)
@@ -181,3 +180,26 @@ def generate_code():
     total = sum(charset.index(c) for c in code)
     checksum = charset[total % 36]
     return code + checksum
+
+def get_authenticated_user():
+    """
+    Retrieve and decode the authenticated user's token from the request.
+    Returns a tuple: (decoded_payload, token, error_response).
+    """
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not token and 'user' in session:
+        token = session.get('user', {}).get('token', '')
+
+    if not token:
+        logging.warning("Security Issue - No token provided in Authorization header or session")
+        return None, None, jsonify({"status": "error", "message": "No token provided"}), 401
+
+    try:
+        decoded = decode_token(token)
+        return decoded, token, None
+    except jwt.InvalidTokenError as e:
+        logging.error(f"Security Issue - Invalid token: {str(e)}", exc_info=True)
+        return None, None, jsonify({"status": "error", "message": "Invalid token"}), 401
+    except Exception as e:
+        logging.error(f"UX Issue - Token processing error: {str(e)}", exc_info=True)
+        return None, None, jsonify({"status": "error", "message": f"Token error: {str(e)}"}), 500

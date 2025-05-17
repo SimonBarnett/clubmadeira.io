@@ -1,4 +1,4 @@
-// /static/js/community/referrals-data.js
+// /static/js/merchant/referrals-data.js
 import { log } from '../core/logger.js';
 import { authenticatedFetch } from '../core/auth.js';
 import { withErrorHandling } from '../utils/error.js';
@@ -6,7 +6,7 @@ import { parsePageType, shouldInitializeForPageType } from '../utils/initializat
 import { ERROR_MESSAGES } from '../config/constants.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
 
-const context = 'community/referrals-data.js';
+const context = 'merchant/referrals-data.js';
 
 /**
  * Fetches events for the given event type and period.
@@ -15,7 +15,7 @@ const context = 'community/referrals-data.js';
  * @returns {Promise<Array>} Array of event objects
  */
 export async function fetchEvents(eventType, period) {
-    const pageType = parsePageType(context, 'page', 'community');
+    const pageType = parsePageType(context, 'page', 'merchant');
     if (pageType === 'login') {
         log(context, `Skipping ${eventType} events fetch on login page`);
         return [];
@@ -31,10 +31,10 @@ export async function fetchEvents(eventType, period) {
     }, ERROR_MESSAGES.FETCH_FAILED(`${eventType} events`), () => []);
 }
 
-if (shouldInitializeForPageType('community')) {
+if (shouldInitializeForPageType('merchant')) {
     withScriptLogging(context, () => {
         log(context, 'Module initialized');
     });
 } else {
-    log(context, 'Skipping initialization for non-community page');
+    log(context, 'Skipping initialization for non-merchant page');
 }

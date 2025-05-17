@@ -1,5 +1,5 @@
 // /static/js/main.js
-// Purpose: Entry point for the application, initializing modules based on page type.
+// Purpose: Entry point for the application, initializing modules based on page type and handling referral tracking.
 
 import { log, error as logError } from './core/logger.js';
 import { withErrorHandling } from './utils/error.js';
@@ -9,7 +9,7 @@ import { initializeLoggerModule } from './core/logger.js';
 import { initializeCookies } from './core/cookies.js';
 import { initializeEndpointsModule } from './config/endpoints.js';
 import { initializePagesModule } from './config/pages.js';
-import * as auth from './core/auth.js'; // Import all exports from auth.js
+import * as auth from './core/auth.js';
 import { initializeMenusModule } from './config/menus.js';
 import { initializeNavigationModule } from './modules/navigation.js';
 import { initializeIconsModule } from './utils/icons.js';
@@ -22,7 +22,8 @@ import { initializeCommunityPageModule } from './community-page.js';
 import { initializePartnerPageModule } from './partner-page.js';
 import { error as notifyError } from './core/notifications.js';
 import { withScriptLogging } from './utils/logging-utils.js';
-import { initializeMarkdownModule } from './core/markdown.js'; // Added import for markdown module
+import { initializeMarkdownModule } from './core/markdown.js';
+import { API_ENDPOINTS } from './config/endpoints.js';
 
 const context = 'main.js';
 
@@ -31,22 +32,48 @@ const registry = new Map();
 
 // Define page-specific module initialization configurations
 const PAGE_MODULES = {
-    login: [
-        { name: 'login-page', initializer: initializeLoginPageModule },
-    ],
-    admin: [
-        { name: 'admin-page', initializer: initializeAdminPageModule },
-    ],
-    merchant: [
-        { name: 'merchant-page', initializer: initializeMerchantPageModule },
-    ],
-    community: [
-        { name: 'community-page', initializer: initializeCommunityPageModule },
-    ],
-    partner: [
-        { name: 'partner-page', initializer: initializePartnerPageModule },
-    ],
+    login: [{ name: 'login-page', initializer: initializeLoginPageModule }],
+    admin: [{ name: 'admin-page', initializer: initializeAdminPageModule }],
+    merchant: [{ name: 'merchant-page', initializer: initializeMerchantPageModule }],
+    community: [{ name: 'community-page', initializer: initializeCommunityPageModule }],
+    partner: [{ name: 'partner-page', initializer: initializePartnerPageModule }],
 };
+
+/**
+ * Sends a click event to the /event endpoint based on URL query parameters.
+ */
+async function trackReferralClick(context) {
+    log(context, 'Checking for referral tracking parameters');
+    const urlParams = new URLSearchParams(window.location.search);
+    const sourceUserId = urlParams.get('source_user_id');
+    const destinationUserId = urlParams.get('destination_user_id');
+
+    if (!sourceUserId || !destinationUserId) {
+        log(context, 'No source_user_id or destination_user_id in URL, skipping referral tracking');
+        return;
+    }
+
+    await withErrorHandling(`${context}:trackReferralClick`, async () => {
+        const data = { source_user_id: sourceUserId, destination_user_id: destinationUserId };
+        log(context, `Sending click event to ${API_ENDPOINTS.EVENT}:`, data);
+
+        const response = await fetch(API_ENDPOINTS.EVENT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+        if (response.ok && result.status === 'success') {
+            log(context, 'Click event recorded successfully:', result.message);
+        } else {
+            throw new Error(result.message || 'Failed to record click event');
+        }
+    }, 'Failed to track referral click', (err) => {
+        logError(context, `Referral tracking error: ${err.message}`);
+        notifyError(context, 'Failed to track referral');
+    });
+}
 
 /**
  * Initializes core modules required for all pages.
@@ -76,7 +103,7 @@ async function initializeCoreModules() {
         registry.set('icons', initializeIconsModule(registry));
         registry.set('dom-manipulation', initializeDomManipulationModule(registry));
         registry.set('initialization', initializeInitializationModule(registry));
-        registry.set('markdown', initializeMarkdownModule(registry)); // Added markdown module to registry
+        registry.set('markdown', initializeMarkdownModule(registry));
     }, 'Failed to initialize core modules');
 }
 
@@ -87,21 +114,18 @@ async function initializeApp() {
     log(context, 'Initializing application');
 
     await initializeCoreModules();
+    await trackReferralClick(context);
 
-    // Resolve page type from meta tag first, then fallback to DOM or query
     let pageType = document.querySelector('meta[name="page-type"]')?.content || 'login';
     log(context, `Initial page type from meta: ${pageType}`);
 
-    // Validate page type
     const validPageTypes = ['login', 'admin', 'merchant', 'community', 'partner'];
     if (!validPageTypes.includes(pageType)) {
         log(context, `Invalid page type from meta: ${pageType}, falling back to parsePageType`);
         pageType = await parsePageType(context, 'page', 'login');
     }
-
     log(context, `Resolved page type: ${pageType}`);
 
-    // Handle invalid page types by redirecting to login
     if (!validPageTypes.includes(pageType)) {
         log(context, `Invalid page type: ${pageType}, redirecting to login with section`);
         const section = pageType === 'signup' ? 'signupContainer' : 'info';
@@ -109,7 +133,6 @@ async function initializeApp() {
         return;
     }
 
-    // Initialize only the modules for the current page type
     const modules = PAGE_MODULES[pageType] || [];
     if (modules.length === 0) {
         logError(context, `No modules defined for page type: ${pageType}`);
@@ -117,7 +140,6 @@ async function initializeApp() {
         return;
     }
 
-    // If pageType is 'login', skip authentication checks and initialize login modules
     if (pageType === 'login') {
         for (const module of modules) {
             try {
@@ -132,7 +154,6 @@ async function initializeApp() {
             }
         }
     } else {
-        // For non-login pages, check if user is authenticated
         const token = auth.getAuthToken();
         if (!token) {
             log(context, 'No auth token found, redirecting to login');
@@ -146,16 +167,12 @@ async function initializeApp() {
                 const instance = module.initializer(registry);
                 registry.set(module.name, instance);
                 if (pageType === 'admin') {
-                    log(context, 'Calling initializeAdmin');
                     await instance.initializeAdmin('admin');
                 } else if (pageType === 'merchant') {
-                    log(context, 'Calling initializeMerchantPage');
                     await instance.initializeMerchantPage(context);
                 } else if (pageType === 'community') {
-                    log(context, 'Calling initializeCommunityPage');
                     await instance.initializeCommunityPage(context);
                 } else if (pageType === 'partner') {
-                    log(context, 'Calling initializePartnerPage');
                     await instance.initializePartnerPage(context);
                 }
                 log(context, `Module ${module.name} initialized successfully`);
@@ -165,6 +182,31 @@ async function initializeApp() {
             }
         }
     }
+
+    // Allow specific form submissions handled by their respective modules
+    document.addEventListener('submit', event => {
+        const form = event.target;
+        if ((form.id === 'siteRequestForm' && form.dataset.siteRequestHandled) || 
+            form.id === 'category-form') {
+            log(context, `Allowing submission for form ID: ${form.id}, handled by respective module`);
+            // Do not prevent default or stop propagation, let module-specific handlers manage
+        } else {
+            log(context, `Form submission detected for form ID: ${form.id || 'unknown'}`);
+            event.preventDefault(); // Prevent direct submission for unhandled forms
+        }
+    }, { capture: true });
+
+    // Prevent redundant click handlers for saveSiteRequest
+    document.addEventListener('click', event => {
+        if (event.target.dataset.action === 'saveSiteRequest') {
+            const form = document.querySelector('#siteRequestForm');
+            if (form && form.dataset.saveSiteRequestHandled) {
+                log(context, 'Save Site Request button already handled, ignoring');
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }
+    }, { capture: true });
 
     log(context, 'All modules initialized');
     hideOverlay();

@@ -1,4 +1,4 @@
-// /static/js/community/referrals-ui.js
+// File path: /static/js/merchant/referrals-ui.js
 import { log } from '../core/logger.js';
 import { fetchEvents } from './referrals-data.js';
 
@@ -45,7 +45,7 @@ function formatTimestamp(timestamp) {
 export function renderPeriodIcons() {
     const container = document.getElementById('log_period_icon');
     if (!container) {
-        log('community/referrals-ui', 'Error: log_period_icon container not found.');
+        log('merchant/referrals-ui', 'Error: log_period_icon container not found.');
         return;
     }
     container.innerHTML = ''; // Clear existing content
@@ -93,7 +93,7 @@ function updateDescription(type, periodLabel) {
         const iconClass = logTypeIcons[type] || 'fa-question'; // Default to question mark if type unknown
         descriptionElement.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${typeLabel} logs for ${periodLabel}`;
     } else {
-        log('community/referrals-ui', 'Warning: logs-description element not found.');
+        log('merchant/referrals-ui', 'Warning: logs-description element not found.');
     }
 }
 
@@ -104,14 +104,14 @@ function updateDescription(type, periodLabel) {
  */
 export async function loadLogs(type, period) {
     if (!type) {
-        log('community/referrals-ui', 'Error: No type set for logs section.');
+        log('merchant/referrals-ui', 'Error: No type set for logs section.');
         return;
     }
     try {
-        const events = await fetchEvents(type, period); // Directly use 'click' or 'order'
+        const events = await fetchEvents(type, period);
         renderEventsTable(events);
     } catch (error) {
-        log('community/referrals-ui', `Error loading logs: ${error.message}`);
+        log('merchant/referrals-ui', `Error loading logs: ${error.message}`);
         document.getElementById('logs-table-container').innerHTML = `
             <p>Error: ${error.message}</p>
             <button onclick="loadLogs('${type}', '${period}')">Retry</button>
@@ -126,7 +126,7 @@ export async function loadLogs(type, period) {
 export function renderEventsTable(events) {
     const container = document.getElementById('logs-table-container');
     if (!container) {
-        log('community/referrals-ui', 'Error: logs-table-container not found.');
+        log('merchant/referrals-ui', 'Error: logs-table-container not found.');
         return;
     }
     container.innerHTML = ''; // Clear existing content

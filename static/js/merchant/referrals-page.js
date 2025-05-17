@@ -1,4 +1,4 @@
-// /static/js/community/referrals-page.js
+// /static/js/merchant/referrals-page.js
 import { log } from '../core/logger.js';
 import { withErrorHandling } from '../utils/error.js';
 import { withAuthenticatedUser } from '../core/auth.js';
@@ -7,7 +7,7 @@ import { renderPeriodIcons } from './referrals-ui.js';
 import { shouldInitializeForPageType } from '../utils/initialization.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
 
-const context = 'community/referrals-page.js';
+const context = 'merchant/referrals-page.js';
 
 /**
  * Initializes the referrals page with the specified log type ('referral' or 'sale').
@@ -29,10 +29,10 @@ export async function initializeReferralsPage(logType) {
     }, 'initializeReferralsPage');
 }
 
-if (shouldInitializeForPageType('community')) {
+if (shouldInitializeForPageType('merchant')) {
     withScriptLogging(context, () => {
         log(context, 'Module initialized');
     });
 } else {
-    log(context, 'Skipping initialization for non-community page');
+    log(context, 'Skipping initialization for non-merchant page');
 }

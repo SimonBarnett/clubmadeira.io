@@ -50,6 +50,23 @@
             <tbody id="productList"></tbody>
         </table>
     </div>
+
+    <!-- New Logs Section -->    
+    <div id="logsIntro" class="section" style="display: none;">
+        <h2>Logs</h2>
+        <p>This section allows you to view different types of event logs captured by the system.</p>
+        <p>Select a log type from the submenu to view specific events:</p>
+        <ul>
+            <li><strong>Click Events:</strong> View logs related to user clicks on the site.</li>
+            <li><strong>Order Events:</strong> View logs related to order placements.</li>
+        </ul>
+    </div>            
+    <div id="logs" class="section" style="display: none;" data-type="">
+        <h2>Logs</h2>
+        <p id="logs-description"><i class="fa-solid fa-sign-in-alt"></i>   Login logs for Today</p>
+        <div id="log_period_icon" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>        
+        <div id="logs-table-container"></div>
+    </div>
     
     <script>
         console.log('merchant.html - Template loaded');

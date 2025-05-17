@@ -91,16 +91,12 @@ admin.html
             <form id="pageVisitForm">
                 <table>
                     <tr>
-                        <td><label for="pageReferer">Referer:</label></td>
-                        <td><select id="pageReferer" name="referer"></select></td>
+                        <td><label for="sourceUserId">Source User ID:</label></td>
+                        <td><input type="text" id="sourceUserId" name="source_user_id" placeholder="e.g., user123"></td>
                     </tr>
                     <tr>
-                        <td><label for="page">Page:</label></td>
-                        <td><input type="text" id="page" name="page" value="/home"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="pageTimestamp">Timestamp:</label></td>
-                        <td><input type="text" id="pageTimestamp" name="timestamp"></td>
+                        <td><label for="destinationUserId">Destination User ID:</label></td>
+                        <td><input type="text" id="destinationUserId" name="destination_user_id" placeholder="e.g., user123"></td>
                     </tr>
                     <tr>
                         <td colspan="2"><button type="submit">Submit Page Visit</button></td>
@@ -109,31 +105,23 @@ admin.html
             </form>
         </div>
     </div>
-
+    
     <div id="order_test" class="section" style="display: none;">
         <h2>Order Referral Test</h2>
         <div class="form">
             <form id="orderForm">
                 <table>
                     <tr>
-                        <td><label for="orderReferer">Referer:</label></td>
-                        <td><select id="orderReferer" name="referer"></select></td>
+                        <td><label for="orderSourceUserId">Source User ID:</label></td>
+                        <td><input type="text" id="orderSourceUserId" name="source_user_id" placeholder="e.g., user123"></td>
                     </tr>
                     <tr>
-                        <td><label for="orderId">Order ID:</label></td>
-                        <td><input type="text" id="orderId" name="orderId" value="ORD12345"></td>
+                        <td><label for="orderDestinationUserId">Destination User ID:</label></td>
+                        <td><input type="text" id="orderDestinationUserId" name="destination_user_id" placeholder="e.g., user123"></td>
                     </tr>
                     <tr>
-                        <td><label for="buyer">Buyer Name:</label></td>
-                        <td><input type="text" id="buyer" name="buyer" value="John Doe"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="total">Total Amount (£):</label></td>
-                        <td><input type="number" id="total" name="total" value="99.99" step="0.01"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="orderTimestamp">Timestamp:</label></td>
-                        <td><input type="text" id="orderTimestamp" name="timestamp"></td>
+                        <td><label for="saleValue">Sale Value (£):</label></td>
+                        <td><input type="number" id="saleValue" name="sale_value" value="99.99" step="0.01"></td>
                     </tr>
                     <tr>
                         <td colspan="2"><button type="submit">Submit Order</button></td>
@@ -200,10 +188,25 @@ admin.html
         </form>
     </div>
 
-    <div id="categories" class="section" style="display: none;">
-        <h2>Categories</h2>
-        <p>Manage categories here.</p>
+    <!-- New Logs Section -->    
+    <div id="logsIntro" class="section" style="display: none;">
+        <h2>Logs</h2>
+        <p>This section allows you to view different types of event logs captured by the system.</p>
+        <p>Select a log type from the submenu to view specific events:</p>
+        <ul>
+            <li><strong>Login Events:</strong> View logs related to user logins.</li>
+            <li><strong>Signup Events:</strong> View logs related to new user signups.</li>
+            <li><strong>Click Events:</strong> View logs related to user clicks on the site.</li>
+            <li><strong>Order Events:</strong> View logs related to order placements.</li>
+        </ul>
+    </div>            
+    <div id="logs" class="section" style="display: none;" data-type="">
+        <h2>Logs</h2>
+        <p id="logs-description"><i class="fa-solid fa-sign-in-alt"></i>   Login logs for Today</p>
+        <div id="log_period_icon" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>        
+        <div id="logs-table-container"></div>
     </div>
+    
 {% endblock %}
 base.inc
 <!DOCTYPE html>
@@ -216,9 +219,12 @@ base.inc
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Local CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css?v=1.0.1') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css?v=1.0.1') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/siterequest.css?v=1.0.1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/siterequest.css') }}">    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/roles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menu.css') }}">
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='black' d='M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160zM201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/></svg>" type="image/svg+xml">
     <!-- Dynamic API URL -->
@@ -279,77 +285,82 @@ base.inc
         <div class="header">
             {% include 'roles.inc' %}
         </div>
-        <div class="content">
-            <!-- Menu Container (dynamically populated by navigation.js) -->
-            <div id="menu" class="menu"></div>
-            <!-- Role-specific sections (corresponding to navigation menu buttons) -->
-            {% block content %}{% endblock %}
-            <div id="info" class="section" style="display: none;">
-                {% include 'welcome.inc' with context %}
+        <!-- Start of layout-content for menu and sections -->
+        <div class="layout-content">
+            <div class="layout-menu">
+                <!-- Menu Container (dynamically populated by navigation.js) -->
+                <div id="menu" class="menu"></div>
             </div>
+            <div class="layout-section">
+                <!-- Role-specific sections (corresponding to navigation menu buttons) -->
+                {% block content %}{% endblock %}
+                <div id="info" class="section" style="display: none;">
+                    {% include 'welcome.inc' with context %}
+                </div>
 
-            {% if page_type != 'login' %}
-            <!-- My Account Sections (shared across authenticated roles) -->
-            <div id="my-account" class="section" style="display: none;">
-                <h2>My Account</h2>
-            </div>
-            <div id="contact-details" class="section" style="display: none;">
-                <h2>Contact Details</h2>
-                <form id="contactDetailsForm">
-                    <div class="form-group">
-                        <label for="contact_name">Name:</label>
-                        <input type="text" id="contact_name" name="contact_name">
-                    </div>
-                    <div class="form-group">
-                        <label for="email_address">Email:</label>
-                        <input type="email" id="email_address" name="email_address">
-                    </div>
-                    <div class="form-group">
-                        <label for="phone_number">Phone Number:</label>
-                        <input type="tel" id="phone_number" name="phone_number">
-                    </div>
-                    <button type="submit"><i class="fas fa-address-card"></i> Save Details</button>
-                </form>
-            </div>
-            <div id="change-password" class="section" style="display: none;">
-                <h2>Change Password</h2>
-                <form id="myAccountForm">
-                    <div class="form-group">
-                        <label for="currentPassword">Current Password:</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="currentPassword" name="current_password">
-                            <span class="toggle-password"><i class="fa fa-eye"></i></span>
+                {% if page_type != 'login' %}
+                <!-- My Account Sections (shared across authenticated roles) -->
+                <div id="my-account" class="section" style="display: none;">
+                    <h2>My Account</h2>
+                </div>
+                <div id="contact-details" class="section" style="display: none;">
+                    <h2>Contact Details</h2>
+                    <form id="contactDetailsForm">
+                        <div class="form-group">
+                            <label for="contact_name">Name:</label>
+                            <input type="text" id="contact_name" name="contact_name">
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="newPassword">New Password:</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="newPassword" name="new_password">
-                            <span class="toggle-password"><i class="fa fa-eye"></i></span>
+                        <div class="form-group">
+                            <label for="email_address">Email:</label>
+                            <input type="email" id="email_address" name="email_address">
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm New Password:</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="confirmPassword" name="confirm_password">
-                            <span class="toggle-password"><i class="fa fa-eye"></i></span>
+                        <div class="form-group">
+                            <label for="phone_number">Phone Number:</label>
+                            <input type="tel" id="phone_number" name="phone_number">
                         </div>
-                    </div>
-                    <button type="submit"><i class="fas fa-key"></i> Update Password</button>
-                </form>
+                        <button type="submit"><i class="fas fa-address-card"></i> Save Details</button>
+                    </form>
+                </div>
+                <div id="change-password" class="section" style="display: none;">
+                    <h2>Change Password</h2>
+                    <form id="myAccountForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password:</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="currentPassword" name="current_password">
+                                <span class="toggle-password"><i class="fa fa-eye"></i></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password:</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="newPassword" name="new_password">
+                                <span class="toggle-password"><i class="fa fa-eye"></i></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password:</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="confirmPassword" name="confirm_password">
+                                <span class="toggle-password"><i class="fa fa-eye"></i></span>
+                            </div>
+                        </div>
+                        <button type="submit"><i class="fas fa-key"></i> Update Password</button>
+                    </form>
+                </div>
+                <div id="settings" class="section" style="display: none;">
+                    <h2>Settings</h2>
+                    <p>Configure settings specific to your role here.</p>
+                    <form id="settings-form">
+                        <input type="text" id="settingsUserId" name="userId" placeholder="User ID">
+                        <input type="text" id="contactName" name="contactName" placeholder="Contact Name">
+                        <input type="text" id="websiteUrl" name="websiteUrl" placeholder="Website URL">
+                        <input type="email" id="emailAddress" name="emailAddress" placeholder="Email Address">
+                        <button type="submit">Save Settings</button>
+                    </form>
+                </div>
+                {% endif %}
             </div>
-            <div id="settings" class="section" style="display: none;">
-                <h2>Settings</h2>
-                <p>Configure settings specific to your role here.</p>
-                <form id="settings-form">
-                    <input type="text" id="settingsUserId" name="userId" placeholder="User ID">
-                    <input type="text" id="contactName" name="contactName" placeholder="Contact Name">
-                    <input type="text" id="websiteUrl" name="websiteUrl" placeholder="Website URL">
-                    <input type="email" id="emailAddress" name="emailAddress" placeholder="Email Address">
-                    <button type="submit">Save Settings</button>
-                </form>
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -452,67 +463,21 @@ community.html
         </div>
     </div>
 
-    <!-- Referrals Intro Section -->
-    <div id="referrals_intro" class="section" style="display: none;">
-        <h2>My Referrals</h2>
-        <p>This section allows you to track your referral activity.</p>
-        <p>Select from the submenu options:</p>
+    <!-- New Logs Section -->    
+    <div id="logsIntro" class="section" style="display: none;">
+        <h2>Logs</h2>
+        <p>This section allows you to view different types of event logs captured by the system.</p>
+        <p>Select a log type from the submenu to view specific events:</p>
         <ul>
-            <li><strong>Visits:</strong> View pages visited through your referral links.</li>
-            <li><strong>Orders:</strong> See orders placed via your referrals.</li>
+            <li><strong>Click Events:</strong> View logs related to user clicks on the site.</li>
+            <li><strong>Order Events:</strong> View logs related to order placements.</li>
         </ul>
-    </div>
-
-    <!-- Visits Section -->
-    <div id="visits" class="section" style="display: none;">
-        <h2>Visits</h2>
-        <div class="toggle-section" data-toggle="visits_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
-        <div id="visits_this_month" class="toggle-content open">
-            <table id="visitsTableThisMonth">
-                <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                <tbody id="visitList"></tbody>
-            </table>
-        </div>
-        <div class="toggle-section" data-toggle="visits_last_month"><i class="fas fa-calendar-alt"></i> Last Month</div>
-        <div id="visits_last_month" class="toggle-content">
-            <table id="visitsTableLastMonth">
-                <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                <tbody id="visitsListLastMonth"></tbody>
-            </table>
-        </div>
-        <div class="toggle-section" data-toggle="visits_earlier"><i class="fas fa-history"></i> Earlier</div>
-        <div id="visits_earlier" class="toggle-content">
-            <table id="visitsTableEarlier">
-                <thead><tr><th>Page</th><th>Timestamp</th></tr></thead>
-                <tbody id="visitsListEarlier"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Orders Section -->
-    <div id="orders" class="section" style="display: none;">
-        <h2>Orders</h2>
-        <div class="toggle-section" data-toggle="orders_this_month"><i class="fas fa-calendar-day"></i> This Month</div>
-        <div id="orders_this_month" class="toggle-content open">
-            <table id="ordersTableThisMonth">
-                <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                <tbody id="orderList"></tbody>
-            </table>
-        </div>
-        <div class="toggle-section" data-toggle="orders_last_month"><i class="fas fa-calendar-alt"></i> Last Month</div>
-        <div id="orders_last_month" class="toggle-content">
-            <table id="ordersTableLastMonth">
-                <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                <tbody id="ordersListLastMonth"></tbody>
-            </table>
-        </div>
-        <div class="toggle-section" data-toggle="orders_earlier"><i class="fas fa-history"></i> Earlier</div>
-        <div id="orders_earlier" class="toggle-content">
-            <table id="ordersTableEarlier">
-                <thead><tr><th>Order ID</th><th>Buyer</th><th>Total</th><th>Timestamp</th></tr></thead>
-                <tbody id="ordersListEarlier"></tbody>
-            </table>
-        </div>
+    </div>            
+    <div id="logs" class="section" style="display: none;" data-type="">
+        <h2>Logs</h2>
+        <p id="logs-description"><i class="fa-solid fa-sign-in-alt"></i>   Login logs for Today</p>
+        <div id="log_period_icon" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>        
+        <div id="logs-table-container"></div>
     </div>
 
     <!-- My Website Intro Section -->
@@ -540,7 +505,6 @@ community.html
 {% block scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize TinyMCE for rich text fields
             if (window.tinymce) {
                 tinymce.init({
                     selector: '#aboutCommunity, #stylingDetails, #page1Content',
@@ -558,7 +522,6 @@ community.html
                 console.error('TinyMCE library not loaded');
             }
 
-            // Ensure marked is loaded before rendering markdown
             if (typeof marked === 'undefined') {
                 console.error('marked library not loaded');
                 const script = document.createElement('script');
@@ -849,6 +812,23 @@ merchant.html
             <tbody id="productList"></tbody>
         </table>
     </div>
+
+    <!-- New Logs Section -->    
+    <div id="logsIntro" class="section" style="display: none;">
+        <h2>Logs</h2>
+        <p>This section allows you to view different types of event logs captured by the system.</p>
+        <p>Select a log type from the submenu to view specific events:</p>
+        <ul>
+            <li><strong>Click Events:</strong> View logs related to user clicks on the site.</li>
+            <li><strong>Order Events:</strong> View logs related to order placements.</li>
+        </ul>
+    </div>            
+    <div id="logs" class="section" style="display: none;" data-type="">
+        <h2>Logs</h2>
+        <p id="logs-description"><i class="fa-solid fa-sign-in-alt"></i>   Login logs for Today</p>
+        <div id="log_period_icon" style="display: flex; gap: 20px; margin-bottom: 20px;"></div>        
+        <div id="logs-table-container"></div>
+    </div>
     
     <script>
         console.log('merchant.html - Template loaded');
@@ -871,88 +851,106 @@ roles.inc
 <!-- templates/roles.inc -->
 {% if is_authenticated %}
     {% if page_type == 'admin' %}
-        <button data-section="info" style="color: currentcolor; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 25px; height: 120px; box-sizing: border-box; overflow: visible; background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-            <span class="icon-admin" style="width: 50px; height: 50px;"></span>
-            <div>
-                <h1 style="margin: 0; font-size: 24px; color: currentcolor;">Admin Dashboard</h1>
-                <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9; color: currentcolor;">Manage your platform with powerful tools and insights.</p>
+        <button class="role-dashboard-button" data-section="info">
+            <div class="role-dashboard-header">
+                <span class="role-dashboard-icon"><i class="fas fa-headset"></i></span>
+                <div class="role-dashboard-text">
+                    <h1 class="role-dashboard-title">Admin Dashboard</h1>
+                    <p class="role-dashboard-description">Manage your platform with powerful tools and insights.</p>
+                </div>
             </div>
         </button>
     {% elif page_type == 'merchant' %}
-        <button data-section="info" style="color: currentcolor; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 15px; height: 120px; box-sizing: border-box; overflow: visible; background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-            <span class="icon-merchant" style="width: 50px; height: 50px;"></span>
-            <div>
-                <h1 style="margin: 0; font-size: 24px; color: currentcolor;">Merchant Dashboard</h1>
-                <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9; color: currentcolor;">Track sales, manage deals, and grow your business.</p>
+        <button class="role-dashboard-button" data-section="info">
+            <div class="role-dashboard-header">
+                <span class="role-dashboard-icon"><i class="fas fa-user-tie"></i></span>
+                <div class="role-dashboard-text">
+                    <h1 class="role-dashboard-title">Merchant Dashboard</h1>
+                    <p class="role-dashboard-description">Track sales, manage deals, and grow your business.</p>
+                </div>
             </div>
         </button>
     {% elif page_type == 'community' %}
-        <button data-section="info" style="color: currentcolor; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 15px; height: 120px; box-sizing: border-box; overflow: visible; background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-            <span class="icon-community" style="width: 50px; height: 50px;"></span>
-            <div>
-                <h1 style="margin: 0; font-size: 24px; color: currentcolor;">Community Dashboard</h1>
-                <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9; color: currentcolor;">Connect with members and share valuable resources.</p>
+        <button class="role-dashboard-button" data-section="info">
+            <div class="role-dashboard-header">
+                <span class="role-dashboard-icon"><i class="fas fa-people-group"></i></span>
+                <div class="role-dashboard-text">
+                    <h1 class="role-dashboard-title">Community Dashboard</h1>
+                    <p class="role-dashboard-description">Connect with members and share valuable resources.</p>
+                </div>
             </div>
         </button>
     {% elif page_type == 'partner' %}
-        <button data-section="info" style="color: currentcolor; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 15px; height: 120px; box-sizing: border-box; overflow: visible; background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-            <span class="icon-partner" style="width: 50px; height: 50px;"></span>
-            <div>
-                <h1 style="margin: 0; font-size: 24px; color: currentcolor;">Partner Dashboard</h1>
-                <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9; color: currentcolor;">Collaborate and create with our partner tools.</p>
+        <button class="role-dashboard-button" data-section="info">
+            <div class="role-dashboard-header">
+                <span class="role-dashboard-icon"><i class="fas fa-palette"></i></span>
+                <div class="role-dashboard-text">
+                    <h1 class="role-dashboard-title">Partner Dashboard</h1>
+                    <p class="role-dashboard-description">Collaborate and create with our partner tools.</p>
+                </div>
             </div>
         </button>
     {% else %}
-        <button data-section="info" style="color: currentcolor; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 15px; height: 120px; box-sizing: border-box; overflow: visible; background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-            <span class="icon-community" style="width: 50px; height: 50px;"></span>
-            <div>
-                <h1 style="margin: 0; font-size: 24px; color: currentcolor;">Welcome to clubmadeira.io</h1>
-                <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9; color: currentcolor;">Log in to access your dashboard.</p>
+        <button class="role-dashboard-button" data-section="info">
+            <div class="role-dashboard-header">
+                <span class="role-dashboard-icon"><i class="fas fa-people-group"></i></span>
+                <div class="role-dashboard-text">
+                    <h1 class="role-dashboard-title">Welcome to clubmadeira.io</h1>
+                    <p class="role-dashboard-description">Log in to access your dashboard.</p>
+                </div>
             </div>
         </button>
     {% endif %}
 {% else %}
-    <button data-section="info" style="color: currentcolor; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 15px; height: 120px; box-sizing: border-box; overflow: visible; background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
-        <span class="icon-community" style="width: 50px; height: 50px;"></span>
-        <div>
-            <h1 style="margin: 0; font-size: 24px; color: currentcolor;">Welcome to clubmadeira.io</h1>
-            <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9; color: currentcolor;">Log in to access your dashboard.</p>
+    <button class="role-dashboard-button" data-section="info">
+        <div class="role-dashboard-header">
+            <span class="role-dashboard-icon"><i class="fas fa-people-group"></i></span>
+            <div class="role-dashboard-text">
+                <h1 class="role-dashboard-title">Welcome to clubmadeira.io</h1>
+                <p class="role-dashboard-description">Log in to access your dashboard.</p>
+            </div>
         </div>
-    </button>    
+    </button>
 {% endif %}
 siterequest.inc
 <form id="siteRequestForm" class="settings-form site-request-form">
     <input type="hidden" id="userType" class="user-type-input" value="{{ user_type }}">
 
+    <!-- Community/Store Name Section -->
     <div id="orgname" class="form-section orgname-section">
         <label for="name" class="form-label">{{ 'Community Name' if user_type == 'community' else 'Store Name' }}:</label>
         <input type="text" id="name" name="name" class="form-input orgname-input"
             placeholder="Enter your {{ 'community' if user_type == 'community' else 'store' }} name" required>
     </div>
 
+    <!-- About Section -->
     <div id="aboutorg" class="form-section aboutorg-section">
         <label for="about" class="form-label">{{ 'About Our Community' if user_type == 'community' else 'About Your Store' }}:</label>
         <textarea id="about" name="about" class="mce-editor form-textarea aboutorg-textarea"
             placeholder="Tell us about your {{ 'community' if user_type == 'community' else 'store' }}"></textarea>
     </div>
 
+    <!-- Logos Section -->
     <div id="orglogos" class="form-section orglogos-section">
         <label for="logos" class="form-label">{{ 'Community Logos' if user_type == 'community' else 'Store Logos' }}:</label>
         <input type="file" id="logos" name="logos" class="form-file-input orglogos-input" accept="image/*" multiple>
         <small class="form-hint">Upload up to 5 logos (e.g., main logo, secondary logos).</small>
     </div>
 
+    <!-- Color Preferences Section -->
     <div id="orgcolour" class="form-section orgcolour-section">
         <label for="colorPrefs" class="form-label">Color Preferences:</label>
         <input type="text" id="colorPrefs" name="colorPrefs" class="form-input orgcolour-input" placeholder="e.g., #FF5733, Blue">
     </div>
 
+    <!-- Styling Details Section -->
     <div id="orgStyle" class="form-section orgstyle-section">
         <label for="stylingDetails" class="form-label">Styling Details:</label>
         <textarea id="stylingDetails" name="stylingDetails" class="mce-editor form-textarea orgstyle-textarea" rows="4"
             placeholder="e.g., modern layout, bold fonts"></textarea>
     </div>
 
+    <!-- Preferred Domain Section -->
     <div id="orgEmail" class="form-section orgemail-section orgemail-domain">
         <label for="preferredDomain" class="form-label">Preferred Domain Name:</label>
         <input type="text" id="preferredDomain" name="preferredDomain" class="form-input orgemail-domain-input"
@@ -963,9 +961,10 @@ siterequest.inc
         </button>
     </div>
 
+    <!-- Email Addresses Section with Maximum Limit -->
     <div id="orgEmail" class="form-section orgemail-section orgemail-addresses">
         <label class="form-label">Email Addresses to Set Up (up to 5):</label>
-        <div id="emailsContainer" class="emails-container">
+        <div id="emailsContainer" class="emails-container" data-max-emails="5">
             <div class="email-section" data-email="1">
                 <label for="email1Name" class="form-label email-name-label">Email Name:</label>
                 <input type="text" id="email1Name" name="email1Name" class="form-input email-name-input" placeholder="e.g., info">
@@ -977,51 +976,19 @@ siterequest.inc
         </button>
     </div>
 
-    <div id="orgPages" class="form-section orgpages-section">
-        <label class="form-label">{{ 'Requested Pages (up to 5)' if user_type == 'community' else 'Required Pages' }}:</label>
-        <div id="pagesContainer" class="pages-container">
-            {% if user_type == 'merchant' %}
-            <!-- Fixed Home page -->
-            <div class="page-section" data-page="1">
-                <label for="page1Name" class="form-label page-name-label">Page Name:</label>
-                <input type="text" id="page1Name" name="page1Name" class="form-input page-name-input" value="Home" readonly>
-                <br><br>
-                <label for="page1Content" class="form-label page-content-label">Home Page Content:</label>
-                <textarea id="page1Content" name="page1Content" class="mce-editor form-textarea page-content-textarea"
-                    placeholder="Describe your home page (e.g., welcome message, featured products)"></textarea>
-                <label for="page1Images" class="form-label page-images-label">Additional Images:</label>
-                <input type="file" id="page1Images" name="page1Images" class="form-file-input page-images-input" accept="image/*" multiple>
-            </div>
-            <!-- Fixed Returns Policy page -->
-            <div class="page-section" data-page="2">
-                <label for="page2Name" class="form-label page-name-label">Page Name:</label>
-                <input type="text" id="page2Name" name="page2Name" class="form-input page-name-input" value="Returns Policy" readonly>
-                <br><br>
-                <label for="page2Content" class="form-label page-content-label">Returns Policy Content:</label>
-                <textarea id="page2Content" name="page2Content" class="mce-editor form-textarea page-content-textarea"
-                    placeholder="Outline your returns policy"></textarea>
-                <label for="page2Images" class="form-label page-images-label">Additional Images:</label>
-                <input type="file" id="page2Images" name="page2Images" class="form-file-input page-images-input" accept="image/*" multiple>
-            </div>
-            {% else %}
-            <!-- Community starts with one customizable page -->
-            <div class="page-section" data-page="1">
-                <label for="page1Name" class="form-label page-name-label">Page Name:</label>
-                <input type="text" id="page1Name" name="page1Name" class="form-input page-name-input" value="Home">
-                <br><br>
-                <label for="page1Content" class="form-label page-content-label">Page Content:</label>
-                <textarea id="page1Content" name="page1Content" class="mce-editor form-textarea page-content-textarea"
-                    placeholder="Describe this page"></textarea>
-                <label for="page1Images" class="form-label page-images-label">Additional Images:</label>
-                <input type="file" id="page1Images" name="page1Images" class="form-file-input page-images-input" accept="image/*" multiple>
-            </div>
-            {% endif %}
+    <!-- Pages Section -->
+    <div id="orgPagesContainer" class="form-section">
+        <!-- Pages Section Placeholder -->
+        <div id="pagesContainer" class="orgpages-section">
+            <!-- Pages HTML will be dynamically inserted here from the endpoint -->
         </div>
+        <!-- Add New Page Button -->
         <button type="button" data-action="addPage" class="form-button add-page-button">
-            <i class="fas fa-plus"></i> Add Another Page
+            <i class="fas fa-plus"></i> Add New Page
         </button>
     </div>
 
+    <!-- Widgets Section -->
     <div id="orgWidgets" class="form-section orgwidgets-section">
         <label class="form-label">{{ 'Wix Widgets' if user_type == 'community' else 'Wix Store Widgets' }}:</label>
         <div class="widget-checkboxes">
@@ -1091,28 +1058,34 @@ siterequest.inc
         </div>
     </div>
 
-    <button type="button" data-action="saveSiteRequest" class="form-button submit-request-button">
+    <!-- Submit Button -->
+    <button type="submit" class="form-button submit-request-button">
         <i class="fas fa-paper-plane"></i> Submit Request
     </button>
+
 </form>
 welcome.inc
 <!-- templates/welcome.inc -->
 
 {% if page_type == 'admin' %}
     <h2>Admin Info</h2>
-    <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard is your central hub for overseeing the clubmadeira.io platform.</p>
+    <p id="welcome-message">Hello, <span id="user-contact-name">{{ user.first_name if user.first_name else 'User' }}</span>! This dashboard is your central hub for overseeing the clubmadeira.io platform.</p>
+    <p>{{ user.last_login }}</p>
     <p>Use the menu to manage affiliate programs, deal listings, user permissions, and test scripts. This powerful toolset allows you to maintain and optimize the platform for all users.</p>
 {% elif page_type == 'merchant' %}
     <h2>Merchant Info</h2>
-    <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard is designed for merchants to manage integrations with clubmadeira.io.</p>
+    <p id="welcome-message">Hello, <span id="user-contact-name">{{ user.first_name if user.first_name else 'User' }}</span>! This dashboard is designed for merchants to manage integrations with clubmadeira.io.</p>
+    <p>{{ user.last_login }}</p>
     <p>Use the menu to manage products, your store, Wix integration, and account settings. Grow your business by leveraging our tools to showcase deals and track performance.</p>
 {% elif page_type == 'community' %}
     <h2>Community Info</h2>
-    <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard connects your community with valuable resources on clubmadeira.io.</p>
+    <p id="welcome-message">Hello, <span id="user-contact-name">{{ user.first_name if user.first_name else 'User' }}</span>! This dashboard connects your community with valuable resources on clubmadeira.io.</p>
+    <p>{{ user.last_login }}</p>
     <p>Use the menu to integrate discounts into your website, select product categories, track referrals, and update account details. Build stronger ties by sharing benefits with your members.</p>
 {% elif page_type == 'partner' %}
     <h2>Partner Info</h2>
-    <p id="welcome-message">Hello, <span id="user-contact-name">[User]</span>! This dashboard empowers partners to collaborate with merchants and communities on clubmadeira.io.</p>
+    <p id="welcome-message">Hello, <span id="user-contact-name">{{ user.first_name if user.first_name else 'User' }}</span>! This dashboard empowers partners to collaborate with merchants and communities on clubmadeira.io.</p>
+    <p>{{ user.last_login }}</p>
     <p>Use the menu to manage integrations, review site requests, access documentation, and update your account. Work together to create tailored solutions for our users.</p>
 {% else %}
     <p>Log in to access your dashboard.</p>
@@ -1134,5 +1107,4 @@ welcome.inc
             <button type="submit">Login</button>
         </div>
     </form>
-
 {% endif %}

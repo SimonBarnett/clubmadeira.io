@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify, current_app
-from utils.auth import login_required
+from utils.auth import login_required, get_authenticated_user
 from utils.users import load_users_settings, save_users_settings
 from utils.config import load_config
+from utils.posthog_utils import get_date_range, fetch_events, format_event_details  # Import helper functions
 from utils import wix
 import logging
 import json
+import requests
 
 user_settings_bp = Blueprint('user_settings_bp', __name__)
 
@@ -14,10 +16,6 @@ user_settings_bp = Blueprint('user_settings_bp', __name__)
 def manage_user_settings():
     """
     Manage the authenticated user's top-level settings based on the HTTP method.
-    
-    - GET: Retrieve the user's top-level settings as a flat object of fields and values.
-    - PUT: Replace the entire top-level settings with the provided fields and values.
-    - PATCH: Update specific fields in the user's top-level settings.
     """
     try:
         user_id = request.user_id
@@ -26,7 +24,6 @@ def manage_user_settings():
         if user_id not in users_settings:
             return jsonify({"status": "error", "message": "User not found"}), 404
         
-        # Ensure expected fields exist with default values
         expected_fields = ["contact_name", "website_url", "email_address", "phone_number"]
         for field in expected_fields:
             if field not in users_settings[user_id]:
@@ -239,7 +236,6 @@ def patch_api_key_setting(key):
     except Exception as e:
         logging.error(f"Error updating api_key setting for user {request.user_id}: {str(e)}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-
 # endregion settings/api
 
 @user_settings_bp.route('/settings/products', methods=['GET'])
@@ -252,161 +248,4 @@ def get_user_products():
     except Exception as e:
         logging.error(f"Error fetching products for user {request.user_id}: {str(e)}")
         return jsonify({"status": "error", "message": "Failed to fetch products"}), 500
-    
-# region /sales GET - Self-Auth Endpoint for Sales Data
-@user_settings_bp.route('/sales', methods=['GET'])
-@login_required(["self"], require_all=False)
-def get_sales():
-    """
-    Queries PostHog for click and order events where the user is source or destination.
-    """
-    try:
-        user_id = request.user_id
-        clicks = []
-        orders = []
-        
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            # Query clicks where user is source or destination
-            click_query = {
-                "event": "click",
-                "properties": [
-                    {"key": "source_user_id", "value": user_id, "operator": "exact"},
-                    {"key": "destination_user_id", "value": user_id, "operator": "exact"}
-                ],
-                "operator": "OR"
-            }
-            click_results = current_app.posthog_client.query_events(click_query)
-            clicks = [{"event": r["event"], "properties": r["properties"]} for r in click_results.get("results", [])]
-            
-            # Query orders where user is source or destination
-            order_query = {
-                "event": "order",
-                "properties": [
-                    {"key": "source_user_id", "value": user_id, "operator": "exact"},
-                    {"key": "destination_user_id", "value": user_id, "operator": "exact"}
-                ],
-                "operator": "OR"
-            }
-            order_results = current_app.posthog_client.query_events(order_query)
-            orders = [{"event": r["event"], "properties": r["properties"]} for r in order_results.get("results", [])]
-        
-        logging.debug(f"Retrieved sales data for user {user_id}: {len(clicks)} clicks, {len(orders)} orders")
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            current_app.posthog_client.capture(
-                distinct_id=user_id,
-                event="view_sales",
-                properties={"clicks_count": len(clicks), "orders_count": len(orders)}
-            )
-        
-        return jsonify({"status": "success", "clicks": clicks, "orders": orders}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to retrieve sales for user {user_id}: {str(e)}", exc_info=True)
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            current_app.posthog_client.capture(
-                distinct_id=user_id,
-                event="view_sales_error",
-                properties={"error": f"Server error: {str(e)}"}
-            )
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
 
-# region /referrals GET - Self-Auth Endpoint for Referrals Data
-@user_settings_bp.route('/referrals', methods=['GET'])
-@login_required(["self"], require_all=False)
-def get_referrals():
-    """
-    Queries PostHog for click and order events where the user is source.
-    """
-    try:
-        user_id = request.user_id
-        clicks = []
-        orders = []
-        
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            # Query clicks where user is source
-            click_query = {
-                "event": "click",
-                "properties": [
-                    {"key": "source_user_id", "value": user_id, "operator": "exact"}
-                ]
-            }
-            click_results = current_app.posthog_client.query_events(click_query)
-            clicks = [{"event": r["event"], "properties": r["properties"]} for r in click_results.get("results", [])]
-            
-            # Query orders where user is source
-            order_query = {
-                "event": "order",
-                "properties": [
-                    {"key": "source_user_id", "value": user_id, "operator": "exact"}
-                ]
-            }
-            order_results = current_app.posthog_client.query_events(order_query)
-            orders = [{"event": r["event"], "properties": r["properties"]} for r in order_results.get("results", [])]
-        
-        logging.debug(f"Retrieved referrals data for user {user_id}: {len(clicks)} clicks, {len(orders)} orders")
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            current_app.posthog_client.capture(
-                distinct_id=user_id,
-                event="view_referrals",
-                properties={"clicks_count": len(clicks), "orders_count": len(orders)}
-            )
-        
-        return jsonify({"status": "success", "clicks": clicks, "orders": orders}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to retrieve referrals for user {user_id}: {str(e)}", exc_info=True)
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            current_app.posthog_client.capture(
-                distinct_id=user_id,
-                event="view_referrals_error",
-                properties={"error": f"Server error: {str(e)}"}
-            )
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion
-
-# region /last-login GET - Self-Auth Endpoint for Last Login
-@user_settings_bp.route('/last-login', methods=['GET'])
-@login_required(["self"], require_all=False)
-def get_last_login():
-    """
-    Queries PostHog for the most recent login event.
-    """
-    try:
-        user_id = request.user_id
-        last_login = None
-        
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            login_query = {
-                "event": "login",
-                "properties": [
-                    {"key": "user_id", "value": user_id, "operator": "exact"}
-                ],
-                "order_by": ["-timestamp"]
-            }
-            login_results = current_app.posthog_client.query_events(login_query)
-            if login_results.get("results", []):
-                last_login = login_results["results"][0]["properties"]
-        
-        if last_login:
-            message = f"You last logged in from {last_login['ip_address']} on {last_login['timestamp']}"
-        else:
-            message = "No login history found"
-        
-        logging.debug(f"Retrieved last login for user {user_id}: {message}")
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            current_app.posthog_client.capture(
-                distinct_id=user_id,
-                event="view_last_login",
-                properties={"has_login": bool(last_login)}
-            )
-        
-        return jsonify({"status": "success", "message": message}), 200
-    except Exception as e:
-        logging.error(f"UX Issue - Failed to retrieve last login for user {user_id}: {str(e)}", exc_info=True)
-        if hasattr(current_app, 'posthog_client') and current_app.posthog_client:
-            current_app.posthog_client.capture(
-                distinct_id=user_id,
-                event="view_last_login_error",
-                properties={"error": f"Server error: {str(e)}"}
-            )
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
-# endregion

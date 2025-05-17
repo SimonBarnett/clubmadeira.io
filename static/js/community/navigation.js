@@ -1,7 +1,7 @@
-// /static/js/community/navigation.js
-import { log, warn } from '../core/logger.js';
+// File path: /static/js/community/navigation.js
+import { log, error as logError } from '../core/logger.js';
 import { defineSectionHandlers } from '../modules/navigation.js';
-import { toggleViewState, withElement } from '../utils/dom-manipulation.js';
+import { toggleViewState } from '../utils/dom-manipulation.js';
 import { renderMarkdown } from '../core/markdown.js';
 import { initializeCategoriesPage } from './categories-page.js';
 import { initializeProvidersPage } from './providers-page.js';
@@ -9,83 +9,112 @@ import { initializeReferralsPage } from './referrals-page.js';
 import { withErrorHandling } from '../utils/error.js';
 import { ERROR_MESSAGES } from '../config/messages.js';
 import { withScriptLogging } from '../utils/logging-utils.js';
+import { initializeSiteRequest } from '../modules/site-request.js';
+import { error as notifyError } from '../core/notifications.js';
 
 const context = 'community/navigation.js';
 
-/**
- * Defines section handlers for the community page.
- * @param {string} context - The context or module name.
- * @returns {Object} Section handlers object.
- */
-export function defineCommunitySectionHandlers(context) {
-    log(context, 'Defining community section handlers');
+// Define arrays for section management
+const topLevelSections = ['info', 'categories', 'logs', 'my_website_intro_section', 'no_website'];
+const allSections = ['info', 'categories', 'logs', 'my_website_intro_section', 'no_website', 'providers'];
+
+// Function to define handlers for each section in the community interface
+export function defineCommunitySectionHandlers(contextParameter) {
+    log(contextParameter, 'Defining section handlers for the community interface');
 
     const specificHandlers = [
         {
             id: 'info',
-            handler: async () => {
-                log(context, 'Loading info section');
-                toggleViewState(context, { info: true });
+            handler: async function() {
+                log(contextParameter, 'Loading the information section');
+                const state = allSections.reduce(function(accumulator, section) {
+                    accumulator[section] = section === 'info';
+                    return accumulator;
+                }, {});
+                toggleViewState(contextParameter, state);
             },
         },
         {
             id: 'categories',
-            handler: async () => {
-                log(context, 'Loading categories section');
-                await initializeCategoriesPage(context);
-                toggleViewState(context, { categories: true });
+            handler: async function() {
+                log(contextParameter, 'Loading the categories section');
+                await initializeCategoriesPage(contextParameter);
+                const state = allSections.reduce(function(accumulator, section) {
+                    accumulator[section] = section === 'categories';
+                    return accumulator;
+                }, {});
+                toggleViewState(contextParameter, state);
             },
         },
         {
             id: 'providers',
-            handler: async () => {
-                log(context, 'Loading providers section');
-                await initializeProvidersPage(context);
-                toggleViewState(context, { providers: true });
+            handler: async function() {
+                log(contextParameter, 'Loading the providers section');
+                await initializeProvidersPage(contextParameter);
+                const state = allSections.reduce(function(accumulator, section) {
+                    accumulator[section] = section === 'providers';
+                    return accumulator;
+                }, {});
+                toggleViewState(contextParameter, state);
             },
         },
         {
-            id: 'referrals',
-            handler: async () => {
-                log(context, 'Loading referrals section');
-                await initializeReferralsPage(context);
-                toggleViewState(context, { referrals: true });
-            },
-        },
-        {
-            id: 'visits',
-            handler: async () => {
-                log(context, 'Loading visits section');
-                await initializeReferralsPage(context);
-                toggleViewState(context, { visits: true });
-            },
-        },
-        {
-            id: 'orders',
-            handler: async () => {
-                log(context, 'Loading orders section');
-                await initializeReferralsPage(context);
-                toggleViewState(context, { orders: true });
+            id: 'logs',
+            handler: async function(show, role, type) {
+                log(contextParameter, `Loading logs section with type: ${type || 'none'}`);
+                if (show) {
+                    if (!type || !['click', 'order'].includes(type)) {
+                        logError(contextParameter, `Invalid or missing log type: ${type}`);
+                        notifyError(contextParameter, 'Please select a log type (Click or Order Events)');
+                        toggleViewState(contextParameter, { logs: false, logsIntro: true });
+                        return;
+                    }
+
+                    const logsSection = document.getElementById('logs');
+                    if (!logsSection) {
+                        logError(contextParameter, 'Logs section element not found');
+                        notifyError(contextParameter, 'Logs section not found');
+                        return;
+                    }
+
+                    logsSection.dataset.type = type;
+                    log(contextParameter, `Set data-type="${type}" on logs section`);
+
+                    toggleViewState(contextParameter, { logs: true, info: false });
+
+                    try {
+                        await initializeReferralsPage(type);
+                        const { renderPeriodIcons } = await import('./referrals-ui.js');
+                        renderPeriodIcons();
+                        log(contextParameter, `Initialized logs UI for type: ${type}`);
+                    } catch (err) {
+                        logError(contextParameter, `Failed to initialize logs UI: ${err.message}`);
+                        notifyError(contextParameter, 'Failed to load logs');
+                    }
+                } else {
+                    toggleViewState(contextParameter, { logs: false });
+                }
             },
         },
         {
             id: 'my_website_intro_section',
-            handler: async () => {
-                log(context, 'Loading my_website_intro_section');
-                await withErrorHandling(`${context}:my_website_intro_section`, async () => {
-                    // Dynamic import for providers initialization
+            handler: async function() {
+                log(contextParameter, 'Loading the my website introduction section');
+                await withErrorHandling(`${contextParameter}:my_website_intro_section`, async function() {
                     const { initializeProviders } = await import('./community-providers.js');
-                    log(context, 'Imported initializeProviders from community-providers.js');
-                    await initializeProviders(context);
-                    await withElement(context, 'markdown-content', async (section) => {
+                    await initializeProviders(contextParameter);
+                    await withElement(contextParameter, 'markdown-content', async function(section) {
                         try {
-                            // Use renderMarkdown from core/markdown.js
-                            const htmlContent = await renderMarkdown(context, '/static/md/link_my_website.md');
+                            const htmlContent = await renderMarkdown(contextParameter, '/static/md/link_my_website.md');
                             section.innerHTML = htmlContent;
-                            toggleViewState(context, { my_website_intro_section: true });
-                        } catch (err) {
-                            warn(context, `Failed to render markdown: ${err.message}`);
-                            section.innerHTML = '<p>Error: Unable to load website integration guide. Please try again later.</p>';
+                            const state = allSections.reduce(function(accumulator, sectionIdentifier) {
+                                accumulator[sectionIdentifier] = sectionIdentifier === 'my_website_intro_section';
+                                return accumulator;
+                            }, {});
+                            toggleViewState(contextParameter, state);
+                        } catch (error) {
+                            log(contextParameter, `Failed to render markdown content: ${error.message}`);
+                            section.innerHTML = '<p>Error: Unable to load website integration guide.</p>';
                         }
                     }, 3, 50, false);
                 }, ERROR_MESSAGES.MARKDOWN_RENDER_FAILED);
@@ -93,38 +122,30 @@ export function defineCommunitySectionHandlers(context) {
         },
         {
             id: 'no_website',
-            handler: async () => {
-                log(context, 'Loading no_website section');
-                toggleViewState(context, { no_website: true });
-            },
-        },
-        {
-            id: 'referrals_intro',
-            handler: async () => {
-                log(context, 'Loading referrals_intro section');
-                await initializeReferralsPage(context);
-                toggleViewState(context, { referrals_intro: true });
+            handler: async function() {
+                log(contextParameter, 'Loading the no website section');
+                await withErrorHandling(`${contextParameter}:no_website`, async function() {
+                    await initializeSiteRequest(contextParameter, 'no_website');
+                }, 'Failed to initialize the site request');
             },
         },
     ];
 
-    const sectionHandlers = defineSectionHandlers(context, 'community', specificHandlers);
+    const sectionHandlers = defineSectionHandlers(contextParameter, 'community', specificHandlers);
     return sectionHandlers;
 }
 
-/**
- * Initializes the navigation module for use with the module registry.
- * @param {Map} registry - The module registry instance.
- * @returns {Object} Module instance with public methods.
- */
+// Function to initialize the navigation module for the registry
 export function initializeNavigationModule(registry) {
-    log(context, 'Initializing navigation module for module registry');
+    log(context, 'Initializing the navigation module for the module registry');
     return {
-        defineCommunitySectionHandlers: ctx => defineCommunitySectionHandlers(ctx),
+        defineCommunitySectionHandlers: function(contextParameter) {
+            return defineCommunitySectionHandlers(contextParameter);
+        },
     };
 }
 
-// Initialize the module with lifecycle logging
-withScriptLogging(context, () => {
-    log(context, 'Module initialized');
+// Execute script logging
+withScriptLogging(context, function() {
+    log(context, 'Module has been initialized');
 });
